@@ -52,4 +52,4 @@ production acceptance remain separate qualification. Native Poet rebuilding is d
 
 ## Dependency publication status
 
-The required QualiaDB/Ecopunk/Aether engine updates are prepared locally but not pushed. See provenance/engine-dependencies.json. Their publication needs separate authorization; this source push does not establish a fresh-clone build.
+The required QualiaDB/Ecopunk/Aether engine updates are now published on their pinned review branches. See provenance/engine-dependencies.json. A fresh-clone build remains unqualified; no new build or test was performed for this publication.

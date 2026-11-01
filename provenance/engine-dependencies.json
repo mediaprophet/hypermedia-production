@@ -1,5 +1,7 @@
 {
-  "prepared_engine_refs": [
+  "local_consumer_folder": "hypermedia-libraries",
+  "source_scope": "Existing shared workspace and notices. Engine review commits published and remote-verified after explicit user authorization. No new compilation performed.",
+  "published_engine_refs": [
     {
       "name": "qualiaDB",
       "local_repository": "C:\\github\\qualiaDB",
@@ -11,8 +13,11 @@
       "files": 176,
       "original_engine_index_preserved": true,
       "new_checkout_index_initialized": false,
-      "pushed": false,
-      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+      "pushed": true,
+      "publication_status": "Published to the review branch after explicit user authorization; not merged to main.",
+      "push_output": "To https://github.com/mediaprophet/qualiaDB.git\n*\trefs/heads/codex/synth-engine-publication-2026-11-02:refs/heads/codex/synth-engine-publication-2026-11-02\t[new branch]\nDone",
+      "prior_publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection.",
+      "remote_head_verified": true
     },
     {
       "name": "ecopunk",
@@ -25,8 +30,11 @@
       "files": 243,
       "original_engine_index_preserved": true,
       "new_checkout_index_initialized": false,
-      "pushed": false,
-      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+      "pushed": true,
+      "publication_status": "Published to the review branch after explicit user authorization; not merged to main.",
+      "push_output": "To https://github.com/mediaprophet/ecopunk.git\n*\trefs/heads/codex/synth-engine-publication-2026-11-02:refs/heads/codex/synth-engine-publication-2026-11-02\t[new branch]\nDone",
+      "prior_publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection.",
+      "remote_head_verified": true
     },
     {
       "name": "rust-app-framework",
@@ -39,10 +47,11 @@
       "files": 1,
       "original_engine_index_preserved": true,
       "new_checkout_index_initialized": false,
-      "pushed": false,
-      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+      "pushed": true,
+      "publication_status": "Published to the review branch after explicit user authorization; not merged to main.",
+      "push_output": "To https://github.com/mediaprophet/rust-app-framework.git\n*\trefs/heads/codex/synth-engine-publication-2026-11-02:refs/heads/codex/synth-engine-publication-2026-11-02\t[new branch]\nDone",
+      "prior_publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection.",
+      "remote_head_verified": true
     }
-  ],
-  "local_consumer_folder": "hypermedia-libraries",
-  "source_scope": "Existing shared workspace and notices; no new compilation performed. Engine commits await explicit publication authorization."
+  ]
 }
