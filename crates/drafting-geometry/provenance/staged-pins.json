@@ -1,0 +1,87 @@
+[
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\Cargo.toml",
+    "sha256": "4DA3959E432FFBF6EF4A3297A2242CC0399ABFA23B781F271B7675227FD0D1D1",
+    "bytes": 400
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\LICENSE-MIT",
+    "sha256": "54B0FC87ED7B61B59C20340070DD2B8C7F9D0B53795347819C3BD7C67EA2508A",
+    "bytes": 1100
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\README.md",
+    "sha256": "C496D5A3F56CEEEE2EC8FCC17444DF2944ECDF2AF5E7F454CCE68F0132AFF935",
+    "bytes": 1219
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\provenance\\original-ATTRIBUTION.md",
+    "sha256": "F7C53DFFD94302510948DE78AF6B646C2EB355FE6048ED655C60AFF45FF51A58",
+    "bytes": 6988
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\provenance\\original-NOTICE",
+    "sha256": "CDFBFA6606BC6C389758CFDC5ADDECCB47A2A2CC7BFB7FCC4BE9A2B783BD1561",
+    "bytes": 1244
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\provenance\\prior-current-source.json",
+    "sha256": "9957BBD0AD9488B9CCC70DA1E856E43BD6F4754B91D8778DC6256536EF10B437",
+    "bytes": 15404
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\provenance\\prior-source-map.json",
+    "sha256": "3368B854134A68B29E3F24F2D0EF6EE6AEF21323EC3DAFCB3F6BB3158CF7B70A",
+    "bytes": 7822
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\provenance\\source-map.json",
+    "sha256": "BB91F4184D6F4D76A97B679FFC0D86A3500ACFA0C255222E2230F167661AE6B0",
+    "bytes": 4660
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\bounds.rs",
+    "sha256": "E9227CA6F12A4B0D83827D35938CF59D851C1A44A104209834103CE091EB07E9",
+    "bytes": 3397
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\curve.rs",
+    "sha256": "B451CA7277CD95702167A75CD675959B0F784C9A160767BBCA983F7318195AC8",
+    "bytes": 21414
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\intersect.rs",
+    "sha256": "23AABB289AE1B72AF4E59CF3B4604CE3FAC15D380C99EF1B6163695801358BCD",
+    "bytes": 4771
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\lib.rs",
+    "sha256": "246AB5B08B6A1714FB65D9268F47456FBBFC8B303B5B8018C1AE9238E719FE2A",
+    "bytes": 2474
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\mat.rs",
+    "sha256": "E47810E00928FF0A95DAEDF615D1A7A2E3ACAB2D9368CEC9FF4964E65A617A3D",
+    "bytes": 5261
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\region.rs",
+    "sha256": "A953CBD48B3899B1ECD7A4DEDC5D055D2784868546CEAA6755D486EC926C9607",
+    "bytes": 21240
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\spline.rs",
+    "sha256": "58F67277BB7A9021046F2360662DE26CD174994F7348950874298E5447DD388F",
+    "bytes": 11200
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\tests.rs",
+    "sha256": "A2119BF17FE160EAFCF6011AF34B43251C54996FF97D4E31C125D04AF971467B",
+    "bytes": 13036
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\vec.rs",
+    "sha256": "F8FD2FD51A853E081A6756CB032FACCF6156C6E472F019677C445795E389F74C",
+    "bytes": 6454
+  }
+]

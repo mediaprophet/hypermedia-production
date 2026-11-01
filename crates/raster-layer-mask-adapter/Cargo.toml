@@ -1,0 +1,9 @@
+[package]
+name = "raster-layer-mask-adapter"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+description = "Checked U8 adapter for the existing QualiaDB image layer mask owner"
+
+[dependencies]
+raster-selection-morphology = { path = "../raster-selection-morphology" }

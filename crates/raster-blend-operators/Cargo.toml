@@ -1,0 +1,9 @@
+[package]
+name = "raster-blend-operators"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Pure channel blend operators extracted from PhotoCraft compositing"
+
+[lib]
+path = "src/lib.rs"

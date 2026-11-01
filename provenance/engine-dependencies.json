@@ -1,0 +1,48 @@
+{
+  "prepared_engine_refs": [
+    {
+      "name": "qualiaDB",
+      "local_repository": "C:\\github\\qualiaDB",
+      "url": "https://github.com/mediaprophet/qualiaDB",
+      "base_commit": "b64e82cae26ae47a3263fb5d51a5c0d1b3aa60fd",
+      "commit": "392e53343a3b3f5b4cade28c4816e4e17a0aef6f",
+      "branch": "codex/synth-engine-publication-2026-11-02",
+      "local_source_branch": "codex/synth-engine-publication-2026-11-02",
+      "files": 176,
+      "original_engine_index_preserved": true,
+      "new_checkout_index_initialized": false,
+      "pushed": false,
+      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+    },
+    {
+      "name": "ecopunk",
+      "local_repository": "C:\\github\\ecopunk",
+      "url": "https://github.com/mediaprophet/ecopunk",
+      "base_commit": "f28235135f98df7d6b81a2f12ba341cc9e13a403",
+      "commit": "c65d76df9ee47cc33133fdeb90f5dab5f0aa383d",
+      "branch": "codex/synth-engine-publication-2026-11-02",
+      "local_source_branch": "codex/synth-engine-publication-2026-11-02",
+      "files": 243,
+      "original_engine_index_preserved": true,
+      "new_checkout_index_initialized": false,
+      "pushed": false,
+      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+    },
+    {
+      "name": "rust-app-framework",
+      "local_repository": "C:\\github\\rust-app-framework",
+      "url": "https://github.com/mediaprophet/rust-app-framework",
+      "base_commit": "60123a1932f2018ea777502b33ef9006f8f926ea",
+      "commit": "ed61a567396552fc2076835885ded7ce56a797bb",
+      "branch": "codex/synth-engine-publication-2026-11-02",
+      "local_source_branch": "codex/synth-engine-publication-2026-11-02",
+      "files": 1,
+      "original_engine_index_preserved": true,
+      "new_checkout_index_initialized": false,
+      "pushed": false,
+      "publication_status": "Prepared local commit only; additional repository publication awaits explicit authorization after automatic approval rejection."
+    }
+  ],
+  "local_consumer_folder": "hypermedia-libraries",
+  "source_scope": "Existing shared workspace and notices; no new compilation performed. Engine commits await explicit publication authorization."
+}

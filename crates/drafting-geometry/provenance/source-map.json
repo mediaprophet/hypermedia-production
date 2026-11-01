@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-30",
+  "revision_kind": "local SHA-256 file bytes; no git revision queried",
+  "selected_license": "MIT",
+  "originals_preserved": true,
+  "worker_cargo_run": false,
+  "source_files": [
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\bounds.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\bounds.rs",
+      "source_sha256": "E9227CA6F12A4B0D83827D35938CF59D851C1A44A104209834103CE091EB07E9",
+      "target_sha256": "E9227CA6F12A4B0D83827D35938CF59D851C1A44A104209834103CE091EB07E9",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\curve.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\curve.rs",
+      "source_sha256": "B451CA7277CD95702167A75CD675959B0F784C9A160767BBCA983F7318195AC8",
+      "target_sha256": "B451CA7277CD95702167A75CD675959B0F784C9A160767BBCA983F7318195AC8",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\intersect.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\intersect.rs",
+      "source_sha256": "23AABB289AE1B72AF4E59CF3B4604CE3FAC15D380C99EF1B6163695801358BCD",
+      "target_sha256": "23AABB289AE1B72AF4E59CF3B4604CE3FAC15D380C99EF1B6163695801358BCD",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\lib.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\lib.rs",
+      "source_sha256": "246AB5B08B6A1714FB65D9268F47456FBBFC8B303B5B8018C1AE9238E719FE2A",
+      "target_sha256": "246AB5B08B6A1714FB65D9268F47456FBBFC8B303B5B8018C1AE9238E719FE2A",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\mat.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\mat.rs",
+      "source_sha256": "E47810E00928FF0A95DAEDF615D1A7A2E3ACAB2D9368CEC9FF4964E65A617A3D",
+      "target_sha256": "E47810E00928FF0A95DAEDF615D1A7A2E3ACAB2D9368CEC9FF4964E65A617A3D",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\region.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\region.rs",
+      "source_sha256": "A953CBD48B3899B1ECD7A4DEDC5D055D2784868546CEAA6755D486EC926C9607",
+      "target_sha256": "A953CBD48B3899B1ECD7A4DEDC5D055D2784868546CEAA6755D486EC926C9607",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\spline.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\spline.rs",
+      "source_sha256": "58F67277BB7A9021046F2360662DE26CD174994F7348950874298E5447DD388F",
+      "target_sha256": "58F67277BB7A9021046F2360662DE26CD174994F7348950874298E5447DD388F",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\tests.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\tests.rs",
+      "source_sha256": "A2119BF17FE160EAFCF6011AF34B43251C54996FF97D4E31C125D04AF971467B",
+      "target_sha256": "A2119BF17FE160EAFCF6011AF34B43251C54996FF97D4E31C125D04AF971467B",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\geometry\\src\\vec.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\drafting-geometry\\src\\vec.rs",
+      "source_sha256": "F8FD2FD51A853E081A6756CB032FACCF6156C6E472F019677C445795E389F74C",
+      "target_sha256": "F8FD2FD51A853E081A6756CB032FACCF6156C6E472F019677C445795E389F74C",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    }
+  ]
+}

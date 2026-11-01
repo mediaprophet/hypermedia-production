@@ -1,0 +1,22 @@
+[package]
+name = "video-h264-codec"
+version = "0.5.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+description = "H.264/AVC software decoder"
+
+[features]
+default = ["threads"]
+threads = ["dep:rayon"]
+
+[dependencies]
+bitstream-codec = { path = "../bitstream-codec" }
+thiserror = "2"
+rayon = { version = "1", optional = true }
+
+[dev-dependencies]
+media-test-support = { path = "../media-test-support" }
+
+[lints.rust]
+unsafe_code = "forbid"

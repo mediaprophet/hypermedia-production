@@ -1,0 +1,57 @@
+[
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\Cargo.toml",
+    "sha256": "A126DC6BCA31BEB208C664DAF43217EA0EDE28064CFF7ED52DCFCA3A3D7158C6",
+    "bytes": 256
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\LICENSE-MIT",
+    "sha256": "BAD480F4273C231A1EE379EE260E5268E2E481682297EB829C0226A63670889C",
+    "bytes": 1095
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\NOTICE",
+    "sha256": "D7D12AC25925DDAB3BCA5AE0C92C2BA3959DFF26333BA8C9C7F54B53A3B2503D",
+    "bytes": 659
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\README.md",
+    "sha256": "47ED5266303E227DBA8AD3F268051A24F1C985CAB544D1392FEAD2535C1B9051",
+    "bytes": 4473
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\adaptation\\grid-impl.rs",
+    "sha256": "B29FD7A835FE85C7D99ECA3F0A39C9AABBABF560B1590B5A53E2FA20C19EBDF0",
+    "bytes": 18220
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\examples\\local-stroke.rs",
+    "sha256": "6D2B848D023DCE951754402B85386CB772444D4E0A0686A071575F62017D6BE0",
+    "bytes": 904
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\provenance\\changes.md",
+    "sha256": "AB44CBEDECC37A080947F2CB09785D338771A2BB6EF91068315D293796AB6AD8",
+    "bytes": 5128
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\provenance\\original-cow_delta_undo.rs",
+    "sha256": "D95DFA85BDD657816BD8EE2665A79DEFE3CE35F440AB46368BD745A7994038A6",
+    "bytes": 19310
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\provenance\\source-map.json",
+    "sha256": "53C141593E44295AB9458D4B8405793C112C0CD441634ACB3E005D2D8410196E",
+    "bytes": 1101
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\src\\adaptation_tests.rs",
+    "sha256": "6928CE5FB070F12903EFD6B923EE4B486DBCF0D48C84644DBCAEDA228D16D664",
+    "bytes": 10811
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\src\\lib.rs",
+    "sha256": "1E6191015ACE9010D2567EF6AF8A55460D34B0B45D33AEF8EDF3DC7AA4F41E6C",
+    "bytes": 28615
+  }
+]

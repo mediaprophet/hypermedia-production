@@ -1,0 +1,13 @@
+{
+  "source": "C:\\github\\poet\\crates\\spatial-authoring\\src\\geo_studio\\cow_delta_undo.rs",
+  "source_sha256": "D95DFA85BDD657816BD8EE2665A79DEFE3CE35F440AB46368BD745A7994038A6",
+  "preserved_source": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\provenance\\original-cow_delta_undo.rs",
+  "preserved_sha256": "D95DFA85BDD657816BD8EE2665A79DEFE3CE35F440AB46368BD745A7994038A6",
+  "target": "C:\\github\\ecopunk\\tools\\hypermedia-migration-round2\\staged\\spatial\\terrain-brushes\\src\\lib.rs",
+  "target_sha256": "1E6191015ACE9010D2567EF6AF8A55460D34B0B45D33AEF8EDF3DC7AA4F41E6C",
+  "primitive_kernel_and_four_source_tests_suffix_byte_equal": true,
+  "grid_impl": "Adapted, see adaptation/grid-impl.rs and provenance/changes.md",
+  "worker_cargo_run": false,
+  "source_revision": "local file SHA-256; no git revision queried",
+  "review_repairs": "Allocation-free conservative accounting bounded to 256 entry-length visits; explicit discard_local_history cap recovery; late-second-tile atomicity and conservative-commit regressions"
+}

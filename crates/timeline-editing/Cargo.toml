@@ -1,0 +1,9 @@
+[package]
+name = "timeline-editing"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Exact media time and bounded transition-span editing primitives"
+
+[lib]
+path = "src/lib.rs"

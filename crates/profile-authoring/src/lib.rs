@@ -1,0 +1,27 @@
+//! Bounded metric profile authoring. Source, units and project history remain host-owned.
+#![forbid(unsafe_code)]
+pub mod profile;
+pub use profile::{Profile, ProfileLimits};
+
+/// Existing source-compatible authoring refusal categories.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AuthoringError {
+    Invalid(&'static str),
+    Budget(&'static str),
+    Kernel(String),
+}
+impl std::fmt::Display for AuthoringError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Invalid(m) | Self::Budget(m) => f.write_str(m),
+            Self::Kernel(m) => f.write_str(m),
+        }
+    }
+}
+impl std::error::Error for AuthoringError {}
+pub(crate) fn finite_positive(value: f64) -> bool {
+    value.is_finite() && value > 0.0 && (value as f32).is_finite()
+}
+
+#[cfg(test)]
+mod tests;

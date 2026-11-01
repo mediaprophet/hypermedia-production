@@ -1,0 +1,49 @@
+diff --git "tools\\hypermedia-migration-round3\\staged\\image\\raster-layer-mask-adapter\\provenance\\morphology-lib-before.rs" "tools\\hypermedia-migration-round3\\staged\\image\\raster-layer-mask-adapter\\provenance\\morphology-lib-after.rs"
+index 99a55d0..e2cb53f 100644
+--- "tools\\hypermedia-migration-round3\\staged\\image\\raster-layer-mask-adapter\\provenance\\morphology-lib-before.rs"
++++ "tools\\hypermedia-migration-round3\\staged\\image\\raster-layer-mask-adapter\\provenance\\morphology-lib-after.rs"
+@@ -64,7 +64,9 @@ impl std::error::Error for PreflightError {}
+ /// writes, with headroom for loop-condition and index checks. Payload bounds count Vec element storage, including
+ /// masks, EDT arrays, results, and concurrent EDT band scratch. They do not claim to bound total
+ /// process heap or allocator/Rayon runtime overhead.
+-pub fn preflight(operation: Operation, mask: &[f32], width: usize, height: usize, radius: f32, limits: Limits) -> Result<Plan, PreflightError> {
++/// Validates shape, radius, and caller-selected limits before any buffer conversion/allocation.
++/// This is useful to adapters whose source representation is not the morphology crate's f32 mask.
++pub fn preflight_dimensions(operation: Operation, width: usize, height: usize, radius: f32, limits: Limits) -> Result<Plan, PreflightError> {
+     let pixels = width.checked_mul(height).ok_or(PreflightError::DimensionOverflow)?;
+     if width == 0 || height == 0 { return Err(PreflightError::EmptyDimensions); }
+     // The copied EDT allocates a fixed `width * BAND_ROWS` band buffer (BAND_ROWS = 32),
+@@ -77,7 +79,6 @@ pub fn preflight(operation: Operation, mask: &[f32], width: usize, height: usize
+     {
+         return Err(PreflightError::DimensionOverflow);
+     }
+-    if pixels != mask.len() { return Err(PreflightError::DimensionMismatch); }
+     if pixels > limits.max_pixels { return Err(PreflightError::PixelBudget); }
+     if !radius.is_finite() || radius < 0.0 { return Err(PreflightError::InvalidRadius); }
+     let units_per_pixel = match operation { Operation::Expand => 27usize, Operation::Contract => 29, Operation::Border => 52 };
+@@ -91,10 +92,24 @@ pub fn preflight(operation: Operation, mask: &[f32], width: usize, height: usize
+         .and_then(|base| base.checked_add(scratch))
+         .ok_or(PreflightError::PayloadBudget)?;
+     if algorithm_payload_bytes_upper_bound > limits.max_algorithm_payload_bytes { return Err(PreflightError::PayloadBudget); }
++    Ok(Plan { pixels, work_units_upper_bound, algorithm_payload_bytes_upper_bound, edt_scratch_bytes_upper_bound: scratch })
++}
++
++/// Validates shape, radius, coverage, and caller-selected limits without allocating algorithm
++/// buffers. Work units conservatively count coverage validation and source loop iterations:
++/// at most 27 per pixel for expand, 29 for contract, and 52 for border. Each EDT is budgeted at
++/// 24 visits per pixel to cover its seed `any`/`all` scans, column sweeps, output initialization,
++/// band copies, row candidate filtering/insertion and removals, envelope advancement, and output
++/// writes, with headroom for loop-condition and index checks. Payload bounds count Vec element storage, including
++/// masks, EDT arrays, results, and concurrent EDT band scratch. They do not claim to bound total
++/// process heap or allocator/Rayon runtime overhead.
++pub fn preflight(operation: Operation, mask: &[f32], width: usize, height: usize, radius: f32, limits: Limits) -> Result<Plan, PreflightError> {
++    let plan = preflight_dimensions(operation, width, height, radius, limits)?;
++    if plan.pixels != mask.len() { return Err(PreflightError::DimensionMismatch); }
+     // Full input validation is O(N), so do the scalar work/payload admissions first. Its one
+     // visit per pixel is included in each operation's conservative bound above.
+     if mask.iter().any(|coverage| !coverage.is_finite() || !(0.0..=1.0).contains(coverage)) { return Err(PreflightError::InvalidCoverage); }
+-    Ok(Plan { pixels, work_units_upper_bound, algorithm_payload_bytes_upper_bound, edt_scratch_bytes_upper_bound: scratch })
++    Ok(plan)
+ }
+ 
+ fn edt_scratch_bound(width: usize, height: usize, pixels: usize) -> Option<usize> {

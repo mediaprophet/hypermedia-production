@@ -1,0 +1,20 @@
+source	source_sha256	source_range	staged_target	staged_sha256	relation
+crates/algo/src/selection.rs	72F4269CE0D2DB8888B01DA5456FEEC02ABBDB1AC8F5CD2DBBBE4C0BD2360813	717-749 expand, contract, border; source expressions retained; parameter/local names adapted for checked API	src/lib.rs	461952B5C9E1030D42FA5DCF307A066CCF96A508238B572D4A41E6F9E9C36265	operation-equivalent
+crates/algo/src/selection.rs	72F4269CE0D2DB8888B01DA5456FEEC02ABBDB1AC8F5CD2DBBBE4C0BD2360813	1097-1130 expand_contract_border and border_matches_photoshop	src/tests.rs	98B9508269E277628A15CBE3548EAA5A37AB72CDE57743E004F31140649970C3	source-derived tests; helper localized
+crates/algo/src/selection/distance.rs	E7BC8DBF7239E69C37B795CFF5107A5C59F87F4D0405ADECD7BA3AF4E8C9D372	whole file	src/distance.rs	E7BC8DBF7239E69C37B795CFF5107A5C59F87F4D0405ADECD7BA3AF4E8C9D372	byte-identical
+crates/algo/src/selection/distance/tests.rs	693D6CD6BD7A8A7030A40FB7BE2D225715567BEC97B29F1C844675C39960E385	whole file	src/distance/tests.rs	693D6CD6BD7A8A7030A40FB7BE2D225715567BEC97B29F1C844675C39960E385	byte-identical
+crates/algo/src/photo_util.rs	F62D8EC684935C05C27ED703DCA226A24168D0B31C9FD2F1E65892983FE843DD	128-136 par_rows	src/lib.rs	461952B5C9E1030D42FA5DCF307A066CCF96A508238B572D4A41E6F9E9C36265	cfg helper adapted so Rayon is feature-gated
+crates/engine/src/selection_cmds.rs	82A728D3D6AA5FAEA0973156E3CAAD0A0868D1B0B2C14AD3A56F71CF750BD86F	363-422 modify admission, canvas padding, cap and operation dispatch			caller evidence only
+NOTICE	FB7D6F0E57C396B6C94F6315D3DBA13048A296D81E7546D33E2B7C77C71EA147	whole file	NOTICE	FB7D6F0E57C396B6C94F6315D3DBA13048A296D81E7546D33E2B7C77C71EA147	byte-identical
+LICENSE-MIT	1A8F66D8A86B146F5336FA0D4B1186576C8AA98E60823080C85C7811CFD810AF	whole file	LICENSE-MIT	1A8F66D8A86B146F5336FA0D4B1186576C8AA98E60823080C85C7811CFD810AF	byte-identical
+LICENSE-APACHE	0D542E0C8804E39AA7F37EB00DA5A762149DC682D7829451287E11B938E94594	whole file	LICENSE-APACHE	0D542E0C8804E39AA7F37EB00DA5A762149DC682D7829451287E11B938E94594	byte-identical
+crates/develop/src/settings.rs	8DF6FAD19E7810DC498CE4D4CEC8EDB0E035922150CAA4A9394F2B1D290189F9	1-22 process-version persistence contract; 100-167 DevelopSettings including masks			candidate review evidence only
+crates/develop/src/segmask.rs	3F7EFCF9308405D1090935692135E14235D1527B321948E018E7AEBDE6F8A492	1-65 SegMask storage, bounds and bounded decode			candidate review evidence only
+crates/engine/src/cmd/masks.rs	DBED4DEC9FEB1EDF07F854BAB397AE1DCF5B0F37F09C5D4D9BEB29FD2B065F2F	1-85 shape constructors/AI resolution; 154-220 mask.add and mask.addComponent; 546-556 mask.invert			caller evidence only
+hypermedia_authoring/image.rs	FC984B4E4868E6F08CE61DC2512B95EC5CBE82D098C6E16DF5EBC5CAA6D4973A	ImageLayer mask lines 66-160; ImageDocument selections lines 355-436			Core owner overlap evidence only
+specialized_libs/computer_vision/cv/morph/dilate_u8.rs	AA5999C5119976A7EFA14CF4DF067B0B5BDA38298D8257DBDA30114ACFFB9F15	whole file			Core CV comparison only
+specialized_libs/computer_vision/cv/morph/erode_u8.rs	5E0C4E36454664C7754FFDBA519D5898E258F0BC55037F0C6BF2C14D090BD116	whole file			Core CV comparison only
+hypermedia_authoring/image_composite.rs	EE2170DB389066B9435257A1928E28F17732A4FC2C6DF26ACEDE842A1076D5B2	whole file			Core compositor owner evidence only
+hypermedia_authoring/image_filters.rs	D5304FE88D8404C5C6792602BAAC05A53028C3A8A5E16EFB33BCDC7676D8D1FF	caller-buffered RGBA8 filters/planning			Core filter comparison only
+cv/mod.rs	E6E039AA013D37D63092B9606DB4C7829C50B604D7896CA28935DCCDDEA096B0	whole file			reexports Core specialized computer-vision owner
+specialized_libs/computer_vision/cv/color/rgb_to_gray_u8.rs	97BA7B1D8CC59862E877CFC76AAC9D0A2DFF3A0D05AAF3B55A87BCC3D5E029AF	whole file; grayscale conversion owner reviewed, no color transform copied			Core CV/color comparison only

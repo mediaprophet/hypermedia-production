@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-30",
+  "revision_kind": "local SHA-256 file bytes; no git revision queried",
+  "selected_license": "MIT",
+  "originals_preserved": true,
+  "worker_cargo_run": false,
+  "source_files": [
+    {
+      "source": "C:\\github\\poet\\crates\\spatial-authoring\\src\\lib.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\lib.rs",
+      "source_sha256": "1986B25AA7C6CA6A0FCC011B0672AC3B1769ABAEDD1D87F9AA7667AA99FB513E",
+      "target_sha256": "D180A1BA5EE1580A6402A22BDBA305BB45599FBCF2042D0A113D17E728E07F2F",
+      "unchanged": false,
+      "disposition": "extract error/helper definitions; add profile exports and active tests"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\spatial-authoring\\src\\profile.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\profile.rs",
+      "source_sha256": "B894158CBC6A9F1DFDC927EA29C03436C422B10A13A3D7E34094EC5E5627ABE4",
+      "target_sha256": "B894158CBC6A9F1DFDC927EA29C03436C422B10A13A3D7E34094EC5E5627ABE4",
+      "unchanged": true,
+      "disposition": "copy byte-for-byte; preserve original source spelling"
+    },
+    {
+      "source": "C:\\github\\poet\\crates\\spatial-authoring\\src\\tests.rs",
+      "target": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\tests.rs",
+      "source_sha256": "B52C01DE27D2D7027F2C1D10EC3BCE5450D62E806716D84840AA389385DD02FA",
+      "target_sha256": "C91BCB194D9E68654ABF05830EF1FDF6D9BD1067DC576D091FC9A871B24B700F",
+      "unchanged": false,
+      "disposition": "adapt selected profile regression cases; see test-adaptations.md"
+    }
+  ]
+}

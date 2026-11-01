@@ -1,0 +1,72 @@
+[
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\Cargo.toml",
+    "sha256": "98EA211168CEA8A7F881FF06AAFC11E3FA9DCB4BCF22D31E24389C9D34536056",
+    "bytes": 427
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\LICENSE-MIT",
+    "sha256": "54B0FC87ED7B61B59C20340070DD2B8C7F9D0B53795347819C3BD7C67EA2508A",
+    "bytes": 1100
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\README.md",
+    "sha256": "7A2A5C61A54B7897058126E75A3282FB63F8362267D80BEC875538F782CB8D8B",
+    "bytes": 2156
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\original-ATTRIBUTION.md",
+    "sha256": "F7C53DFFD94302510948DE78AF6B646C2EB355FE6048ED655C60AFF45FF51A58",
+    "bytes": 6988
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\original-lib.rs",
+    "sha256": "1986B25AA7C6CA6A0FCC011B0672AC3B1769ABAEDD1D87F9AA7667AA99FB513E",
+    "bytes": 1016
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\original-NOTICE",
+    "sha256": "CDFBFA6606BC6C389758CFDC5ADDECCB47A2A2CC7BFB7FCC4BE9A2B783BD1561",
+    "bytes": 1244
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\original-spatial-tests.rs",
+    "sha256": "B52C01DE27D2D7027F2C1D10EC3BCE5450D62E806716D84840AA389385DD02FA",
+    "bytes": 5530
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\prior-current-source.json",
+    "sha256": "9957BBD0AD9488B9CCC70DA1E856E43BD6F4754B91D8778DC6256536EF10B437",
+    "bytes": 15404
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\prior-source-map.json",
+    "sha256": "3368B854134A68B29E3F24F2D0EF6EE6AEF21323EC3DAFCB3F6BB3158CF7B70A",
+    "bytes": 7822
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\source-map.json",
+    "sha256": "325B4D44CAF308AC717A2BEE235B78726241CC39C642B6BE5F1B81503FE3A21E",
+    "bytes": 1757
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\provenance\\test-adaptations.md",
+    "sha256": "233420477FF61D1F9300FE3CDAF51000DCFA52677114731EB935FE640E3DFF94",
+    "bytes": 1200
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\lib.rs",
+    "sha256": "D180A1BA5EE1580A6402A22BDBA305BB45599FBCF2042D0A113D17E728E07F2F",
+    "bytes": 837
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\profile.rs",
+    "sha256": "B894158CBC6A9F1DFDC927EA29C03436C422B10A13A3D7E34094EC5E5627ABE4",
+    "bytes": 8312
+  },
+  {
+    "path": "C:\\github\\ecopunk\\tools\\multimedia-migration\\staged\\spatial\\profile-authoring\\src\\tests.rs",
+    "sha256": "C91BCB194D9E68654ABF05830EF1FDF6D9BD1067DC576D091FC9A871B24B700F",
+    "bytes": 2482
+  }
+]

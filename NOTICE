@@ -1,0 +1,1 @@
+This repository publishes the existing hypermedia-libraries workspace. Individual crates retain their declared licenses and upstream notices. QualiaDB owns the shared semantic/runtime structures; Synth and Poet remain separate consumers. Source publication is not asset-quality or complete migration acceptance.

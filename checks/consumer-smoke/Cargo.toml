@@ -1,0 +1,10 @@
+[package]
+name = "spatial-migration-consumer-smoke"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+poet-geometry = { package = "drafting-geometry", path = "../../crates/drafting-geometry" }
+profile-authoring = { path = "../../crates/profile-authoring" }
+raster-blend-operators = { path = "../../crates/raster-blend-operators" }

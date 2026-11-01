@@ -1,0 +1,10 @@
+[package]
+name = "pcm-device-output"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Bounded source-bound PCM output through the controlled native CPAL backend"
+
+[dependencies]
+cpal = { path = "../audio-device-cpal" }
+qualia-core-db = { path = "../../../qualiaDB/crates/qualia-core-db", default-features = false }

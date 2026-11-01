@@ -1,0 +1,17 @@
+[package]
+name = "raster-selection-morphology"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Euclidean expansion, contraction, and soft border transforms for caller-owned raster selection masks"
+
+[features]
+default = []
+parallel = ["dep:rayon"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = { version = "1", optional = true }
+
+[dev-dependencies]
+rayon = "1"
+

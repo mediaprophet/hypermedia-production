@@ -1,0 +1,17 @@
+[package]
+name = "video-h264-preview"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+description = "Bounded MP4/H.264 preview adapter over existing QualiaDB and FilmCraft codecs"
+
+[dependencies]
+mp4 = "=0.14.0"
+media-isobmff = { path = "../media-isobmff" }
+video-h264-codec = { path = "../video-h264-codec", default-features = false }
+bitstream-codec = { path = "../bitstream-codec" }
+color-transforms = { path = "../color-transforms" }
+
+[lints.rust]
+unsafe_code = "forbid"

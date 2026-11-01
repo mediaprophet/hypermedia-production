@@ -1,0 +1,14 @@
+[package]
+name = "media-test-support"
+version = "0.5.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+publish = false
+description = "Media codec test fixtures and optional external oracle helpers"
+
+[dependencies]
+png = "0.18"
+
+[lints.rust]
+unsafe_code = "forbid"

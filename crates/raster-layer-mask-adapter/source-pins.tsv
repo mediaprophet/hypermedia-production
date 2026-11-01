@@ -1,0 +1,18 @@
+role	path	sha256
+QualiaDB image owner	C:\github\qualiaDB\crates\qualia-core-db\src\hypermedia_authoring\image.rs	FC984B4E4868E6F08CE61DC2512B95EC5CBE82D098C6E16DF5EBC5CAA6D4973A
+QualiaDB mask compositor	C:\github\qualiaDB\crates\qualia-core-db\src\hypermedia_authoring\image_composite.rs	EE2170DB389066B9435257A1928E28F17732A4FC2C6DF26ACEDE842A1076D5B2
+QualiaDB Vibe image invoke stubs	C:\github\qualiaDB\crates\qualia-core-db\src\poet_host\invoke\hypermedia\mod.rs	A0C078079C8DC39AA5D5B7D3CC03399979EEA4E06661ACEAE3E0D8938D43615B
+QualiaDB Vibe invocation dispatch	C:\github\qualiaDB\crates\qualia-core-db\src\poet_host\invoke\mod.rs	5EA5B613EE0985D9C5B47BBD8F570F05602F3C7CD3B6BBFBF072EDC470B073A2
+QualiaDB Vibe invoke IDs	C:\github\qualiaDB\crates\qualia-core-db\src\poet_host\invoke\ids.rs	4009C71120CC1FBE6C5B38E715D4233493F7587A5035AFDC9857E93672B016E0
+Poet image authoring actions	C:\github\qualiaDB\crates\poet\src\browser\image_edit_chain_actions.rs	710D3794CA22355F6906390A8321001C1508724E173720CD821C0562ACE88978
+Poet image tool registration	C:\github\qualiaDB\crates\poet\src\browser\registration\register_image_toolbox.rs	0E7B9683B03DA4113C502B7AC13DFD328F93E212212D1179628660BBB40CA4E5
+Round-two morphology public API, canonical staged bytes	C:\github\ecopunk\tools\hypermedia-migration-round2\staged\image\raster-selection-morphology\src\lib.rs	461952B5C9E1030D42FA5DCF307A066CCF96A508238B572D4A41E6F9E9C36265
+Round-two morphology EDT source	C:\github\ecopunk\tools\hypermedia-migration-round2\staged\image\raster-selection-morphology\src\distance.rs	E7BC8DBF7239E69C37B795CFF5107A5C59F87F4D0405ADECD7BA3AF4E8C9D372
+Adapter manifest	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\Cargo.toml	34D5C44579B582BAA1C7C5B81AB79D79F0FDDB1FDBF2E48242BCCF65256E22E9
+Adapter public API	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\src\lib.rs	C2EC4DBB37B4E5035AC6BAD79B77A632F9A7D12744EB2FDC10631CA58678E8DD
+Adapter tests	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\src\tests.rs	03CB2B9701F553A51E4556F860BE7B29C870FFDED863D359C17C4EB5901F5D6B
+Adapter README	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\README.md	DC63F52EC0D4CFCD0595545739EDC893A7808D8A1784B30184121A6722773E76
+Consumer example	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\examples\edit_existing_layer_mask.rs	3FFAA37868F4B2D84AC639AEDB5889C0DA4E6E76E2A6B30677F2B595AEEC64C0
+Preflight patch preimage	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\provenance\morphology-lib-before.rs	461952B5C9E1030D42FA5DCF307A066CCF96A508238B572D4A41E6F9E9C36265
+Preflight patch proposed postimage	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\provenance\morphology-lib-after.rs	F9D1C568C4E759C6039B2C3991B346651CA19E2A0A701B8B97830D6F619CE29D
+Preflight patch diff	C:\github\ecopunk\tools\hypermedia-migration-round3\staged\image\raster-layer-mask-adapter\provenance\preflight-dimensions.patch	5AF229D6E5ECC3915267C6C74F1C09142ACF842279CEBC29DE485D08E3B18B4A
