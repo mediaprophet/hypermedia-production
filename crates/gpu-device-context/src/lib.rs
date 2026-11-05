@@ -59,6 +59,7 @@ impl DeviceHandle {
             label: None,
             required_features,
             required_limits,
+            default_queue: Default::default(),
             memory_hints: MemoryHints::MemoryUsage,
             trace: wgpu::Trace::default(),
             experimental_features: wgpu::ExperimentalFeatures::default(),

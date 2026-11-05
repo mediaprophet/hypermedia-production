@@ -109,7 +109,7 @@ optional = true
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "072b4d9ceeebd423234359dff1dee8fbe9e62b6e"
+rev = "575bab54accf1aafb24f67e9ba810c0f3f745aea"
 features = [
     "std",
     "wgsl",
