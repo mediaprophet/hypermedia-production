@@ -1,4 +1,4 @@
-//! Colour science for FilmCraft: YUV matrices, transfer functions, camera log curves, gamuts,
+//! Colour science and transforms: YUV matrices, transfer functions, camera log curves, gamuts,
 //! colour-managed input/output transforms (tone and gamut mapping), colour metadata and LUTs.
 //! See the crate README for the formulas and their sources.
 //!
@@ -11,6 +11,9 @@ use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
 pub mod grade;
+pub mod icc;
+pub mod ontology;
+pub mod palette;
 pub mod log;
 pub mod lut;
 pub mod spaces;
@@ -22,7 +25,7 @@ pub use lut::{Lut, Lut1d, Lut3d, LutFormat};
 pub use spaces::{ColorPipeline, ColorSpace, Curve, Gamut, WorkingSpace};
 pub use transform::{DecodeTable, InputTransform, OutputTransform, REFERENCE_WHITE_NITS, ToneMap};
 
-/// YUV ↔ RGB matrix coefficients.
+/// YUV â†” RGB matrix coefficients.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Matrix {
     Bt601,
@@ -90,7 +93,7 @@ pub enum Primaries {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Range {
-    /// 16–235 (8-bit) "video" range.
+    /// 16â€“235 (8-bit) "video" range.
     #[default]
     Limited,
     Full,
@@ -106,7 +109,7 @@ pub struct ColorInfo {
 }
 
 /// HDR static metadata of a stream: SMPTE ST 2086 mastering display luminance and the CTA-861.3
-/// content light levels (MaxCLL / MaxFALL), in cd/m². Read from `mdcv` / `clli` (MP4 / MOV) and
+/// content light levels (MaxCLL / MaxFALL), in cd/mÂ². Read from `mdcv` / `clli` (MP4 / MOV) and
 /// Matroska `MasteringMetadata` / `MaxCLL` / `MaxFALL`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -175,7 +178,7 @@ pub fn normalize_c(v: u32, bits: u32, range: Range) -> f32 {
     }
 }
 
-/// sRGB electro-optical transfer (encoded → linear).
+/// sRGB electro-optical transfer (encoded â†’ linear).
 #[inline]
 pub fn srgb_to_linear(v: f32) -> f32 {
     if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) }
@@ -185,7 +188,7 @@ pub fn linear_to_srgb(v: f32) -> f32 {
     if v <= 0.003_130_8 { v * 12.92 } else { 1.055 * v.powf(1.0 / 2.4) - 0.055 }
 }
 
-/// Encoded → linear for a transfer function (display-referred; PQ normalised to 100 nits = 1.0).
+/// Encoded â†’ linear for a transfer function (display-referred; PQ normalised to 100 nits = 1.0).
 pub fn to_linear(v: f32, t: Transfer) -> f32 {
     match t {
         Transfer::Srgb => srgb_to_linear(v),
@@ -229,13 +232,13 @@ pub fn hlg_inverse_oetf(e: f32) -> f32 {
     if e <= 0.5 { e * e / 3.0 } else { (((e - c) / a).exp() + b) / 12.0 }
 }
 
-/// 256-entry table: sRGB-encoded u8 → linear f32.
+/// 256-entry table: sRGB-encoded u8 â†’ linear f32.
 pub fn srgb_u8_to_linear_table() -> &'static [f32; 256] {
     static T: OnceLock<[f32; 256]> = OnceLock::new();
     T.get_or_init(|| std::array::from_fn(|i| srgb_to_linear(i as f32 / 255.0)))
 }
 
-/// 4096-entry table: linear (0..1, quantised to 12 bits) → sRGB-encoded u8.
+/// 4096-entry table: linear (0..1, quantised to 12 bits) â†’ sRGB-encoded u8.
 pub fn linear_to_srgb_u8_table() -> &'static [u8; 4096] {
     static T: OnceLock<[u8; 4096]> = OnceLock::new();
     T.get_or_init(|| std::array::from_fn(|i| (linear_to_srgb(i as f32 / 4095.0) * 255.0 + 0.5).clamp(0.0, 255.0) as u8))
@@ -253,7 +256,7 @@ pub fn luma709(r: f32, g: f32, b: f32) -> f32 {
     0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-/// RGB (0..1) → HSL (h in 0..1).
+/// RGB (0..1) â†’ HSL (h in 0..1).
 pub fn rgb_to_hsl(r: f32, g: f32, b: f32) -> [f32; 3] {
     let max = r.max(g).max(b);
     let min = r.min(g).min(b);
@@ -359,6 +362,125 @@ mod tests {
         for k in 0..3 {
             assert!((c[k] - b[k]).abs() < 1e-5);
         }
+    }
+
+
+    #[test]
+    fn test_icc_transform_roundtrip() {
+        use crate::icc::{Intent, Transform, TransformOptions, adobe_rgb, srgb};
+        let src = srgb();
+        let dst = adobe_rgb();
+        let xform = Transform::with_options(src, dst, TransformOptions {
+            intent: Intent::RelativeColorimetric,
+            bpc: true,
+            precise_float: true,
+        }).expect("Transform creation should succeed");
+
+        let mut out = [0.0f32; 3];
+        xform.eval(&[0.5, 0.5, 0.5], &mut out);
+        assert!((out[0] - out[1]).abs() < 0.05);
+        assert!((out[1] - out[2]).abs() < 0.05);
+
+        let src_u8 = [128u8, 128, 128, 255];
+        let mut dst_u8 = [0u8; 4];
+        xform.convert_u8(&src_u8, 4, &mut dst_u8, 4, true);
+        assert_eq!(dst_u8[3], 255, "Alpha channel preserved");
+        assert!((dst_u8[0] as i32 - dst_u8[1] as i32).abs() <= 2);
+    }
+
+    #[test]
+    fn test_tetrahedral_clut_interpolation() {
+        use crate::icc::Clut;
+        let clut = Clut::sample(vec![5, 5, 5], 3, |inp, out| {
+            out[0] = inp[0] * 0.5 + inp[1] * 0.3 + inp[2] * 0.2;
+            out[1] = inp[0] * inp[1];
+            out[2] = 1.0 - inp[2];
+        });
+        let mut out = [0.0f32; 3];
+        clut.eval(&[0.2, 0.4, 0.6], &mut out);
+        let expected_0 = 0.2 * 0.5 + 0.4 * 0.3 + 0.6 * 0.2;
+        assert!((out[0] - expected_0).abs() < 1e-4);
+        assert!((out[2] - 0.4).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_gamut_warning() {
+        use crate::icc::{GamutCheck, generic_cmyk, srgb};
+        let src = srgb();
+        let proof = generic_cmyk();
+        let gamut = GamutCheck::new(src, proof, 2.0).expect("GamutCheck creation should succeed");
+        let green = [0.0f32, 1.0, 0.0];
+        let de = gamut.delta_e(&green);
+        assert!(de > 0.0, "Delta E should be positive");
+    }
+
+    #[test]
+    fn test_aco_roundtrip() {
+        use crate::palette::{AcoColor, AcoSwatch, parse_aco, write_aco};
+        let swatches = vec![
+            AcoSwatch {
+                name: "Test Red".into(),
+                color: AcoColor::Rgb([65535, 0, 0]),
+            },
+            AcoSwatch {
+                name: "Test Cyan".into(),
+                color: AcoColor::Cmyk([65535, 0, 0, 0]),
+            },
+        ];
+        let bytes = write_aco(&swatches).expect("write_aco should succeed");
+        let parsed = parse_aco(&bytes).expect("parse_aco should succeed");
+        assert_eq!(parsed.swatches.len(), 2);
+        assert_eq!(parsed.swatches[0].name, "Test Red");
+        assert_eq!(parsed.swatches[0].color, AcoColor::Rgb([65535, 0, 0]));
+    }
+
+    #[test]
+    fn test_ase_roundtrip() {
+        use crate::palette::{AseColor, AseEntry, AseFile, AseGroup, AseKind, parse_ase, write_ase};
+        let file = AseFile {
+            groups: vec![AseGroup {
+                name: "Warm Tones".into(),
+                entries: vec![AseEntry {
+                    name: "Solar Orange".into(),
+                    color: AseColor::Rgb([1.0, 0.5, 0.0]),
+                    kind: AseKind::Global,
+                }],
+            }],
+            loose: vec![AseEntry {
+                name: "Process Black".into(),
+                color: AseColor::Gray(0.0),
+                kind: AseKind::Process,
+            }],
+        };
+        let bytes = write_ase(&file).expect("write_ase should succeed");
+        let parsed = parse_ase(&bytes).expect("parse_ase should succeed");
+        assert_eq!(parsed.groups.len(), 1);
+        assert_eq!(parsed.groups[0].name, "Warm Tones");
+        assert_eq!(parsed.groups[0].entries[0].name, "Solar Orange");
+        assert_eq!(parsed.loose.len(), 1);
+        assert_eq!(parsed.loose[0].name, "Process Black");
+    }
+
+    #[test]
+    fn test_gpl_roundtrip() {
+        use crate::palette::{GplColor, GplPalette, parse_gpl, write_gpl};
+        let pal = GplPalette {
+            name: "EcoPalette".into(),
+            columns: 4,
+            comments: vec!["Test palette".into()],
+            colors: vec![
+                GplColor { rgb: [255, 0, 0], name: "Pure Red".into() },
+                GplColor { rgb: [0, 255, 0], name: "Pure Green".into() },
+                GplColor { rgb: [0, 0, 255], name: "Pure Blue".into() },
+            ],
+        };
+        let bytes = write_gpl(&pal).expect("write_gpl should succeed");
+        let parsed = parse_gpl(&bytes).expect("parse_gpl should succeed");
+        assert_eq!(parsed.name, "EcoPalette");
+        assert_eq!(parsed.columns, 4);
+        assert_eq!(parsed.colors.len(), 3);
+        assert_eq!(parsed.colors[1].name, "Pure Green");
+        assert_eq!(parsed.colors[1].rgb, [0, 255, 0]);
     }
 
     #[test]

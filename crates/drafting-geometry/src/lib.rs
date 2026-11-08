@@ -1,6 +1,6 @@
-//! CADCraft geometry: double-precision 2D/3D math for drafting.
+//! Double-precision 2D/3D math for drafting.
 //!
-//! Everything a CAD kernel needs below the document model: vectors and affine transforms,
+//! Everything a drafting kernel needs below the document model: vectors and affine transforms,
 //! bounding boxes, angles, lines, circular arcs (and polyline bulges), ellipses, NURBS splines,
 //! intersections, closest points, offsets and tessellation. All angles are radians,
 //! counter-clockwise from +X, as in DXF.
@@ -9,6 +9,8 @@
 
 mod bounds;
 mod curve;
+pub mod dxf_reader;
+pub mod geodesic_ruler;
 mod intersect;
 mod mat;
 pub mod region;
@@ -16,8 +18,17 @@ mod spline;
 mod vec;
 
 pub use bounds::Bounds2;
-pub use curve::{Arc, Circle, Ellipse, Line, PolyVertex, Polyline, Segment, arc_to_bulge, bulge_to_arc, point_in_polygon, shoelace};
-pub use intersect::{circle_circle, intersect_ext, intersect_segments, line_circle, line_line, line_line_infinite};
+pub use curve::{
+    Arc, Circle, Ellipse, Line, PolyVertex, Polyline, Segment, arc_to_bulge, bulge_to_arc,
+    point_in_polygon, shoelace,
+};
+pub use dxf_reader::{DxfDrawing, DxfEntity, DxfError, parse_dxf};
+pub use geodesic_ruler::{
+    EarthModel, GeodesicRuler, Ruler, RulerPaths, RulerPointId, haversine_km, vincenty_wgs84_km,
+};
+pub use intersect::{
+    circle_circle, intersect_ext, intersect_segments, line_circle, line_line, line_line_infinite,
+};
 pub use mat::{Mat3, Mat4};
 pub use spline::Spline;
 pub use vec::{Vec2, Vec3};

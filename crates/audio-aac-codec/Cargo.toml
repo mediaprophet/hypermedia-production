@@ -11,12 +11,12 @@ default = []
 rayon = ["dep:rayon"]
 
 [dependencies]
-filmcraft-bitstream = { package = "bitstream-codec", path = "../bitstream-codec" }
+bitstream-codec = { path = "../bitstream-codec" }
 thiserror = "2"
 rayon = { version = "1", optional = true }
 
 [dev-dependencies]
-filmcraft-testkit = { package = "media-test-support", path = "../media-test-support" }
+media-test-support = { path = "../media-test-support" }
 
 [lints.rust]
 unsafe_code = "forbid"

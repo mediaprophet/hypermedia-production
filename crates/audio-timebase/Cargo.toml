@@ -1,0 +1,14 @@
+[package]
+name = "audio-timebase"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT OR Apache-2.0"
+description = "Deterministic audio timebases: samples, musical bars/beats, SMPTE timecode, 35mm film feet+frames, tempo maps, and transport positioning"
+
+[dependencies]
+serde = { workspace = true }
+thiserror = "2"
+
+[lints.rust]
+unsafe_code = "forbid"

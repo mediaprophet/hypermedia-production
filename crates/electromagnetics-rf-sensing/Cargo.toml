@@ -1,0 +1,13 @@
+[package]
+name = "electromagnetics-rf-sensing"
+description = "Pure-Rust Wi-Fi 802.11n/ax/be Channel State Information (CSI) spatial sensing, contactless vitals extraction, MUSIC AoA beamforming, 17-keypoint RF skeletal pose, and camera-free privacy witness verification"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"

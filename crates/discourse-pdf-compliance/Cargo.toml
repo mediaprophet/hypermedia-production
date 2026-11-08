@@ -1,0 +1,19 @@
+[package]
+name = "discourse-pdf-compliance"
+description = "Pure-Rust PDF/UA accessibility compliance, fail-closed semantic redaction, PAdES B-B signatures, AcroForm/XFDF forms, and PDF/A-PDF/X preflight"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

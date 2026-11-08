@@ -1,0 +1,69 @@
+[package]
+name = "asset-production-vibe"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Application-independent bounded Vibe adapters for shared asset production"
+
+[dependencies]
+qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a9d104c9bb69cbe8b37113a47f605d132dda56b2", default-features = false }
+vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a9d104c9bb69cbe8b37113a47f605d132dda56b2" }
+vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a9d104c9bb69cbe8b37113a47f605d132dda56b2" }
+serde_json = "1.0"
+profile-authoring = { path = "../profile-authoring" }
+drafting-geometry = { path = "../drafting-geometry" }
+color-transforms = { path = "../color-transforms" }
+raster-blend-operators = { path = "../raster-blend-operators" }
+raster-selection-morphology = { path = "../raster-selection-morphology" }
+raster-layer-mask-adapter = { path = "../raster-layer-mask-adapter" }
+terrain-brushes = { path = "../terrain-brushes" }
+timeline-editing = { path = "../timeline-editing" }
+media-isobmff = { path = "../media-isobmff" }
+audio-aac-codec = { path = "../audio-aac-codec" }
+video-h264-preview = { path = "../video-h264-preview" }
+video-prores-codec = { path = "../video-prores-codec" }
+audio-timebase = { path = "../audio-timebase" }
+terrain-erosion-solvers = { path = "../terrain-erosion-solvers" }
+vector-locus-geometry = { path = "../vector-locus-geometry" }
+vector-surface-brush = { path = "../vector-surface-brush" }
+vector-radiance-trace = { path = "../vector-radiance-trace" }
+raster-spatial-operators = { path = "../raster-spatial-operators" }
+multimodal-synthesis-schema = { path = "../multimodal-synthesis-schema" }
+manifold-bim-csg = { path = "../manifold-bim-csg" }
+kinetics-schedule-cpm = { path = "../kinetics-schedule-cpm" }
+chronicle-fiduciary-ledger = { path = "../chronicle-fiduciary-ledger" }
+surface-pbr-studio = { path = "../surface-pbr-studio" }
+kinetics-garment-draping = { path = "../kinetics-garment-draping" }
+kinetics-block-simulation = { path = "../kinetics-block-simulation" }
+discourse-scientific-matlang = { path = "../discourse-scientific-matlang" }
+locus-parametric-solver = { path = "../locus-parametric-solver" }
+layout-box-autolayout = { path = "../layout-box-autolayout" }
+discourse-pdf-compliance = { path = "../discourse-pdf-compliance" }
+layout-nodegraph-compiler = { path = "../layout-nodegraph-compiler" }
+radiance-color-grading = { path = "../radiance-color-grading" }
+chronicle-timeline-interchange = { path = "../chronicle-timeline-interchange" }
+kinetics-motion-compositor = { path = "../kinetics-motion-compositor" }
+chronicle-broadcast-containers = { path = "../chronicle-broadcast-containers" }
+chronicle-tabular-engine = { path = "../chronicle-tabular-engine" }
+layout-paged-typesetter = { path = "../layout-paged-typesetter" }
+layout-presentation-deck = { path = "../layout-presentation-deck" }
+chronicle-office-codecs = { path = "../chronicle-office-codecs" }
+discourse-academic-tex = { path = "../discourse-academic-tex" }
+vector-locus-pathops = { path = "../vector-locus-pathops" }
+vector-glyph-shaping = { path = "../vector-glyph-shaping" }
+kinetics-continuum-multiphysics = { path = "../kinetics-continuum-multiphysics" }
+radiance-camera-raw = { path = "../radiance-camera-raw" }
+surface-layered-codecs = { path = "../surface-layered-codecs" }
+geodesy-spatial-analysis = { path = "../geodesy-spatial-analysis" }
+locus-geospatial-codecs = { path = "../locus-geospatial-codecs" }
+acoustics-daw-session = { path = "../acoustics-daw-session" }
+electromagnetics-rf-sensing = { path = "../electromagnetics-rf-sensing" }
+bitstream-codec = { path = "../bitstream-codec" }
+vector-render = { package = "vector-cpu-render-adapter", path = "../vector-cpu-render-adapter" }
+anyrender = "0.14.0"
+kurbo = "0.13.1"
+peniko = "0.6"
+qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a9d104c9bb69cbe8b37113a47f605d132dda56b2" }
+png = "0.18"
+base64 = "0.22"
+bytemuck = "1.14"

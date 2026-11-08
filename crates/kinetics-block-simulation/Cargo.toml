@@ -1,0 +1,13 @@
+[package]
+name = "kinetics-block-simulation"
+description = "Categorical block-diagram simulation kernel, topological compiler, algebraic loop isolation, continuous/discrete hybrid numerical solvers (Euler, RK4, RK45), and standard block library"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = "1.0"
+
+[lints.rust]
+unsafe_code = "forbid"

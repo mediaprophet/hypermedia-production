@@ -1,0 +1,19 @@
+[package]
+name = "chronicle-tabular-engine"
+description = "Categorical tabular spreadsheet DAG recalculation engine with topological cycle detection, dynamic array spill propagation, LET/LAMBDA closures, 34 financial operators, statistical distributions, and custom number formatting"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

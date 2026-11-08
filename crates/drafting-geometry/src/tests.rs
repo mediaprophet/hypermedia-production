@@ -321,3 +321,59 @@ fn long_secant_keeps_both_intersections() {
     assert!(hits[0].0.near(Vec2::new(-2.0, 0.0), 1e-8), "{hits:?}");
     assert!(hits[1].0.near(Vec2::new(2.0, 0.0), 1e-8), "{hits:?}");
 }
+
+
+#[test]
+fn geodesic_ruler_measures_distances_and_supports_undo_redo() {
+    let mut ruler = GeodesicRuler::default();
+    ruler.add_point((0.0, 0.0), false);
+    ruler.add_point((0.0, 1.0), false);
+    let sphere = ruler.distance_km(EarthModel::PerfectSphere);
+    let realistic = ruler.distance_km(EarthModel::Wgs84);
+    assert!((sphere - 111.195080234).abs() < 1e-6);
+    assert!((realistic - 111.319490793).abs() < 1e-6);
+    assert!((ruler.angular_distance_degrees(EarthModel::Wgs84) - 1.0).abs() < 1e-6);
+
+    assert!(ruler.undo());
+    assert_eq!(ruler.point_count(), 1);
+    assert!(ruler.redo());
+    assert_eq!(ruler.point_count(), 2);
+}
+
+#[test]
+fn dxf_reader_parses_entities_without_error() {
+    let dxf_sample = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nWALLS\n10\n0.0\n20\n0.0\n30\n0.0\n11\n10.0\n21\n0.0\n31\n0.0\n0\nCIRCLE\n8\nCOLUMNS\n10\n5.0\n20\n5.0\n30\n0.0\n40\n2.5\n0\nTEXT\n8\nLABELS\n10\n1.0\n20\n1.0\n30\n0.0\n40\n0.5\n1\nRoom A\n0\nENDSEC\n0\nEOF\n";
+    let drawing = parse_dxf(dxf_sample);
+    assert!(drawing.is_ok());
+    if let Ok(d) = drawing {
+        assert_eq!(d.entities.len(), 3);
+        assert_eq!(d.layers.len(), 3);
+        assert!(d.layers.contains(&"WALLS".to_string()));
+        assert!(d.layers.contains(&"COLUMNS".to_string()));
+        assert!(d.layers.contains(&"LABELS".to_string()));
+        assert!(matches!(
+            &d.entities[0],
+            DxfEntity::Line {
+                layer,
+                start,
+                end
+            } if layer == "WALLS" && *start == [0.0, 0.0, 0.0] && *end == [10.0, 0.0, 0.0]
+        ));
+        assert!(matches!(
+            &d.entities[1],
+            DxfEntity::Circle {
+                layer,
+                center,
+                radius
+            } if layer == "COLUMNS" && *center == [5.0, 5.0, 0.0] && (*radius - 2.5).abs() < 1e-9
+        ));
+        assert!(matches!(
+            &d.entities[2],
+            DxfEntity::Text {
+                layer,
+                text,
+                ..
+            } if layer == "LABELS" && text == "Room A"
+        ));
+    }
+}

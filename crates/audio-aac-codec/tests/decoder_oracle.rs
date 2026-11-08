@@ -92,7 +92,7 @@ fn matches_ffmpeg_decoder() {
 #[test]
 fn pns_matches_ffmpeg() {
     use audio_aac_codec::AdtsHeader;
-    use filmcraft_bitstream::BitWriter;
+    use bitstream_codec::BitWriter;
     let Some(ff) = ffmpeg() else { return };
     fn ics(bw: &mut BitWriter, with_info: bool, nrg: u32) {
         bw.write_bits(100, 8); // global_gain

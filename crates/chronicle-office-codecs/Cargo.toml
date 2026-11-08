@@ -1,0 +1,15 @@
+[package]
+name = "chronicle-office-codecs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+chronicle-tabular-engine = { path = "../chronicle-tabular-engine" }
+layout-paged-typesetter = { path = "../layout-paged-typesetter" }
+layout-presentation-deck = { path = "../layout-presentation-deck" }
+
+[lints]
+workspace = true

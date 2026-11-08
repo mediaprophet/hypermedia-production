@@ -1,0 +1,12 @@
+[package]
+name = "discourse-scientific-matlang"
+description = "Categorical scientific computing language, column-major Matrix algebra with LU/QR/Cholesky/SVD/Eig, pure-Rust M-code interpreter, and headless SVG plot renderer"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
