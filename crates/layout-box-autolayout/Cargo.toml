@@ -1,0 +1,19 @@
+[package]
+name = "layout-box-autolayout"
+description = "Pure-Rust Flexbox and CSS Grid auto-layout solver with constraint propagation and fractional tracks"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

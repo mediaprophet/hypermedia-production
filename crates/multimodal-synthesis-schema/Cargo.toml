@@ -1,0 +1,20 @@
+[package]
+name = "multimodal-synthesis-schema"
+description = "Multimodal synthesis schemas: model catalog, reference decks, job feeds, 2D/3D composition stages, and splat cost estimators"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = "1.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

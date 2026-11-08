@@ -1,0 +1,13 @@
+[package]
+name = "locus-geospatial-codecs"
+description = "Pure-Rust parsers and serializers for OGC WKB, ESRI FileGDB, ASPRS LAS LiDAR, LandXML, MapInfo MIF/MID, KML, PMTiles v3, MVT, and ADS-B / AIS streaming telemetry"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"

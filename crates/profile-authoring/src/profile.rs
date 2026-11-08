@@ -1,6 +1,7 @@
 //! Metric operator parameters. Inherited geometry supplies curve tessellation.
 use crate::{AuthoringError, finite_positive};
-use poet_geometry::{Arc, Circle, PI, Polyline, TAU, Vec2};
+use drafting_geometry::{Arc, Circle, PI, Polyline, TAU, Vec2};
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Profile {
     RoundedRectangle {
@@ -24,11 +25,13 @@ pub enum Profile {
         points: Vec<[f64; 2]>,
     },
 }
+
 #[derive(Clone, Copy, Debug)]
 pub struct ProfileLimits {
     pub points: usize,
     pub scratch_bytes: usize,
 }
+
 impl Default for ProfileLimits {
     fn default() -> Self {
         Self {
@@ -37,6 +40,37 @@ impl Default for ProfileLimits {
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct ProfileDoc {
+    pub id: String,
+    pub revision: u64,
+    pub profile: Profile,
+}
+
+impl ProfileDoc {
+    /// Pure successor, never a second document store or undo journal.
+    pub fn replace(
+        &self,
+        expected_revision: u64,
+        profile: Profile,
+        limits: ProfileLimits,
+    ) -> Result<Self, AuthoringError> {
+        if self.id.is_empty() || self.id.len() > 4096 || self.revision != expected_revision {
+            return Err(AuthoringError::Invalid("profile identifier/revision mismatch"));
+        }
+        profile.points(limits)?;
+        Ok(Self {
+            id: self.id.clone(),
+            revision: self
+                .revision
+                .checked_add(1)
+                .ok_or(AuthoringError::Invalid("profile revision exhausted"))?,
+            profile,
+        })
+    }
+}
+
 fn arc(
     out: &mut Vec<Vec2>,
     center: Vec2,
@@ -55,6 +89,7 @@ fn arc(
     }
     out.extend(points);
 }
+
 impl Profile {
     pub fn points(&self, limits: ProfileLimits) -> Result<Vec<[f64; 2]>, AuthoringError> {
         if limits.points < 3 || limits.points > 65536 {
@@ -229,7 +264,7 @@ impl Profile {
                 "profile tessellation degenerate or over budget",
             ));
         }
-        if poet_geometry::shoelace(&out) <= 1e-16 {
+        if drafting_geometry::shoelace(&out) <= 1e-16 {
             return Err(AuthoringError::Invalid(
                 "profile must have positive nondegenerate CCW area",
             ));

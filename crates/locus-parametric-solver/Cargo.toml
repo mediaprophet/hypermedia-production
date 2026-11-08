@@ -1,0 +1,20 @@
+[package]
+name = "locus-parametric-solver"
+description = "2D parametric sketch constraint solver (damped Gauss-Newton / LM), autoconstrain inference, expression evaluator, and MTEXT/single-stroke CAM typography"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[dependencies]
+serde = { workspace = true }
+drafting-geometry = { path = "../drafting-geometry" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"

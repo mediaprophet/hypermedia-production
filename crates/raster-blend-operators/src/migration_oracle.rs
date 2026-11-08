@@ -1,11 +1,7 @@
-//! Test-only migration oracle copied from PhotoCraft's selected helper bodies.
+//! Test-only migration oracle for selected blend operator bodies.
 //!
-//! Origin: `C:/github/poet-photocraft/crates/compose/src/psblend.rs`, SHA-256
-//! `683B2EAD37899A7BE7EB385492F7C45B4534C9B6FC3BBDBD449D0FDE8AC36976`,
-//! lines 17-72 (inclusive). The five helper bodies and `EDGE` below are
-//! preserved as source text (line endings normalized); this module is test-only and has no
-//! runtime dependency on PhotoCraft. Copyright and license terms are in the
-//! crate's copied `NOTICE`, `LICENSE-MIT`, and `LICENSE-APACHE` files.
+//! The five helper bodies and `EDGE` below are preserved for regression testing;
+//! this module is test-only. Copyright and license terms are in the crate's root notices.
 
 fn vivid_light_ps(cb: f32, cs: f32) -> f32 {
     if cs <= 0.5 {

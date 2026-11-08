@@ -1,0 +1,12 @@
+[package]
+name = "kinetics-garment-draping"
+description = "Categorical garment mechanics, nonlinear orthotropic membrane & bending simulation, Vertex Block Descent, and Newton-PCG solver"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"

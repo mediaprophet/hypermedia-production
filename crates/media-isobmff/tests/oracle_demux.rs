@@ -278,6 +278,6 @@ fn specific_properties() {
 fn generate_fixtures() {
     for name in all_fixture_names() {
         let out = [fixture_dir().join(name)];
-        filmcraft_testkit::fixtures::generate_and_report(&format!("isobmff/{name}"), &out, || fixture(name));
+        media_test_support::fixtures::generate_and_report(&format!("isobmff/{name}"), &out, || fixture(name));
     }
 }

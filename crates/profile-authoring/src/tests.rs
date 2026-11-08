@@ -1,9 +1,46 @@
-//! Adapted from current Poet spatial-authoring source tests; see provenance/test-adaptations.md.
-use super::{AuthoringError, Profile, ProfileLimits};
+//! Authoring unit tests for profiles, assemblies, representation frames, and geometry sweeps.
+use super::*;
+use qualia_core_db::{container_10d::MaterialRecord, render::assets::Mesh};
+
+fn triangle() -> Mesh {
+    Mesh {
+        positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
+        triangles: vec![[0, 1, 2]],
+        min: [0.0; 3],
+        max: [1.0, 1.0, 0.0],
+    }
+}
+
+fn part(key: &str, id: u64) -> AuthoringPart {
+    let mut material = MaterialRecord::legacy_default();
+    material.id = 7;
+    AuthoringPart {
+        key: key.into(),
+        parent: None,
+        semantic_id: id,
+        mesh: triangle(),
+        material,
+        trs: Transform::default(),
+        normals: None,
+        uv0: None,
+    }
+}
+
+fn volume(mesh: &Mesh) -> f64 {
+    use drafting_geometry::Vec3;
+    let mut sum = 0.0;
+    for t in &mesh.triangles {
+        let p = t.map(|i| {
+            let p = mesh.positions[i as usize];
+            Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64)
+        });
+        sum += p[0].dot(p[1].cross(p[2])) / 6.0;
+    }
+    sum
+}
 
 #[test]
 fn malformed_profiles_are_rejected() {
-    // Preserved profile-only cases from malformed_profiles_and_primitive_budgets_are_rejected.
     let invalid = Profile::OpenChannel {
         width: 1.0,
         height: 0.2,
@@ -12,24 +49,43 @@ fn malformed_profiles_are_rejected() {
         segments: 4,
     };
     assert!(invalid.points(ProfileLimits::default()).is_err());
-    let p = Profile::Circle { radius: f64::NAN, segments: 16 };
+    let p = Profile::Circle {
+        radius: f64::NAN,
+        segments: 16,
+    };
     assert!(p.points(ProfileLimits::default()).is_err());
 }
 
 #[test]
 fn changed_profile_parameters_change_section_dimensions_and_area() {
-    // Same profile inputs as changed_profile_parameters_change_real_geometry;
-    // inspect the extracted section, leaving mesh/sweep tests with Core's caller.
     let original = Profile::RoundedRectangle {
-        width: 1.0, height: 0.3, radius: 0.05, segments: 8,
-    }.points(ProfileLimits::default()).unwrap();
+        width: 1.0,
+        height: 0.3,
+        radius: 0.05,
+        segments: 8,
+    }
+    .points(ProfileLimits::default())
+    .unwrap();
     let edited = Profile::RoundedRectangle {
-        width: 1.2, height: 0.3, radius: 0.05, segments: 8,
-    }.points(ProfileLimits::default()).unwrap();
-    let xmax = |points: &[[f64; 2]]| points.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max);
+        width: 1.2,
+        height: 0.3,
+        radius: 0.05,
+        segments: 8,
+    }
+    .points(ProfileLimits::default())
+    .unwrap();
+    let xmax = |points: &[[f64; 2]]| {
+        points
+            .iter()
+            .map(|p| p[0])
+            .fold(f64::NEG_INFINITY, f64::max)
+    };
     let area = |points: &[[f64; 2]]| {
-        let vertices: Vec<_> = points.iter().map(|p| poet_geometry::Vec2::new(p[0], p[1])).collect();
-        poet_geometry::shoelace(&vertices)
+        let vertices: Vec<_> = points
+            .iter()
+            .map(|p| drafting_geometry::Vec2::new(p[0], p[1]))
+            .collect();
+        drafting_geometry::shoelace(&vertices)
     };
     assert!(xmax(&edited) > xmax(&original));
     assert!(original.len() > 8);
@@ -39,14 +95,178 @@ fn changed_profile_parameters_change_section_dimensions_and_area() {
 
 #[test]
 fn open_channel_section_retains_wall_void_and_refuses_caller_budget() {
-    // Section inputs/analytic area from concave_channel_caps_preserve_wall_void_and_volume.
     let profile = Profile::OpenChannel {
-        width: 0.4, height: 0.2, wall: 0.02, corner_radius: 0.0, segments: 4,
+        width: 0.4,
+        height: 0.2,
+        wall: 0.02,
+        corner_radius: 0.0,
+        segments: 4,
     };
     let points = profile.points(ProfileLimits::default()).unwrap();
-    let vertices: Vec<_> = points.iter().map(|p| poet_geometry::Vec2::new(p[0], p[1])).collect();
+    let vertices: Vec<_> = points
+        .iter()
+        .map(|p| drafting_geometry::Vec2::new(p[0], p[1]))
+        .collect();
     let expected_area = 0.4 * 0.2 - (0.4 - 0.04) * (0.2 - 0.02);
-    assert!((poet_geometry::shoelace(&vertices) - expected_area).abs() < 1e-12);
-    // Additional extraction-boundary assertion: refuse before tessellation allocation.
-    assert!(matches!(profile.points(ProfileLimits { points: 3, scratch_bytes: 64 }), Err(AuthoringError::Budget(_))));
+    assert!((drafting_geometry::shoelace(&vertices) - expected_area).abs() < 1e-12);
+    assert!(matches!(
+        profile.points(ProfileLimits {
+            points: 3,
+            scratch_bytes: 64,
+        }),
+        Err(AuthoringError::Budget(_))
+    ));
+}
+
+#[test]
+fn concave_channel_caps_preserve_wall_void_and_volume() {
+    let profile = Profile::OpenChannel {
+        width: 0.4,
+        height: 0.2,
+        wall: 0.02,
+        corner_radius: 0.0,
+        segments: 4,
+    };
+    let mesh = profile_sweep(
+        &profile,
+        &[[0.0; 3], [0.0, 0.0, 2.0]],
+        true,
+        GeometryLimits::default(),
+    )
+    .unwrap();
+    let section = 0.4 * 0.2 - (0.4 - 0.04) * (0.2 - 0.02);
+    assert!((volume(&mesh) - section * 2.0).abs() < 1e-7);
+    assert!((mesh.min[0] + 0.2).abs() < 1e-6 && (mesh.max[1] - 0.1).abs() < 1e-6);
+    let mut edges = std::collections::BTreeMap::new();
+    for t in &mesh.triangles {
+        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
+            *edges.entry((a.min(b), a.max(b))).or_insert(0) += 1;
+        }
+    }
+    assert!(edges.values().all(|n| *n == 2));
+}
+
+#[test]
+fn rounded_profile_edit_changes_real_geometry_and_rejects_stale_revision() {
+    let p = Profile::RoundedRectangle {
+        width: 1.0,
+        height: 0.3,
+        radius: 0.05,
+        segments: 8,
+    };
+    let document = ProfileDoc {
+        id: "profile/rail".into(),
+        revision: 4,
+        profile: p.clone(),
+    };
+    let changed = Profile::RoundedRectangle {
+        width: 1.2,
+        height: 0.3,
+        radius: 0.05,
+        segments: 8,
+    };
+    let next = document
+        .replace(4, changed.clone(), ProfileLimits::default())
+        .unwrap();
+    assert_eq!(next.revision, 5);
+    assert!(
+        document
+            .replace(3, changed, ProfileLimits::default())
+            .is_err()
+    );
+    let original = profile_sweep(
+        &p,
+        &[[0.0; 3], [0.0, 0.0, 1.0]],
+        true,
+        GeometryLimits::default(),
+    )
+    .unwrap();
+    let edited = profile_sweep(
+        &next.profile,
+        &[[0.0; 3], [0.0, 0.0, 1.0]],
+        true,
+        GeometryLimits::default(),
+    )
+    .unwrap();
+    assert!(edited.max[0] > original.max[0]);
+    assert!(original.positions.len() > 8);
+}
+
+#[test]
+fn parent_relative_parts_retain_semantics_material_ranges_and_flat_frames() {
+    let mut parent = part("frame", 11);
+    parent.trs.translation = [1.0, 0.0, 0.0];
+    let mut child = part("channel", 22);
+    child.parent = Some("frame".into());
+    child.trs.translation = [0.0, 2.0, 0.0];
+    let compiled = compile_assembly(&[child, parent], AssemblyLimits::default()).unwrap();
+    assert_eq!(compiled.mesh.positions[0], [1.0, 2.0, 0.0]);
+    assert_eq!(compiled.parts[0].semantic_id, 22);
+    assert_eq!(compiled.ranges[1].semantic_id, 11);
+    assert_eq!(compiled.normals.len(), compiled.mesh.positions.len());
+    assert_eq!(compiled.uv0.len(), compiled.mesh.positions.len());
+    assert_eq!(compiled.materials.len(), 1);
+    assert!(compiled.normals.iter().all(|n| *n == [0.0, 0.0, 1.0]));
+}
+
+#[test]
+fn authored_normals_use_full_world_inverse_transpose_and_uvs_survive() {
+    let mut parent = part("frame", 11);
+    parent.trs.scale = [2.0, 1.0, 0.5];
+    let mut child = part("channel", 22);
+    child.parent = Some("frame".into());
+    child.trs.rotation = [0.4, 0.7, 0.3];
+    child.normals = Some(vec![[0.0, 0.0, 1.0]; 3]);
+    child.uv0 = Some(vec![[0.2, 0.3], [0.7, 0.3], [0.2, 0.9]]);
+    let compiled = compile_assembly(&[child, parent], AssemblyLimits::default()).unwrap();
+    let p = &compiled.mesh.positions;
+    let n = compiled.normals[0];
+    for i in [1, 2] {
+        let dot: f64 = (0..3)
+            .map(|a| (p[i][a] - p[0][a]) as f64 * n[a] as f64)
+            .sum();
+        assert!(dot.abs() < 1e-6);
+    }
+    assert_eq!(compiled.uv0[1], [0.7, 0.3]);
+}
+
+#[test]
+fn invalid_assemblies_and_expanded_output_budget_fail_without_mutating_inputs() {
+    let mut a = part("a", 1);
+    let mut b = part("b", 2);
+    a.parent = Some("b".into());
+    b.parent = Some("a".into());
+    assert!(compile_assembly(&[a.clone(), b.clone()], AssemblyLimits::default()).is_err());
+    a.parent = None;
+    b.parent = None;
+    b.semantic_id = 1;
+    assert!(compile_assembly(&[a.clone(), b], AssemblyLimits::default()).is_err());
+    let before = a.mesh.clone();
+    let mut tiny = AssemblyLimits::default();
+    tiny.vertices = 2;
+    assert!(compile_assembly(&[a.clone()], tiny).is_err());
+    assert_eq!(a.mesh, before);
+    a.trs.scale = [1.0, 0.0, 1.0];
+    assert!(compile_assembly(&[a], AssemblyLimits::default()).is_err());
+}
+
+#[test]
+fn malformed_profiles_and_primitive_budgets_are_rejected() {
+    let invalid = Profile::OpenChannel {
+        width: 1.0,
+        height: 0.2,
+        wall: 0.3,
+        corner_radius: 0.01,
+        segments: 4,
+    };
+    assert!(invalid.points(ProfileLimits::default()).is_err());
+    let p = Profile::Circle {
+        radius: f64::NAN,
+        segments: 16,
+    };
+    assert!(p.points(ProfileLimits::default()).is_err());
+    let mut tiny = GeometryLimits::default();
+    tiny.vertices = 2;
+    assert!(sphere(1.0, 16, 32, tiny).is_err());
+    assert!(torus(1.0, 0.2, 32, 16, tiny).is_err());
 }

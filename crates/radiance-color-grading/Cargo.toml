@@ -1,0 +1,16 @@
+[package]
+name = "radiance-color-grading"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT OR Apache-2.0"
+description = "Categorical film color science, color space transforms (Rec.709, Rec.2020, ACEScc/cct/cg), ASC CDL, color wheels, 3D LUT parser/interpolation, and real-time video scopes"
+
+[dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[lints.rust]
+unsafe_code = "forbid"

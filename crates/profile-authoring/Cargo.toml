@@ -7,8 +7,8 @@ license = "MIT"
 rust-version = "1.90"
 
 [dependencies]
-# Preserve inherited Rust imports and source bytes during the functional rename.
-poet-geometry = { package = "drafting-geometry", path = "../drafting-geometry" }
+drafting-geometry = { path = "../drafting-geometry" }
+qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a9d104c9bb69cbe8b37113a47f605d132dda56b2", default-features = false }
 
 [lints.rust]
 unsafe_code = "forbid"
