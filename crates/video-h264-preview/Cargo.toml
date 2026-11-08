@@ -4,14 +4,17 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
 license = "MIT"
-description = "Bounded MP4/H.264 preview adapter over existing QualiaDB and FilmCraft codecs"
+description = "Bounded MP4/MOV preview and timeline inspection adapter over H.264 and ProRes codecs"
 
 [dependencies]
 mp4 = "=0.14.0"
 media-isobmff = { path = "../media-isobmff" }
 video-h264-codec = { path = "../video-h264-codec", default-features = false }
+video-prores-codec = { path = "../video-prores-codec" }
 bitstream-codec = { path = "../bitstream-codec" }
 color-transforms = { path = "../color-transforms" }
+serde = { workspace = true }
+thiserror = "2"
 
 [lints.rust]
 unsafe_code = "forbid"

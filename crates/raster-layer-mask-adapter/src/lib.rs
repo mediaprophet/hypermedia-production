@@ -1,8 +1,19 @@
 #![forbid(unsafe_code)]
 
-//! Checked conversion adapter between QualiaDB's current U8 layer-mask field and
-//! the source-derived f32 selection-morphology operations. This owns no image
-//! document, selection identity, persistence, host authority, or history.
+//! Checked conversion adapter between QualiaDB's layer-mask operations,
+//! digital painting brush dynamics, and selection-morphology pipelines.
+//!
+//! Grounded in international human rights instruments (UDHR Articles 12, 19, 27; ICESCR Article 15)
+//! and Informatics Fiduciary duties.
+
+pub mod brush;
+pub mod masks;
+pub mod mixer;
+pub mod ontology;
+
+pub use brush::{BrushSettings, ColorDynamics, Control, Dab, DualBrush, Dynamic, Scattering, ShapeDynamics, StrokePoint, generate_dabs};
+pub use masks::{BlendIf, BlendRange, KnockoutMode, evaluate_knockout, feather_mask, propagate_clipping_mask_alpha, scale_mask_density};
+pub use mixer::{MixerSettings, MixerState, mix_dab};
 
 use raster_selection_morphology::{
     Limits as MorphologyLimits, Operation, Plan as MorphologyPlan, PreflightError,

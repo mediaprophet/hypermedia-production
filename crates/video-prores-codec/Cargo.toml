@@ -1,0 +1,19 @@
+[package]
+name = "video-prores-codec"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT OR Apache-2.0"
+description = "Clean-room Apple ProRes 422 / 4444 / XQ codec and QuickTime MOV container support (SMPTE RDD 36)"
+
+[dependencies]
+bitstream-codec = { path = "../bitstream-codec" }
+media-isobmff = { path = "../media-isobmff" }
+thiserror = "2"
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+media-test-support = { path = "../media-test-support" }
+
+[lints.rust]
+unsafe_code = "forbid"

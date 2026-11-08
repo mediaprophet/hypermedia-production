@@ -1,0 +1,18 @@
+[package]
+name = "terrain-erosion-solvers"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT OR Apache-2.0"
+description = "Pure mathematical 2D heightfield geomorphology, hydraulic droplet erosion, thermal relaxation, drainage routing, snow transport, lacustrine fill, impact cratering, and stratigraphic terrace solvers"
+
+[dependencies]
+serde = { workspace = true, optional = true }
+thiserror = "2"
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[lints.rust]
+unsafe_code = "forbid"

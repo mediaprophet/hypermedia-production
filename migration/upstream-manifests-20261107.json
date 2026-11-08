@@ -1,0 +1,1254 @@
+{
+  "date": "2026-11-07",
+  "scope": "Current public manifest inventory; candidate counterparts of historically consolidated source suites. Not a claim of identity with the old source-hash snapshots or implementation qualification.",
+  "repositories": [
+    {
+      "repository": "storytold/vectorcraft",
+      "url": "https://github.com/storytold/vectorcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "924a1a68dc2affef22cf5e1c35b6fd62d3d0e3f4",
+      "packages": [
+        {
+          "name": "vectorcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "vectorcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "vectorcraft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "vectorcraft-pathops",
+          "path": "crates/pathops"
+        },
+        {
+          "name": "vectorcraft-brush",
+          "path": "crates/brush"
+        },
+        {
+          "name": "vectorcraft-trace",
+          "path": "crates/trace"
+        },
+        {
+          "name": "vectorcraft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "vectorcraft-effects",
+          "path": "crates/effects"
+        },
+        {
+          "name": "vectorcraft-three-d",
+          "path": "crates/three-d"
+        },
+        {
+          "name": "vectorcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "vectorcraft-svg",
+          "path": "crates/svg"
+        },
+        {
+          "name": "vectorcraft-pdf",
+          "path": "crates/pdf"
+        },
+        {
+          "name": "vectorcraft-format",
+          "path": "crates/format"
+        },
+        {
+          "name": "vectorcraft-tools",
+          "path": "crates/tools"
+        },
+        {
+          "name": "vectorcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "vectorcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "vectorcraft-mcp",
+          "path": "crates/mcp"
+        },
+        {
+          "name": "vectorcraft-testkit",
+          "path": "crates/testkit"
+        },
+        {
+          "name": "vectorcraft-cad",
+          "path": "crates/cad"
+        },
+        {
+          "name": "vectorcraft-eps",
+          "path": "crates/eps"
+        },
+        {
+          "name": "vectorcraft-metafile",
+          "path": "crates/metafile"
+        },
+        {
+          "name": "vectorcraft-plugins",
+          "path": "crates/plugins"
+        },
+        {
+          "name": "vectorcraft-affinity",
+          "path": "crates/affinity"
+        },
+        {
+          "name": "vectorcraft-scriptcheck",
+          "path": "crates/scriptcheck"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/effectcraft",
+      "url": "https://github.com/storytold/effectcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "abb2256c2b4608e211b576952d138c9886aed787",
+      "packages": [
+        {
+          "name": "effectcraft-time",
+          "path": "crates/time"
+        },
+        {
+          "name": "effectcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "effectcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "effectcraft-raster",
+          "path": "crates/raster"
+        },
+        {
+          "name": "effectcraft-path",
+          "path": "crates/path"
+        },
+        {
+          "name": "effectcraft-keyframe",
+          "path": "crates/keyframe"
+        },
+        {
+          "name": "effectcraft-project",
+          "path": "crates/project"
+        },
+        {
+          "name": "effectcraft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "effectcraft-effects",
+          "path": "crates/effects"
+        },
+        {
+          "name": "effectcraft-track",
+          "path": "crates/track"
+        },
+        {
+          "name": "effectcraft-segment",
+          "path": "crates/segment"
+        },
+        {
+          "name": "effectcraft-sam2",
+          "path": "crates/sam2"
+        },
+        {
+          "name": "effectcraft-model",
+          "path": "crates/model"
+        },
+        {
+          "name": "effectcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "effectcraft-gpu",
+          "path": "crates/gpu"
+        },
+        {
+          "name": "effectcraft-media",
+          "path": "crates/media"
+        },
+        {
+          "name": "effectcraft-export",
+          "path": "crates/export"
+        },
+        {
+          "name": "effectcraft-expr",
+          "path": "crates/expr"
+        },
+        {
+          "name": "effectcraft-lottie",
+          "path": "crates/lottie"
+        },
+        {
+          "name": "effectcraft-interchange",
+          "path": "crates/interchange"
+        },
+        {
+          "name": "effectcraft-pdf",
+          "path": "crates/pdf"
+        },
+        {
+          "name": "effectcraft-psd",
+          "path": "crates/psd"
+        },
+        {
+          "name": "effectcraft-aep",
+          "path": "crates/aep"
+        },
+        {
+          "name": "effectcraft-vp9enc",
+          "path": "crates/vp9enc"
+        },
+        {
+          "name": "effectcraft-svg",
+          "path": "crates/svg"
+        },
+        {
+          "name": "effectcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "effectcraft-host",
+          "path": "crates/host"
+        },
+        {
+          "name": "effectcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "effectcraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "effectcraft-opusenc",
+          "path": "crates/opusenc"
+        },
+        {
+          "name": "effectcraft-script",
+          "path": "crates/script"
+        },
+        {
+          "name": "effectcraft-hevcenc",
+          "path": "crates/hevcenc"
+        },
+        {
+          "name": "effectcraft-av1enc",
+          "path": "crates/av1enc"
+        },
+        {
+          "name": "effectcraft-plugin",
+          "path": "crates/plugin"
+        },
+        {
+          "name": "effectcraft-helper-host",
+          "path": "crates/helper-host"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/soundcraft",
+      "url": "https://github.com/storytold/soundcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "5eb04d035dddfc97f915d8ca77a617d81bbbb78f",
+      "packages": [
+        {
+          "name": "soundcraft-time",
+          "path": "crates/time"
+        },
+        {
+          "name": "soundcraft-audio-io",
+          "path": "crates/audio-io"
+        },
+        {
+          "name": "soundcraft-midi",
+          "path": "crates/midi"
+        },
+        {
+          "name": "soundcraft-video",
+          "path": "crates/video"
+        },
+        {
+          "name": "soundcraft-dsp",
+          "path": "crates/dsp"
+        },
+        {
+          "name": "soundcraft-clap-host",
+          "path": "crates/clap-host"
+        },
+        {
+          "name": "soundcraft-vst3-host",
+          "path": "crates/vst3-host"
+        },
+        {
+          "name": "soundcraft-au-host",
+          "path": "crates/au-host"
+        },
+        {
+          "name": "soundcraft-model",
+          "path": "crates/model"
+        },
+        {
+          "name": "soundcraft-mix",
+          "path": "crates/mix"
+        },
+        {
+          "name": "soundcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "soundcraft-playback",
+          "path": "crates/playback"
+        },
+        {
+          "name": "soundcraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "soundcraft-ui-egui",
+          "path": "crates/ui-egui"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/materialcraft",
+      "url": "https://github.com/storytold/materialcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "03d0173de0b8095daa7df3b004e859c68b94ad2b",
+      "packages": [
+        {
+          "name": "materialcraft-core",
+          "path": "crates/core"
+        },
+        {
+          "name": "materialcraft-image",
+          "path": "crates/image"
+        },
+        {
+          "name": "materialcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "materialcraft-nodes",
+          "path": "crates/nodes"
+        },
+        {
+          "name": "materialcraft-eval",
+          "path": "crates/eval"
+        },
+        {
+          "name": "materialcraft-formats",
+          "path": "crates/formats"
+        },
+        {
+          "name": "materialcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "materialcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "materialcraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "materialcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "egui-phosphor",
+          "path": "vendor/egui-phosphor"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/texturecraft",
+      "url": "https://github.com/storytold/texturecraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "02b5a6dcc4a69a6b9152024230119957586ab4de",
+      "packages": [
+        {
+          "name": "texturecraft-core",
+          "path": "crates/core"
+        },
+        {
+          "name": "texturecraft-texel",
+          "path": "crates/texel"
+        },
+        {
+          "name": "texturecraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "texturecraft-bake",
+          "path": "crates/bake"
+        },
+        {
+          "name": "texturecraft-paint",
+          "path": "crates/paint"
+        },
+        {
+          "name": "texturecraft-formats",
+          "path": "crates/formats"
+        },
+        {
+          "name": "texturecraft-compose",
+          "path": "crates/compose"
+        },
+        {
+          "name": "texturecraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "texturecraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "texturecraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "texturecraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "egui-phosphor",
+          "path": "vendor/egui-phosphor"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/designcraft",
+      "url": "https://github.com/storytold/designcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "dbf070673bb650a0be68edc7e8aa530aa4a2895c",
+      "packages": [
+        {
+          "name": "designcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "designcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "designcraft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "designcraft-fonts",
+          "path": "crates/fonts"
+        },
+        {
+          "name": "designcraft-compose",
+          "path": "crates/compose"
+        },
+        {
+          "name": "designcraft-images",
+          "path": "crates/images"
+        },
+        {
+          "name": "designcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "designcraft-pdf",
+          "path": "crates/pdf"
+        },
+        {
+          "name": "designcraft-idml",
+          "path": "crates/idml"
+        },
+        {
+          "name": "designcraft-epub",
+          "path": "crates/epub"
+        },
+        {
+          "name": "designcraft-pptx",
+          "path": "crates/pptx"
+        },
+        {
+          "name": "designcraft-textimport",
+          "path": "crates/textimport"
+        },
+        {
+          "name": "designcraft-format",
+          "path": "crates/format"
+        },
+        {
+          "name": "designcraft-tools",
+          "path": "crates/tools"
+        },
+        {
+          "name": "designcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "designcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "designcraft-mcp",
+          "path": "crates/mcp"
+        },
+        {
+          "name": "designcraft-testkit",
+          "path": "crates/testkit"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/figcraft",
+      "url": "https://github.com/storytold/figcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "c9b915a69bbbb3f9d30127338487a86b23c92782",
+      "packages": [
+        {
+          "name": "figcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "figcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "figcraft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "figcraft-layout",
+          "path": "crates/layout"
+        },
+        {
+          "name": "figcraft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "figcraft-pathops",
+          "path": "crates/pathops"
+        },
+        {
+          "name": "figcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "figcraft-svg",
+          "path": "crates/svg"
+        },
+        {
+          "name": "figcraft-pdf",
+          "path": "crates/pdf"
+        },
+        {
+          "name": "figcraft-vectordrawable",
+          "path": "crates/vectordrawable"
+        },
+        {
+          "name": "figcraft-format",
+          "path": "crates/format"
+        },
+        {
+          "name": "figcraft-tools",
+          "path": "crates/tools"
+        },
+        {
+          "name": "figcraft-collab",
+          "path": "crates/collab"
+        },
+        {
+          "name": "figcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "figcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "figcraft-mcp",
+          "path": "crates/mcp"
+        },
+        {
+          "name": "figcraft-collab-net",
+          "path": "crates/collab-net"
+        },
+        {
+          "name": "figcraft-plugin",
+          "path": "crates/plugin"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/lightcraft",
+      "url": "https://github.com/storytold/lightcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "8549d6167e401044c9c4737bb4bffc2d6ed5b572",
+      "packages": [
+        {
+          "name": "lightcraft-denoise-core",
+          "path": "crates/denoise-core"
+        },
+        {
+          "name": "lightcraft-denoise",
+          "path": "crates/denoise"
+        },
+        {
+          "name": "lightcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "lightcraft-faces",
+          "path": "crates/faces"
+        },
+        {
+          "name": "lightcraft-sysmem",
+          "path": "crates/sysmem"
+        },
+        {
+          "name": "lightcraft-wincolor",
+          "path": "crates/wincolor"
+        },
+        {
+          "name": "lightcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "lightcraft-raster",
+          "path": "crates/raster"
+        },
+        {
+          "name": "lightcraft-tiff",
+          "path": "crates/tiff"
+        },
+        {
+          "name": "lightcraft-raw",
+          "path": "crates/raw"
+        },
+        {
+          "name": "lightcraft-codecs",
+          "path": "crates/codecs"
+        },
+        {
+          "name": "lightcraft-meta",
+          "path": "crates/meta"
+        },
+        {
+          "name": "lightcraft-develop",
+          "path": "crates/develop"
+        },
+        {
+          "name": "lightcraft-film",
+          "path": "crates/film"
+        },
+        {
+          "name": "lightcraft-lensdb",
+          "path": "crates/lensdb"
+        },
+        {
+          "name": "lightcraft-inpaint",
+          "path": "crates/inpaint"
+        },
+        {
+          "name": "lightcraft-scenes",
+          "path": "crates/scenes"
+        },
+        {
+          "name": "lightcraft-pipeline",
+          "path": "crates/pipeline"
+        },
+        {
+          "name": "lightcraft-gpu",
+          "path": "crates/gpu"
+        },
+        {
+          "name": "lightcraft-catalog",
+          "path": "crates/catalog"
+        },
+        {
+          "name": "lightcraft-preview",
+          "path": "crates/preview"
+        },
+        {
+          "name": "lightcraft-merge",
+          "path": "crates/merge"
+        },
+        {
+          "name": "lightcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "lightcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "lightcraft-mcp",
+          "path": "crates/mcp"
+        },
+        {
+          "name": "lightcraft-fetch",
+          "path": "crates/fetch"
+        },
+        {
+          "name": "lightcraft-heif",
+          "path": "crates/heif"
+        },
+        {
+          "name": "lightcraft-segment",
+          "path": "crates/segment"
+        },
+        {
+          "name": "lightcraft-geocode",
+          "path": "crates/geocode"
+        },
+        {
+          "name": "lightcraft-slideshow",
+          "path": "crates/slideshow"
+        },
+        {
+          "name": "lightcraft-testkit",
+          "path": "crates/testkit"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/craft-libs",
+      "url": "https://github.com/storytold/craft-libs/blob/main/Cargo.toml",
+      "manifest_git_blob": "9c7b8ef2b441bddc990e0cc08d55f1f4b04d07f5",
+      "packages": [
+        {
+          "name": "craft-platform",
+          "path": "crates/platform"
+        },
+        {
+          "name": "craft-ai-core",
+          "path": "crates/ai-core"
+        },
+        {
+          "name": "craft-pdf",
+          "path": "crates/pdf"
+        },
+        {
+          "name": "craft-plate-test",
+          "path": "crates/plate-test"
+        },
+        {
+          "name": "craft-atomic",
+          "path": "crates/atomic"
+        },
+        {
+          "name": "craft-cms",
+          "path": "crates/cms"
+        },
+        {
+          "name": "craft-crw",
+          "path": "crates/crw"
+        },
+        {
+          "name": "craft-dialogs",
+          "path": "crates/dialogs"
+        },
+        {
+          "name": "craft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "craft-docpath",
+          "path": "crates/docpath"
+        },
+        {
+          "name": "craft-ecproj-format",
+          "path": "crates/ecproj-format"
+        },
+        {
+          "name": "craft-font-catalog",
+          "path": "crates/font-catalog"
+        },
+        {
+          "name": "craft-font-manager",
+          "path": "crates/font-manager"
+        },
+        {
+          "name": "craft-font-store",
+          "path": "crates/font-store"
+        },
+        {
+          "name": "craft-fonts-build",
+          "path": "crates/fonts-build"
+        },
+        {
+          "name": "craft-i18n",
+          "path": "crates/i18n"
+        },
+        {
+          "name": "craft-jpeg",
+          "path": "crates/jpeg"
+        },
+        {
+          "name": "craft-keymap",
+          "path": "crates/keymap"
+        },
+        {
+          "name": "craft-audio",
+          "path": "crates/audio"
+        },
+        {
+          "name": "craft-media",
+          "path": "crates/media"
+        },
+        {
+          "name": "craft-media-testkit",
+          "path": "crates/media-testkit"
+        },
+        {
+          "name": "craft-menu",
+          "path": "crates/menu"
+        },
+        {
+          "name": "craft-pcraft-format",
+          "path": "crates/pcraft-format"
+        },
+        {
+          "name": "craft-prepress",
+          "path": "crates/prepress"
+        },
+        {
+          "name": "craft-print",
+          "path": "crates/print"
+        },
+        {
+          "name": "craft-proof",
+          "path": "crates/proof"
+        },
+        {
+          "name": "craft-quit",
+          "path": "crates/quit"
+        },
+        {
+          "name": "craft-settings",
+          "path": "crates/settings"
+        },
+        {
+          "name": "craft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "craft-ui",
+          "path": "crates/ui"
+        },
+        {
+          "name": "craft-update",
+          "path": "crates/update"
+        },
+        {
+          "name": "craft-vectorcraft-format",
+          "path": "crates/vectorcraft-format"
+        },
+        {
+          "name": "craft-web-api",
+          "path": "crates/web-api"
+        },
+        {
+          "name": "craft-window",
+          "path": "crates/window"
+        },
+        {
+          "name": "craft-web-host",
+          "path": "crates/web-host"
+        },
+        {
+          "name": "krilla",
+          "path": "vendor/krilla"
+        },
+        {
+          "name": "hayro",
+          "path": "vendor/hayro"
+        },
+        {
+          "name": "hayro-interpret",
+          "path": "vendor/hayro-interpret"
+        },
+        {
+          "name": "hayro-syntax",
+          "path": "vendor/hayro-syntax"
+        },
+        {
+          "name": "hayro-jbig2",
+          "path": "vendor/hayro-jbig2"
+        },
+        {
+          "name": "hayro-cmap",
+          "path": "vendor/hayro-cmap"
+        },
+        {
+          "name": "hayro-postscript",
+          "path": "vendor/hayro-postscript"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/photocraft",
+      "url": "https://github.com/storytold/photocraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "e01bcf175abc56b6512d1a46d10cd1c13a7c940c",
+      "packages": [
+        {
+          "name": "photocraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "photocraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "photocraft-cms",
+          "path": "crates/cms"
+        },
+        {
+          "name": "photocraft-raster",
+          "path": "crates/raster"
+        },
+        {
+          "name": "photocraft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "photocraft-ops",
+          "path": "crates/ops"
+        },
+        {
+          "name": "photocraft-psd",
+          "path": "crates/psd"
+        },
+        {
+          "name": "photocraft-codecs",
+          "path": "crates/codecs"
+        },
+        {
+          "name": "photocraft-raw",
+          "path": "crates/raw"
+        },
+        {
+          "name": "photocraft-affinity",
+          "path": "crates/affinity"
+        },
+        {
+          "name": "photocraft-compose",
+          "path": "crates/compose"
+        },
+        {
+          "name": "photocraft-gpu",
+          "path": "crates/gpu"
+        },
+        {
+          "name": "photocraft-paint",
+          "path": "crates/paint"
+        },
+        {
+          "name": "photocraft-algo",
+          "path": "crates/algo"
+        },
+        {
+          "name": "photocraft-io",
+          "path": "crates/io"
+        },
+        {
+          "name": "photocraft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "photocraft-vector",
+          "path": "crates/vector"
+        },
+        {
+          "name": "photocraft-format",
+          "path": "crates/format"
+        },
+        {
+          "name": "photocraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "photocraft-plugins",
+          "path": "crates/plugins"
+        },
+        {
+          "name": "photocraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "photocraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "photocraft-testkit",
+          "path": "crates/testkit"
+        },
+        {
+          "name": "photocraft-tablet",
+          "path": "crates/tablet"
+        },
+        {
+          "name": "photocraft-ipp",
+          "path": "crates/ipp"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/filmcraft",
+      "url": "https://github.com/storytold/filmcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "d7f36980e1ae977198b694fa686587a1c6ee6419",
+      "packages": [
+        {
+          "name": "filmcraft-time",
+          "path": "crates/time"
+        },
+        {
+          "name": "filmcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "filmcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "filmcraft-bitstream",
+          "path": "crates/bitstream"
+        },
+        {
+          "name": "filmcraft-isobmff",
+          "path": "crates/isobmff"
+        },
+        {
+          "name": "filmcraft-avi",
+          "path": "crates/avi"
+        },
+        {
+          "name": "filmcraft-matroska",
+          "path": "crates/matroska"
+        },
+        {
+          "name": "filmcraft-mxf",
+          "path": "crates/mxf"
+        },
+        {
+          "name": "filmcraft-cfb",
+          "path": "crates/cfb"
+        },
+        {
+          "name": "filmcraft-mpegts",
+          "path": "crates/mpegts"
+        },
+        {
+          "name": "filmcraft-mpeg2v",
+          "path": "crates/mpeg2v"
+        },
+        {
+          "name": "filmcraft-ac3",
+          "path": "crates/ac3"
+        },
+        {
+          "name": "filmcraft-mpa",
+          "path": "crates/mpa"
+        },
+        {
+          "name": "filmcraft-ogg",
+          "path": "crates/ogg"
+        },
+        {
+          "name": "filmcraft-h264",
+          "path": "crates/h264"
+        },
+        {
+          "name": "filmcraft-hevc",
+          "path": "crates/hevc"
+        },
+        {
+          "name": "filmcraft-vp8",
+          "path": "crates/vp8"
+        },
+        {
+          "name": "filmcraft-vp9",
+          "path": "crates/vp9"
+        },
+        {
+          "name": "filmcraft-prores",
+          "path": "crates/prores"
+        },
+        {
+          "name": "filmcraft-dnx",
+          "path": "crates/dnx"
+        },
+        {
+          "name": "filmcraft-apv",
+          "path": "crates/apv"
+        },
+        {
+          "name": "filmcraft-dng",
+          "path": "crates/dng"
+        },
+        {
+          "name": "filmcraft-av1",
+          "path": "crates/av1"
+        },
+        {
+          "name": "filmcraft-aac",
+          "path": "crates/aac"
+        },
+        {
+          "name": "filmcraft-flac",
+          "path": "crates/flac"
+        },
+        {
+          "name": "filmcraft-opus",
+          "path": "crates/opus"
+        },
+        {
+          "name": "filmcraft-h264enc",
+          "path": "crates/h264enc"
+        },
+        {
+          "name": "filmcraft-audio-dsp",
+          "path": "crates/audio-dsp"
+        },
+        {
+          "name": "filmcraft-frame",
+          "path": "crates/frame"
+        },
+        {
+          "name": "filmcraft-media",
+          "path": "crates/media"
+        },
+        {
+          "name": "filmcraft-codecs",
+          "path": "crates/codecs"
+        },
+        {
+          "name": "filmcraft-project",
+          "path": "crates/project"
+        },
+        {
+          "name": "filmcraft-edit",
+          "path": "crates/edit"
+        },
+        {
+          "name": "filmcraft-interchange",
+          "path": "crates/interchange"
+        },
+        {
+          "name": "filmcraft-text",
+          "path": "crates/text"
+        },
+        {
+          "name": "filmcraft-captions",
+          "path": "crates/captions"
+        },
+        {
+          "name": "filmcraft-speech",
+          "path": "crates/speech"
+        },
+        {
+          "name": "filmcraft-tts",
+          "path": "crates/tts"
+        },
+        {
+          "name": "filmcraft-tts-text",
+          "path": "crates/tts-text"
+        },
+        {
+          "name": "filmcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "filmcraft-gpu",
+          "path": "crates/gpu"
+        },
+        {
+          "name": "filmcraft-scopes",
+          "path": "crates/scopes"
+        },
+        {
+          "name": "filmcraft-export",
+          "path": "crates/export"
+        },
+        {
+          "name": "filmcraft-format",
+          "path": "crates/format"
+        },
+        {
+          "name": "filmcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "filmcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "filmcraft-automation",
+          "path": "crates/automation"
+        },
+        {
+          "name": "filmcraft-platform",
+          "path": "crates/platform"
+        },
+        {
+          "name": "filmcraft-testkit",
+          "path": "crates/testkit"
+        }
+      ]
+    },
+    {
+      "repository": "storytold/cadcraft",
+      "url": "https://github.com/storytold/cadcraft/blob/main/Cargo.toml",
+      "manifest_git_blob": "60d198514c9bb622d5dfd845efc193c975260e66",
+      "packages": [
+        {
+          "name": "cadcraft-geom",
+          "path": "crates/geom"
+        },
+        {
+          "name": "cadcraft-dxf",
+          "path": "crates/dxf"
+        },
+        {
+          "name": "cadcraft-dwg",
+          "path": "crates/dwg"
+        },
+        {
+          "name": "cadcraft-color",
+          "path": "crates/color"
+        },
+        {
+          "name": "cadcraft-doc",
+          "path": "crates/doc"
+        },
+        {
+          "name": "cadcraft-constraints",
+          "path": "crates/constraints"
+        },
+        {
+          "name": "cadcraft-fonts",
+          "path": "crates/fonts"
+        },
+        {
+          "name": "cadcraft-render",
+          "path": "crates/render"
+        },
+        {
+          "name": "cadcraft-io",
+          "path": "crates/io"
+        },
+        {
+          "name": "cadcraft-engine",
+          "path": "crates/engine"
+        },
+        {
+          "name": "cadcraft-ui-egui",
+          "path": "crates/ui-egui"
+        },
+        {
+          "name": "cadcraft-mcp",
+          "path": "crates/mcp"
+        }
+      ]
+    }
+  ]
+}

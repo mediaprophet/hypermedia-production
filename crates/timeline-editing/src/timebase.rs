@@ -1,4 +1,4 @@
-//! Exact rational media time adapted from FilmCraft's `filmcraft-time` crate.
+//! Exact rational media time adapted from the chronicle media `filmcraft-time` crate.
 
 /// Integer ticks per second. This value represents the common frame rates and
 /// audio sample rates used by the source media timeline without per-edit float
@@ -196,7 +196,7 @@ fn frame_index(rate: FrameRate, time: Tick) -> i128 {
         .div_euclid(i128::from(TICKS_PER_SECOND) * i128::from(rate.den))
 }
 
-/// Ceiling division for a frame boundary, matching FilmCraft's exact rational
+/// Ceiling division for a frame boundary, matching the chronicle media exact rational
 /// path. Only the final public Tick is narrowed; an overflowing wide numerator
 /// maps to the corresponding endpoint before that final clamp.
 fn frame_boundary(rate: FrameRate, frame: i128) -> i128 {

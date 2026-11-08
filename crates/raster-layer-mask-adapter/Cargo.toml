@@ -7,3 +7,4 @@ description = "Checked U8 adapter for the existing QualiaDB image layer mask own
 
 [dependencies]
 raster-selection-morphology = { path = "../raster-selection-morphology" }
+serde = { workspace = true }

@@ -1,0 +1,12 @@
+[package]
+name = "surface-layered-codecs"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Pure-Rust layered raster document codecs: PSD/PSB, Affinity container, XCF, OpenRaster (ORA), and ABR brush presets"
+
+[dependencies]
+serde = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"

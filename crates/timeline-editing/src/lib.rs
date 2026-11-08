@@ -1,8 +1,8 @@
 //! Application-neutral editorial time and transition editing.
 //!
-//! The selected FilmCraft operations are adapted to a small public surface with
+//! The selected chronicle media operations are adapted to a small public surface with
 //! no application model, codec, renderer, file, GPU, or runtime dependencies.
-//! `Tick` uses FilmCraft's exact media scale. Simulation time remains owned by
+//! `Tick` uses the chronicle media exact media scale. Simulation time remains owned by
 //! simulation systems; this crate describes editorial positions and frame
 //! boundaries.
 

@@ -1,0 +1,15 @@
+[package]
+name = "raster-spatial-operators"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Pure Rust raster spatial operators: seam carve, affine/perspective/polar/lens distortion, 2D convolution, filter-bank resampling, octree palette reduction"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+
+[dev-dependencies]
+serde_json = "1.0"

@@ -1,4 +1,4 @@
-//! Transition-span editing adapted from FilmCraft's `filmcraft-edit` operation.
+//! Transition-span editing adapted from the chronicle media `filmcraft-edit` operation.
 
 use crate::Tick;
 
@@ -203,7 +203,7 @@ pub fn start_for_alignment(
 
 /// Compute a drag preview without changing a document. The host commits the
 /// returned span through its own authorized command/session/history path.
-/// Like FilmCraft's low-level preview helper, this does not reject a locked
+/// Like the chronicle media low-level preview helper, this does not reject a locked
 /// track; the authoritative commit must call [`set_transition_span`] with the
 /// current context, which refuses locked tracks.
 pub fn drag_transition_span(

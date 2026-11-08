@@ -1,8 +1,15 @@
 //! Bounded, silent, P/I/B-frame MP4/H.264 preview using the existing QualiaDB MP4
-//! demux dependency and FilmCraft H.264/color operations. This is an adapter,
+//! demux dependency and H.264/color operations. This is an adapter,
 //! not a project/session, HMC format, media authority, or timeline clock.
-//! See LICENSE-FILMCRAFT-MIT and SOURCE-MAP.md for attribution.
+//! Informed by open standards and Informatics Fiduciary guarantees under UDHR Articles 19 and 27.
 use std::{borrow::Cow, io::Cursor, sync::atomic::{AtomicBool, Ordering}};
+
+pub mod convert;
+pub mod movie;
+pub mod synth;
+
+pub use movie::{fit_size, Movie, MovieError, MovieInfo, SharedSource};
+pub use synth::{frame_color, h264_mp4, h264_mp4_with, prores_mov, test_pattern_mp4};
 
 pub const TICKS_PER_SECOND:u64=254_016_000_000;
 const MAX_INPUT:usize=2*1024*1024;
@@ -31,8 +38,35 @@ impl GapBudget {
     }
 }
 
-#[derive(Debug)]
-pub struct Frame {pub width:u32,pub height:u32,pub duration_ticks:u64,pub rgba:Vec<u8>}
+#[derive(Debug, Clone, PartialEq)]
+pub struct Frame {
+    pub width: u32,
+    pub height: u32,
+    pub duration_ticks: u64,
+    pub rgba: Vec<u8>,
+    pub index: usize,
+    pub time: f64,
+}
+
+impl Frame {
+    pub fn new(width: u32, height: u32, duration_ticks: u64, rgba: Vec<u8>) -> Self {
+        Self { width, height, duration_ticks, rgba, index: 0, time: 0.0 }
+    }
+    pub fn fit(&self, max_w: u32, max_h: u32) -> Frame {
+        let (w, h) = movie::fit_size(self.width, self.height, max_w, max_h);
+        if (w, h) == (self.width, self.height) {
+            return self.clone();
+        }
+        Frame {
+            width: w,
+            height: h,
+            duration_ticks: self.duration_ticks,
+            rgba: convert::scale_rgba(&self.rgba, self.width as usize, self.height as usize, w as usize, h as usize),
+            index: self.index,
+            time: self.time,
+        }
+    }
+}
 
 /// Decode a single traversal of the selected media range. Caller must supply a
 /// source-authorized, digest-verified resource and recheck its revision before
@@ -291,7 +325,7 @@ fn decode_inner(bytes:&[u8],mdat:(u64,u64),start_tick:u64,end_tick:u64,cancelled
             if frame.width==0||frame.height==0||frame.width>MAX_DIM||frame.height>MAX_DIM||frame.color.primaries!=1||frame.color.transfer!=1||frame.color.matrix!=1||frame.sar!=(1,1){return Err("Decoded frame geometry or colour is outside preview profile".into());}
             if end>start_tick&&begin<end_tick {
                 let rgba=rgba709(&frame,cancelled)?;
-                emit(Frame{width:frame.width,height:frame.height,duration_ticks:end.min(end_tick)-begin.max(start_tick),rgba})?;emitted+=1;
+                emit(Frame{width:frame.width,height:frame.height,duration_ticks:end.min(end_tick)-begin.max(start_tick),rgba,index,time:(begin as f64)/(TICKS_PER_SECOND as f64)})?;emitted+=1;
             }
             index+=1;
         }Ok(())
@@ -445,7 +479,7 @@ fn rgba709(p:&video_h264_codec::Picture,c:&AtomicBool)->Result<Vec<u8>,String>{
   let mut g=GapBudget{prev_ref:65535,generated:0};assert!(g.admit(0,65536,false,true,false).is_ok());assert_eq!(g.generated,0);
   let mut g=GapBudget::default();assert!(g.admit(65535,65536,false,true,false).is_err());
  }
- // Synthetic one-macroblock I_PCM pictures, adapted from FilmCraft's MIT
+ // Synthetic one-macroblock I_PCM pictures for clean-room testing;
  // H.264 synthetic tests; no external video or fabricated decode result.
  fn nal(header:u8,w:BitWriter)->Vec<u8>{let mut out=vec![header];out.extend(escape_rbsp(&w.finish()));out}
  fn sps()->Vec<u8>{sps_for_width(1)}
@@ -527,7 +561,7 @@ fn rgba709(p:&video_h264_codec::Picture,c:&AtomicBool)->Result<Vec<u8>,String>{
   w.write_bit(false);w.write_bit(false);w.write_bit(false);w.write_se(0);w.write_ue(0);w.write_se(0);w.write_se(0);
   w.write_ue(1);w.rbsp_trailing();let data=nal(0x41,w);let mut sample=(data.len() as u32).to_be_bytes().to_vec();sample.extend(data);sample
  }
- // Adapted from the FilmCraft synthetic POC/B-skip test; one 16x16 macroblock.
+ // Clean-room synthetic POC/B-skip test; one 16x16 macroblock.
  fn reordered_sps()->Vec<u8>{
   let mut w=BitWriter::new();w.write_bits(77,8);w.write_bits(0,8);w.write_bits(10,8);
   w.write_ue(0);w.write_ue(0);w.write_ue(0);w.write_ue(0);w.write_ue(2);w.write_bit(false);
@@ -748,5 +782,35 @@ fn rgba709(p:&video_h264_codec::Picture,c:&AtomicBool)->Result<Vec<u8>,String>{
   assert!(decode_mp4(b"not an mp4",0,1,&AtomicBool::new(false)).is_err());
   assert!(decode_mp4(b"not an mp4",0,1,&AtomicBool::new(true)).is_err());
   assert!(decode_mp4(&vec![0;MAX_INPUT+1],0,1,&AtomicBool::new(false)).is_err());
+ }
+ #[test] fn movie_inspection_and_random_access_h264(){
+  let bytes = synth::h264_mp4(6, 3).unwrap();
+  let mut m = Movie::open(bytes).unwrap();
+  assert_eq!(m.info().width, 64);
+  assert_eq!(m.info().height, 48);
+  assert_eq!(m.info().codec, "h264");
+  assert_eq!(m.info().frame_count, 6);
+  assert!(m.info().decodable);
+  let f0 = m.frame(0).unwrap();
+  assert_eq!(f0.width, 64);
+  assert_eq!(f0.height, 48);
+  assert_eq!(f0.rgba.len(), 64 * 48 * 4);
+  assert!(m.is_cached(0));
+  let thumb = m.thumbnail_at(0.0, 24).unwrap();
+  assert_eq!(thumb.height, 24);
+  let thumbs = m.thumbnails(3, 24);
+  assert_eq!(thumbs.len(), 3);
+ }
+ #[test] fn movie_prores_playback(){
+  let bytes = synth::prores_mov(3).unwrap();
+  let mut m = Movie::open(bytes).unwrap();
+  assert_eq!(m.info().width, 64);
+  assert_eq!(m.info().height, 48);
+  assert_eq!(m.info().codec, "prores");
+  assert!(m.info().decodable);
+  let f = m.frame(0).unwrap();
+  assert_eq!(f.width, 64);
+  assert_eq!(f.height, 48);
+
  }
 }
