@@ -1,5 +1,5 @@
+use super::behavioral_hooks::BehaviorMacro;
 use super::*;
-use crate::*;
 use qualia_core_db::container_10d::skeletal_section::{
     encode_skeletal_section_into, ClipRecord, Counts as SklCounts, SkeletalData, SkeletalSection,
 };
@@ -19,12 +19,42 @@ use vibe::Value;
 impl AssetHost<'_> {
     /// Constructs and steps the 18-joint PGA `Motor` fauna skeletal rig (`FaunaSkeletalRig10d`),
     /// evaluates ABSM locomotion + `PROC1` thoracic respiration + tail undulation + 2-bone & FABRIK IK,
-    /// and encodes the `.10d` `SKL1` skeletal section.
+    /// applies Small-LLM Whole-Model Behavioral Macros (`macro_state`: `grazing`, `chewing`, `grooming`,
+    /// `alert_scan`, `foraging_sniff`, `saltatorial_hop`, `idle`) and Targeted Sub-Element Effector Hooks
+    /// (`head_yaw`, `head_pitch`, `jaw_open_01`, `jaw_chew_hz`, `ear_swivel_l`, `ear_swivel_r`,
+    /// `eye_blink_01`, `forepaw_reach_01`, `forepaw_grasp_01`, `hindlimb_crouch_01`, `tail_pitch`,
+    /// `tail_yaw`, `breath_hz`), and encodes both the `.10d` `SKL1` skeletal section and the
+    /// compact ~22-token Small-LLM Behavioral Control Packet (`small_llm_packet_resource`).
     pub(super) fn rig_biomechanical_archetype(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["archetype", "speed_m_s", "turn_rate_rad_s", "dt_sec"])?;
+        fields(
+            a,
+            &[
+                "archetype",
+                "speed_m_s",
+                "turn_rate_rad_s",
+                "dt_sec",
+                "macro_state",
+                "head_yaw",
+                "head_pitch",
+                "jaw_open_01",
+                "jaw_chew_hz",
+                "ear_swivel_l",
+                "ear_swivel_r",
+                "eye_blink_01",
+                "forepaw_reach_01",
+                "forepaw_grasp_01",
+                "hindlimb_crouch_01",
+                "tail_pitch",
+                "tail_yaw",
+                "breath_hz",
+            ],
+        )?;
 
         let archetype_str = opt_string(a, "archetype", "macropod_saltatorial")?;
         let archetype = parse_fauna_archetype(&archetype_str)?;
+        let macro_str = opt_string(a, "macro_state", "grazing")?;
+        let macro_mode = BehaviorMacro::from_str_name(&macro_str)?;
+        let hooks = macro_mode.default_hooks().with_overrides(a)?;
 
         let speed_m_s = number(a, "speed_m_s", 4.5)?;
         if !(0.0..=35.0).contains(&speed_m_s) {
@@ -49,7 +79,6 @@ impl AssetHost<'_> {
         rig.set_parameter(1, AbsmParameter::Float(speed_m_s as f32));
 
         let mut local_pose = rig.rest_pose;
-        // Step twice so ABSM transition settles into the active locomotion gait state
         let _ = rig.step_absm(dt_sec as f32, &mut local_pose);
         let _ = rig.step_absm(dt_sec as f32, &mut local_pose);
 
@@ -61,6 +90,9 @@ impl AssetHost<'_> {
             [0.14, 0.0, 0.05],
         );
         let _ = rig.solve_tail_fabrik_ik(&mut local_pose, [0.0, 0.12, -0.85]);
+
+        // Layer the Small-LLM Whole-Model Macro + Targeted Sub-Element Effector Hooks
+        hooks.apply_to_rig_pose(&mut rig, &mut local_pose, dt_sec as f32);
 
         let _gpu_palette = rig.evaluate_gpu_palette(&local_pose);
 
@@ -138,9 +170,12 @@ impl AssetHost<'_> {
         debug_assert_eq!(parsed.counts().joints, FAUNA_MAX_JOINTS);
 
         let active_state_index = rig.absm.layers[0].current_state;
+        let llm_json = hooks.to_small_llm_json(macro_mode);
+        let llm_packet_resource = self.encode("json", llm_json.clone().into_bytes())?;
 
         let mut out = BTreeMap::new();
         out.insert("archetype".into(), Value::String(archetype_str));
+        out.insert("macro_state".into(), Value::String(macro_mode.as_str().into()));
         out.insert("joint_count".into(), Value::I64(FAUNA_MAX_JOINTS as i64));
         out.insert("skl1_byte_len".into(), Value::I64(written as i64));
         out.insert(
@@ -148,6 +183,8 @@ impl AssetHost<'_> {
             Value::I64(active_state_index as i64),
         );
         out.insert("valid_motors".into(), Value::Bool(all_valid));
+        out.insert("small_llm_json".into(), Value::String(llm_json));
+        out.insert("small_llm_packet_resource".into(), llm_packet_resource);
 
         Ok(Value::Record(out))
     }

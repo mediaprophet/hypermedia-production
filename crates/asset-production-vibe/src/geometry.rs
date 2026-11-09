@@ -105,7 +105,7 @@ impl AssetHost<'_> {
                 self.encode("svg", svg.into_bytes())
             }
             "hypermedia.manifold.extrude" | "hypermedia.mesh.extrude" => {
-                fields(a, &["profile", "path", "caps"])?;
+                fields(a, &["profile", "path", "caps", "stations"])?;
                 let section = self.profile(required(a, "profile")?)?;
                 let caps = boolean(a, "caps", true)?;
                 let section_len = section.len();
@@ -118,8 +118,59 @@ impl AssetHost<'_> {
                 if path.windows(2).any(|p| p[0] == p[1]) {
                     return Err("Extrusion path has a repeated station".into());
                 }
-                let m = section.len();
                 let n = path.len();
+                let stations_opt = if let Some(st_val) = a.get("stations") {
+                    let st_list = list(st_val)?;
+                    if st_list.len() != n {
+                        return Err(format!(
+                            "Extrusion stations count ({}) must match path length ({n})",
+                            st_list.len()
+                        ));
+                    }
+                    let mut parsed = Vec::with_capacity(n);
+                    for item in st_list {
+                        let st = match item {
+                            Value::Record(r) => {
+                                fields(r, &["scale_x", "scale_y", "twist_rad"])?;
+                                cg::sweep_extrusion::ExtrusionStation {
+                                    scale_x: number(r, "scale_x", 1.0)?,
+                                    scale_y: number(r, "scale_y", 1.0)?,
+                                    twist_rad: number(r, "twist_rad", 0.0)?,
+                                }
+                            }
+                            Value::List(coords) if coords.len() == 2 => {
+                                cg::sweep_extrusion::ExtrusionStation {
+                                    scale_x: num(&coords[0])?,
+                                    scale_y: num(&coords[1])?,
+                                    twist_rad: 0.0,
+                                }
+                            }
+                            Value::List(coords) if coords.len() == 3 => {
+                                cg::sweep_extrusion::ExtrusionStation {
+                                    scale_x: num(&coords[0])?,
+                                    scale_y: num(&coords[1])?,
+                                    twist_rad: num(&coords[2])?,
+                                }
+                            }
+                            other => {
+                                let s = num(other)?;
+                                cg::sweep_extrusion::ExtrusionStation {
+                                    scale_x: s,
+                                    scale_y: s,
+                                    twist_rad: 0.0,
+                                }
+                            }
+                        };
+                        if st.scale_x <= 0.0 || st.scale_y <= 0.0 {
+                            return Err("Extrusion station scales must be positive".into());
+                        }
+                        parsed.push(st);
+                    }
+                    Some(parsed)
+                } else {
+                    None
+                };
+                let m = section.len();
                 let nv = n * m + if caps { 2 } else { 0 };
                 let nt = (n - 1) * m * 2 + if caps { 2 * m } else { 0 };
                 self.mesh_budget(nv, nt)?;
@@ -142,7 +193,7 @@ impl AssetHost<'_> {
                 let (nv, nt) = cg::extrude_profile_along_path(
                     &path,
                     &section,
-                    None,
+                    stations_opt.as_deref(),
                     true,
                     caps,
                     &mut frames,
@@ -175,20 +226,87 @@ impl AssetHost<'_> {
                 self.store_mesh(v, t)
             }
             "hypermedia.manifold.loft" | "hypermedia.mesh.loft" => {
-                fields(a, &["a", "b"])?;
-                let first = points3(required(a, "a")?, 2)?;
-                let second = points3(required(a, "b")?, 2)?;
-                if first.len() != second.len() {
-                    return Err("Loft curves need corresponding point counts".into());
+                fields(a, &["a", "b", "sections", "caps"])?;
+                if let Some(sections_val) = a.get("sections") {
+                    let ring_vals = list(sections_val)?;
+                    if ring_vals.len() < 2 || ring_vals.len() > 256 {
+                        return Err("Multi-section loft requires 2..=256 sections".into());
+                    }
+                    let mut rings = Vec::with_capacity(ring_vals.len());
+                    let mut ring_len = 0usize;
+                    for (idx, rv) in ring_vals.iter().enumerate() {
+                        let pts = points3(rv, 3)?;
+                        if idx == 0 {
+                            ring_len = pts.len();
+                        } else if pts.len() != ring_len {
+                            return Err("All loft sections must have identical point counts".into());
+                        }
+                        rings.push(pts);
+                    }
+                    let caps = boolean(a, "caps", true)?;
+                    let n_sec = rings.len();
+                    let nv = n_sec * ring_len + if caps { 2 } else { 0 };
+                    let nt = (n_sec - 1) * ring_len * 2 + if caps { 2 * ring_len } else { 0 };
+                    self.mesh_budget(nv, nt)?;
+                    let mut vertices = Vec::with_capacity(nv);
+                    let mut triangles = Vec::with_capacity(nt);
+                    for ring in &rings {
+                        vertices.extend_from_slice(ring);
+                    }
+                    for s in 0..(n_sec - 1) {
+                        let base_a = (s * ring_len) as u32;
+                        let base_b = ((s + 1) * ring_len) as u32;
+                        for i in 0..ring_len {
+                            let next_i = (i + 1) % ring_len;
+                            let i00 = base_a + i as u32;
+                            let i01 = base_a + next_i as u32;
+                            let i10 = base_b + i as u32;
+                            let i11 = base_b + next_i as u32;
+                            triangles.push([i00, i10, i11]);
+                            triangles.push([i00, i11, i01]);
+                        }
+                    }
+                    if caps {
+                        for (ring_idx, flip) in [(0usize, true), (n_sec - 1, false)] {
+                            let ring = &rings[ring_idx];
+                            let mut cx = 0.0;
+                            let mut cy = 0.0;
+                            let mut cz = 0.0;
+                            for p in ring {
+                                cx += p.x;
+                                cy += p.y;
+                                cz += p.z;
+                            }
+                            let inv = 1.0 / (ring_len as f64);
+                            let c_idx = vertices.len() as u32;
+                            vertices.push(Point3::new(cx * inv, cy * inv, cz * inv));
+                            let base = (ring_idx * ring_len) as u32;
+                            for i in 0..ring_len {
+                                let next_i = (i + 1) % ring_len;
+                                if flip {
+                                    triangles.push([c_idx, base + next_i as u32, base + i as u32]);
+                                } else {
+                                    triangles.push([c_idx, base + i as u32, base + next_i as u32]);
+                                }
+                            }
+                        }
+                    }
+                    self.store_mesh(vertices, triangles)
+                } else {
+                    let first = points3(required(a, "a")?, 2)?;
+                    let second = points3(required(a, "b")?, 2)?;
+                    if first.len() != second.len() {
+                        return Err("Loft curves need corresponding point counts".into());
+                    }
+                    let nv = first.len() * 2;
+                    let nt = (first.len() - 1) * 2;
+                    self.mesh_budget(nv, nt)?;
+                    let mut v = vec![Point3::default(); nv];
+                    let mut t = vec![[0; 3]; nt];
+                    cg::parametric_cad::loft_profiles(&first, &second, &mut v, &mut t)
+                        .map_err(|e| format!("Loft: {e:?}"))?;
+                    self.store_mesh(v, t)
                 }
-                let nv = first.len() * 2;
-                let nt = (first.len() - 1) * 2;
-                self.mesh_budget(nv, nt)?;
-                let mut v = vec![Point3::default(); nv];
-                let mut t = vec![[0; 3]; nt];
-                cg::parametric_cad::loft_profiles(&first, &second, &mut v, &mut t)
-                    .map_err(|e| format!("Loft: {e:?}"))?;
-                self.store_mesh(v, t)
             }
             "hypermedia.manifold.compile_10d" | "hypermedia.mesh.encode" => {
                 fields(a, &["mesh"])?;

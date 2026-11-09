@@ -337,8 +337,8 @@ dependencies = [
  "peniko",
  "png 0.18.1",
  "profile-authoring",
- "qualia-audio 0.0.41",
- "qualia-core-db 0.0.41",
+ "qualia-audio",
+ "qualia-core-db",
  "radiance-camera-raw",
  "radiance-color-grading",
  "raster-blend-operators",
@@ -357,8 +357,8 @@ dependencies = [
  "vector-locus-pathops",
  "vector-radiance-trace",
  "vector-surface-brush",
- "vibe 0.0.41",
- "vibescript-abi 0.0.41",
+ "vibe",
+ "vibescript-abi",
  "video-h264-preview",
  "video-prores-codec",
 ]
@@ -1883,6 +1883,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "etalon"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "arrayvec",
+ "bitflags 2.13.2",
+ "bytemuck",
+ "cfg-if",
+ "cfg_aliases",
+ "document-features",
+ "etalon-core 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-sync 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "hashbrown 0.17.1",
+ "js-sys",
+ "log",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "profiling",
+ "raw-window-handle",
+ "smallvec",
+ "static_assertions",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "etalon-core"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
@@ -1897,7 +1925,6 @@ dependencies = [
  "etalon-core-deps-apple 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "etalon-core-deps-emscripten 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "etalon-core-deps-linux-android-bsd 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-core-deps-wasm",
  "etalon-core-deps-windows 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "etalon-naga-bridge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
@@ -1906,8 +1933,45 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap",
  "log",
+ "macro_rules_attribute",
  "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "num-traits",
+ "profiling",
+ "raw-window-handle",
+ "rustc-hash 1.1.0",
+ "scopeguard",
+ "serde",
+ "smallvec",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "etalon-core"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "arrayvec",
+ "bit-set 0.11.1",
+ "bit-vec 0.10.1",
+ "bitflags 2.13.2",
+ "bytemuck",
+ "cfg_aliases",
+ "document-features",
+ "etalon-core-deps-apple 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-core-deps-emscripten 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-core-deps-linux-android-bsd 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-core-deps-wasm",
+ "etalon-core-deps-windows 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-naga-bridge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-sync 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "hashbrown 0.17.1",
+ "indexmap",
+ "log",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "num-traits",
  "profiling",
  "raw-window-handle",
@@ -1926,11 +1990,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "etalon-core-deps-apple"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+]
+
+[[package]]
 name = "etalon-core-deps-emscripten"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
  "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+]
+
+[[package]]
+name = "etalon-core-deps-emscripten"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
 ]
 
 [[package]]
@@ -1942,7 +2022,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "etalon-core-deps-linux-android-bsd"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+]
+
+[[package]]
 name = "etalon-core-deps-wasm"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+]
+
+[[package]]
+name = "etalon-core-deps-windows"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
@@ -1952,9 +2048,9 @@ dependencies = [
 [[package]]
 name = "etalon-core-deps-windows"
 version = "0.0.2"
-source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
 dependencies = [
- "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-hal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
 ]
 
 [[package]]
@@ -2021,14 +2117,66 @@ dependencies = [
 ]
 
 [[package]]
+name = "etalon-hal"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "android_system_properties",
+ "arrayvec",
+ "ash",
+ "bit-set 0.11.1",
+ "bitflags 2.13.2",
+ "block2 0.6.2",
+ "bytemuck",
+ "cfg-if",
+ "cfg_aliases",
+ "etalon-naga-bridge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-sync 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "etalon-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "glow",
+ "glutin_wgl_sys",
+ "gpu-allocator",
+ "hashbrown 0.17.1",
+ "js-sys",
+ "khronos-egl",
+ "libc",
+ "libloading",
+ "log",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "ndk-sys 0.6.0+11769913",
+ "objc2 0.6.5",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
+ "objc2-foundation 0.3.2",
+ "objc2-metal 0.3.2",
+ "objc2-quartz-core 0.3.2",
+ "ordered-float",
+ "profiling",
+ "range-alloc",
+ "raw-window-handle",
+ "raw-window-metal 1.1.0",
+ "renderdoc-sys",
+ "smallvec",
+ "static_assertions",
+ "thiserror 2.0.21",
+ "wasm-bindgen",
+ "wayland-sys",
+ "web-sys",
+ "windows 0.62.2",
+ "windows-core 0.62.2",
+ "windows-result 0.4.1",
+]
+
+[[package]]
 name = "etalon-inference"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
  "bytemuck",
- "etalon-inference-kernel 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model-io 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-inference-kernel",
+ "etalon-model",
+ "etalon-model-io",
  "half",
  "log",
  "memmap2",
@@ -2054,10 +2202,10 @@ version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
  "ciborium",
- "etalon-diagnostics 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference-kernel 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-diagnostics",
+ "etalon-inference",
+ "etalon-inference-kernel",
+ "etalon-model",
  "log",
  "serde",
  "serde_json",
@@ -2070,7 +2218,7 @@ version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
  "bytemuck",
- "etalon-inference-kernel 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-inference-kernel",
  "half",
  "serde",
 ]
@@ -2092,6 +2240,15 @@ source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a
 dependencies = [
  "etalon-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+]
+
+[[package]]
+name = "etalon-naga-bridge"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "etalon-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
 ]
 
 [[package]]
@@ -2142,7 +2299,7 @@ version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
  "bytemuck",
- "etalon-render 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-render",
  "serde",
  "serde_json",
 ]
@@ -2151,6 +2308,19 @@ dependencies = [
 name = "etalon-sync"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
+dependencies = [
+ "cfg-if",
+ "lock_api",
+ "once_cell",
+ "parking_lot",
+ "portable-atomic",
+ "portable-atomic-util",
+]
+
+[[package]]
+name = "etalon-sync"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
 dependencies = [
  "cfg-if",
  "lock_api",
@@ -2186,6 +2356,23 @@ dependencies = [
  "macro_rules_attribute",
  "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
  "raw-window-handle",
+ "serde",
+ "static_assertions",
+ "web-sys",
+]
+
+[[package]]
+name = "etalon-types"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "bitflags 2.13.2",
+ "bytemuck",
+ "js-sys",
+ "log",
+ "macro_rules_attribute",
+ "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "raw-window-handle",
  "static_assertions",
  "web-sys",
 ]
@@ -2195,13 +2382,13 @@ name = "etalon-vibe"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
 dependencies = [
- "etalon-model 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-model",
  "etalon-nquin",
- "etalon-resources 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-resources",
  "etalon-sense-core",
- "etalon-signal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-wgsl-forge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "vibescript-abi 0.0.41 (git+https://github.com/mediaprophet/vibe-script.git?rev=c26acd2aacceffc0778b5b96b1a935e251fd5e96)",
+ "etalon-signal",
+ "etalon-wgsl-forge",
+ "vibescript-abi",
 ]
 
 [[package]]
@@ -2211,7 +2398,7 @@ source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a
 dependencies = [
  "blake3",
  "bytemuck",
- "etalon-signal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-signal",
  "hashbrown 0.17.1",
  "log",
  "serde",
@@ -2733,7 +2920,7 @@ dependencies = [
 name = "gpu-command-profiler"
 version = "0.28.0"
 dependencies = [
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "futures-lite",
  "parking_lot",
  "profiling",
@@ -2748,7 +2935,7 @@ dependencies = [
 name = "gpu-device-context"
 version = "0.10.0"
 dependencies = [
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "futures-intrusive",
 ]
 
@@ -3927,9 +4114,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "naga"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
+dependencies = [
+ "arrayvec",
+ "bit-set 0.11.1",
+ "bitflags 2.13.2",
+ "cfg-if",
+ "cfg_aliases",
+ "codespan-reporting",
+ "half",
+ "hashbrown 0.17.1",
+ "indexmap",
+ "libm",
+ "log",
+ "naga-types 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
+ "num-traits",
+ "once_cell",
+ "rustc-hash 1.1.0",
+ "spirv",
+ "thiserror 2.0.21",
+ "unicode-ident",
+]
+
+[[package]]
 name = "naga-types"
 version = "0.0.2"
 source = "git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e#6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e"
+dependencies = [
+ "bytemuck",
+ "hashbrown 0.17.1",
+ "indexmap",
+ "rustc-hash 1.1.0",
+ "serde",
+]
+
+[[package]]
+name = "naga-types"
+version = "0.0.2"
+source = "git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952#8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952"
 dependencies = [
  "bytemuck",
  "hashbrown 0.17.1",
@@ -4659,7 +4883,7 @@ name = "pcm-device-output"
 version = "0.1.0"
 dependencies = [
  "cpal",
- "qualia-core-db 0.0.40",
+ "qualia-core-db",
 ]
 
 [[package]]
@@ -4752,7 +4976,7 @@ name = "pixel-buffer-output"
 version = "0.17.2"
 dependencies = [
  "bytemuck",
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "pollster 0.4.0",
  "raw-window-handle",
  "thiserror 2.0.21",
@@ -4959,7 +5183,7 @@ name = "profile-authoring"
 version = "0.4.0"
 dependencies = [
  "drafting-geometry",
- "qualia-core-db 0.0.41",
+ "qualia-core-db",
 ]
 
 [[package]]
@@ -5034,18 +5258,8 @@ dependencies = [
 
 [[package]]
 name = "qualia-app-contract"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
-dependencies = [
- "ciborium",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "qualia-app-contract"
 version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
  "ciborium",
  "serde",
@@ -5055,37 +5269,20 @@ dependencies = [
 
 [[package]]
 name = "qualia-audio"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
-
-[[package]]
-name = "qualia-audio"
 version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
- "etalon-signal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
-]
-
-[[package]]
-name = "qualia-cooperative-core"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
-dependencies = [
- "chrono",
- "hex",
- "qualia-app-contract 0.0.40",
- "serde",
- "serde_json",
- "sha2 0.11.1",
- "uuid",
+ "etalon-signal",
 ]
 
 [[package]]
 name = "qualia-cooperative-core"
 version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
  "chrono",
  "hex",
- "qualia-app-contract 0.0.41",
+ "qualia-app-contract",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -5094,8 +5291,8 @@ dependencies = [
 
 [[package]]
 name = "qualia-core-db"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
+version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
  "aead 0.6.1",
  "aes-gcm",
@@ -5116,129 +5313,19 @@ dependencies = [
  "csv",
  "dashmap",
  "ed25519-dalek",
- "etalon-diagnostics 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference-contract 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference-lab 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model-io 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-render 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-resources 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-wgsl-forge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "fast_qr",
- "fips203",
- "fips204",
- "fips205",
- "flate2",
- "futures-channel",
- "futures-core",
- "futures-intrusive",
- "futures-util",
- "getrandom 0.2.17",
- "getrandom 0.3.4",
- "getrandom 0.4.3",
- "h2",
- "half",
- "hex",
- "hkdf",
- "hmac 0.13.0",
- "http",
- "http-body-util",
- "io-uring",
- "jni 0.22.4",
- "jpeg-decoder",
- "js-sys",
- "keyring",
- "keyring-core",
- "libc",
- "log",
- "lz4_flex",
- "memmap2",
- "mikktspace",
- "minicbor",
- "mp4",
- "num_cpus",
- "oxiri",
- "png 0.17.16",
- "pollster 1.0.1",
- "qualia-audio 0.0.40",
- "qualia-cooperative-core 0.0.40",
- "qualia-inference-kernel 0.0.40",
- "quick-xml 0.41.0",
- "rand 0.10.3",
- "rand_distr",
- "rayon",
- "rcgen",
- "regex",
- "reqwest",
- "rio_api",
- "rio_turtle",
- "rio_xml",
- "rtrb",
- "rustls",
- "rustls-pki-types",
- "serde",
- "serde-wasm-bindgen",
- "serde_bytes",
- "serde_json",
- "serde_yaml",
- "sha1 0.11.0",
- "sha2 0.11.1",
- "sha3 0.12.0",
- "sysinfo",
- "tempfile",
- "tokio",
- "tokio-rustls",
- "tokio-stream",
- "tower-http 0.7.1",
- "urlencoding",
- "vibe 0.0.40",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "windows 0.62.2",
- "windows-native-keyring-store",
- "x25519-dalek 3.0.0",
- "zeroize",
- "zstd",
-]
-
-[[package]]
-name = "qualia-core-db"
-version = "0.0.41"
-dependencies = [
- "aead 0.6.1",
- "aes-gcm",
- "async-trait",
- "atoi",
- "axum",
- "base64 0.23.1",
- "blake3",
- "boringtun",
- "bytemuck",
- "bytes",
- "chacha20poly1305 0.11.0",
- "chrono",
- "ciborium",
- "console_error_panic_hook",
- "core_affinity",
- "crossbeam-channel",
- "csv",
- "dashmap",
- "ed25519-dalek",
- "etalon-diagnostics 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference-contract 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-inference-lab 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-model-io 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-diagnostics",
+ "etalon-inference",
+ "etalon-inference-contract",
+ "etalon-inference-lab",
+ "etalon-model",
+ "etalon-model-io",
  "etalon-nquin",
- "etalon-render 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-resources 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
- "etalon-signal 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-render",
+ "etalon-resources",
+ "etalon-signal",
  "etalon-sim",
  "etalon-tensor",
- "etalon-wgsl-forge 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-wgsl-forge",
  "fast_qr",
  "fips203",
  "fips204",
@@ -5275,9 +5362,9 @@ dependencies = [
  "oxiri",
  "png 0.17.16",
  "pollster 1.0.1",
- "qualia-audio 0.0.41",
- "qualia-cooperative-core 0.0.41",
- "qualia-inference-kernel 0.0.41",
+ "qualia-audio",
+ "qualia-cooperative-core",
+ "qualia-inference-kernel",
  "quick-xml 0.41.0",
  "rand 0.10.3",
  "rand_distr",
@@ -5306,8 +5393,8 @@ dependencies = [
  "tokio-stream",
  "tower-http 0.7.1",
  "urlencoding",
- "vibe 0.0.41",
- "vibescript-abi 0.0.41",
+ "vibe",
+ "vibescript-abi",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -5320,17 +5407,10 @@ dependencies = [
 
 [[package]]
 name = "qualia-inference-kernel"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
-dependencies = [
- "etalon-inference-kernel 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
-]
-
-[[package]]
-name = "qualia-inference-kernel"
 version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
- "etalon-inference-kernel 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon-inference-kernel",
 ]
 
 [[package]]
@@ -7186,7 +7266,7 @@ name = "vector-compute-renderer"
 version = "0.11.0"
 dependencies = [
  "bytemuck",
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "futures-intrusive",
  "gpu-command-profiler",
  "log",
@@ -7205,7 +7285,7 @@ version = "0.11.0"
 dependencies = [
  "bytemuck",
  "log",
- "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "thiserror 2.0.21",
  "vello_encoding",
 ]
@@ -7242,7 +7322,7 @@ version = "0.15.0"
 dependencies = [
  "anyrender",
  "debug_timer",
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "futures-channel",
  "gpu-device-context",
  "kurbo",
@@ -7259,7 +7339,7 @@ version = "0.11.0"
 dependencies = [
  "anyrender",
  "debug_timer",
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "futures-channel",
  "glifo",
  "gpu-device-context",
@@ -7277,7 +7357,7 @@ name = "vector-hybrid-renderer"
 version = "0.3.0"
 dependencies = [
  "bytemuck",
- "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "etalon 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "glifo",
  "hashbrown 0.17.1",
  "js-sys",
@@ -7295,7 +7375,7 @@ dependencies = [
 name = "vector-hybrid-shaders"
 version = "0.3.0"
 dependencies = [
- "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=6ace6cc6413a87ca10a1da58397ddc7c0b2fc41e)",
+ "naga 0.0.2 (git+https://github.com/mediaprophet/etalon.git?rev=8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952)",
  "wesl",
  "wesl-macros",
  "wgsl-parse",
@@ -7425,31 +7505,19 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vibe"
-version = "0.0.40"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?branch=0.0.40.12-etalon-migration#2e63c3556ae90263ea2f2bb8e50064b2aa7bc009"
-dependencies = [
- "bytemuck",
- "unicode-xid",
-]
-
-[[package]]
-name = "vibe"
 version = "0.0.41"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 dependencies = [
  "bytemuck",
  "etalon-vibe",
  "unicode-xid",
- "vibescript-abi 0.0.41",
+ "vibescript-abi",
 ]
 
 [[package]]
 name = "vibescript-abi"
 version = "0.0.41"
-
-[[package]]
-name = "vibescript-abi"
-version = "0.0.41"
-source = "git+https://github.com/mediaprophet/vibe-script.git?rev=c26acd2aacceffc0778b5b96b1a935e251fd5e96#c26acd2aacceffc0778b5b96b1a935e251fd5e96"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=e2084243a5bc68d08e48d511c24c105b3b0d24b0#e2084243a5bc68d08e48d511c24c105b3b0d24b0"
 
 [[package]]
 name = "video-h264-codec"

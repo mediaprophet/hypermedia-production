@@ -28,8 +28,13 @@ use qualia_core_db::simulation::physics3d::{
 };
 use vibe::Value;
 
+pub mod behavioral_hooks;
+pub mod human_welfare_anatomy;
+pub mod whitegum_canopy;
 mod botanical_vertebrate_10d;
+pub mod portable_scaffold;
 mod rig_ontology_continuum_frustum;
+pub mod turntable_render;
 
 pub(super) fn opt_string(a: &Args, k: &str, default: &str) -> Result<String, String> {
     match a.get(k) {

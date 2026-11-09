@@ -14,13 +14,30 @@ impl AssetHost<'_> {
     /// 123: `hypermedia.manifold.sweep_assembly_profile`
     /// (`profile-authoring`)
     pub(crate) fn sweep_assembly_profile(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["profile", "width", "height", "wall", "length", "caps"])?;
+        fields(
+            a,
+            &[
+                "title",
+                "profile",
+                "width",
+                "height",
+                "wall",
+                "length",
+                "caps",
+                "parts",
+                "axis",
+            ],
+        )?;
+        let title_str = opt_str(a, "title", "Hierarchical CAD Assembly")?;
         let width = number(a, "width", 1.2)?;
         let height = number(a, "height", 0.8)?;
         let wall = number(a, "wall", 0.15)?;
         let length = number(a, "length", 2.5)?;
         let caps = boolean(a, "caps", true)?;
-        let opt_prof = a.get("profile").map(|v| self.profile(v).map(|p| p.to_vec())).transpose()?;
+        let opt_prof = a
+            .get("profile")
+            .map(|v| self.profile(v).map(|p| p.to_vec()))
+            .transpose()?;
 
         self.charge(512, 16384)?;
 
@@ -28,63 +45,217 @@ impl AssetHost<'_> {
             AssemblyLimits, AuthoringPart, GeometryLimits, Profile, Transform, compile_assembly,
             profile_sweep, sphere, torus,
         };
-        use qualia_core_db::container_10d::MaterialRecord;
-
-        let channel = if let Some(points) = opt_prof {
-            Profile::Polyline { points }
-        } else {
-            Profile::OpenChannel {
-                width,
-                height,
-                wall,
-                corner_radius: 0.0,
-                segments: 16,
-            }
+        use qualia_core_db::container_10d::{
+            MaterialRecord, OpacityMode, ShadingModel, attach_material_section,
         };
-        let axis = [[0.0, 0.0, 0.0], [0.0, 0.0, length]];
-        let swept = profile_sweep(&channel, &axis, caps, GeometryLimits::default())
-            .map_err(|e| format!("profile_sweep failed: {e}"))?;
-        let sph = sphere(0.25, 16, 12, GeometryLimits::default())
-            .map_err(|e| format!("sphere failed: {e}"))?;
-        let tor = torus(0.4, 0.1, 16, 12, GeometryLimits::default())
-            .map_err(|e| format!("torus failed: {e}"))?;
+        use qualia_core_db::q_hash;
+        use qualia_core_db::render::compile_10d::{
+            Compile10dExtras, compile_mesh_to_10d_with_extras_and_frames,
+        };
 
-        let parts = vec![
-            AuthoringPart {
-                key: "channel_beam".into(),
-                parent: None,
-                semantic_id: 1,
-                mesh: swept,
-                material: MaterialRecord::legacy_default(),
-                trs: Transform::default(),
-                normals: None,
-                uv0: None,
-            },
-            AuthoringPart {
-                key: "end_sphere".into(),
-                parent: Some("channel_beam".into()),
-                semantic_id: 2,
-                mesh: sph,
-                material: MaterialRecord::legacy_default(),
-                trs: Transform {
-                    translation: [0.0, 0.0, length],
-                    rotation: [0.0, 0.0, 0.0],
-                    scale: [1.0, 1.0, 1.0],
+        let parts = if let Some(parts_val) = a.get("parts") {
+            let part_list = list(parts_val)?;
+            if part_list.is_empty() || part_list.len() > 512 {
+                return Err("Assembly parts list requires 1..=512 parts".into());
+            }
+            let mut authored = Vec::with_capacity(part_list.len());
+            for (idx, pv) in part_list.iter().enumerate() {
+                let pr = record(pv)?;
+                fields(
+                    pr,
+                    &[
+                        "key",
+                        "parent",
+                        "semantic_id",
+                        "mesh",
+                        "shape",
+                        "radius",
+                        "minor_radius",
+                        "width",
+                        "height",
+                        "depth",
+                        "wall",
+                        "axis",
+                        "caps",
+                        "translation",
+                        "rotation",
+                        "scale",
+                        "color",
+                        "roughness",
+                        "metallic",
+                    ],
+                )?;
+                let key = opt_str(pr, "key", &format!("part_{idx}"))?;
+                let parent = match pr.get("parent") {
+                    Some(Value::String(s)) if !s.is_empty() => Some(s.clone()),
+                    _ => None,
+                };
+                let semantic_id = match pr.get("semantic_id") {
+                    Some(Value::String(s)) => q_hash(s).max(1),
+                    Some(v) => (integer(v, "semantic_id")? as u64).max(1),
+                    None => q_hash(&key).max((idx as u64) + 1),
+                };
+                let part_mesh = if let Some(mh) = pr.get("mesh") {
+                    let Artifact::Mesh(m) = self.workspace.get(mh)? else {
+                        return Err(format!("Assembly part '{key}' expected mesh handle"));
+                    };
+                    m.clone()
+                } else {
+                    let shape = opt_str(pr, "shape", "sphere")?;
+                    match shape.as_str() {
+                        "sphere" => {
+                            let r = number(pr, "radius", 0.25)?;
+                            sphere(r, 16, 12, GeometryLimits::default())
+                                .map_err(|e| format!("sphere '{key}': {e}"))?
+                        }
+                        "torus" => {
+                            let r_maj = number(pr, "radius", 0.4)?;
+                            let r_min = number(pr, "minor_radius", 0.1)?;
+                            torus(r_maj, r_min, 16, 12, GeometryLimits::default())
+                                .map_err(|e| format!("torus '{key}': {e}"))?
+                        }
+                        "box" => {
+                            let bw = number(pr, "width", 1.0)? as f32;
+                            let bh = number(pr, "height", 1.0)? as f32;
+                            let bd = number(pr, "depth", 1.0)? as f32;
+                            qualia_core_db::specialized_libs::computational_geometry::authoring::box_mesh(bw, bh, bd)
+                                .map_err(|e| format!("box '{key}': {e}"))?
+                        }
+                        "sweep" | "channel" => {
+                            let pw = number(pr, "width", width)?;
+                            let ph = number(pr, "height", height)?;
+                            let pwall = number(pr, "wall", wall)?;
+                            let pcaps = boolean(pr, "caps", caps)?;
+                            let prof = Profile::OpenChannel {
+                                width: pw,
+                                height: ph,
+                                wall: pwall,
+                                corner_radius: 0.0,
+                                segments: 16,
+                            };
+                            let ax = if let Some(ax_val) = pr.get("axis") {
+                                let pts = list(ax_val)?;
+                                pts.iter()
+                                    .map(vector::<3>)
+                                    .collect::<Result<Vec<[f64; 3]>, _>>()?
+                            } else {
+                                vec![[0.0, 0.0, 0.0], [0.0, 0.0, length]]
+                            };
+                            profile_sweep(&prof, &ax, pcaps, GeometryLimits::default())
+                                .map_err(|e| format!("sweep '{key}': {e}"))?
+                        }
+                        other => return Err(format!("Unknown assembly part shape: {other}")),
+                    }
+                };
+                let translation = pr
+                    .get("translation")
+                    .map(vector::<3>)
+                    .transpose()?
+                    .unwrap_or([0.0, 0.0, 0.0]);
+                let rotation = pr
+                    .get("rotation")
+                    .map(vector::<3>)
+                    .transpose()?
+                    .unwrap_or([0.0, 0.0, 0.0]);
+                let scale = pr
+                    .get("scale")
+                    .map(vector::<3>)
+                    .transpose()?
+                    .unwrap_or([1.0, 1.0, 1.0]);
+                let base_color = if let Some(cv) = pr.get("color") {
+                    let c = vector::<4>(cv)?;
+                    [c[0] as f32, c[1] as f32, c[2] as f32, c[3] as f32]
+                } else {
+                    [0.78, 0.80, 0.84, 1.0]
+                };
+                let mut mat = MaterialRecord::legacy_default();
+                mat.id = q_hash(&format!("mat_part_{key}"));
+                mat.shading_model = ShadingModel::MetallicRoughness;
+                mat.opacity_mode = OpacityMode::Opaque;
+                mat.base_color = base_color;
+                mat.roughness = number(pr, "roughness", 0.45)? as f32;
+                mat.metallic = number(pr, "metallic", 0.05)? as f32;
+
+                authored.push(AuthoringPart {
+                    key,
+                    parent,
+                    semantic_id,
+                    mesh: part_mesh,
+                    material: mat,
+                    trs: Transform {
+                        translation,
+                        rotation,
+                        scale,
+                    },
+                    normals: None,
+                    uv0: None,
+                });
+            }
+            authored
+        } else {
+            let channel = if let Some(points) = opt_prof {
+                Profile::Polyline { points }
+            } else {
+                Profile::OpenChannel {
+                    width,
+                    height,
+                    wall,
+                    corner_radius: 0.0,
+                    segments: 16,
+                }
+            };
+            let axis: Vec<[f64; 3]> = if let Some(ax_val) = a.get("axis") {
+                list(ax_val)?
+                    .iter()
+                    .map(vector::<3>)
+                    .collect::<Result<Vec<_>, _>>()?
+            } else {
+                vec![[0.0, 0.0, 0.0], [0.0, 0.0, length]]
+            };
+            let swept = profile_sweep(&channel, &axis, caps, GeometryLimits::default())
+                .map_err(|e| format!("profile_sweep failed: {e}"))?;
+            let sph = sphere(0.25, 16, 12, GeometryLimits::default())
+                .map_err(|e| format!("sphere failed: {e}"))?;
+            let tor = torus(0.4, 0.1, 16, 12, GeometryLimits::default())
+                .map_err(|e| format!("torus failed: {e}"))?;
+
+            vec![
+                AuthoringPart {
+                    key: "channel_beam".into(),
+                    parent: None,
+                    semantic_id: 1,
+                    mesh: swept,
+                    material: MaterialRecord::legacy_default(),
+                    trs: Transform::default(),
+                    normals: None,
+                    uv0: None,
                 },
-                normals: None,
-                uv0: None,
-            },
-            AuthoringPart {
-                key: "collar_torus".into(),
-                parent: Some("channel_beam".into()),
-                semantic_id: 3,
-                mesh: tor,
-                material: MaterialRecord::legacy_default(),
-                trs: Transform::default(),
-                normals: None,
-                uv0: None,
-            },
-        ];
+                AuthoringPart {
+                    key: "end_sphere".into(),
+                    parent: Some("channel_beam".into()),
+                    semantic_id: 2,
+                    mesh: sph,
+                    material: MaterialRecord::legacy_default(),
+                    trs: Transform {
+                        translation: [0.0, 0.0, length],
+                        rotation: [0.0, 0.0, 0.0],
+                        scale: [1.0, 1.0, 1.0],
+                    },
+                    normals: None,
+                    uv0: None,
+                },
+                AuthoringPart {
+                    key: "collar_torus".into(),
+                    parent: Some("channel_beam".into()),
+                    semantic_id: 3,
+                    mesh: tor,
+                    material: MaterialRecord::legacy_default(),
+                    trs: Transform::default(),
+                    normals: None,
+                    uv0: None,
+                },
+            ]
+        };
 
         let compiled = compile_assembly(&parts, AssemblyLimits::default())
             .map_err(|e| format!("compile_assembly failed: {e}"))?;
@@ -92,14 +263,78 @@ impl AssetHost<'_> {
         let vertex_count = compiled.mesh.positions.len();
         let triangle_count = compiled.mesh.triangles.len();
         let part_count = compiled.parts.len();
-        let bytes_10d = qualia_core_db::render::compile_10d::compile_mesh_to_10d(&compiled.mesh)
-            .map_err(|e| format!("10D encoding failed: {e:?}"))?;
+
+        let mut vertex_colors = vec![[0.74f32, 0.78, 0.82, 1.0]; vertex_count];
+        for range in &compiled.ranges {
+            if let Some(mat) = compiled.materials.iter().find(|m| m.id == range.material_id) {
+                let start_tri = (range.first_index as usize) / 3;
+                let end_tri = ((range.first_index + range.index_count) as usize / 3)
+                    .min(compiled.mesh.triangles.len());
+                for tri in &compiled.mesh.triangles[start_tri..end_tri] {
+                    for &vi in tri {
+                        if let Some(slot) = vertex_colors.get_mut(vi as usize) {
+                            *slot = mat.base_color;
+                        }
+                    }
+                }
+            }
+        }
+
+        let flat_indices: Vec<u32> = compiled
+            .mesh
+            .triangles
+            .iter()
+            .flat_map(|t| [t[0], t[1], t[2]])
+            .collect();
+        let turntable_bytes =
+            crate::living_world_anatomy::turntable_render::render_turnaround_sheet_png(
+                &compiled.mesh.positions,
+                &compiled.normals,
+                &vertex_colors,
+                &flat_indices,
+            )?;
+        let blueprint_bytes =
+            crate::living_world_anatomy::turntable_render::render_anatomical_blueprint_svg(
+                &title_str,
+                &compiled.mesh.positions,
+                &vertex_colors,
+                &flat_indices,
+                part_count,
+            );
+
+        let mut bytes_10d = compile_mesh_to_10d_with_extras_and_frames(
+            &compiled.mesh,
+            &[],
+            None,
+            Compile10dExtras::default(),
+            Some(&vertex_colors),
+            Some(&compiled.normals),
+            None,
+        )
+        .map_err(|e| format!("10D encoding failed: {e:?}"))?;
+        let mut sorted_mats = compiled.materials.clone();
+        sorted_mats.sort_by_key(|m| m.id);
+        sorted_mats.dedup_by_key(|m| m.id);
+        if let Ok(with_mats) = attach_material_section(
+            &bytes_10d,
+            &sorted_mats,
+            &compiled.ranges,
+            (triangle_count * 3) as u32,
+        ) {
+            bytes_10d = with_mats;
+        }
         let container_10d = self.encode("10d", bytes_10d)?;
-        let mesh_handle = self.workspace.insert(Artifact::Mesh(compiled.mesh), self.limits)?;
+        let turntable_png = self.encode("png", turntable_bytes)?;
+        let blueprint_svg = self.encode("svg", blueprint_bytes)?;
+        let mesh_handle = self
+            .workspace
+            .insert(Artifact::Mesh(compiled.mesh), self.limits)?;
 
         let mut out = BTreeMap::new();
         out.insert("mesh".into(), mesh_handle);
         out.insert("container_10d".into(), container_10d);
+        out.insert("turntable_png".into(), turntable_png);
+        out.insert("blueprint_svg".into(), blueprint_svg);
         out.insert("part_count".into(), Value::I64(part_count as i64));
         out.insert("vertex_count".into(), Value::I64(vertex_count as i64));
         out.insert("triangle_count".into(), Value::I64(triangle_count as i64));

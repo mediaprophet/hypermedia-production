@@ -1,6 +1,9 @@
 use super::*;
+use qualia_core_db::container_10d::header::Container10dHeader;
+use qualia_core_db::container_10d::section::{parse_section_table, SectionType};
+use qualia_core_db::container_10d::surface_reading::decode_surface_reading;
 use qualia_core_db::render::compile_10d::{
-    compile_mesh_to_10d_with_extras_and_frames, Compile10dExtras,
+    compile_mesh_to_10d_with_extras_and_frames, decode_10d_mesh, Compile10dExtras,
 };
 use qualia_core_db::specialized_libs::computational_geometry::{
     self as cg, boolean_3::Boolean3Op, DecimateOptions, Point3,
@@ -290,7 +293,10 @@ impl AssetHost<'_> {
     }
 
     fn manifold_compile_10d_pbr(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "albedo", "topology", "spatial_index"])?;
+        fields(
+            a,
+            &["mesh", "albedo", "source_10d", "topology", "spatial_index"],
+        )?;
         let topology = boolean(a, "topology", true)?;
         let spatial_index = boolean(a, "spatial_index", true)?;
 
@@ -306,6 +312,13 @@ impl AssetHost<'_> {
                 return Err("Expected rgba handle for 'albedo'".into());
             };
             Some(rgba.clone())
+        } else {
+            None
+        };
+
+        let source_10d_colors = if let Some(sv) = a.get("source_10d") {
+            let res = self.workspace.encoded(sv)?;
+            decode_source_10d_vertex_colors(&res.bytes)
         } else {
             None
         };
@@ -350,7 +363,7 @@ impl AssetHost<'_> {
             }
         }
 
-        // Sample albedo pixels at each vertex spherical projection
+        // Sample albedo pixels or transfer nearest-vertex colors from source_10d
         let surface_reading: Option<Vec<[f32; 4]>> = if let Some(rgba) = albedo {
             if rgba.width == 0 || rgba.height == 0 || rgba.pixels.is_empty() {
                 return Err("Albedo image has empty dimensions".into());
@@ -390,11 +403,17 @@ impl AssetHost<'_> {
                 ]);
             }
             Some(readings)
+        } else if let Some((ref_pos, ref_cols)) = source_10d_colors {
+            Some(transfer_nearest_vertex_colors(
+                &mesh.positions,
+                &ref_pos,
+                &ref_cols,
+            ))
         } else {
             None
         };
 
-        let bytes = compile_mesh_to_10d_with_extras_and_frames(
+        let bytes = match compile_mesh_to_10d_with_extras_and_frames(
             &mesh,
             &[],
             None,
@@ -405,9 +424,66 @@ impl AssetHost<'_> {
             surface_reading.as_deref(),
             Some(&normals),
             None,
-        )
-        .map_err(|e| format!("10D PBR compile failed: {e:?}"))?;
+        ) {
+            Ok(b) => b,
+            Err(_) if topology => compile_mesh_to_10d_with_extras_and_frames(
+                &mesh,
+                &[],
+                None,
+                Compile10dExtras {
+                    topology: false,
+                    spatial_index,
+                },
+                surface_reading.as_deref(),
+                Some(&normals),
+                None,
+            )
+            .map_err(|e| format!("10D PBR compile failed: {e:?}"))?,
+            Err(e) => return Err(format!("10D PBR compile failed: {e:?}")),
+        };
 
         self.encode("10d", bytes)
     }
+}
+
+fn decode_source_10d_vertex_colors(bytes: &[u8]) -> Option<(Vec<[f32; 3]>, Vec<[f32; 4]>)> {
+    let header = Container10dHeader::parse(bytes).ok()?;
+    let descs = parse_section_table(bytes, &header).ok()?;
+    let ref_mesh = decode_10d_mesh(bytes).ok()?;
+    for d in descs {
+        if d.typ() == Some(SectionType::SurfaceReading) {
+            let start = d.byte_offset as usize;
+            let end = start.saturating_add(d.byte_length as usize);
+            let slice = bytes.get(start..end)?;
+            let cols = decode_surface_reading(slice)?;
+            if cols.len() == ref_mesh.positions.len() && !cols.is_empty() {
+                return Some((ref_mesh.positions, cols));
+            }
+        }
+    }
+    None
+}
+
+fn transfer_nearest_vertex_colors(
+    target_positions: &[[f32; 3]],
+    ref_positions: &[[f32; 3]],
+    ref_colors: &[[f32; 4]],
+) -> Vec<[f32; 4]> {
+    let mut out = Vec::with_capacity(target_positions.len());
+    for p in target_positions {
+        let mut best_d2 = f32::INFINITY;
+        let mut best_col = [0.65, 0.72, 0.68, 1.0];
+        for (rp, rc) in ref_positions.iter().zip(ref_colors.iter()) {
+            let dx = p[0] - rp[0];
+            let dy = p[1] - rp[1];
+            let dz = p[2] - rp[2];
+            let d2 = dx * dx + dy * dy + dz * dz;
+            if d2 < best_d2 {
+                best_d2 = d2;
+                best_col = *rc;
+            }
+        }
+        out.push(best_col);
+    }
+    out
 }

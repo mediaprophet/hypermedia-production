@@ -52,7 +52,7 @@ pub struct ToolLimits {
 impl Default for ToolLimits {
     fn default() -> Self {
         Self {
-            resources: 128,
+            resources: 512,
             resource_bytes: 16 * 1024 * 1024,
             total_resource_bytes: 64 * 1024 * 1024,
             asset_work_units: 50_000_000,
