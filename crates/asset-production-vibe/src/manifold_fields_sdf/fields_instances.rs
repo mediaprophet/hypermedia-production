@@ -3,7 +3,7 @@
 
 use super::{p_add, p_cross, p_normalize, p_scale, p_sub, CHUNK_SIZE};
 use crate::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use vibe::Value;
 
 impl AssetHost<'_> {
@@ -444,7 +444,7 @@ impl AssetHost<'_> {
         let weld_grid = 1e4f64;
         let mut welded_positions: Vec<[f32; 3]> = Vec::new();
         let mut welded_triangles: Vec<[u32; 3]> = Vec::with_capacity(total_t);
-        let mut vert_map: HashMap<(i64, i64, i64), u32> = HashMap::new();
+        let mut vert_map: BTreeMap<(i64, i64, i64), u32> = BTreeMap::new();
 
         for (pt, sc) in &instance_transforms {
             let mut local_remap = Vec::with_capacity(proto.positions.len());

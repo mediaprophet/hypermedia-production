@@ -2,8 +2,10 @@
 
 use super::{v_add, v_cross, v_normalize, v_scale, v_sub, M64ShellRecord, M64_MODE_SHELL};
 use crate::*;
-use qualia_core_db::q42::m64_matter::{M64ChunkDirectoryEntry, M64Header};
-use std::collections::{BTreeMap, HashMap};
+use qualia_core_db::q42::m64_matter::{
+    M64ChunkDirectoryEntry, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader,
+};
+use std::collections::BTreeMap;
 use vibe::Value;
 
 #[allow(dead_code)]
@@ -47,7 +49,7 @@ impl AssetHost<'_> {
 
         // Helper to reconstruct edge table from active face loops
         let rebuild_edges = |faces: &[RadialFace], crease: f32| -> Vec<RadialEdge> {
-            let mut edge_map: HashMap<(usize, usize), usize> = HashMap::new();
+            let mut edge_map: BTreeMap<(usize, usize), usize> = BTreeMap::new();
             let mut edges: Vec<RadialEdge> = Vec::new();
             for (f_idx, face) in faces.iter().enumerate() {
                 if !face.active || face.vertices.len() < 3 {
@@ -255,7 +257,7 @@ impl AssetHost<'_> {
             .count();
 
         // Edge lookup map for shell records
-        let edge_lookup: HashMap<(usize, usize), usize> = edges
+        let edge_lookup: BTreeMap<(usize, usize), usize> = edges
             .iter()
             .enumerate()
             .map(|(i, e)| ((e.v0.min(e.v1), e.v0.max(e.v1)), i))
@@ -412,7 +414,7 @@ impl AssetHost<'_> {
             inset_end: u32,
         }
 
-        let mut edge_map: HashMap<(u32, u32), Vec<EdgeFaceRef>> = HashMap::new();
+        let mut edge_map: BTreeMap<(u32, u32), Vec<EdgeFaceRef>> = BTreeMap::new();
         for (f_idx, tri) in mesh.triangles.iter().enumerate() {
             let insets = face_insets[f_idx];
             for i in 0..3 {
@@ -481,7 +483,7 @@ impl AssetHost<'_> {
         }
 
         // 3. Connect corner fan triangles at each original vertex
-        let mut vertex_insets: HashMap<u32, Vec<u32>> = HashMap::new();
+        let mut vertex_insets: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
         for (f_idx, tri) in mesh.triangles.iter().enumerate() {
             let insets = face_insets[f_idx];
             for i in 0..3 {

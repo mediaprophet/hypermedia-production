@@ -6,7 +6,7 @@ use super::{
     v_sub,
 };
 use crate::*;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::PI;
 use vibe::Value;
 
@@ -33,8 +33,8 @@ impl AssetHost<'_> {
         self.charge(work_units, work_units * 16 + 65536)?;
 
         // Build vertex adjacency and edge frequency
-        let mut adj: Vec<HashSet<usize>> = vec![HashSet::new(); nv];
-        let mut edge_count: HashMap<[u32; 2], usize> = HashMap::new();
+        let mut adj: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); nv];
+        let mut edge_count: BTreeMap<[u32; 2], usize> = BTreeMap::new();
         for tri in &mesh.triangles {
             for k in 0..3 {
                 let v0 = tri[k] as usize;
@@ -69,7 +69,7 @@ impl AssetHost<'_> {
         // Find primary boundary loop
         let mut boundary_loop = Vec::new();
         if let Some(start_v) = is_boundary.iter().position(|&b| b) {
-            let mut visited = HashSet::new();
+            let mut visited = BTreeSet::new();
             let mut curr = start_v;
             while !visited.contains(&curr) {
                 visited.insert(curr);

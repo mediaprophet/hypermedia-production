@@ -6,34 +6,11 @@ mod radial_bevel_inset;
 mod solidify_bisect_subdivide;
 
 use crate::*;
-use qualia_core_db::container_10d::crc32c::crc32c;
+use qualia_core_db::q42::m64_matter::{M64ShellRecord, M64_MODE_SHELL};
 use qualia_core_db::render::assets::Mesh;
 use vibe::Value;
 
-/// Matter-64 container record mode for Radial-Edge topological shell records.
-pub const M64_MODE_SHELL: u8 = 0x04;
-
-/// Fixed 64-byte aligned binary shell record for Radial-Edge B-Rep containers.
-#[repr(C, align(64))]
-#[derive(Copy, Clone, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct M64ShellRecord {
-    pub face_id: u32,
-    pub vertex_indices: [u32; 3],
-    pub edge_indices: [u32; 3],
-    pub normal: [f32; 3],
-    pub centroid: [f32; 3],
-    pub crease: f32,
-    pub flags: u32,
-    pub record_crc32c: u32,
-}
-
-impl M64ShellRecord {
-    #[inline]
-    pub fn update_crc(&mut self) {
-        let bytes: &[u8; 64] = bytemuck::cast_ref(self);
-        self.record_crc32c = crc32c(&bytes[..60]);
-    }
-}
+pub use qualia_core_db::q42::m64_matter::{M64ShellRecord as _, M64_MODE_SHELL as _};
 
 // ── 3D Vector Math Helpers ───────────────────────────────────────────────────
 

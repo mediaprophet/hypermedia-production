@@ -3,7 +3,7 @@
 
 use super::{compute_smooth_normals, v_add, v_cross, v_dot, v_len_sq, v_normalize, v_scale, v_sub};
 use crate::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use vibe::Value;
 
 impl AssetHost<'_> {
@@ -52,7 +52,7 @@ impl AssetHost<'_> {
         }
 
         // Identify boundary edges (incident to exactly 1 triangle)
-        let mut edge_counts: HashMap<(u32, u32), (usize, u32, u32)> = HashMap::new();
+        let mut edge_counts: BTreeMap<(u32, u32), (usize, u32, u32)> = BTreeMap::new();
         for tri in &mesh.triangles {
             for i in 0..3 {
                 let u = tri[i];
@@ -270,7 +270,7 @@ impl AssetHost<'_> {
         }
 
         // Compact unreferenced vertices from culled half-space
-        let mut remap: HashMap<u32, u32> = HashMap::new();
+        let mut remap: BTreeMap<u32, u32> = BTreeMap::new();
         let mut compacted_positions: Vec<[f32; 3]> = Vec::new();
         let mut compacted_triangles: Vec<[u32; 3]> = Vec::with_capacity(out_triangles.len());
         for tri in out_triangles {
@@ -318,7 +318,7 @@ impl AssetHost<'_> {
                 opposites: Vec<usize>,
             }
 
-            let mut edge_map: HashMap<(usize, usize), usize> = HashMap::new();
+            let mut edge_map: BTreeMap<(usize, usize), usize> = BTreeMap::new();
             let mut edge_list: Vec<EdgeInfo> = Vec::new();
 
             for tri in &current_triangles {
@@ -372,7 +372,7 @@ impl AssetHost<'_> {
             }
 
             // Update existing vertices with Loop stencil
-            let mut vertex_neighbors: Vec<HashSet<usize>> = vec![HashSet::new(); orig_nv];
+            let mut vertex_neighbors: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); orig_nv];
             let mut boundary_neighbors: Vec<Vec<usize>> = vec![Vec::new(); orig_nv];
 
             for edge in &edge_list {
