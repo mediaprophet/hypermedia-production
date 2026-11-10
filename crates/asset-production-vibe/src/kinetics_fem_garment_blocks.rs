@@ -398,4 +398,43 @@ mod tests {
         assert_eq!(host.profile(&rec137["profile"]).unwrap().len(), 16);
         assert_eq!(host.workspace.encoded(&rec137["trajectory_svg_resource"]).unwrap().kind, "svg");
     }
+
+    #[test]
+    fn kinetics_fem_cloth_ticks_two_produces_match() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits: &limits,
+            cancel: &cancel,
+            work: 0,
+        };
+
+        let fem_a = host.solve_continuum_fem_lbm(&Args::new()).expect("fem a");
+        let fem_b = host.solve_continuum_fem_lbm(&Args::new()).expect("fem b");
+        let rec_a = record(&fem_a).unwrap();
+        let rec_b = record(&fem_b).unwrap();
+        assert_eq!(rec_a.get("solved_dof_0"), rec_b.get("solved_dof_0"));
+        assert_eq!(
+            rec_a.get("lbm_mass_conservation_error"),
+            rec_b.get("lbm_mass_conservation_error")
+        );
+        assert_eq!(rec_a.get("shear_modulus_pa"), rec_b.get("shear_modulus_pa"));
+        let dof0 = num(rec_a.get("solved_dof_0").unwrap()).unwrap();
+        assert!((dof0 - 1.0).abs() < 1e-10);
+        let mass_err = num(rec_a.get("lbm_mass_conservation_error").unwrap()).unwrap();
+        assert!(mass_err < 1e-6);
+
+        let cloth_a = host.drape_orthotropic_garment(&Args::new()).expect("cloth a");
+        let cloth_b = host.drape_orthotropic_garment(&Args::new()).expect("cloth b");
+        let ca = record(&cloth_a).unwrap();
+        let cb = record(&cloth_b).unwrap();
+        assert_eq!(ca.get("draped_vertex2_y"), cb.get("draped_vertex2_y"));
+        assert_eq!(ca.get("membrane_strain_energy"), cb.get("membrane_strain_energy"));
+        let draped_y = num(ca.get("draped_vertex2_y").unwrap()).unwrap();
+        assert!(draped_y < 1.0);
+        let energy = num(ca.get("membrane_strain_energy").unwrap()).unwrap();
+        assert!(energy > 0.0);
+    }
 }

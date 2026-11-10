@@ -454,4 +454,148 @@ mod tests {
         let disp = num(r.get("mean_displacement").unwrap()).unwrap();
         assert!(disp > 0.0);
     }
+
+    fn xpbd_body(id: &str, y: f64, vy: f64) -> Value {
+        let mut b = BTreeMap::new();
+        b.insert("id".into(), Value::String(id.into()));
+        b.insert(
+            "position".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(y), Value::F64(0.0)]),
+        );
+        b.insert(
+            "velocity".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(vy), Value::F64(0.0)]),
+        );
+        b.insert("radius".into(), Value::F64(0.5));
+        b.insert("inv_mass".into(), Value::F64(1.0));
+        Value::Record(b)
+    }
+
+    #[test]
+    fn test_step_island_xpbd_two_produces_match_permuted_ids() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut args_ab = BTreeMap::new();
+        args_ab.insert(
+            "bodies".into(),
+            Value::List(vec![xpbd_body("b1", 1.0, -2.0), xpbd_body("b2", 2.0, -1.0)]),
+        );
+        args_ab.insert("steps".into(), Value::I64(4));
+        args_ab.insert("substeps".into(), Value::I64(4));
+        args_ab.insert("ground_y".into(), Value::F64(0.0));
+
+        let mut args_ba = args_ab.clone();
+        args_ba.insert(
+            "bodies".into(),
+            Value::List(vec![xpbd_body("b2", 2.0, -1.0), xpbd_body("b1", 1.0, -2.0)]),
+        );
+
+        let a = host
+            .kinetics_sim_op("hypermedia.kinetics.step_island_xpbd", &args_ab)
+            .expect("xpbd a");
+        let b = host
+            .kinetics_sim_op("hypermedia.kinetics.step_island_xpbd", &args_ba)
+            .expect("xpbd b");
+        let Value::Record(ra) = a else { panic!("record") };
+        let Value::Record(rb) = b else { panic!("record") };
+        assert_eq!(ra.get("bodies"), rb.get("bodies"));
+        assert_eq!(ra.get("island_count"), rb.get("island_count"));
+        assert_eq!(ra.get("contact_count"), rb.get("contact_count"));
+        assert_eq!(ra.get("sleeping_count"), rb.get("sleeping_count"));
+    }
+
+    #[test]
+    fn test_evaluate_nla_channelbag_two_produces_match() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut strip1 = BTreeMap::new();
+        strip1.insert("name".into(), Value::String("base_move".into()));
+        strip1.insert("start_time".into(), Value::F64(0.0));
+        strip1.insert("end_time".into(), Value::F64(2.0));
+        strip1.insert("weight".into(), Value::F64(1.0));
+        strip1.insert("blend_mode".into(), Value::String("replace".into()));
+        strip1.insert(
+            "start_val".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        strip1.insert(
+            "end_val".into(),
+            Value::List(vec![Value::F64(10.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        strip1.insert("transition".into(), Value::String("linear".into()));
+
+        let mut strip2 = BTreeMap::new();
+        strip2.insert("name".into(), Value::String("add_hop".into()));
+        strip2.insert("start_time".into(), Value::F64(0.0));
+        strip2.insert("end_time".into(), Value::F64(2.0));
+        strip2.insert("weight".into(), Value::F64(1.0));
+        strip2.insert("blend_mode".into(), Value::String("add".into()));
+        strip2.insert(
+            "start_val".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        strip2.insert(
+            "end_val".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(4.0), Value::F64(0.0)]),
+        );
+        strip2.insert("transition".into(), Value::String("linear".into()));
+
+        let mut args = BTreeMap::new();
+        args.insert(
+            "strips".into(),
+            Value::List(vec![Value::Record(strip1), Value::Record(strip2)]),
+        );
+        args.insert("eval_time".into(), Value::F64(1.0));
+
+        let a = host
+            .kinetics_sim_op("hypermedia.kinetics.evaluate_nla_channelbag", &args)
+            .expect("nla a");
+        let b = host
+            .kinetics_sim_op("hypermedia.kinetics.evaluate_nla_channelbag", &args)
+            .expect("nla b");
+        let Value::Record(ra) = a else { panic!("record") };
+        let Value::Record(rb) = b else { panic!("record") };
+        assert_eq!(ra.get("evaluated_value"), rb.get("evaluated_value"));
+        let val = vector::<3>(ra.get("evaluated_value").unwrap()).unwrap();
+        assert!((val[0] - 5.0).abs() < 1e-12);
+        assert!((val[1] - 2.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_step_simulation_zone_two_produces_match() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut args = BTreeMap::new();
+        args.insert(
+            "points".into(),
+            Value::List(vec![
+                Value::List(vec![Value::F64(1.0), Value::F64(0.0), Value::F64(0.0)]),
+                Value::List(vec![Value::F64(0.0), Value::F64(1.0), Value::F64(0.0)]),
+            ]),
+        );
+        args.insert("iterations".into(), Value::I64(8));
+        args.insert("dt".into(), Value::F64(0.05));
+        args.insert("curl_strength".into(), Value::F64(0.5));
+        args.insert(
+            "attractor".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+
+        let a = host
+            .kinetics_sim_op("hypermedia.kinetics.step_simulation_zone", &args)
+            .expect("zone a");
+        let b = host
+            .kinetics_sim_op("hypermedia.kinetics.step_simulation_zone", &args)
+            .expect("zone b");
+        let Value::Record(ra) = a else { panic!("record") };
+        let Value::Record(rb) = b else { panic!("record") };
+        assert_eq!(ra.get("points"), rb.get("points"));
+        assert_eq!(ra.get("mean_displacement"), rb.get("mean_displacement"));
+    }
 }

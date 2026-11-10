@@ -257,4 +257,64 @@ mod tests {
         assert_eq!(shapes[0]["ty"], "rc");
         assert_eq!(shapes[1]["ty"], "fl");
     }
+
+    #[test]
+    fn test_solve_two_bone_ik_skl1_10d_two_produces_match() {
+        use qualia_core_db::container_10d::skeletal_container::read_skeletal_section;
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut args = BTreeMap::new();
+        args.insert(
+            "root".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        args.insert(
+            "target".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(1.5), Value::F64(0.0)]),
+        );
+        args.insert(
+            "pole".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(1.0), Value::F64(1.0)]),
+        );
+        args.insert("upper_length".into(), Value::F64(1.0));
+        args.insert("lower_length".into(), Value::F64(1.0));
+
+        let a = host
+            .kinetics_op("hypermedia.kinetics.solve_two_bone_ik", &args)
+            .expect("ik a");
+        let b = host
+            .kinetics_op("hypermedia.kinetics.solve_two_bone_ik", &args)
+            .expect("ik b");
+        let Value::Record(ra) = a else { panic!("record") };
+        let Value::Record(rb) = b else { panic!("record") };
+
+        let mid_a = vector::<3>(ra.get("mid_position").unwrap()).unwrap();
+        let mid_b = vector::<3>(rb.get("mid_position").unwrap()).unwrap();
+        let end_a = vector::<3>(ra.get("end_position").unwrap()).unwrap();
+        let end_b = vector::<3>(rb.get("end_position").unwrap()).unwrap();
+        assert_eq!(mid_a, mid_b);
+        assert_eq!(end_a, end_b);
+        assert_eq!(ra.get("skl1_joint_count"), Some(&Value::I64(3)));
+
+        let enc_a = host
+            .workspace
+            .encoded(ra.get("container_10d").unwrap())
+            .expect("10d a");
+        let enc_b = host
+            .workspace
+            .encoded(rb.get("container_10d").unwrap())
+            .expect("10d b");
+        assert_eq!(enc_a.kind, "10d");
+        assert_eq!(enc_a.bytes, enc_b.bytes);
+
+        let skl = read_skeletal_section(&enc_a.bytes).expect("SKL1 in .10d");
+        assert_eq!(skl.counts().joints, 3);
+        assert_eq!(skl.counts().vertices, 3);
+        let skl1_len = num(ra.get("skl1_byte_len").unwrap()).unwrap() as usize;
+        assert!(skl1_len > 0);
+        assert!(skl1_len < enc_a.bytes.len());
+    }
 }
