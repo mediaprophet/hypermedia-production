@@ -3,7 +3,7 @@
 use crate::xml::dom::{escape_xml, parse_xml, XEl, XNode};
 use crate::zip::minizip::ZipPackage;
 use layout_presentation_deck::model::master::{Presentation, Slide};
-use layout_presentation_deck::model::shape::Shape;
+use layout_presentation_deck::model::shape::{Paragraph, Shape, ShapeContent, TextBody};
 use layout_presentation_deck::model::types::{LayoutId, ShapeId, SlideId, Xfrm};
 
 /// Serialize a `Presentation` into an OpenXML `.pptx` ZIP package.
@@ -67,10 +67,11 @@ pub fn to_pptx_package(pres: &Presentation) -> ZipPackage {
             sld_xml.push_str(&format!("          <a:xfrm><a:off x=\"{}\" y=\"{}\"/><a:ext cx=\"{}\" cy=\"{}\"/></a:xfrm>\n", emu_x, emu_y, emu_w, emu_h));
             sld_xml.push_str("        </p:spPr>\n");
 
-            if let Some(txt) = shape.text() {
-                sld_xml.push_str("        <p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>");
-                escape_xml(&txt, &mut sld_xml);
-                sld_xml.push_str("</a:t></a:r></a:p></p:txBody>\n");
+            // ECMA-376 forbids U+000A in a:t; one a:p per paragraph.
+            if let ShapeContent::Text(tb) = &shape.content {
+                sld_xml.push_str("        <p:txBody><a:bodyPr/><a:lstStyle/>");
+                emit_txbody_paragraphs(&tb.paragraphs, &mut sld_xml);
+                sld_xml.push_str("</p:txBody>\n");
             }
             sld_xml.push_str("      </p:sp>\n");
         }
@@ -86,6 +87,29 @@ fn escape_attr(s: &str) -> String {
     let mut out = String::new();
     escape_xml(s, &mut out);
     out
+}
+
+fn emit_txbody_paragraphs(paragraphs: &[Paragraph], out: &mut String) {
+    if paragraphs.is_empty() {
+        out.push_str("<a:p/>");
+        return;
+    }
+    for para in paragraphs {
+        let txt = para.text();
+        if txt.is_empty() {
+            out.push_str("<a:p/>");
+            continue;
+        }
+        for line in txt.split('\n') {
+            out.push_str("<a:p>");
+            if !line.is_empty() {
+                out.push_str("<a:r><a:t>");
+                escape_xml(line, out);
+                out.push_str("</a:t></a:r>");
+            }
+            out.push_str("</a:p>");
+        }
+    }
 }
 
 /// Parse an OpenXML `.pptx` ZIP package into a `Presentation`.
@@ -104,7 +128,6 @@ pub fn parse_pptx_package(pkg: &ZipPackage) -> Result<Presentation, String> {
                         let mut shape_id = ShapeId(0);
                         let mut shape_name = String::new();
                         let mut xfrm = Xfrm::default();
-                        let mut shape_text = None;
 
                         if let Some(nvsp) = sp_el.find_child("nvSpPr") {
                             if let Some(cnv) = nvsp.find_child("cNvPr") {
@@ -132,23 +155,21 @@ pub fn parse_pptx_package(pkg: &ZipPackage) -> Result<Presentation, String> {
                             }
                         }
 
+                        let mut s = Shape::new(shape_id, shape_name, xfrm);
                         if let Some(txbody) = sp_el.find_child("txBody") {
-                            let mut full_text = String::new();
+                            let mut tb = TextBody::default();
                             for p_el in txbody.find_children("p") {
+                                let mut para_text = String::new();
                                 for r_el in p_el.find_children("r") {
                                     for t_el in r_el.find_children("t") {
-                                        full_text.push_str(&t_el.text_content());
+                                        para_text.push_str(&t_el.text_content());
                                     }
                                 }
+                                tb.paragraphs.push(Paragraph::new(para_text));
                             }
-                            if !full_text.is_empty() {
-                                shape_text = Some(full_text);
+                            if tb.paragraphs.iter().any(|p| !p.text().is_empty()) {
+                                s.content = ShapeContent::Text(tb);
                             }
-                        }
-
-                        let mut s = Shape::new(shape_id, shape_name, xfrm);
-                        if let Some(t) = shape_text {
-                            s = s.with_text(t);
                         }
                         slide.shapes.push(s);
                     }

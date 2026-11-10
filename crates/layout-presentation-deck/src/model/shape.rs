@@ -189,6 +189,23 @@ impl Shape {
         self
     }
 
+    /// One DrawingML paragraph per string so U+000A never lives in a single `a:t`.
+    pub fn with_paragraphs<I, S>(mut self, paras: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        let mut tb = TextBody::default();
+        for p in paras {
+            tb.paragraphs.push(Paragraph::new(p));
+        }
+        if tb.paragraphs.is_empty() {
+            tb.paragraphs.push(Paragraph::new(""));
+        }
+        self.content = ShapeContent::Text(tb);
+        self
+    }
+
     pub fn text(&self) -> Option<String> {
         match &self.content {
             ShapeContent::Text(tb) => Some(tb.text()),

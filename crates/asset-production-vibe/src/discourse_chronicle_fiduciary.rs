@@ -118,6 +118,27 @@ impl AssetHost<'_> {
         let redacted_txt_resource = self.encode("txt", redacted.into_bytes())?;
         let equation_svg_resource = self.encode("svg", eq_svg.into_bytes())?;
 
+        let mut pdf_args = Args::new();
+        pdf_args.insert(
+            "title".into(),
+            Value::String("Fiduciary Compliance Report".into()),
+        );
+        pdf_args.insert(
+            "author".into(),
+            Value::String("Hypermedia Discourse".into()),
+        );
+        pdf_args.insert("heading".into(), Value::String("Fiduciary Audit".into()));
+        pdf_args.insert(
+            "body".into(),
+            Value::String(format!(
+                "PDF/UA rules passed {passed_rules}/{}. Zero-residue PII: {}.",
+                verdicts.len(),
+                zero_residue.verified_clean
+            )),
+        );
+        let pdf_ua_resource =
+            self.discourse_op("hypermedia.discourse.compile_pdf", &pdf_args)?;
+
         let report_json = serde_json::json!({
             "pdf_ua": {
                 "rules_evaluated": verdicts.len(),
@@ -141,6 +162,7 @@ impl AssetHost<'_> {
         out.insert("redacted_txt_resource".into(), redacted_txt_resource);
         out.insert("equation_svg_resource".into(), equation_svg_resource);
         out.insert("compliance_json_resource".into(), compliance_json_resource);
+        out.insert("pdf_ua_resource".into(), pdf_ua_resource);
         out.insert("tex_environment_count".into(), Value::I64(tex_struct.envs.len() as i64));
         out.insert("tex_math_width".into(), Value::F64(math_frag.width));
         out.insert("pdf_ua_rules_evaluated".into(), Value::I64(verdicts.len() as i64));
