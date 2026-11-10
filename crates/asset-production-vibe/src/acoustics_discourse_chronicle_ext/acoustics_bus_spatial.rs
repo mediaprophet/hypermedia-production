@@ -454,3 +454,125 @@ impl AssetHost<'_> {
             .insert(Artifact::Audio { rate, samples: out }, self.limits)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn insert_tone(host: &mut AssetHost<'_>, hz: f32, frames: usize, amp: f32) -> Value {
+        let rate = 48_000u32;
+        let samples = qualia_audio::media_store::synth_tone_f32(hz, rate, frames, amp);
+        host.workspace
+            .insert(Artifact::Audio { rate, samples }, host.limits)
+            .unwrap()
+    }
+
+    fn peak(host: &AssetHost<'_>, handle: &Value) -> f32 {
+        match host.workspace.get(handle).expect("audio") {
+            Artifact::Audio { samples, .. } => samples.iter().fold(0.0f32, |m, s| m.max(s.abs())),
+            _ => panic!("expected Audio"),
+        }
+    }
+
+    #[test]
+    fn test_route_bus_dag_master_is_non_silent_object() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let frames = 4800usize;
+        let h1 = insert_tone(&mut host, 440.0, frames, 0.4);
+        let h2 = insert_tone(&mut host, 660.0, frames, 0.3);
+
+        let mut b1 = BTreeMap::new();
+        b1.insert("name".into(), Value::String("SFX".into()));
+        b1.insert("audio".into(), h1);
+        b1.insert("send_to".into(), Value::String("Master".into()));
+        b1.insert("gain_db".into(), Value::F64(-3.0));
+        b1.insert("state".into(), Value::String("playing".into()));
+
+        let mut b2 = BTreeMap::new();
+        b2.insert("name".into(), Value::String("Music".into()));
+        b2.insert("audio".into(), h2);
+        b2.insert("send_to".into(), Value::String("Master".into()));
+        b2.insert("gain_db".into(), Value::F64(-6.0));
+        b2.insert("state".into(), Value::String("fade_to_stop".into()));
+
+        let mut master = BTreeMap::new();
+        master.insert("name".into(), Value::String("Master".into()));
+        master.insert("send_to".into(), Value::String("".into()));
+
+        let mut args = BTreeMap::new();
+        args.insert(
+            "buses".into(),
+            Value::List(vec![
+                Value::Record(b1),
+                Value::Record(b2),
+                Value::Record(master),
+            ]),
+        );
+
+        let mixed = host.route_bus_dag(&args).expect("bus DAG");
+        match host.workspace.get(&mixed).expect("master") {
+            Artifact::Audio { rate, samples } => {
+                assert_eq!(*rate, 48_000);
+                assert_eq!(samples.len(), frames);
+                assert!(
+                    samples.iter().any(|s| s.abs() > 0.01),
+                    "mixed master must be a non-silent Audio object"
+                );
+                assert!(samples.iter().all(|s| s.is_finite() && *s >= -1.0 && *s <= 1.0));
+            }
+            _ => panic!("expected Audio"),
+        }
+    }
+
+    #[test]
+    fn test_spatialize_pga_zone_inverse_distance_object() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let near = insert_tone(&mut host, 440.0, 4800, 0.5);
+
+        let mut near_args = BTreeMap::new();
+        near_args.insert("audio".into(), near.clone());
+        near_args.insert(
+            "source_pos".into(),
+            Value::List(vec![Value::F64(0.5), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        near_args.insert("occlusion".into(), Value::F64(0.0));
+        near_args.insert("reverb_room_size".into(), Value::F64(0.0));
+        let near_out = host
+            .spatialize_pga_zone(&near_args)
+            .expect("near spatialize");
+
+        let mut far_args = BTreeMap::new();
+        far_args.insert("audio".into(), near);
+        far_args.insert(
+            "source_pos".into(),
+            Value::List(vec![Value::F64(8.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        far_args.insert("occlusion".into(), Value::F64(0.0));
+        far_args.insert("reverb_room_size".into(), Value::F64(0.0));
+        let far_out = host.spatialize_pga_zone(&far_args).expect("far spatialize");
+
+        let p_near = peak(&host, &near_out);
+        let p_far = peak(&host, &far_out);
+        assert!(p_near > 0.05, "near source must remain audible, peak={p_near}");
+        assert!(
+            p_far < p_near * 0.6,
+            "inverse-distance law: far peak {p_far} must be quieter than near {p_near}"
+        );
+    }
+}

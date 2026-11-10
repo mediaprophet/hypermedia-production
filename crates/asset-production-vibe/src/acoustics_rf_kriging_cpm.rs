@@ -2,6 +2,61 @@ use super::*;
 use std::collections::BTreeMap;
 use vibe::Value;
 
+/// ITU-R BS.1770-4 / EBU R128 gated integrated LUFS.
+/// Mean-square is accumulated over each 400 ms block (the crate meter currently
+/// stores last-frame energy, which floors near -70 LUFS).
+fn integrated_lufs_bs1770(samples: &[f32], sr: f32) -> f32 {
+    use acoustics_daw_session::KWeightingChannel;
+    let mut kw = KWeightingChannel::new(sr);
+    let block = ((sr * 0.4).round() as usize).max(1);
+    if samples.len() < block {
+        return -70.0;
+    }
+    let mut blocks = Vec::new();
+    let mut acc = 0.0f64;
+    let mut n = 0usize;
+    for &s in samples {
+        let y = kw.filter_sample(s) as f64;
+        acc += y * y;
+        n += 1;
+        if n >= block {
+            blocks.push(acc / n as f64);
+            acc = 0.0;
+            n = 0;
+        }
+    }
+    if blocks.is_empty() {
+        return -70.0;
+    }
+    let abs_threshold_energy = 10f64.powf((-70.0 - 0.691) / 10.0);
+    let mut abs_gated = Vec::new();
+    for &z in &blocks {
+        if z >= abs_threshold_energy {
+            abs_gated.push(z);
+        }
+    }
+    if abs_gated.is_empty() {
+        return -70.0;
+    }
+    let mean_abs: f64 = abs_gated.iter().sum::<f64>() / (abs_gated.len() as f64);
+    let gamma_rel = -0.691 + 10.0 * mean_abs.log10() - 10.0;
+    let rel_threshold_energy = 10f64.powf((gamma_rel - 0.691) / 10.0);
+    let mut rel_sum = 0.0f64;
+    let mut rel_n = 0usize;
+    for z in abs_gated {
+        if z >= rel_threshold_energy {
+            rel_sum += z;
+            rel_n += 1;
+        }
+    }
+    if rel_n == 0 {
+        return -70.0;
+    }
+    let mean_rel = rel_sum / rel_n as f64;
+    let lufs = -0.691 + 10.0 * mean_rel.log10();
+    (lufs as f32).max(-70.0)
+}
+
 impl AssetHost<'_> {
     /// 138: `hypermedia.kinetics.schedule_cpm_evm_montecarlo`
     /// (`kinetics-schedule-cpm`)
@@ -83,26 +138,34 @@ impl AssetHost<'_> {
         let bpm = number(a, "bpm", 120.0)?;
         let azimuth = number(a, "azimuth_deg", 30.0)? as f32;
 
-        self.charge(512, 16384)?;
-
         use acoustics_daw_session::{
-            CamelotKey, EbuR128Meter, HarmonicRelation, LAYOUT_5_1, VbapPanner, detect_pitch_yin,
-            hz_to_midi,
+            CamelotKey, HarmonicRelation, LAYOUT_5_1, VbapPanner, detect_pitch_yin, hz_to_midi,
         };
         use audio_timebase::{BarBeat, SampleRate, TempoMap, TimecodeRate, TransportPosition};
 
+        // EBU R128 gates on 400 ms blocks; shorter buffers floor at -70 LUFS.
         let (sr, samples) = if let Some(v) = a.get("audio") {
             let Artifact::Audio { rate, samples: src } = self.workspace.get(v)? else {
                 return Err("Expected audio handle".into());
             };
+            let sr = *rate as f32;
+            let min_len = ((sr * 0.4).ceil() as usize).saturating_mul(2).max(2048);
             let mut buf = src.clone();
-            if buf.len() < 2048 {
-                buf.resize(2048, 0.0);
+            if buf.is_empty() {
+                return Err("Expected non-empty audio".into());
             }
-            (*rate as f32, buf)
+            if buf.len() < min_len {
+                let orig = buf.clone();
+                while buf.len() < min_len {
+                    let remaining = min_len - buf.len();
+                    let take = remaining.min(orig.len());
+                    buf.extend_from_slice(&orig[..take]);
+                }
+            }
+            (sr, buf)
         } else {
             let sr = 48_000.0f32;
-            let n = 4096usize;
+            let n = 24_000usize;
             let mut buf = Vec::with_capacity(n);
             for i in 0..n {
                 let t = (i as f32) / sr;
@@ -111,9 +174,9 @@ impl AssetHost<'_> {
             (sr, buf)
         };
 
-        let mut meter = EbuR128Meter::new(sr, 1);
-        meter.process_interleaved(&samples);
-        let lufs = meter.integrated_lufs();
+        self.charge(samples.len() * 4, samples.len() * 10 + 44)?;
+
+        let lufs = integrated_lufs_bs1770(&samples, sr);
         let pitch = detect_pitch_yin(&samples[..2048], sr, 50.0, 2000.0, 0.15).unwrap_or(freq_hz);
         let midi_note = hz_to_midi(pitch);
 
@@ -395,5 +458,55 @@ impl AssetHost<'_> {
         out.insert("contour_line_count".into(), Value::I64(contours.len() as i64));
         out.insert("shortest_route_cost".into(), Value::F64(route.total_cost));
         Ok(Value::Record(out))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn test_ebu_r128_loudness_object_not_floor() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let res = host
+            .analyze_ebu_r128_camelot_daw(&Args::new())
+            .expect("default 440 Hz loudness");
+        let rec = record(&res).expect("loudness record");
+        let lufs = match rec.get("integrated_lufs") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("integrated_lufs"),
+        };
+        assert!(
+            lufs.is_finite() && lufs > -40.0 && lufs < -6.0,
+            "0.25 FS 440 Hz sine must gate above the -70 LUFS floor, got {lufs}"
+        );
+        let audio = rec.get("audio").expect("audio object").clone();
+        match host.workspace.get(&audio).expect("audio handle") {
+            Artifact::Audio { rate, samples } => {
+                assert_eq!(*rate, 48_000);
+                assert!(samples.len() >= 24_000, "need ≥400 ms for R128 gating");
+                assert!(samples.iter().any(|s| s.abs() > 0.1));
+            }
+            _ => panic!("expected Audio artifact"),
+        }
+        let power = match rec.get("vbap_5_1_power") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("vbap_5_1_power"),
+        };
+        assert!((power - 1.0).abs() < 0.15, "unit VBAP power, got {power}");
     }
 }
