@@ -396,6 +396,22 @@ impl AssetHost<'_> {
             shapes::rectangle(Rect::new(width * 0.5, 0.0, width * 1.5, height))
         };
         let united = boolean(&r1, &r2, BoolOp::Union);
+        // Boolean flatten+cubic-refits; Corner::of rejects handles. Sharp ring, then Live Corners.
+        let united = PathData::new(
+            united
+                .subpaths
+                .iter()
+                .filter_map(|sp| {
+                    let pts: Vec<[f64; 2]> = sp.anchors.iter().map(|a| [a.p.x, a.p.y]).collect();
+                    let pts = collapse_collinear(pts);
+                    if pts.len() < 3 {
+                        return None;
+                    }
+                    let kpts: Vec<Point> = pts.into_iter().map(|[x, y]| Point::new(x, y)).collect();
+                    Some(SubPath::polyline(&kpts, sp.closed))
+                })
+                .collect(),
+        );
         // radii is indexed by anchor, not corner; pad so every Live Corner gets the G2 cut.
         let n_anchors = united.anchor_count().max(1);
         let radii = vec![corner_radius.max(0.0); n_anchors];
@@ -746,5 +762,93 @@ mod tests {
             .map(|p| drafting_geometry::Vec2::new(p[0], p[1]))
             .collect();
         assert!(drafting_geometry::shoelace(&v2).abs() > 1e-6);
+    }
+
+    #[test]
+    fn locus_warp_live_corners_90deg_setback_not_l_vs_c() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_host(&limits, &cancel);
+        let radius = 6.0;
+        let invoke = |host: &mut AssetHost<'_>, r: f64| {
+            host.invoke(
+                "hypermedia.locus.pathfinder_warp_envelope",
+                &Value::Record(BTreeMap::from([
+                    ("width".into(), Value::F64(40.0)),
+                    ("height".into(), Value::F64(30.0)),
+                    ("bend".into(), Value::F64(0.0)),
+                    ("corner_radius".into(), Value::F64(r)),
+                    ("extrude_depth".into(), Value::F64(10.0)),
+                ])),
+            )
+            .expect("warp envelope")
+        };
+        let Value::Record(m0) = invoke(&mut host, 0.0) else {
+            panic!("expected record")
+        };
+        let Value::Record(m6) = invoke(&mut host, radius) else {
+            panic!("expected record")
+        };
+        let pts0 = host
+            .profile(m0.get("profile").expect("profile"))
+            .expect("r0 profile");
+        let pts6 = host
+            .profile(m6.get("profile").expect("profile"))
+            .expect("r6 profile");
+        assert_eq!(pts0.len(), 4, "identity warp of a sharp rect union is 4 verts, got {pts0:?}");
+        let svg0 = svg_bytes(&host, &m0);
+        let svg6 = svg_bytes(&host, &m6);
+        let d0 = svg_path_d(std::str::from_utf8(&svg0).expect("utf8"));
+        let d6 = svg_path_d(std::str::from_utf8(&svg6).expect("utf8"));
+        assert!(!d0.contains('C'), "radius-0 still must stay L-only, got {d0}");
+        assert!(d6.contains('C'), "radius-6 Live Corners must emit G2 cubics, got {d6}");
+        // Geometry, not L-only vs C encoding of the same polyline.
+        assert_ne!(pts0, pts6, "radius-6 still must move vertices, not only L→C");
+        let a0 = match m0.get("anchor_count") {
+            Some(Value::I64(n)) => *n,
+            other => panic!("r0 anchors: {other:?}"),
+        };
+        let a6 = match m6.get("anchor_count") {
+            Some(Value::I64(n)) => *n,
+            other => panic!("r6 anchors: {other:?}"),
+        };
+        assert!(
+            a6 >= 8 && a6 > a0,
+            "rounded rect is 8 G2 anchors (then print-split); got r0={a0} r6={a6}"
+        );
+
+        let n = pts0.len();
+        for i in 0..n {
+            let prev = pts0[(i + n - 1) % n];
+            let at = pts0[i];
+            let next = pts0[(i + 1) % n];
+            let (dux, duy) = (prev[0] - at[0], prev[1] - at[1]);
+            let (dvx, dvy) = (next[0] - at[0], next[1] - at[1]);
+            let (lu, lv) = (dux.hypot(duy), dvx.hypot(dvy));
+            let cos = (dux * dvx + duy * dvy) / (lu * lv);
+            let sin = (dux * dvy - duy * dvx).abs() / (lu * lv);
+            let angle = sin.atan2(cos).to_degrees();
+            assert!(
+                (angle - 90.0).abs() < 8.0,
+                "sharp union corner {at:?} should be ~90°, got {angle}"
+            );
+            let d6c = pts6
+                .iter()
+                .map(|p| (p[0] - at[0]).hypot(p[1] - at[1]))
+                .fold(f64::INFINITY, f64::min);
+            assert!(d6c > 2.0, "Live Corners must cut 90° vertex {at:?}, dist {d6c}");
+            let setback = radius * (1.0 + cos) / sin;
+            let on_side = |to: [f64; 2]| {
+                let (dx, dy) = (to[0] - at[0], to[1] - at[1]);
+                let len = dx.hypot(dy);
+                let target = [at[0] + dx / len * setback, at[1] + dy / len * setback];
+                pts6.iter()
+                    .any(|p| (p[0] - target[0]).hypot(p[1] - target[1]) < 0.2)
+            };
+            assert!(
+                on_side(prev) && on_side(next),
+                "90° setback {setback} along both sides of {at:?} (r={radius})"
+            );
+        }
     }
 }
