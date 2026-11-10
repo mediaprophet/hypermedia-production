@@ -266,7 +266,9 @@ impl AssetHost<'_> {
                 .map_err(|e| format!("Failed to add brick chunk: {e}"))?;
         }
 
-        let bytes = writer.to_bytes();
+        let bytes = writer
+            .to_bytes()
+            .map_err(|e| format!("Failed to serialize EMF container: {e}"))?;
         self.encode("emf", bytes)
     }
 
