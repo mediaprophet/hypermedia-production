@@ -561,7 +561,7 @@ pub fn build_flora_mycelium_production_plan_json(
 
 /// Deterministic FNV-1a 60-bit hash (`lexicon.rs` mask `0x0FFF_FFFF_FFFF_FFFF`).
 #[inline]
-fn fnv1a_60(bytes: &[u8]) -> u64 {
+pub(super) fn fnv1a_60(bytes: &[u8]) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
     for &b in bytes {
         h ^= b as u64;
@@ -572,7 +572,7 @@ fn fnv1a_60(bytes: &[u8]) -> u64 {
 
 /// Packs a single 48-byte Super-Quin (`NQuin`: `subject`, `predicate`, `object`, `context`,
 /// `metadata`, `parity` = XOR fold) into `out`.
-fn push_nquin_48(
+pub(super) fn push_nquin_48(
     out: &mut Vec<u8>,
     subject_did: &str,
     property_iri: &str,

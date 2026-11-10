@@ -1346,6 +1346,190 @@ pub fn compile_human_welfare_q42_bytes(
     out
 }
 
+/// Years lived and how old the person looks are separate.
+/// Bone, vessels, and organs follow chronological age.
+/// Superficial muscle bulk also follows appearance.
+/// A fetus follows gestational week, not the mother's appearance.
+fn apply_age_morphism(
+    part: &str,
+    osteology: bool,
+    chronological_age: f32,
+    appearance_age: f32,
+    center: &mut [f32; 3],
+    radii: &mut [f32; 3],
+) {
+    if matches!(part, "fetus" | "placenta") {
+        return;
+    }
+    let chrono = chronological_age.clamp(0.0, 110.0);
+    let look_years = appearance_age.clamp(0.0, 110.0);
+    let axis = |years: f32| ((years - 25.0) / 55.0).clamp(-0.45, 1.15);
+    let bio = if chrono >= 25.0 { axis(chrono) } else { 0.0 };
+    let look = axis(look_years);
+    if chrono < 25.0 {
+        let stature = 0.50 + 0.50 * (chrono / 25.0);
+        *center = [center[0] * stature, center[1] * stature, center[2] * stature];
+        *radii = [radii[0] * stature, radii[1] * stature, radii[2] * stature];
+    }
+    let superficial = matches!(
+        part,
+        "pectoralis"
+            | "deltoid_left"
+            | "deltoid_right"
+            | "quadriceps_left"
+            | "quadriceps_right"
+    );
+    if osteology {
+        let height = if part == "spine" { 1.0 - 0.12 * bio } else { 1.0 - 0.02 * bio };
+        let thick = 1.0 - 0.07 * bio;
+        *radii = [radii[0] * thick, radii[1] * height, radii[2] * thick];
+    } else if part == "aorta" {
+        let wide = 1.0 + 0.16 * bio;
+        *radii = [radii[0] * wide, radii[1] * (1.0 - 0.04 * bio), radii[2] * wide];
+    } else if superficial {
+        let bulk = (1.0 - 0.22 * bio + 0.12 * (bio - look)).clamp(0.55, 1.25);
+        *radii = [radii[0] * bulk, radii[1] * bulk, radii[2] * bulk];
+    } else if part.starts_with("eye") {
+        center[1] -= 0.004 * look;
+    } else {
+        let scale = 1.0 - 0.05 * bio;
+        *radii = [radii[0] * scale, radii[1] * scale, radii[2] * scale];
+    }
+}
+
+/// One Synth-authored part. The mesh is generated here. No external model is fetched.
+fn build_authored_part(
+    profile: HumanAnatomyProfile,
+    gestational_week: u32,
+    part: &str,
+    chronological_age: f32,
+    appearance_age: f32,
+    osteology_vis_01: f32,
+    myology_vis_01: f32,
+    integument_vis_01: f32,
+    explode_layer_01: f32,
+) -> Result<CompiledVertebrateAnatomy10d, String> {
+    let is_male = profile == HumanAnatomyProfile::Male;
+    let w = if is_male {
+        0.0
+    } else {
+        (gestational_week.clamp(0, 40) as f32) / 40.0
+    };
+    let h = if is_male { 1.04_f32 } else { 0.97_f32 };
+    let male_only = matches!(part, "prostate" | "testis_left" | "testis_right");
+    let female_only = matches!(part, "uterus" | "ovary_left" | "ovary_right" | "fetus" | "placenta");
+    if male_only && !is_male {
+        return Err(format!("{part} is a male part"));
+    }
+    if female_only && is_male {
+        return Err(format!("{part} is a female part"));
+    }
+    if matches!(part, "fetus" | "placenta") && gestational_week == 0 {
+        return Err(format!("{part} requires a gestational week"));
+    }
+
+    let bone = [0.93, 0.90, 0.83, 1.0];
+    let heart = [0.78, 0.14, 0.18, 1.0];
+    let lung = [0.86, 0.54, 0.58, 1.0];
+    let brain = [0.90, 0.72, 0.74, 1.0];
+    let liver = [0.52, 0.20, 0.18, 1.0];
+    let gut = [0.82, 0.56, 0.48, 1.0];
+    let kidney = [0.62, 0.24, 0.26, 1.0];
+    let nerve = [0.95, 0.84, 0.32, 1.0];
+    let muscle = [0.72, 0.22, 0.21, 1.0];
+    let eye = [0.92, 0.93, 0.94, 1.0];
+    let vessel = [0.86, 0.16, 0.20, 1.0];
+    let gland = [0.72, 0.45, 0.55, 1.0];
+    let repro = [0.82, 0.34, 0.48, 1.0];
+    let fetus_c = [0.94, 0.76, 0.68, 1.0];
+
+    let head_y = 0.68 * h;
+    let chest_y = 0.40 * h;
+    let (mut center, mut radii, color, osteology, iri): ([f32; 3], [f32; 3], [f32; 4], bool, &str) =
+        match part {
+            "heart" => ([0.024, chest_y, 0.038], [0.044, 0.054, 0.042], heart, false, "http://purl.obolibrary.org/obo/UBERON_0000948"),
+            "lung_left" => ([0.068, chest_y + 0.02 * w, 0.014], [0.054, 0.096 - 0.012 * w, 0.064], lung, false, "http://purl.obolibrary.org/obo/UBERON_0002048"),
+            "lung_right" => ([-0.068, chest_y + 0.02 * w, 0.014], [0.054, 0.096 - 0.012 * w, 0.064], lung, false, "http://purl.obolibrary.org/obo/UBERON_0002048"),
+            "eye_left" => ([0.032, head_y + 0.02, 0.078], [0.012, 0.012, 0.012], eye, false, "http://purl.obolibrary.org/obo/UBERON_0000970"),
+            "eye_right" => ([-0.032, head_y + 0.02, 0.078], [0.012, 0.012, 0.012], eye, false, "http://purl.obolibrary.org/obo/UBERON_0000970"),
+            "brain" => ([0.0, head_y + 0.04, -0.01], [0.062, 0.048, 0.074], brain, false, "http://purl.obolibrary.org/obo/UBERON_0000955"),
+            "spinal_cord" => ([0.0, 0.28 * h, -0.04], [0.008, 0.28 * h, 0.008], nerve, false, "http://purl.obolibrary.org/obo/UBERON_0002240"),
+            "liver" => ([-0.052, (0.28 + 0.04 * w) * h, 0.028], [0.072, 0.052, 0.058], liver, false, "http://purl.obolibrary.org/obo/UBERON_0002107"),
+            "stomach" => ([0.048, (0.26 + 0.04 * w) * h, 0.032], [0.048, 0.042, 0.044], gut, false, "http://purl.obolibrary.org/obo/UBERON_0000945"),
+            "kidney_left" => ([0.048, 0.18 * h, -0.024], [0.024, 0.042, 0.022], kidney, false, "http://purl.obolibrary.org/obo/UBERON_0002113"),
+            "kidney_right" => ([-0.048, 0.18 * h, -0.024], [0.024, 0.042, 0.022], kidney, false, "http://purl.obolibrary.org/obo/UBERON_0002113"),
+            "spleen" => ([0.082, 0.30 * h, 0.01], [0.028, 0.036, 0.018], [0.55, 0.18, 0.28, 1.0], false, "http://purl.obolibrary.org/obo/UBERON_0002106"),
+            "pancreas" => ([0.01, 0.24 * h, 0.01], [0.055, 0.016, 0.018], gland, false, "http://purl.obolibrary.org/obo/UBERON_0001264"),
+            "trachea" => ([0.0, 0.52 * h, 0.02], [0.012, 0.07, 0.012], lung, false, "http://purl.obolibrary.org/obo/UBERON_0003126"),
+            "thyroid" => ([0.0, 0.58 * h, 0.03], [0.028, 0.012, 0.014], gland, false, "http://purl.obolibrary.org/obo/UBERON_0002046"),
+            "aorta" => ([0.008, 0.32 * h, 0.0], [0.012, 0.22 * h, 0.012], vessel, false, "http://purl.obolibrary.org/obo/UBERON_0000947"),
+            "bladder" => ([0.0, -0.02 * h, 0.03], [0.032, 0.026, 0.028], [0.78, 0.62, 0.28, 1.0], false, "http://purl.obolibrary.org/obo/UBERON_0001255"),
+            "cranium" => ([0.0, head_y + 0.04, -0.01], [0.078, 0.098, 0.094], bone, true, "http://purl.obolibrary.org/obo/UBERON_0003129"),
+            "spine" => ([0.0, 0.22 * h, -0.03], [0.018, 0.42 * h, 0.018], bone, true, "http://purl.obolibrary.org/obo/UBERON_0001130"),
+            "pelvis" => ([0.0, -0.02 * h, 0.0], [if is_male { 0.12 } else { 0.14 + 0.01 * w }, 0.05, 0.08], bone, true, "http://purl.obolibrary.org/obo/UBERON_0001270"),
+            "femur_left" => ([0.08, -0.42 * h, 0.0], [0.018, 0.22 * h, 0.018], bone, true, "http://purl.obolibrary.org/obo/UBERON_0000975"),
+            "femur_right" => ([-0.08, -0.42 * h, 0.0], [0.018, 0.22 * h, 0.018], bone, true, "http://purl.obolibrary.org/obo/UBERON_0000975"),
+            "humerus_left" => ([0.22, 0.28 * h, 0.0], [0.014, 0.16 * h, 0.014], bone, true, "http://purl.obolibrary.org/obo/UBERON_0000976"),
+            "humerus_right" => ([-0.22, 0.28 * h, 0.0], [0.014, 0.16 * h, 0.014], bone, true, "http://purl.obolibrary.org/obo/UBERON_0000976"),
+            "pectoralis" => ([0.0, chest_y + 0.04, 0.06], [0.14, 0.04, 0.03], muscle, false, "http://purl.obolibrary.org/obo/UBERON_0001103"),
+            "deltoid_left" => ([0.20, 0.48 * h, 0.0], [0.03, 0.04, 0.03], muscle, false, "http://purl.obolibrary.org/obo/UBERON_0001103"),
+            "deltoid_right" => ([-0.20, 0.48 * h, 0.0], [0.03, 0.04, 0.03], muscle, false, "http://purl.obolibrary.org/obo/UBERON_0001103"),
+            "quadriceps_left" => ([0.08, -0.28 * h, 0.03], [0.03, 0.12, 0.03], muscle, false, "http://purl.obolibrary.org/obo/UBERON_0001103"),
+            "quadriceps_right" => ([-0.08, -0.28 * h, 0.03], [0.03, 0.12, 0.03], muscle, false, "http://purl.obolibrary.org/obo/UBERON_0001103"),
+            "prostate" => ([0.0, -0.04 * h, 0.02], [0.018, 0.014, 0.016], repro, false, "http://purl.obolibrary.org/obo/UBERON_0002367"),
+            "testis_left" => ([0.018, -0.08 * h, 0.04], [0.014, 0.018, 0.012], repro, false, "http://purl.obolibrary.org/obo/UBERON_0000473"),
+            "testis_right" => ([-0.018, -0.08 * h, 0.04], [0.014, 0.018, 0.012], repro, false, "http://purl.obolibrary.org/obo/UBERON_0000473"),
+            "uterus" => ([0.0, (-0.02 + 0.08 * w) * h, 0.04 + 0.06 * w], [0.03 + 0.05 * w, 0.04 + 0.07 * w, 0.025 + 0.05 * w], repro, false, "http://purl.obolibrary.org/obo/UBERON_0000995"),
+            "ovary_left" => ([0.04, 0.0, 0.02], [0.014, 0.01, 0.01], repro, false, "http://purl.obolibrary.org/obo/UBERON_0000992"),
+            "ovary_right" => ([-0.04, 0.0, 0.02], [0.014, 0.01, 0.01], repro, false, "http://purl.obolibrary.org/obo/UBERON_0000992"),
+            "fetus" => ([0.0, (0.02 + 0.06 * w) * h, 0.06 + 0.05 * w], [0.02 + 0.08 * w, 0.03 + 0.12 * w, 0.02 + 0.06 * w], fetus_c, false, "http://purl.obolibrary.org/obo/UBERON_0000071"),
+            "placenta" => ([0.02, (0.06 + 0.05 * w) * h, -0.01], [0.04 + 0.05 * w, 0.02 + 0.02 * w, 0.03 + 0.03 * w], [0.64, 0.16, 0.26, 1.0], false, "http://purl.obolibrary.org/obo/UBERON_0001987"),
+            other => return Err(format!("Unknown authored part '{other}'")),
+        };
+
+    let mut acc = AnatomyMeshAccumulator::new();
+    let layer = if osteology {
+        ZoologicalAnatomicalLayer::Osteology
+    } else {
+        ZoologicalAnatomicalLayer::MyologyAndTendons
+    };
+    let joint = if part.starts_with("eye") || part == "brain" || part == "cranium" {
+        JOINT_HEAD
+    } else if part.contains("femur") || part == "pelvis" || part == "bladder" || female_only || male_only {
+        JOINT_PELVIS_ROOT
+    } else {
+        JOINT_CHEST
+    };
+    apply_age_morphism(part, osteology, chronological_age, appearance_age, &mut center, &mut radii);
+    acc.push_ellipsoid(center, radii, 16, 12, color, layer, joint, JOINT_SPINE, 0.95);
+    let end = acc.positions.len();
+    let mat = make_pbr_material(part, color, 0.45, 0.0);
+    let ranges = vec![SubmeshRange {
+        first_index: 0,
+        index_count: acc.indices.len() as u32,
+        material_id: mat.id,
+        semantic_id: q_hash(iri),
+    }];
+    let (ost, myo, skin) = if osteology {
+        (0..end, 0..0, 0..0)
+    } else {
+        (0..0, 0..end, 0..0)
+    };
+    Ok(finalize_and_seal_vertebrate_anatomy_10d(
+        FaunaBiomechanicalArchetype::MacropodSaltatorial,
+        acc,
+        vec![mat],
+        ranges,
+        ost,
+        myo,
+        skin,
+        osteology_vis_01,
+        myology_vis_01,
+        integument_vis_01,
+        explode_layer_01,
+    ))
+}
+
 impl AssetHost<'_> {
     /// Morphism `hypermedia.manifold.compile_human_welfare_anatomy_10d`:
     /// Compiles a 17-system Human Welfare & Maternal-Fetal `.10d` container (`male`, `female`,
@@ -1362,6 +1546,9 @@ impl AssetHost<'_> {
                 "integument_vis_01",
                 "explode_01",
                 "title",
+                "part",
+                "chronological_age_years",
+                "appearance_age_years",
             ],
         )?;
 
@@ -1373,6 +1560,9 @@ impl AssetHost<'_> {
         };
         let (profile, week) = HumanAnatomyProfile::from_str_and_week(&profile_str, week_opt)?;
         let title_str = super::opt_string(a, "title", profile.label())?;
+        let part = super::opt_string(a, "part", "")?;
+        let chronological_age = number(a, "chronological_age_years", 25.0)? as f32;
+        let appearance_age = number(a, "appearance_age_years", chronological_age as f64)? as f32;
 
         let osteology_vis_01 = number(a, "osteology_vis_01", 1.0)? as f32;
         let myology_vis_01 = number(a, "myology_vis_01", 0.90)? as f32;
@@ -1381,14 +1571,28 @@ impl AssetHost<'_> {
 
         self.charge(512, 16384)?;
 
-        let mut compiled = build_human_welfare_anatomy_10d(
-            profile,
-            week,
-            osteology_vis_01,
-            myology_vis_01,
-            integument_vis_01,
-            explode_01,
-        );
+        let mut compiled = if part.is_empty() {
+            build_human_welfare_anatomy_10d(
+                profile,
+                week,
+                osteology_vis_01,
+                myology_vis_01,
+                integument_vis_01,
+                explode_01,
+            )
+        } else {
+            build_authored_part(
+                profile,
+                week,
+                &part,
+                chronological_age,
+                appearance_age,
+                osteology_vis_01,
+                myology_vis_01,
+                integument_vis_01,
+                explode_01,
+            )?
+        };
         verify_whole_file_crc32c(&mut compiled.container_bytes)
             .map_err(|e| format!("Human Welfare .10d CRC-32C verification failed: {e:?}"))?;
 
@@ -1445,6 +1649,15 @@ impl AssetHost<'_> {
         )?;
 
         let mut out = BTreeMap::new();
+        out.insert("part".into(), Value::String(part));
+        out.insert(
+            "chronological_age_years".into(),
+            Value::F64(chronological_age as f64),
+        );
+        out.insert(
+            "appearance_age_years".into(),
+            Value::F64(appearance_age as f64),
+        );
         out.insert("profile".into(), Value::String(profile.slug().into()));
         out.insert("label".into(), Value::String(profile.label().into()));
         out.insert("gestational_week".into(), Value::I64(week as i64));

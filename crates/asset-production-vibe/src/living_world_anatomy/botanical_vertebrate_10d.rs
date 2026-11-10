@@ -11,7 +11,6 @@ use qualia_core_db::render::vertebrate_anatomy::{
     build_scale5_vertebrate_anatomy_10d, evaluate_anatomical_layer_peel_zero_heap,
     ZoologicalAnatomicalLayer,
 };
-use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 use vibe::Value;
 
@@ -187,6 +186,12 @@ impl AssetHost<'_> {
             }
         }
 
+        if a.contains_key("scaffold_input") {
+            return Err(
+                "scaffold_input (JSON resource) is no longer accepted; pass a VibeScript record as 'spec'"
+                    .into(),
+            );
+        }
         fields(
             a,
             &[
@@ -195,9 +200,11 @@ impl AssetHost<'_> {
                 "myology_vis_01",
                 "integument_vis_01",
                 "explode_01",
+                "spec",
                 "scaffold",
-                "scaffold_input",
+                "rules",
                 "title",
+                "corpus",
             ],
         )?;
 
@@ -224,10 +231,31 @@ impl AssetHost<'_> {
 
         self.charge(512, 16384)?;
 
-        let scaffold_json_opt = resolve_portable_scaffold_arg(self.inputs, a)?;
-        let mut compiled = if let Some(scaffold_val) = scaffold_json_opt {
+        let spec_opt = species_spec::resolve_species_spec(self.inputs, a)?;
+        let spec_json = spec_opt.as_ref().map(|(j, _)| j);
+        let species_id = species_spec::species_model_id(spec_json, &archetype_str);
+        let corpus = corpus_values::resolve_corpus(self.inputs, a, spec_json)?;
+        let joints = if let Some(corpus) = &corpus {
+            if spec_json.and_then(|s| s.get("joints")).is_some() {
+                return Err(
+                    "spec joints and a species corpus both supply ranges; keep the ranges in the corpus"
+                        .into(),
+                );
+            }
+            corpus_values::joint_rom_from_corpus(corpus)?
+        } else {
+            joint_rom::parse_joint_rom(spec_json)?
+        };
+        let rules = species_spec::resolve_rules(
+            self.inputs,
+            a,
+            &species_id,
+            false,
+            &joint_rom::joint_rom_rules(&joints),
+        )?;
+        let mut compiled = if let Some(spec_val) = spec_json {
             portable_scaffold::build_anatomy_from_portable_scaffold(
-                &scaffold_val,
+                spec_val,
                 archetype,
                 osteology_vis_01 as f32,
                 myology_vis_01 as f32,
@@ -386,10 +414,40 @@ impl AssetHost<'_> {
         let fauna_plan_json =
             behavioral_hooks::build_fauna_production_plan_json(&archetype_str, &title_str);
         let fauna_plan_res = self.encode("json", fauna_plan_json.clone().into_bytes())?;
-        let fauna_logic_q42 = self.encode(
-            "q42",
-            behavioral_hooks::compile_model_logic_q42_bytes("wallabia-bicolor", false),
-        )?;
+        let fauna_logic_q42 = self.encode("q42", rules.bytes)?;
+        out.insert("species_id".into(), Value::String(species_id));
+        out.insert(
+            "spec_source".into(),
+            Value::String(
+                spec_opt
+                    .as_ref()
+                    .map(|(_, s)| s.as_str())
+                    .unwrap_or("archetype")
+                    .into(),
+            ),
+        );
+        out.insert("joint_rom_count".into(), Value::I64(joints.len() as i64));
+        if let Some(corpus) = &corpus {
+            let rules_from_joints = joint_rom::joint_rom_rules(&joints);
+            let cited = rules_from_joints
+                .iter()
+                .filter(|r| !r.assertion_ids.is_empty())
+                .count();
+            out.insert("corpus_iri".into(), Value::String(corpus.corpus_iri.clone()));
+            out.insert("cited_rule_count".into(), Value::I64(cited as i64));
+        }
+        out.insert(
+            "rules_source".into(),
+            Value::String(rules.source.as_str().into()),
+        );
+        out.insert(
+            "rules_quin_count".into(),
+            Value::I64(rules.summary.quin_count as i64),
+        );
+        out.insert(
+            "rules_payload_digest".into(),
+            Value::String(format!("{:015x}", rules.summary.payload_digest)),
+        );
         out.insert("production_plan_json".into(), Value::String(fauna_plan_json));
         out.insert("production_plan_resource".into(), fauna_plan_res);
         out.insert("logic_q42".into(), fauna_logic_q42);
@@ -428,64 +486,4 @@ fn store_raw_mesh(
         }),
         host.limits,
     )
-}
-
-fn resolve_portable_scaffold_arg(
-    inputs: &[Resource],
-    a: &Args,
-) -> Result<Option<JsonValue>, String> {
-    if let Some(inp_val) = a.get("scaffold_input") {
-        let key = text(inp_val)?;
-        let res = inputs
-            .iter()
-            .find(|r| r.key == key)
-            .ok_or_else(|| format!("Portable scaffold input '{key}' not found in workspace inputs"))?;
-        let s = std::str::from_utf8(&res.bytes)
-            .map_err(|e| format!("Portable scaffold input '{key}' is not UTF-8: {e}"))?;
-        let parsed: JsonValue = serde_json::from_str(s)
-            .map_err(|e| format!("Portable scaffold input '{key}' JSON error: {e}"))?;
-        return Ok(Some(parsed));
-    }
-    if let Some(scaf_val) = a.get("scaffold") {
-        match scaf_val {
-            Value::String(s) => {
-                if let Some(res) = inputs.iter().find(|r| r.key == *s) {
-                    let utf8 = std::str::from_utf8(&res.bytes)
-                        .map_err(|e| format!("Portable scaffold '{s}' is not UTF-8: {e}"))?;
-                    let parsed: JsonValue = serde_json::from_str(utf8)
-                        .map_err(|e| format!("Portable scaffold '{s}' JSON error: {e}"))?;
-                    return Ok(Some(parsed));
-                }
-                let parsed: JsonValue = serde_json::from_str(s)
-                    .map_err(|e| format!("Inline portable scaffold JSON error: {e}"))?;
-                return Ok(Some(parsed));
-            }
-            other => {
-                let parsed = vibe_value_to_json(other);
-                return Ok(Some(parsed));
-            }
-        }
-    }
-    Ok(None)
-}
-
-fn vibe_value_to_json(v: &Value) -> JsonValue {
-    match v {
-        Value::Bool(b) => JsonValue::Bool(*b),
-        Value::I64(n) => JsonValue::Number((*n).into()),
-        Value::U64(n) => JsonValue::Number((*n).into()),
-        Value::F64(f) => serde_json::Number::from_f64(*f)
-            .map(JsonValue::Number)
-            .unwrap_or(JsonValue::Null),
-        Value::String(s) => JsonValue::String(s.clone()),
-        Value::List(items) => JsonValue::Array(items.iter().map(vibe_value_to_json).collect()),
-        Value::Record(map) => {
-            let mut obj = serde_json::Map::new();
-            for (k, val) in map {
-                obj.insert(k.clone(), vibe_value_to_json(val));
-            }
-            JsonValue::Object(obj)
-        }
-        _ => JsonValue::Null,
-    }
 }

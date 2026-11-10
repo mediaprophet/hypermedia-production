@@ -25,7 +25,14 @@ impl AssetHost<'_> {
     pub(super) fn raymarch_vox0_dda(&mut self, a: &Args) -> Result<Value, String> {
         fields(
             a,
-            &["emf", "width", "height", "deflection_mass", "step_limit"],
+            &[
+                "emf",
+                "width",
+                "height",
+                "deflection_mass",
+                "step_limit",
+                "camera_position",
+            ],
         )?;
 
         let width = count(a, "width", 64, 512)?;
@@ -126,7 +133,13 @@ impl AssetHost<'_> {
         let [gx, gy, gz] = dims;
         let box_max = [gx as f64, gy as f64, gz as f64];
         let center = [box_max[0] * 0.5, box_max[1] * 0.5, box_max[2] * 0.5];
-        let cam_pos = [center[0], center[1], -1.35 * box_max[2]];
+        let cam_pos = match a.get("camera_position") {
+            Some(v) => {
+                let p = vector::<3>(v)?;
+                [p[0], p[1], p[2]]
+            }
+            None => [center[0], center[1], -1.35 * box_max[2]],
+        };
         let aspect = width as f64 / height as f64;
         let fov_scale = 0.55;
 

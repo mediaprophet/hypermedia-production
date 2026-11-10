@@ -290,4 +290,6 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
      "TeX manuscript + PDF/UA snapshot + M-code script -> TeX math metrics, 32-rule accessibility & zero-residue PII redaction, SVD decomposition & 3DGS cost"),
     ("hypermedia.chronicle.recalculate_tabular_fiduciary_archive", "hypermedia/chronicle-tabular-engine + chronicle-fiduciary-ledger + chronicle-office-codecs + chronicle-timeline-interchange + chronicle-broadcast-containers + video-prores-codec",
      "Spreadsheet formulas + double-entry journal + timeline clips -> DAG recalculated cells, hash-chained fiduciary audit, DOCX/OTIO/Matroska & Apple ProRes 422"),
+    ("qualia.species.assemble_corpus", "QualiaDB/q42/species_corpus",
+     "Sources and evidenced assertions -> species .q42 volume, CBOR-LD projection, digest, conflicts and gaps"),
 ];
