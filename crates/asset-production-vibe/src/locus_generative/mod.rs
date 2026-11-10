@@ -1,6 +1,6 @@
 //! Bounded Locus generative curve and geodesic path morphisms:
-//! corner filleting, arc-length / curvature resampling, sub-curve trimming,
-//! cyclic double-reflection Bishop rotation-minimizing frames (RMF),
+//! G2 cubic corner filleting at print density, arc-length / curvature resampling,
+//! sub-curve trimming, cyclic double-reflection Bishop rotation-minimizing frames (RMF),
 //! and mesh geodesic shortest edge path search.
 
 mod fillet_resample_trim;
@@ -319,5 +319,58 @@ mod tests {
         let mut host = make_test_host(&limits, &cancel, &[]);
         let args = BTreeMap::new();
         assert!(host.locus_generative_op("unknown.op", &args).is_err());
+    }
+
+    fn polyline_svg_d(pts: &[[f64; 2]]) -> String {
+        use std::fmt::Write as _;
+        fn svg_num(x: f64) -> String {
+            let q = (if x.abs() < 1e-12 { 0.0 } else { x } * 10_000.0).round() / 10_000.0;
+            let q = if q == 0.0 { 0.0 } else { q };
+            format!("{q:.4}")
+        }
+        let mut d = String::new();
+        let Some(first) = pts.first() else {
+            return d;
+        };
+        let _ = write!(&mut d, "M{} {}", svg_num(first[0]), svg_num(first[1]));
+        for p in &pts[1..] {
+            let _ = write!(&mut d, " L{} {}", svg_num(p[0]), svg_num(p[1]));
+        }
+        d.push_str(" Z");
+        d
+    }
+
+    #[test]
+    fn test_locus_fillet_g2_print_density_svg_path_roundtrip() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let square = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let prof_h = store_test_profile(&mut host, square);
+
+        let mut args = BTreeMap::new();
+        args.insert("profile".into(), prof_h);
+        args.insert("radius".into(), Value::F64(1.0));
+        args.insert("segments".into(), Value::U64(4));
+        args.insert("closed".into(), Value::Bool(true));
+
+        let res = host
+            .locus_generative_op("hypermedia.locus.fillet", &args)
+            .expect("g2 fillet");
+        let out_pts = host.profile(&res).expect("filleted profile");
+        // Origin 4-seg circular fillet is 20 verts; print-density G2 cubics are at least that dense.
+        assert!(
+            out_pts.len() >= 16,
+            "G2 print-density fillet too sparse: {}",
+            out_pts.len()
+        );
+
+        let d = polyline_svg_d(out_pts);
+        assert_eq!(d, polyline_svg_d(out_pts), "fillet SVG still must be bit-stable");
+        let back = kurbo::BezPath::from_svg(&d).expect("svg path round-trip");
+        assert!(back.segments().count() >= 3);
+        let pts_vec: Vec<Vec2> = out_pts.iter().map(|p| Vec2::new(p[0], p[1])).collect();
+        assert!(drafting_geometry::shoelace(&pts_vec) > 0.0);
     }
 }

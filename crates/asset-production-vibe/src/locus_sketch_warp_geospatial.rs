@@ -2,13 +2,227 @@ use super::*;
 use qualia_core_db::specialized_libs::computational_geometry::Point3;
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
+use vector_locus_geometry::{CubicBez, ParamCurve, PathData, SubPath};
 use vibe::Value;
+
+/// 300 DPI chord in document points (1/72 in). G2 cubics flatten to this.
+const PRINT_CHORD: f64 = 72.0 / 300.0;
 
 fn opt_str(a: &Args, k: &str, default: &str) -> Result<String, String> {
     match a.get(k) {
         None => Ok(default.to_string()),
         Some(v) => Ok(text(v)?.to_string()),
     }
+}
+
+fn snap0(x: f64) -> f64 {
+    if x.abs() < 1e-12 {
+        0.0
+    } else {
+        x
+    }
+}
+
+/// Fixed-point SVG number; kills signed zero so stills are bit-stable.
+fn svg_num(x: f64) -> String {
+    let q = (snap0(x) * 10_000.0).round() / 10_000.0;
+    let q = if q == 0.0 { 0.0 } else { q };
+    format!("{q:.4}")
+}
+
+fn polyline_svg_d(pts: &[[f64; 2]]) -> String {
+    let mut d = String::new();
+    let Some(first) = pts.first() else {
+        return d;
+    };
+    let _ = write!(
+        &mut d,
+        "M{} {}",
+        svg_num(first[0]),
+        svg_num(first[1])
+    );
+    for p in &pts[1..] {
+        let _ = write!(&mut d, " L{} {}", svg_num(p[0]), svg_num(p[1]));
+    }
+    d.push_str(" Z");
+    d
+}
+
+/// Ruled/linear cubics stay named two-point spans (no print-density tessellation).
+fn segment_is_ruled(sp: &SubPath, i: usize) -> bool {
+    if sp.segment_is_line(i) {
+        return true;
+    }
+    let c = sp.segment(i);
+    let dx = c.p3.x - c.p0.x;
+    let dy = c.p3.y - c.p0.y;
+    let len = (dx * dx + dy * dy).sqrt();
+    if len < 1e-12 {
+        return true;
+    }
+    let cross1 = (c.p1.x - c.p0.x) * dy - (c.p1.y - c.p0.y) * dx;
+    let cross2 = (c.p2.x - c.p0.x) * dy - (c.p2.y - c.p0.y) * dx;
+    // Exact ruled span; print-chord would reclassify G2 cubics as lines.
+    cross1.abs() <= 1e-9 * len && cross2.abs() <= 1e-9 * len
+}
+
+fn path_svg_d(path: &PathData) -> String {
+    let mut d = String::new();
+    for sp in &path.subpaths {
+        let Some(first) = sp.anchors.first() else {
+            continue;
+        };
+        if !d.is_empty() {
+            d.push(' ');
+        }
+        let _ = write!(
+            &mut d,
+            "M{} {}",
+            svg_num(first.p.x),
+            svg_num(first.p.y)
+        );
+        for i in 0..sp.segment_count() {
+            let c = sp.segment(i);
+            if segment_is_ruled(sp, i) {
+                let _ = write!(&mut d, " L{} {}", svg_num(c.p3.x), svg_num(c.p3.y));
+            } else {
+                let _ = write!(
+                    &mut d,
+                    " C{} {} {} {} {} {}",
+                    svg_num(c.p1.x),
+                    svg_num(c.p1.y),
+                    svg_num(c.p2.x),
+                    svg_num(c.p2.y),
+                    svg_num(c.p3.x),
+                    svg_num(c.p3.y)
+                );
+            }
+        }
+        if sp.closed {
+            d.push_str(" Z");
+        }
+    }
+    d
+}
+
+fn print_cubic_n(c: CubicBez) -> usize {
+    let err_at = |t: f64| {
+        let p = c.eval(t);
+        let q = c.p0.lerp(c.p3, t);
+        p.distance(q)
+    };
+    let err = err_at(0.5).max(err_at(0.25)).max(err_at(0.75)).max(1e-12);
+    ((err / PRINT_CHORD).ceil() as usize).clamp(1, 32)
+}
+
+fn densify_print(path: &PathData) -> PathData {
+    let mut path = path.clone();
+    for sp in &mut path.subpaths {
+        let mut i = 0;
+        while i < sp.segment_count() {
+            if segment_is_ruled(sp, i) {
+                i += 1;
+                continue;
+            }
+            let k = print_cubic_n(sp.segment(i));
+            if k > 1 {
+                for j in 1..k {
+                    let t_local = 1.0 / (k - j + 1) as f64;
+                    sp.insert_anchor(i + j - 1, t_local);
+                }
+            }
+            i += k;
+        }
+    }
+    path
+}
+
+fn push_pt(out: &mut Vec<[f64; 2]>, p: [f64; 2]) {
+    if let Some(last) = out.last() {
+        let dx = last[0] - p[0];
+        let dy = last[1] - p[1];
+        if dx * dx + dy * dy < 1e-18 {
+            return;
+        }
+    }
+    out.push([snap0(p[0]), snap0(p[1])]);
+}
+
+fn point_on_span(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> bool {
+    let dx = c[0] - a[0];
+    let dy = c[1] - a[1];
+    let len = (dx * dx + dy * dy).sqrt();
+    if len < 1e-12 {
+        return true;
+    }
+    let cross = (b[0] - a[0]) * dy - (b[1] - a[1]) * dx;
+    // Exact ruled span only; print-chord would eat G2 samples.
+    cross.abs() <= 1e-9 * len
+}
+
+/// Drop interior samples on ruled/linear spans so they stay named two-point profiles.
+fn collapse_collinear(mut pts: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
+    if pts.len() < 3 {
+        return pts;
+    }
+    let mut changed = true;
+    while changed && pts.len() >= 3 {
+        changed = false;
+        let n = pts.len();
+        let mut keep = vec![true; n];
+        for i in 0..n {
+            let prev = pts[(i + n - 1) % n];
+            let next = pts[(i + 1) % n];
+            if point_on_span(prev, pts[i], next) {
+                keep[i] = false;
+            }
+        }
+        let next_pts: Vec<_> = pts
+            .iter()
+            .copied()
+            .enumerate()
+            .filter(|(i, _)| keep[*i])
+            .map(|(_, p)| p)
+            .collect();
+        if next_pts.len() >= 3 && next_pts.len() < pts.len() {
+            pts = next_pts;
+            changed = true;
+        }
+    }
+    pts
+}
+
+fn profile_from_path(path: &PathData) -> Vec<[f64; 2]> {
+    let mut pts = Vec::new();
+    let Some(sp) = path.subpaths.iter().max_by(|a, b| {
+        a.area()
+            .abs()
+            .partial_cmp(&b.area().abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }) else {
+        return pts;
+    };
+    for i in 0..sp.segment_count() {
+        let c = sp.segment(i);
+        if segment_is_ruled(sp, i) {
+            push_pt(&mut pts, [c.p0.x, c.p0.y]);
+            push_pt(&mut pts, [c.p3.x, c.p3.y]);
+        } else {
+            let n = print_cubic_n(c);
+            for k in 0..=n {
+                let p = c.eval(k as f64 / n as f64);
+                push_pt(&mut pts, [p.x, p.y]);
+            }
+        }
+    }
+    if pts.len() > 1 {
+        let dx = pts[0][0] - pts.last().unwrap()[0];
+        let dy = pts[0][1] - pts.last().unwrap()[1];
+        if dx * dx + dy * dy < 1e-18 {
+            pts.pop();
+        }
+    }
+    collapse_collinear(pts)
 }
 
 impl AssetHost<'_> {
@@ -45,11 +259,21 @@ impl AssetHost<'_> {
         let (solved, report) = solve_system(&entities, &constraints, &env, &SolveOptions::default())
             .map_err(|e| format!("Sketch solver failed: {e:?}"))?;
 
-        let (solved_len, solved_line) = if let Some((_, EntityKind::Line(line))) = solved.first() {
+        let (raw_len, mut solved_line) = if let Some((_, EntityKind::Line(line))) = solved.first() {
             (((line.b.x - line.a.x).powi(2) + (line.b.y - line.a.y).powi(2)).sqrt(), line.clone())
         } else {
             (target_len, SketchLine { a: Vec2::new(0.0, 0.0), b: Vec2::new(target_len, 0.0) })
         };
+        // Named dimensional constraint wins within solver tolerance so the sketch is bit-stable.
+        let solved_len = if (raw_len - target_len).abs() <= 1e-6 {
+            target_len
+        } else {
+            raw_len
+        };
+        solved_line.a.x = snap0(solved_line.a.x);
+        solved_line.a.y = snap0(solved_line.a.y);
+        solved_line.b.x = snap0(solved_line.b.x);
+        solved_line.b.y = snap0(solved_line.b.y);
 
         let profile_pts: Vec<[f64; 2]> = if let Some(pts) = input_profile {
             let (mut min_x, mut max_x) = (f64::INFINITY, f64::NEG_INFINITY);
@@ -62,7 +286,9 @@ impl AssetHost<'_> {
             }
             let sx = solved_len.max(0.1) / (max_x - min_x).max(1e-6);
             let sy = target_height.max(0.1) / (max_y - min_y).max(1e-6);
-            pts.into_iter().map(|p| [(p[0] - min_x) * sx, (p[1] - min_y) * sy]).collect()
+            pts.into_iter()
+                .map(|p| [snap0((p[0] - min_x) * sx), snap0((p[1] - min_y) * sy)])
+                .collect()
         } else {
             let (l, h) = (solved_len.max(0.1), target_height.max(0.1));
             vec![[0.0, 0.0], [l, 0.0], [l, h], [0.0, h]]
@@ -79,23 +305,32 @@ impl AssetHost<'_> {
 
         let pad = 4.0;
         let (vb_w, vb_h) = (solved_len.max(20.0) + pad * 2.0, target_height.max(12.0) + pad * 2.0);
-        let mut svg_xml = format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\">", -pad, -pad, vb_w, vb_h);
-        svg_xml.push_str("<polygon fill=\"none\" stroke=\"#1e64c8\" stroke-width=\"0.25\" points=\"");
-        for p in &profile_pts {
-            let _ = write!(&mut svg_xml, "{:.3},{:.3} ", p[0], p[1]);
-        }
-        svg_xml.push_str("\"/>");
+        let mut svg_xml = format!(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\">",
+            svg_num(-pad),
+            svg_num(-pad),
+            svg_num(vb_w),
+            svg_num(vb_h)
+        );
         let _ = write!(
             &mut svg_xml,
-            "<line x1=\"{:.3}\" y1=\"{:.3}\" x2=\"{:.3}\" y2=\"{:.3}\" stroke=\"#e03c31\" stroke-width=\"0.35\"/>",
-            solved_line.a.x, solved_line.a.y, solved_line.b.x, solved_line.b.y
+            "<path fill=\"none\" stroke=\"#1e64c8\" stroke-width=\"0.25\" d=\"{}\"/>",
+            polyline_svg_d(&profile_pts)
+        );
+        let _ = write!(
+            &mut svg_xml,
+            "<line x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\" stroke=\"#e03c31\" stroke-width=\"0.35\"/>",
+            svg_num(solved_line.a.x),
+            svg_num(solved_line.a.y),
+            svg_num(solved_line.b.x),
+            svg_num(solved_line.b.y)
         );
         for piece in &mtext_lines.pieces {
             for stroke in &piece.strokes {
                 if stroke.len() >= 2 {
                     svg_xml.push_str("<polyline fill=\"none\" stroke=\"#222222\" stroke-width=\"0.15\" points=\"");
                     for pt in stroke {
-                        let _ = write!(&mut svg_xml, "{:.3},{:.3} ", pt.x, pt.y);
+                        let _ = write!(&mut svg_xml, "{},{} ", svg_num(pt.x), svg_num(pt.y));
                     }
                     svg_xml.push_str("\"/>");
                 }
@@ -105,7 +340,12 @@ impl AssetHost<'_> {
             if stroke.len() >= 2 {
                 svg_xml.push_str("<polyline fill=\"none\" stroke=\"#0b8457\" stroke-width=\"0.2\" points=\"");
                 for pt in stroke {
-                    let _ = write!(&mut svg_xml, "{:.3},{:.3} ", pt.x, pt.y + target_height + 1.0);
+                    let _ = write!(
+                        &mut svg_xml,
+                        "{},{} ",
+                        svg_num(pt.x),
+                        svg_num(pt.y + target_height + 1.0)
+                    );
                 }
                 svg_xml.push_str("\"/>");
             }
@@ -156,18 +396,39 @@ impl AssetHost<'_> {
             shapes::rectangle(Rect::new(width * 0.5, 0.0, width * 1.5, height))
         };
         let united = boolean(&r1, &r2, BoolOp::Union);
-        let (rounded, _) = apply_corners(&united, &[corner_radius.max(0.0)], &[CornerKind::Round]);
+        // Boolean flatten+cubic-refits; Corner::of rejects handles. Sharp ring, then Live Corners.
+        let united = PathData::new(
+            united
+                .subpaths
+                .iter()
+                .filter_map(|sp| {
+                    let pts: Vec<[f64; 2]> = sp.anchors.iter().map(|a| [a.p.x, a.p.y]).collect();
+                    let pts = collapse_collinear(pts);
+                    if pts.len() < 3 {
+                        return None;
+                    }
+                    let kpts: Vec<Point> = pts.into_iter().map(|[x, y]| Point::new(x, y)).collect();
+                    Some(SubPath::polyline(&kpts, sp.closed))
+                })
+                .collect(),
+        );
+        // radii is indexed by anchor, not corner; pad so every Live Corner gets the G2 cut.
+        let n_anchors = united.anchor_count().max(1);
+        let radii = vec![corner_radius.max(0.0); n_anchors];
+        let kinds = vec![CornerKind::Round; n_anchors];
+        let (rounded, _) = apply_corners(&united, &radii, &kinds);
         let bounds = rounded.bounds().unwrap_or(Rect::new(0.0, 0.0, width * 1.5, height));
-        let warped = warp(&rounded, bounds, WarpStyle::Arc, &serde_json::json!({ "bend": bend }));
+        // Split G2 cubics at print density before the nonlinear map; ruled spans stay two-point.
+        let dense = densify_print(&rounded);
+        self.charge(
+            dense.anchor_count().saturating_mul(64).saturating_add(2048),
+            dense.anchor_count().saturating_mul(256).saturating_add(8192),
+        )?;
+        let warped = warp(&dense, bounds, WarpStyle::Arc, &serde_json::json!({ "bend": bend }));
         let faces = extrude(&warped, Extrude { depth: extrude_depth, ..Extrude::default() })
             .map_err(|e| format!("3D extrude failed: {e}"))?;
 
-        let mut warped_pts: Vec<[f64; 2]> = Vec::new();
-        if let Some(sp) = warped.subpaths.first() {
-            for a_pt in &sp.anchors {
-                warped_pts.push([a_pt.p.x, a_pt.p.y]);
-            }
-        }
+        let mut warped_pts = profile_from_path(&warped);
         let poly_area = {
             let v2: Vec<drafting_geometry::Vec2> = warped_pts.iter().map(|p| drafting_geometry::Vec2::new(p[0], p[1])).collect();
             drafting_geometry::shoelace(&v2).abs()
@@ -197,10 +458,13 @@ impl AssetHost<'_> {
         let mesh_handle = self.store_mesh(vertices, triangles)?;
 
         let wb = warped.bounds().unwrap_or(bounds);
-        let svg_d = warped.to_bezpath().to_svg();
+        let svg_d = path_svg_d(&warped);
         let svg_xml = format!(
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{:.3} {:.3} {:.3} {:.3}\"><path fill=\"#2878dc\" stroke=\"#103060\" stroke-width=\"1.5\" d=\"{svg_d}\"/></svg>\n",
-            wb.x0 - 4.0, wb.y0 - 4.0, wb.width().max(1.0) + 8.0, wb.height().max(1.0) + 8.0
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\"><path fill=\"#2878dc\" stroke=\"#103060\" stroke-width=\"1.5\" d=\"{svg_d}\"/></svg>\n",
+            svg_num(wb.x0 - 4.0),
+            svg_num(wb.y0 - 4.0),
+            svg_num(wb.width().max(1.0) + 8.0),
+            svg_num(wb.height().max(1.0) + 8.0)
         );
         let svg_handle = self.encode("svg", svg_xml.into_bytes())?;
 
@@ -379,5 +643,212 @@ mod tests {
             .expect("125 chained failed");
         let Value::Record(m125_2) = r125_chained else { panic!("expected record") };
         assert!(m125_2.contains_key("mesh"));
+    }
+
+    fn svg_bytes(host: &AssetHost<'_>, rec: &BTreeMap<String, Value>) -> Vec<u8> {
+        host.workspace
+            .encoded(rec.get("svg_resource").expect("missing svg_resource"))
+            .expect("svg resource")
+            .bytes
+            .clone()
+    }
+
+    fn svg_path_d(xml: &str) -> &str {
+        let k = xml.find(" d=\"").expect("svg path d");
+        let rest = &xml[k + 4..];
+        let e = rest.find('"').expect("svg path d closer");
+        &rest[..e]
+    }
+
+    fn make_host<'a>(limits: &'a ToolLimits, cancel: &'a AtomicBool) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn locus_sketch_svg_path_roundtrip_bit_stable() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_host(&limits, &cancel);
+        let args = Value::Record(BTreeMap::from([
+            ("target_length".into(), Value::F64(18.0)),
+            ("target_height".into(), Value::F64(10.0)),
+        ]));
+        let r1 = host
+            .invoke("hypermedia.locus.solve_parametric_sketch", &args)
+            .expect("sketch 1");
+        let r2 = host
+            .invoke("hypermedia.locus.solve_parametric_sketch", &args)
+            .expect("sketch 2");
+        let Value::Record(m1) = r1 else { panic!("expected record") };
+        let Value::Record(m2) = r2 else { panic!("expected record") };
+        let b1 = svg_bytes(&host, &m1);
+        let b2 = svg_bytes(&host, &m2);
+        assert_eq!(b1, b2, "parametric sketch SVG must be bit-stable");
+        assert_eq!(m1.get("solved_length"), Some(&Value::F64(18.0)));
+        let xml = std::str::from_utf8(&b1).expect("utf8 svg");
+        let d = svg_path_d(xml);
+        let back = kurbo::BezPath::from_svg(d).expect("svg path round-trip");
+        assert!(back.segments().count() >= 3);
+        let prof = host.profile(m1.get("profile").expect("profile")).expect("profile pts");
+        assert_eq!(prof.len(), 4);
+    }
+
+    #[test]
+    fn locus_warp_print_density_svg_path_roundtrip() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_host(&limits, &cancel);
+
+        let ruled = host
+            .invoke(
+                "hypermedia.locus.pathfinder_warp_envelope",
+                &Value::Record(BTreeMap::from([
+                    ("width".into(), Value::F64(40.0)),
+                    ("height".into(), Value::F64(30.0)),
+                    ("bend".into(), Value::F64(0.0)),
+                    ("corner_radius".into(), Value::F64(0.0)),
+                    ("extrude_depth".into(), Value::F64(10.0)),
+                ])),
+            )
+            .expect("ruled warp");
+        let Value::Record(m_ruled) = ruled else { panic!("expected record") };
+        let ruled_len = host
+            .profile(m_ruled.get("profile").expect("profile"))
+            .expect("ruled profile")
+            .len();
+        let ruled_svg = svg_bytes(&host, &m_ruled);
+        let ruled_d = svg_path_d(std::str::from_utf8(&ruled_svg).expect("utf8 svg"));
+        let ruled_back = kurbo::BezPath::from_svg(ruled_d).expect("ruled svg path round-trip");
+        assert!(ruled_back.segments().count() >= 3);
+
+        let args = Value::Record(BTreeMap::from([
+            ("width".into(), Value::F64(40.0)),
+            ("height".into(), Value::F64(30.0)),
+            ("bend".into(), Value::F64(25.0)),
+            ("corner_radius".into(), Value::F64(6.0)),
+            ("extrude_depth".into(), Value::F64(10.0)),
+        ]));
+        let r1 = host
+            .invoke("hypermedia.locus.pathfinder_warp_envelope", &args)
+            .expect("warp 1");
+        let r2 = host
+            .invoke("hypermedia.locus.pathfinder_warp_envelope", &args)
+            .expect("warp 2");
+        let Value::Record(m1) = r1 else { panic!("expected record") };
+        let Value::Record(m2) = r2 else { panic!("expected record") };
+        let b1 = svg_bytes(&host, &m1);
+        let b2 = svg_bytes(&host, &m2);
+        assert_eq!(b1, b2, "warp SVG still must be bit-stable");
+        let xml = std::str::from_utf8(&b1).expect("utf8 svg");
+        let d = svg_path_d(xml);
+        let back = kurbo::BezPath::from_svg(d).expect("svg path round-trip");
+        assert!(back.segments().count() >= 3);
+        let warped_pts = host
+            .profile(m1.get("profile").expect("profile"))
+            .expect("warped profile");
+        assert!(
+            warped_pts.len() >= 16 && warped_pts.len() >= ruled_len,
+            "G2 warp at print density should keep a dense profile, got {} (ruled {ruled_len})",
+            warped_pts.len()
+        );
+        let v2: Vec<drafting_geometry::Vec2> = warped_pts
+            .iter()
+            .map(|p| drafting_geometry::Vec2::new(p[0], p[1]))
+            .collect();
+        assert!(drafting_geometry::shoelace(&v2).abs() > 1e-6);
+    }
+
+    #[test]
+    fn locus_warp_live_corners_90deg_setback_not_l_vs_c() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_host(&limits, &cancel);
+        let radius = 6.0;
+        let invoke = |host: &mut AssetHost<'_>, r: f64| {
+            host.invoke(
+                "hypermedia.locus.pathfinder_warp_envelope",
+                &Value::Record(BTreeMap::from([
+                    ("width".into(), Value::F64(40.0)),
+                    ("height".into(), Value::F64(30.0)),
+                    ("bend".into(), Value::F64(0.0)),
+                    ("corner_radius".into(), Value::F64(r)),
+                    ("extrude_depth".into(), Value::F64(10.0)),
+                ])),
+            )
+            .expect("warp envelope")
+        };
+        let Value::Record(m0) = invoke(&mut host, 0.0) else {
+            panic!("expected record")
+        };
+        let Value::Record(m6) = invoke(&mut host, radius) else {
+            panic!("expected record")
+        };
+        let pts0 = host
+            .profile(m0.get("profile").expect("profile"))
+            .expect("r0 profile");
+        let pts6 = host
+            .profile(m6.get("profile").expect("profile"))
+            .expect("r6 profile");
+        assert_eq!(pts0.len(), 4, "identity warp of a sharp rect union is 4 verts, got {pts0:?}");
+        let svg0 = svg_bytes(&host, &m0);
+        let svg6 = svg_bytes(&host, &m6);
+        let d0 = svg_path_d(std::str::from_utf8(&svg0).expect("utf8"));
+        let d6 = svg_path_d(std::str::from_utf8(&svg6).expect("utf8"));
+        assert!(!d0.contains('C'), "radius-0 still must stay L-only, got {d0}");
+        assert!(d6.contains('C'), "radius-6 Live Corners must emit G2 cubics, got {d6}");
+        // Geometry, not L-only vs C encoding of the same polyline.
+        assert_ne!(pts0, pts6, "radius-6 still must move vertices, not only L→C");
+        let a0 = match m0.get("anchor_count") {
+            Some(Value::I64(n)) => *n,
+            other => panic!("r0 anchors: {other:?}"),
+        };
+        let a6 = match m6.get("anchor_count") {
+            Some(Value::I64(n)) => *n,
+            other => panic!("r6 anchors: {other:?}"),
+        };
+        assert!(
+            a6 >= 8 && a6 > a0,
+            "rounded rect is 8 G2 anchors (then print-split); got r0={a0} r6={a6}"
+        );
+
+        let n = pts0.len();
+        for i in 0..n {
+            let prev = pts0[(i + n - 1) % n];
+            let at = pts0[i];
+            let next = pts0[(i + 1) % n];
+            let (dux, duy) = (prev[0] - at[0], prev[1] - at[1]);
+            let (dvx, dvy) = (next[0] - at[0], next[1] - at[1]);
+            let (lu, lv) = (dux.hypot(duy), dvx.hypot(dvy));
+            let cos = (dux * dvx + duy * dvy) / (lu * lv);
+            let sin = (dux * dvy - duy * dvx).abs() / (lu * lv);
+            let angle = sin.atan2(cos).to_degrees();
+            assert!(
+                (angle - 90.0).abs() < 8.0,
+                "sharp union corner {at:?} should be ~90°, got {angle}"
+            );
+            let d6c = pts6
+                .iter()
+                .map(|p| (p[0] - at[0]).hypot(p[1] - at[1]))
+                .fold(f64::INFINITY, f64::min);
+            assert!(d6c > 2.0, "Live Corners must cut 90° vertex {at:?}, dist {d6c}");
+            let setback = radius * (1.0 + cos) / sin;
+            let on_side = |to: [f64; 2]| {
+                let (dx, dy) = (to[0] - at[0], to[1] - at[1]);
+                let len = dx.hypot(dy);
+                let target = [at[0] + dx / len * setback, at[1] + dy / len * setback];
+                pts6.iter()
+                    .any(|p| (p[0] - target[0]).hypot(p[1] - target[1]) < 0.2)
+            };
+            assert!(
+                on_side(prev) && on_side(next),
+                "90° setback {setback} along both sides of {at:?} (r={radius})"
+            );
+        }
     }
 }
