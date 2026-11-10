@@ -1,13 +1,74 @@
 use super::*;
-use crate::*;
+use geodesy_spatial_analysis::{
+    Coord, SamplePoint, VariogramModel, VariogramParams, predict_kriging,
+};
+use qualia_core_db::q42::m64_matter::{
+    encode_hilbert3d_u64, M64ChunkDirectoryEntry, M64Header, M64StrataColumnRecord, M64_MODE_STRATA,
+};
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
+
+fn encode_advected_strata_m64(
+    host: &mut AssetHost<'_>,
+    n: usize,
+    density: &[f64],
+    u: &[f64],
+    v: &[f64],
+) -> Result<Value, String> {
+    let record_count = n * n;
+    let payload_bytes_len = record_count * 64;
+    let total_file_size = 128 + payload_bytes_len;
+    let mut buffer = vec![0u8; total_file_size];
+    for i in 0..record_count {
+        let mut rec = M64StrataColumnRecord::default();
+        rec.surface_elevation_mm = (density[i] * 1000.0).round() as i32;
+        rec.fluid_velocity_xy = [
+            (u[i] * 100.0)
+                .round()
+                .clamp(i16::MIN as f64, i16::MAX as f64) as i16,
+            (v[i] * 100.0)
+                .round()
+                .clamp(i16::MIN as f64, i16::MAX as f64) as i16,
+        ];
+        rec.surface_fluid_depth_mm = (density[i].max(0.0) * 200.0).round().clamp(0.0, 65535.0) as u16;
+        rec.update_crc();
+        let offset = 128 + i * 64;
+        buffer[offset..offset + 64].copy_from_slice(bytemuck::bytes_of(&rec));
+    }
+
+    let mut header = M64Header::default();
+    header.total_file_size = total_file_size as u64;
+    header.chunk_count = 1;
+    header.chunk_table_offset = 64;
+    header.spatial_origin = [0.0, 0.0];
+    header.elevation_datum = [0.0, 1.0];
+    header.update_crc();
+
+    let mut entry = M64ChunkDirectoryEntry {
+        chunk_uuid: [0x64; 16],
+        spatial_hilbert_index: encode_hilbert3d_u64(0, 0, 0, 2),
+        byte_offset: 128,
+        byte_length: payload_bytes_len as u32,
+        record_count: record_count as u32,
+        srid_geodetic_code: 4326,
+        lut_bank_epoch_id: 1,
+        chunk_record_mode: M64_MODE_STRATA,
+        compression_flags: 0,
+        bao_root_hash_prefix: [0u8; 12],
+        entry_crc32c: 0,
+    };
+    entry.update_crc();
+
+    buffer[..64].copy_from_slice(bytemuck::bytes_of(&header));
+    buffer[64..128].copy_from_slice(bytemuck::bytes_of(&entry));
+    host.encode("m64", buffer)
+}
 
 impl AssetHost<'_> {
     /// Solves divergence-free pressure projection via Jacobi Poisson iterations,
     /// advances geodetic density via second-order MacCormack advection, and applies
     /// Eikonal fast-sweeping signed-distance redistancing over a `.m64` field grid.
-    pub(super) fn advect_m64_grid(&mut self, a: &Args) -> Result<Value, String> {
+    pub(crate) fn advect_m64_grid(&mut self, a: &Args) -> Result<Value, String> {
         fields(
             a,
             &[
@@ -36,6 +97,7 @@ impl AssetHost<'_> {
         let poisson_iterations = count(a, "poisson_iterations", 12, 64)?;
 
         let n = grid_side;
+        self.charge(n * n * (steps + poisson_iterations + 8), n * n * 80 + 16384)?;
         let mut u = vec![0.0f64; n * n];
         let mut v = vec![0.0f64; n * n];
         let mut density = vec![0.0f64; n * n];
@@ -163,6 +225,13 @@ impl AssetHost<'_> {
             }
         }
 
+        // Thermal slope relaxation of advected density (geomorphic erosion rung).
+        let density_f32: Vec<f32> = density.iter().map(|d| (*d as f32).clamp(0.0, 1.0)).collect();
+        let relaxed = terrain_erosion_solvers::thermal_shape(&density_f32, n, 0.15);
+        for (slot, r) in density.iter_mut().zip(relaxed) {
+            *slot = f64::from(r);
+        }
+
         // Eikonal fast-sweeping signed-distance redistancing
         let iso = 0.40;
         let mut dist = vec![1e6f64; n * n];
@@ -284,6 +353,17 @@ impl AssetHost<'_> {
 
         let preview_rgba = self.store_rgba(n as u32, n as u32, pixels)?;
         let mean_advected_density = density.iter().sum::<f64>() / (n * n) as f64;
+        let m64 = encode_advected_strata_m64(self, n, &density, &u, &v)?;
+
+        let last = n - 1;
+        let samples = [
+            SamplePoint::new(0.0, 0.0, density[0]),
+            SamplePoint::new(last as f64, 0.0, density[last]),
+            SamplePoint::new(0.0, last as f64, density[last * n]),
+            SamplePoint::new(last as f64, last as f64, density[last * n + last]),
+        ];
+        let vparams = VariogramParams::new(VariogramModel::Spherical, 0.0, 1.0, n as f64);
+        let krig = predict_kriging(&samples, Coord::new(n as f64 * 0.5, n as f64 * 0.5), &vparams);
 
         let mut rec = BTreeMap::new();
         rec.insert("preview_rgba".into(), preview_rgba);
@@ -300,13 +380,19 @@ impl AssetHost<'_> {
             Value::F64(mean_advected_density),
         );
         rec.insert("grid_side".into(), Value::U64(n as u64));
+        rec.insert("m64".into(), m64);
+        rec.insert("record_mode".into(), Value::String("strata".into()));
+        if let Some(k) = krig {
+            rec.insert("kriging_estimate".into(), Value::F64(k.estimate));
+            rec.insert("kriging_variance".into(), Value::F64(k.variance));
+        }
 
         Ok(Value::Record(rec))
     }
 
     /// Evaluates Bekker / Mohr-Coulomb terramechanics pressure-sinkage, tractive shear stress,
     /// compaction resistance, and coupled Archimedes + Gerstner wave hydrodynamic buoyancy.
-    pub(super) fn couple_continuum_xpbd(&mut self, a: &Args) -> Result<Value, String> {
+    pub(crate) fn couple_continuum_xpbd(&mut self, a: &Args) -> Result<Value, String> {
         fields(
             a,
             &[
@@ -420,5 +506,94 @@ impl AssetHost<'_> {
         rec.insert("buoyancy_force_n".into(), Value::F64(buoyancy_force_n));
 
         Ok(Value::Record(rec))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qualia_core_db::q42::m64_matter::{
+        has_m64_magic, M64PayloadInterval, M64ReadLimits, M64Reader, M64StrataColumnRecord,
+        M64_MODE_STRATA,
+    };
+    use std::sync::atomic::AtomicBool;
+
+    fn make_host<'a>(limits: &'a ToolLimits, cancel: &'a AtomicBool) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn advect_m64_grid_strata_kriging_erosion_two_produces_match() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_host(&limits, &cancel);
+
+        let mut args = BTreeMap::new();
+        args.insert("grid_side".into(), Value::U64(8));
+        args.insert("steps".into(), Value::U64(2));
+        args.insert("dt".into(), Value::F64(0.08));
+        args.insert("poisson_iterations".into(), Value::U64(8));
+
+        let a = host
+            .advect_m64_grid(&args)
+            .expect("advect a");
+        let b = host
+            .advect_m64_grid(&args)
+            .expect("advect b");
+        let Value::Record(ra) = a else { panic!("record") };
+        let Value::Record(rb) = b else { panic!("record") };
+
+        assert_eq!(ra.get("grid_side"), rb.get("grid_side"));
+        assert_eq!(ra.get("max_divergence_before"), rb.get("max_divergence_before"));
+        assert_eq!(ra.get("max_divergence_after"), rb.get("max_divergence_after"));
+        assert_eq!(ra.get("mean_advected_density"), rb.get("mean_advected_density"));
+        assert_eq!(ra.get("kriging_estimate"), rb.get("kriging_estimate"));
+        assert_eq!(ra.get("record_mode"), Some(&Value::String("strata".into())));
+
+        let estimate = match ra.get("kriging_estimate") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("kriging_estimate object"),
+        };
+        let variance = match ra.get("kriging_variance") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("kriging_variance object"),
+        };
+        assert!(estimate.is_finite(), "advected kriging estimate");
+        assert!(variance >= 0.0);
+
+        let m64_a = host
+            .workspace
+            .encoded(ra.get("m64").expect("m64 handle"))
+            .expect("encoded m64 a");
+        let m64_b = host
+            .workspace
+            .encoded(rb.get("m64").expect("m64 handle"))
+            .expect("encoded m64 b");
+        assert_eq!(m64_a.kind, "m64");
+        assert_eq!(m64_a.bytes, m64_b.bytes);
+        assert!(has_m64_magic(&m64_a.bytes));
+
+        let limits_r = M64ReadLimits {
+            max_file_bytes: m64_a.bytes.len() + 1024,
+            max_chunks: 4,
+            max_records: 8192,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        let reader = M64Reader::parse(&m64_a.bytes, limits_r, &mut scratch).expect("STRATA parse");
+        assert_eq!(
+            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
+            M64_MODE_STRATA
+        );
+        assert_eq!(reader.verification().record_crc_checked, 64);
+        let rec: M64StrataColumnRecord =
+            bytemuck::pod_read_unaligned(&m64_a.bytes[128..192]);
+        rec.validate().expect("advected STRATA CRC");
+        assert!(rec.layer_thickness_mm.iter().all(|&t| t > 0));
     }
 }
