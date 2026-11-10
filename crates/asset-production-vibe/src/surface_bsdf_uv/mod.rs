@@ -158,6 +158,181 @@ pub(super) fn eval_tri_sd(rt: &RestTri, uvs: &[[f64; 2]]) -> (f64, bool) {
     (e, false)
 }
 
+/// Vertex-aligned UVs from a list, unwrap record, or named profile (island outline
+/// is only accepted when its length matches the mesh so ruled/8-bit profiles stay profiles).
+pub(crate) fn parse_vertex_uvs(
+    host: &AssetHost<'_>,
+    value: &Value,
+    vertex_count: usize,
+) -> Result<Vec<[f64; 2]>, String> {
+    if let Ok(Artifact::Profile(p)) = host.workspace.get(value) {
+        if p.len() != vertex_count {
+            return Err(format!(
+                "uvs profile length {} != vertex count {vertex_count}",
+                p.len()
+            ));
+        }
+        return Ok(p.clone());
+    }
+    let items = match value {
+        Value::Record(r) => match r.get("uvs") {
+            Some(v) => list(v)?,
+            None => return Err("uvs record missing uvs".into()),
+        },
+        other => list(other)?,
+    };
+    if items.len() != vertex_count {
+        return Err(format!(
+            "uvs length {} != vertex count {vertex_count}",
+            items.len()
+        ));
+    }
+    let mut out = Vec::with_capacity(vertex_count);
+    for item in items {
+        let pair = list(item)?;
+        if pair.len() < 2 {
+            return Err("uvs entries require [u, v]".into());
+        }
+        out.push([num(&pair[0])?, num(&pair[1])?]);
+    }
+    Ok(out)
+}
+
+/// Monotone-chain hull of a SLIM UV island. Sorted, so iteration is produce-safe.
+pub(crate) fn uv_island_hull(uvs: &[[f64; 2]]) -> Vec<[f64; 2]> {
+    let mut pts: Vec<[f64; 2]> = uvs
+        .iter()
+        .copied()
+        .filter(|p| p[0].is_finite() && p[1].is_finite())
+        .collect();
+    pts.sort_by(|a, b| {
+        a[0].partial_cmp(&b[0])
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then(a[1].partial_cmp(&b[1]).unwrap_or(std::cmp::Ordering::Equal))
+    });
+    pts.dedup_by(|a, b| (a[0] - b[0]).abs() < 1e-12 && (a[1] - b[1]).abs() < 1e-12);
+    if pts.len() < 3 {
+        let c = pts.first().copied().unwrap_or([0.5, 0.5]);
+        return vec![
+            [c[0], c[1]],
+            [c[0] + 0.05, c[1]],
+            [c[0] + 0.05, c[1] + 0.05],
+            [c[0], c[1] + 0.05],
+        ];
+    }
+    fn cross(o: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
+        (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    }
+    let mut lower = Vec::new();
+    for &p in &pts {
+        while lower.len() >= 2 && cross(lower[lower.len() - 2], lower[lower.len() - 1], p) <= 0.0 {
+            lower.pop();
+        }
+        lower.push(p);
+    }
+    let mut upper = Vec::new();
+    for &p in pts.iter().rev() {
+        while upper.len() >= 2 && cross(upper[upper.len() - 2], upper[upper.len() - 1], p) <= 0.0 {
+            upper.pop();
+        }
+        upper.push(p);
+    }
+    lower.pop();
+    upper.pop();
+    lower.extend(upper);
+    if lower.len() < 3 {
+        vec![[0.02, 0.02], [0.98, 0.02], [0.98, 0.98], [0.02, 0.98]]
+    } else {
+        lower
+    }
+}
+
+/// Rasterize UV triangles into a still map so a non-trivial island pixel is observable.
+pub(crate) fn rasterize_uv_chart(
+    uv: &[[f64; 2]],
+    triangles: &[[u32; 3]],
+    width: u32,
+    height: u32,
+) -> Vec<[u8; 4]> {
+    let w = width as usize;
+    let h = height as usize;
+    let bg = [16u8, 18, 28, 255];
+    let fill = [56u8, 189, 248, 255];
+    let mut pixels = vec![bg; w * h];
+    for tri in triangles {
+        let i0 = tri[0] as usize;
+        let i1 = tri[1] as usize;
+        let i2 = tri[2] as usize;
+        if i0 >= uv.len() || i1 >= uv.len() || i2 >= uv.len() {
+            continue;
+        }
+        let a = uv[i0];
+        let b = uv[i1];
+        let c = uv[i2];
+        let min_x = (a[0].min(b[0]).min(c[0]) * w as f64).floor().max(0.0) as usize;
+        let max_x = (a[0].max(b[0]).max(c[0]) * w as f64)
+            .ceil()
+            .min(w as f64) as usize;
+        let min_y = ((1.0 - a[1].max(b[1]).max(c[1])) * h as f64)
+            .floor()
+            .max(0.0) as usize;
+        let max_y = ((1.0 - a[1].min(b[1]).min(c[1])) * h as f64)
+            .ceil()
+            .min(h as f64) as usize;
+        let den = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
+        if den.abs() < 1e-14 {
+            continue;
+        }
+        for y in min_y..max_y.max(min_y + 1).min(h) {
+            for x in min_x..max_x.max(min_x + 1).min(w) {
+                let u = (x as f64 + 0.5) / w as f64;
+                let v = 1.0 - (y as f64 + 0.5) / h as f64;
+                let w0 = ((b[1] - c[1]) * (u - c[0]) + (c[0] - b[0]) * (v - c[1])) / den;
+                let w1 = ((c[1] - a[1]) * (u - c[0]) + (a[0] - c[0]) * (v - c[1])) / den;
+                let w2 = 1.0 - w0 - w1;
+                if w0 >= -1e-6 && w1 >= -1e-6 && w2 >= -1e-6 {
+                    pixels[y * w + x] = fill;
+                }
+            }
+        }
+    }
+    if pixels.iter().all(|p| *p == bg) {
+        if let Some(p0) = uv.first() {
+            let x = (p0[0].clamp(0.0, 0.999) * w as f64) as usize;
+            let y = ((1.0 - p0[1]).clamp(0.0, 0.999) * h as f64) as usize;
+            pixels[y * w + x] = fill;
+        }
+    }
+    pixels
+}
+
+/// Seal SLIM TEXCOORD_0 into a QualiaDB `.10d` so unwrap feeds `compile_10d_pbr`.
+pub(crate) fn seal_mesh_10d_with_slim_uvs(
+    mesh: &Mesh,
+    uvs: &[[f32; 2]],
+    normals: &[[f32; 3]],
+) -> Result<Vec<u8>, String> {
+    use qualia_core_db::container_10d::attach_texture_coordinate_section;
+    use qualia_core_db::render::compile_10d::{
+        compile_mesh_to_10d_with_extras_and_frames, Compile10dExtras,
+    };
+    if uvs.len() != mesh.positions.len() {
+        return Err("SLIM UVs must match vertex count".into());
+    }
+    let bytes = compile_mesh_to_10d_with_extras_and_frames(
+        mesh,
+        &[],
+        None,
+        Compile10dExtras::default(),
+        None,
+        Some(normals),
+        None,
+    )
+    .map_err(|e| format!("10D PBR compile failed: {e:?}"))?;
+    attach_texture_coordinate_section(&bytes, uvs)
+        .map_err(|e| format!("UV01 attach failed: {e:?}"))
+}
+
 // ── AssetHost Extension ─────────────────────────────────────────────────────
 
 impl AssetHost<'_> {
@@ -429,5 +604,144 @@ mod tests {
             assert_eq!(rgba.height, 32);
             assert_eq!(rgba.pixels.len(), 1024);
         }
+    }
+
+    fn still_has_nontrivial_pixel(pixels: &[[u8; 4]], bg: [u8; 4]) -> bool {
+        pixels.iter().any(|p| *p != bg && (p[0] > 8 || p[1] > 8 || p[2] > 8) && p[3] > 0)
+    }
+
+    #[test]
+    fn test_unwrap_slim_uv_island_10d_roundtrip() {
+        use qualia_core_db::container_10d::read_texture_coordinate_section_into;
+
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mesh_h = store_quad_mesh(&mut host);
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), mesh_h.clone());
+        args.insert("iterations".into(), Value::U64(12));
+        args.insert("chart_padding".into(), Value::F64(0.04));
+
+        let res = host
+            .surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &args)
+            .expect("unwrap_slim");
+        let rec = record(&res).expect("record");
+
+        let uvs = list(required(rec, "uvs").unwrap()).unwrap();
+        assert_eq!(uvs.len(), 4);
+        let mut authored = Vec::with_capacity(4);
+        for item in uvs {
+            let pair = list(item).unwrap();
+            authored.push([num(&pair[0]).unwrap() as f32, num(&pair[1]).unwrap() as f32]);
+        }
+        let span_u = authored
+            .iter()
+            .map(|p| p[0])
+            .fold(f32::NEG_INFINITY, f32::max)
+            - authored.iter().map(|p| p[0]).fold(f32::INFINITY, f32::min);
+        let span_v = authored
+            .iter()
+            .map(|p| p[1])
+            .fold(f32::NEG_INFINITY, f32::max)
+            - authored.iter().map(|p| p[1]).fold(f32::INFINITY, f32::min);
+        assert!(span_u > 0.2 && span_v > 0.2, "UV island must be non-degenerate");
+
+        let island = host
+            .profile(required(rec, "uv_island_profile").unwrap())
+            .expect("named UV island profile");
+        assert!(island.len() >= 3);
+
+        let still = host
+            .rgba(required(rec, "uv_island_rgba").unwrap())
+            .expect("uv still");
+        assert_eq!(still.width, 32);
+        assert!(
+            still_has_nontrivial_pixel(&still.pixels, [16, 18, 28, 255]),
+            "UV still must contain a non-background island pixel"
+        );
+
+        let c10d = host
+            .workspace
+            .encoded(required(rec, "container_10d").unwrap())
+            .expect("10d");
+        assert_eq!(c10d.kind, "10d");
+        let mut recovered = vec![[0.0f32; 2]; 4];
+        let n = read_texture_coordinate_section_into(&c10d.bytes, 4, &mut recovered)
+            .expect("UV01 round-trip");
+        assert_eq!(n, 4);
+        for i in 0..4 {
+            assert!(
+                (recovered[i][0] - authored[i][0]).abs() < 1e-5
+                    && (recovered[i][1] - authored[i][1]).abs() < 1e-5,
+                "SLIM UV[{i}] must round-trip through 10d UV01"
+            );
+        }
+
+        let mut bake_args = BTreeMap::new();
+        bake_args.insert("mesh".into(), mesh_h);
+        bake_args.insert("resolution".into(), Value::U64(32));
+        bake_args.insert("samples".into(), Value::U64(4));
+        bake_args.insert("uvs".into(), required(rec, "uvs").unwrap().clone());
+        let bake = host
+            .bake_pbr_materialx(&bake_args)
+            .expect("bake with SLIM UVs");
+        let bake_rec = record(&bake).expect("bake record");
+        assert_eq!(bake_rec.get("used_slim_uvs"), Some(&Value::Bool(true)));
+        let ao = host
+            .rgba(required(bake_rec, "ao_image").unwrap())
+            .expect("ao map");
+        assert!(
+            ao.pixels.iter().any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "MaterialX AO map must contain a non-trivial pixel"
+        );
+        let mtlx = host
+            .workspace
+            .encoded(required(bake_rec, "materialx_resource").unwrap())
+            .expect("mtlx");
+        assert_eq!(mtlx.kind, "mtlx");
+        assert!(mtlx.bytes.starts_with(b"<?xml") || mtlx.bytes.windows(9).any(|w| w == b"<material") || mtlx.bytes.windows(8).any(|w| w == b"<Material") || !mtlx.bytes.is_empty());
+    }
+
+    #[test]
+    fn test_bsdf_and_brush_nontrivial_preview_pixels() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mut bsdf_args = BTreeMap::new();
+        bsdf_args.insert("closure".into(), Value::String("principled_v2".into()));
+        bsdf_args.insert(
+            "base_color".into(),
+            Value::List(vec![Value::F64(0.8), Value::F64(0.4), Value::F64(0.15)]),
+        );
+        bsdf_args.insert("preview_size".into(), Value::U64(32));
+        let bsdf = host
+            .surface_bsdf_uv_op("hypermedia.surface.compile_bsdf_graph", &bsdf_args)
+            .expect("bsdf");
+        let rec = record(&bsdf).expect("record");
+        let preview = host
+            .rgba(required(rec, "preview_rgba").unwrap())
+            .expect("bsdf preview");
+        assert!(
+            still_has_nontrivial_pixel(&preview.pixels, [0, 0, 0, 0]),
+            "Etalon BSDF sphere must contain a non-trivial shaded pixel"
+        );
+
+        let brush = host
+            .expand_procedural_brush(&BTreeMap::new())
+            .expect("brush");
+        let brush_rec = record(&brush).expect("brush record");
+        let image = host
+            .rgba(required(brush_rec, "image").unwrap())
+            .expect("brush still");
+        assert!(
+            still_has_nontrivial_pixel(&image.pixels, [248, 245, 240, 255]),
+            "brush still must contain a non-background stroke pixel"
+        );
+        let _ = host
+            .profile(required(brush_rec, "profile").unwrap())
+            .expect("brush outline stays a named profile");
     }
 }

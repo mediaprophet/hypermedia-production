@@ -2,8 +2,8 @@
 //! Apache-2.0 MikkTSpace tangent space computation.
 
 use super::{
-    build_rest_tris, compute_smooth_vertex_normals, eval_tri_sd, v_cross, v_dot, v_len, v_norm,
-    v_sub,
+    build_rest_tris, compute_smooth_vertex_normals, eval_tri_sd, parse_vertex_uvs,
+    rasterize_uv_chart, seal_mesh_10d_with_slim_uvs, uv_island_hull, v_dot, v_len, v_norm, v_sub,
 };
 use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
@@ -29,7 +29,7 @@ impl AssetHost<'_> {
             return Err("chart_padding outside 0.0..=0.25".into());
         }
 
-        let work_units = nv * 15 + nt * 25 + iterations * (nv + nt) * 6;
+        let work_units = nv * 15 + nt * 25 + iterations * (nv + nt) * 6 + nv * 50 + 2048;
         self.charge(work_units, work_units * 16 + 65536)?;
 
         // Build vertex adjacency and edge frequency
@@ -280,8 +280,28 @@ impl AssetHost<'_> {
 
         let svg_handle = self.encode("svg", svg.into_bytes())?;
 
-        let sample_limit = uv.len().min(256);
-        let sample_uvs: Vec<Value> = uv[..sample_limit]
+        let uv_f32: Vec<[f32; 2]> = uv.iter().map(|c| [c[0] as f32, c[1] as f32]).collect();
+        let normals = compute_smooth_vertex_normals(&mesh);
+        let container_10d =
+            self.encode("10d", seal_mesh_10d_with_slim_uvs(&mesh, &uv_f32, &normals)?)?;
+
+        let island_pts = uv_island_hull(&uv);
+        let uv_island_profile = match self.store_profile(island_pts) {
+            Ok(h) => h,
+            Err(_) => {
+                let pad = chart_padding.max(0.02);
+                self.store_profile(vec![
+                    [pad, pad],
+                    [1.0 - pad, pad],
+                    [1.0 - pad, 1.0 - pad],
+                    [pad, 1.0 - pad],
+                ])?
+            }
+        };
+
+        let uv_island_rgba = self.store_rgba(32, 32, rasterize_uv_chart(&uv, &mesh.triangles, 32, 32))?;
+
+        let sample_uvs: Vec<Value> = uv
             .iter()
             .map(|coord| Value::List(vec![Value::F64(coord[0]), Value::F64(coord[1])]))
             .collect();
@@ -295,13 +315,16 @@ impl AssetHost<'_> {
             ("flipped_triangles".into(), Value::U64(flipped_count)),
             ("uv_chart_svg".into(), svg_handle),
             ("uvs".into(), Value::List(sample_uvs)),
+            ("uv_island_profile".into(), uv_island_profile),
+            ("container_10d".into(), container_10d),
+            ("uv_island_rgba".into(), uv_island_rgba),
         ])))
     }
 
     // ── 2. Apache-2.0 MikkTSpace Tangent Space Computation ──────────────────
 
     pub(super) fn compute_mikktspace(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh"])?;
+        fields(a, &["mesh", "uvs"])?;
 
         let mesh = self.mesh(required(a, "mesh")?)?.clone();
         let nv = mesh.positions.len();
@@ -314,106 +337,45 @@ impl AssetHost<'_> {
 
         let normals = compute_smooth_vertex_normals(&mesh);
 
-        // Generate deterministic spherical/planar UV coordinates
-        let c = mesh.centroid();
-        let mut uvs = Vec::with_capacity(nv);
-        for p in &mesh.positions {
-            let d = [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
-            let r = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
-            if r > 1e-6 {
-                let phi = (d[2] as f64).atan2(d[0] as f64);
-                let theta = ((d[1] / r) as f64).clamp(-1.0, 1.0).asin();
-                uvs.push([(phi + PI) / (2.0 * PI), (theta + PI * 0.5) / PI]);
-            } else {
-                uvs.push([0.5, 0.5]);
-            }
-        }
-
-        // Accumulate first-order triangle tangent and bitangent vectors
-        let mut tan_accum = vec![[0.0f32; 3]; nv];
-        let mut bit_accum = vec![[0.0f32; 3]; nv];
-
-        for tri in &mesh.triangles {
-            let i0 = tri[0] as usize;
-            let i1 = tri[1] as usize;
-            let i2 = tri[2] as usize;
-            if i0 >= nv || i1 >= nv || i2 >= nv {
-                continue;
-            }
-
-            let e1 = v_sub(mesh.positions[i1], mesh.positions[i0]);
-            let e2 = v_sub(mesh.positions[i2], mesh.positions[i0]);
-
-            let (uv0, uv1, uv2) = (uvs[i0], uvs[i1], uvs[i2]);
-            let du1 = (uv1[0] - uv0[0]) as f32;
-            let dv1 = (uv1[1] - uv0[1]) as f32;
-            let du2 = (uv2[0] - uv0[0]) as f32;
-            let dv2 = (uv2[1] - uv0[1]) as f32;
-
-            let det = du1 * dv2 - du2 * dv1;
-            let (t_tri, b_tri) = if det.abs() > 1e-8 {
-                let f = 1.0 / det;
-                (
-                    [
-                        f * (dv2 * e1[0] - dv1 * e2[0]),
-                        f * (dv2 * e1[1] - dv1 * e2[1]),
-                        f * (dv2 * e1[2] - dv1 * e2[2]),
-                    ],
-                    [
-                        f * (-du2 * e1[0] + du1 * e2[0]),
-                        f * (-du2 * e1[1] + du1 * e2[1]),
-                        f * (-du2 * e1[2] + du1 * e2[2]),
-                    ],
-                )
-            } else {
-                let fnorm = v_norm(v_cross(e1, e2));
-                let ref_axis = if fnorm[0].abs() < 0.9 {
-                    [1.0, 0.0, 0.0]
+        // SLIM UVs when unwrap was invoked; spherical TEXCOORD_0 otherwise.
+        let uvs = if let Some(v) = a.get("uvs") {
+            parse_vertex_uvs(self, v, nv)?
+        } else {
+            let c = mesh.centroid();
+            let mut generated = Vec::with_capacity(nv);
+            for p in &mesh.positions {
+                let d = [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
+                let r = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
+                if r > 1e-6 {
+                    let phi = (d[2] as f64).atan2(d[0] as f64);
+                    let theta = ((d[1] / r) as f64).clamp(-1.0, 1.0).asin();
+                    generated.push([(phi + PI) / (2.0 * PI), (theta + PI * 0.5) / PI]);
                 } else {
-                    [0.0, 1.0, 0.0]
-                };
-                let t = v_norm(v_cross(fnorm, ref_axis));
-                let b = v_cross(fnorm, t);
-                (t, b)
-            };
-
-            for &idx in &[i0, i1, i2] {
-                tan_accum[idx][0] += t_tri[0];
-                tan_accum[idx][1] += t_tri[1];
-                tan_accum[idx][2] += t_tri[2];
-                bit_accum[idx][0] += b_tri[0];
-                bit_accum[idx][1] += b_tri[1];
-                bit_accum[idx][2] += b_tri[2];
+                    generated.push([0.5, 0.5]);
+                }
             }
-        }
+            generated
+        };
 
-        // Gram-Schmidt orthogonalization and bitangent handedness sign
-        let mut tangents: Vec<[f32; 4]> = Vec::with_capacity(nv);
+        let uv_f32: Vec<[f32; 2]> = uvs.iter().map(|u| [u[0] as f32, u[1] as f32]).collect();
+        let indices: Vec<u32> = mesh.triangles.iter().flatten().copied().collect();
+        let mut tangents = vec![[0.0f32; 4]; nv];
+        let mut scratch = vec![[0.0f32; 6]; nv];
+        qualia_core_db::etalon_render::surface_frames::tangents_from_uvs_into(
+            &mesh.positions,
+            &uv_f32,
+            &normals,
+            &indices,
+            &mut tangents,
+            &mut scratch,
+        )
+        .map_err(|e| format!("Etalon tangent frames: {e:?}"))?;
+
         let mut total_ortho_err = 0.0f64;
-
         for i in 0..nv {
-            let n = normals[i];
-            let mut t = tan_accum[i];
-            let b = bit_accum[i];
-
-            if v_len(t) < 1e-7 {
-                let ref_axis = if n[0].abs() < 0.9 {
-                    [1.0, 0.0, 0.0]
-                } else {
-                    [0.0, 1.0, 0.0]
-                };
-                t = v_norm(v_cross(n, ref_axis));
-            }
-
-            let nt = v_dot(n, t);
-            let t_ortho = v_norm([t[0] - nt * n[0], t[1] - nt * n[1], t[2] - nt * n[2]]);
-            let b_cross = v_cross(n, t_ortho);
-            let sign = if v_dot(b_cross, b) < 0.0 { -1.0f32 } else { 1.0f32 };
-
-            total_ortho_err += v_dot(n, t_ortho).abs() as f64;
-            tangents.push([t_ortho[0], t_ortho[1], t_ortho[2], sign]);
+            total_ortho_err += v_dot(normals[i], [tangents[i][0], tangents[i][1], tangents[i][2]])
+                .abs() as f64;
         }
-
         let mean_ortho_err = total_ortho_err / nv as f64;
 
         // Render 64x64 normal/tangent preview RGBA map
