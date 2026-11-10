@@ -18,9 +18,21 @@ impl AssetHost<'_> {
 }
 
 pub(super) fn parse_dimensions(a: &Args) -> Result<(u32, u32, usize), String> {
-    let w = count(a, "width", 256, 1024)? as u32;
-    let h = count(a, "height", 256, 1024)? as u32;
+    let profile = crate::graphics::lattice_profile(a)?;
+    let w = count(a, "width", 256, profile.max_dim as usize)? as u32;
+    let h = count(a, "height", 256, profile.max_dim as usize)? as u32;
     Ok((w, h, w as usize * h as usize))
+}
+
+fn store_u16be_as_u8(src: &[u8], dst: &mut [u8]) -> Result<(), String> {
+    if src.len() != dst.len() * 2 {
+        return Err("16-bit channel length mismatch".into());
+    }
+    for (i, out) in dst.iter_mut().enumerate() {
+        let v = u16::from_be_bytes([src[i * 2], src[i * 2 + 1]]);
+        *out = crate::graphics::u16_to_u8_lattice(v);
+    }
+    Ok(())
 }
 
 pub(super) fn decode_psd_channel(
@@ -28,18 +40,24 @@ pub(super) fn decode_psd_channel(
     w: usize,
     h: usize,
     dst: &mut [u8],
+    depth: u16,
 ) -> Result<(), String> {
     if src.len() < 2 {
         return Err("Truncated channel data".into());
     }
+    let bpp = if depth == 16 { 2 } else { 1 };
+    let n = w * h;
     let comp = u16::from_be_bytes(src[0..2].try_into().unwrap());
     match comp {
         0 => {
-            let n = w * h;
-            if src.len() < 2 + n {
+            if src.len() < 2 + n * bpp {
                 return Err("Truncated raw channel data".into());
             }
-            dst.copy_from_slice(&src[2..2 + n]);
+            if bpp == 1 {
+                dst.copy_from_slice(&src[2..2 + n]);
+            } else {
+                store_u16be_as_u8(&src[2..2 + n * 2], dst)?;
+            }
             Ok(())
         }
         1 => {
@@ -49,6 +67,8 @@ pub(super) fn decode_psd_channel(
             }
             let table = &src[2..2 + table_len];
             let mut data_pos = 2 + table_len;
+            let row_bytes = w * bpp;
+            let mut row_buf = vec![0u8; row_bytes];
 
             for row in 0..h {
                 let t_idx = row * 2;
@@ -57,8 +77,12 @@ pub(super) fn decode_psd_channel(
                 if data_pos + row_len > src.len() {
                     return Err("Truncated RLE channel row".into());
                 }
-                let row_slice = &mut dst[row * w..(row + 1) * w];
-                decode_packbits(&src[data_pos..data_pos + row_len], row_slice)?;
+                decode_packbits(&src[data_pos..data_pos + row_len], &mut row_buf)?;
+                if bpp == 1 {
+                    dst[row * w..(row + 1) * w].copy_from_slice(&row_buf);
+                } else {
+                    store_u16be_as_u8(&row_buf, &mut dst[row * w..(row + 1) * w])?;
+                }
                 data_pos += row_len;
             }
             Ok(())

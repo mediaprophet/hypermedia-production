@@ -6,14 +6,16 @@ impl AssetHost<'_> {
     /// 128: `hypermedia.radiance.develop_camera_raw_hdr`
     /// (`radiance-camera-raw` + `color-transforms`)
     pub(crate) fn develop_camera_raw_hdr(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["image", "width", "height", "exposure_ev", "kelvin"])?;
+        fields(a, &["image", "width", "height", "exposure_ev", "kelvin", "profile"])?;
         let exposure_ev = number(a, "exposure_ev", 0.5)?;
         let kelvin = number(a, "kelvin", 5500.0)?;
+        let profile = crate::graphics::lattice_profile(a)?;
+        let max_side = profile.max_dim as usize;
 
         let (width, height, raw) = if let Some(v) = a.get("image") {
             let img = self.rgba(v)?;
-            let w = (img.width as usize).clamp(4, 256);
-            let h = (img.height as usize).clamp(4, 256);
+            let w = (img.width as usize).clamp(4, max_side);
+            let h = (img.height as usize).clamp(4, max_side);
             let mut bayer = vec![1024u16; w * h];
             for y in 0..h {
                 for x in 0..w {
@@ -32,8 +34,8 @@ impl AssetHost<'_> {
             }
             (w, h, bayer)
         } else {
-            let w = count(a, "width", 8, 128)?;
-            let h = count(a, "height", 8, 128)?;
+            let w = count(a, "width", 8, max_side.min(2048))?;
+            let h = count(a, "height", 8, max_side.min(2048))?;
             let mut bayer = vec![1024u16; w * h];
             for y in 0..h {
                 for x in 0..w {
@@ -56,8 +58,8 @@ impl AssetHost<'_> {
             width,
             height,
             CfaPattern::Rggb,
-            16384,
             512,
+            16384,
             DemosaicAlgo::Rcd,
         );
 
@@ -116,7 +118,7 @@ impl AssetHost<'_> {
     /// 129: `hypermedia.radiance.grade_cdl_scopes`
     /// (`radiance-color-grading` + `raster-blend-operators`)
     pub(crate) fn grade_cdl_scopes(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["image", "slope_r", "slope_g", "slope_b", "saturation"])?;
+        fields(a, &["image", "slope_r", "slope_g", "slope_b", "saturation", "profile"])?;
         let slope_r = number(a, "slope_r", 1.1)?;
         let slope_g = number(a, "slope_g", 1.0)?;
         let slope_b = number(a, "slope_b", 0.9)?;
@@ -346,5 +348,82 @@ impl AssetHost<'_> {
         out.insert("skeleton_active_pixels".into(), Value::I64(skeleton.iter().filter(|&&v| v > 0.0).count() as i64));
         out.insert("max_euclidean_distance".into(), Value::F64(max_edt as f64));
         Ok(Value::Record(out))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(limits: &'a ToolLimits, cancel: &'a AtomicBool) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn test_radiance_raw_hdr_nontrivial_pixel() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let pixel = [0x12, 0x34, 0x56, 0xff];
+        let img = h
+            .store_rgba(8, 8, vec![pixel; 64])
+            .expect("store raw source");
+        let res = h
+            .develop_camera_raw_hdr(&BTreeMap::from([
+                ("image".into(), img),
+                ("exposure_ev".into(), Value::F64(0.5)),
+                ("kelvin".into(), Value::F64(5500.0)),
+            ]))
+            .expect("develop camera raw hdr");
+        let rec = record(&res).expect("record");
+        let out = h
+            .rgba(required(rec, "image").expect("image"))
+            .expect("rgba");
+        assert_eq!(out.width, 8);
+        assert_eq!(out.height, 8);
+        assert!(
+            out.pixels.iter().any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "RAW/HDR develop must emit a non-black pixel"
+        );
+        let count = num(required(rec, "pixel_count").expect("pixel_count")).expect("num");
+        assert_eq!(count, 64.0);
+    }
+
+    #[test]
+    fn test_radiance_cdl_scopes_nontrivial_pixel() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let pixel = [0x40, 0x80, 0xc0, 0xff];
+        let img = h
+            .store_rgba(4, 4, vec![pixel; 16])
+            .expect("store grade source");
+        let res = h
+            .grade_cdl_scopes(&BTreeMap::from([
+                ("image".into(), img),
+                ("slope_r".into(), Value::F64(1.2)),
+                ("slope_g".into(), Value::F64(1.0)),
+                ("slope_b".into(), Value::F64(0.85)),
+                ("saturation".into(), Value::F64(1.2)),
+            ]))
+            .expect("grade cdl scopes");
+        let rec = record(&res).expect("record");
+        let out = h
+            .rgba(required(rec, "image").expect("image"))
+            .expect("graded rgba");
+        assert_eq!(out.width, 4);
+        assert_eq!(out.height, 4);
+        assert_ne!(out.pixels[0], [0, 0, 0, 255]);
+        assert_ne!(out.pixels[0][0], out.pixels[0][2]);
+        let wf = num(required(rec, "waveform_bins").expect("waveform")).expect("num");
+        let vs = num(required(rec, "vectorscope_bins").expect("vectorscope")).expect("num");
+        assert!(wf > 0.0 && vs > 0.0);
     }
 }

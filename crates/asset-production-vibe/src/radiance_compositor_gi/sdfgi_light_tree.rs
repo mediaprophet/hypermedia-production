@@ -1,7 +1,19 @@
 //! Cascaded SDFGI irradiance probes, 3D froxel atmospheric scattering, and
 //! hierarchical light tree bounding-cone clustering.
+//! GI evaluation goes through Etalon CPU APIs; WGSL is not duplicated here.
 
 use crate::*;
+use qualia_core_db::etalon_render::frame_quality::{
+    distance_attenuation, evaluate_environment_lighting, evaluate_fragment_radiance,
+    spot_angular_attenuation, DirectionalLight, EnvironmentProbe, EnvironmentProbeSet,
+    SurfaceParameters,
+};
+use qualia_core_db::etalon_render::geo_viewport::sky_limb::{
+    evaluate_sky_limb_and_aerial_perspective, AtmosphereParams,
+};
+use qualia_core_db::etalon_render::ibl_cubemap::{
+    eval_procedural_sky_radiance_zero_heap, IblCubemapParams,
+};
 use std::collections::BTreeMap;
 use vibe::Value;
 
@@ -239,12 +251,12 @@ fn evaluate_tree_lighting(
                     + l_dir[2] * l.direction[2]);
                 let cos_cutoff = l.angle_rad.cos();
                 if cos_n > 0.0 && cos_emit >= cos_cutoff {
-                    let spot_factor = if 1.0 - cos_cutoff > 1e-6 {
-                        ((cos_emit - cos_cutoff) / (1.0 - cos_cutoff)).clamp(0.0, 1.0)
-                    } else {
-                        1.0
-                    };
-                    let atten = 1.0 / (1.0 + 0.08 * dist_sq);
+                    let spot_factor = spot_angular_attenuation(
+                        cos_emit as f32,
+                        1.0,
+                        cos_cutoff as f32,
+                    ) as f64;
+                    let atten = distance_attenuation(dist_sq as f32, 16.0) as f64;
                     let intensity = l.power * cos_n * spot_factor * atten;
                     accum[0] += l.color[0] * intensity;
                     accum[1] += l.color[1] * intensity;
@@ -278,6 +290,7 @@ impl AssetHost<'_> {
                 "sun_direction",
                 "sky_radiance",
                 "bounce_intensity",
+                "profile",
             ],
         )?;
         let image_val = required(a, "image")?;
@@ -329,10 +342,61 @@ impl AssetHost<'_> {
         let n = (w as usize) * (h as usize);
         self.charge(n * (cascades * 3 + 10), n * 4)?;
 
-        let g2 = g * g;
-        let hg_phase = |cos_th: f64| -> f64 {
-            let denom = (1.0 + g2 - 2.0 * g * cos_th).max(1e-4);
-            (1.0 / (4.0 * std::f64::consts::PI)) * (1.0 - g2) / (denom * denom.sqrt())
+        let sun_f = [sun_dir[0] as f32, sun_dir[1] as f32, sun_dir[2] as f32];
+        let sky_f = [
+            sky_radiance[0] as f32,
+            sky_radiance[1] as f32,
+            sky_radiance[2] as f32,
+        ];
+        let ibl = IblCubemapParams {
+            sun_dir_and_turbidity: [sun_f[0], sun_f[1], sun_f[2], 2.2],
+            ground_albedo_and_intensity: [
+                sky_f[0],
+                sky_f[1],
+                sky_f[2],
+                bounce_intensity.max(0.05) as f32,
+            ],
+            zenith_and_mie_g: [0.22, 0.48, 0.92, g.clamp(0.0, 0.96) as f32],
+            roughness_and_dims: [0.45, 16.0, 16.0, 1.0],
+        };
+        let atm = AtmosphereParams {
+            planet_radius_m: 6_371_000.0,
+            atmosphere_top_m: 100_000.0,
+            rayleigh_scale_h_m: 8_000.0,
+            mie_scale_h_m: 1_200.0,
+            beta_rayleigh: [5.8e-6, 13.5e-6, 33.1e-6],
+            mie_g: g as f32,
+            beta_mie: [
+                2.0e-6 * fog_density as f32 + 1.0e-6,
+                2.0e-6 * fog_density as f32 + 1.0e-6,
+                2.0e-6 * fog_density as f32 + 1.0e-6,
+            ],
+            sun_intensity: (12.0 * bounce_intensity.max(0.1)) as f32,
+            sun_dir: sun_f,
+            ozone_peak_h_m: 25_000.0,
+        };
+        let mut probes = EnvironmentProbeSet::new();
+        for c in 0..cascades.min(4) {
+            let scale = 1.0 / ((c + 1) as f32);
+            let sky = eval_procedural_sky_radiance_zero_heap([0.0, 1.0, 0.0], &ibl);
+            probes.push(EnvironmentProbe {
+                position: [0.0, 0.35 * (c as f32 + 1.0), 0.0],
+                radius: 6.0 * (c as f32 + 1.0),
+                irradiance: [
+                    (sky[0] + sky_f[0] * scale) * bounce_intensity as f32,
+                    (sky[1] + sky_f[1] * scale) * bounce_intensity as f32,
+                    (sky[2] + sky_f[2] * scale) * bounce_intensity as f32,
+                ],
+                specular_levels: [sky; 5],
+                dominant_direction: sun_f,
+                valid: true,
+            });
+        }
+        let sun_light = DirectionalLight {
+            direction: [-sun_f[0], -sun_f[1], -sun_f[2]],
+            illuminance_lux: 1.8,
+            color_linear: [1.2, 1.1, 0.9],
+            cast_shadows: false,
         };
 
         let img = self.rgba(image_val)?;
@@ -350,52 +414,60 @@ impl AssetHost<'_> {
 
                 let ray_len = (nx * nx + ny * ny + 1.0).sqrt();
                 let ray_dir = [nx / ray_len, ny / ray_len, 1.0 / ray_len];
+                let ray_f = [ray_dir[0] as f32, ray_dir[1] as f32, ray_dir[2] as f32];
 
-                let cos_theta =
-                    ray_dir[0] * sun_dir[0] + ray_dir[1] * sun_dir[1] + ray_dir[2] * sun_dir[2];
-                let phase = hg_phase(cos_theta);
+                let dist_m = 400.0 + fog_density as f32 * 1_200.0 * (1.0 - v as f32);
+                let (inscatter, trans) =
+                    evaluate_sky_limb_and_aerial_perspective(&atm, 80.0, ray_f, dist_m, 6);
+                let trans_mean =
+                    ((trans[0] + trans[1] + trans[2]) / 3.0).clamp(0.0, 1.0) as f64;
+                let fog_t = (-fog_density * (0.35 + 0.45 * (1.0 - v))).exp();
+                let transmittance = (0.55 * trans_mean + 0.45 * fog_t).clamp(1e-4, 1.0);
 
-                let dist = ray_len * (1.0 + 2.5 * (1.0 - v));
-                let tau = fog_density * dist;
-                let transmittance = (-tau).exp().clamp(0.0, 1.0);
-
-                let mut cascade_irradiance = [0.0f64; 3];
-                for c in 0..cascades {
-                    let c_weight = 1.0 / ((c + 1) as f64);
-                    let sky_factor = (ray_dir[1] * 0.4 + 0.6).clamp(0.0, 1.0);
-                    let factor = bounce_intensity * c_weight * sky_factor;
-                    cascade_irradiance[0] += sky_radiance[0] * factor;
-                    cascade_irradiance[1] += sky_radiance[1] * factor;
-                    cascade_irradiance[2] += sky_radiance[2] * factor;
-                }
-
+                let sky = eval_procedural_sky_radiance_zero_heap(ray_f, &ibl);
+                let p = img.pixels[y as usize * (w as usize) + x as usize];
+                let surface = SurfaceParameters {
+                    base_color: [
+                        p[0] as f32 / 255.0,
+                        p[1] as f32 / 255.0,
+                        p[2] as f32 / 255.0,
+                    ],
+                    metallic: 0.0,
+                    roughness: 0.55,
+                    reflectance_f0: 0.04,
+                    emissive: [0.0; 3],
+                    ambient_occlusion: 1.0,
+                };
+                let env = evaluate_environment_lighting(
+                    &surface,
+                    [nx as f32, 0.0, ny as f32],
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.2, 1.0],
+                    Some(&probes),
+                    sky,
+                    None,
+                );
+                let frag = evaluate_fragment_radiance(
+                    &surface,
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.2, 1.0],
+                    Some(&sun_light),
+                    1.0,
+                    env.radiance,
+                    None,
+                );
                 let mean_irr_px =
-                    (cascade_irradiance[0] + cascade_irradiance[1] + cascade_irradiance[2]) / 3.0;
+                    ((env.radiance[0] + env.radiance[1] + env.radiance[2]) / 3.0).max(0.0) as f64
+                        + bounce_intensity * 0.05;
                 total_irradiance += mean_irr_px;
                 total_transmittance += transmittance;
 
-                let sun_col = [1.2, 1.1, 0.9];
-                let sun_inscatter = [
-                    sun_col[0] * phase * 4.0 * std::f64::consts::PI * (1.0 - transmittance),
-                    sun_col[1] * phase * 4.0 * std::f64::consts::PI * (1.0 - transmittance),
-                    sun_col[2] * phase * 4.0 * std::f64::consts::PI * (1.0 - transmittance),
-                ];
-
-                let sky_inscatter = [
-                    sky_radiance[0] * (1.0 - transmittance) * 0.3,
-                    sky_radiance[1] * (1.0 - transmittance) * 0.3,
-                    sky_radiance[2] * (1.0 - transmittance) * 0.3,
-                ];
-
-                let p = img.pixels[y as usize * (w as usize) + x as usize];
                 let mut out_rgb = [0u8; 3];
                 for ch in 0..3 {
-                    let surf = p[ch] as f64 / 255.0;
-                    let lit_surf =
-                        surf * (1.0 + cascade_irradiance[ch]) + cascade_irradiance[ch] * 0.15;
-                    let final_col =
-                        lit_surf * transmittance + sun_inscatter[ch] + sky_inscatter[ch];
-                    let mapped = (final_col / (1.0 + final_col) * 1.4).clamp(0.0, 1.0);
+                    let lit = frag[ch] as f64 * transmittance
+                        + inscatter[ch] as f64
+                        + sky[ch] as f64 * (1.0 - transmittance) * 0.25;
+                    let mapped = (lit / (1.0 + lit) * 1.4).clamp(0.0, 1.0);
                     out_rgb[ch] = (mapped * 255.0).round() as u8;
                 }
 
@@ -418,15 +490,16 @@ impl AssetHost<'_> {
 
     /// 5. Hierarchical light tree bounding-cone clustering and direct lighting preview
     pub(super) fn radiance_build_light_tree(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["lights", "width", "height"])?;
+        fields(a, &["lights", "width", "height", "profile"])?;
         let lights_val = required(a, "lights")?;
         let lights_list = list(lights_val)?;
         if lights_list.is_empty() || lights_list.len() > 64 {
             return Err("lights must contain between 1 and 64 lights".into());
         }
 
-        let width = count(a, "width", 64, 512)?;
-        let height = count(a, "height", 64, 512)?;
+        let profile = crate::graphics::lattice_profile(a)?;
+        let width = count(a, "width", 64, profile.max_dim as usize)?;
+        let height = count(a, "height", 64, profile.max_dim as usize)?;
 
         let mut lights = Vec::with_capacity(lights_list.len());
         for item in lights_list {
