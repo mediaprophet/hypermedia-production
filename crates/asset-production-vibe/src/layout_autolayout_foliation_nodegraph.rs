@@ -129,13 +129,65 @@ impl AssetHost<'_> {
         }
         let image_handle = self.store_rgba(pw, ph, pixels)?;
 
+        let rect_record = |id: u64, r: layout_box_autolayout::Rect| {
+            Value::Record(BTreeMap::from([
+                ("id".into(), Value::U64(id)),
+                ("x".into(), Value::F64(r.x)),
+                ("y".into(), Value::F64(r.y)),
+                ("width".into(), Value::F64(r.width)),
+                ("height".into(), Value::F64(r.height)),
+            ]))
+        };
+        let mut flex_children: Vec<(u64, layout_box_autolayout::Rect)> = flex_frame
+            .children
+            .iter()
+            .map(|c| (c.id, c.rect))
+            .collect();
+        flex_children.sort_by_key(|(id, _)| *id);
+        let mut grid_children: Vec<(u64, layout_box_autolayout::Rect)> = grid_frame
+            .children
+            .iter()
+            .map(|c| (c.id, c.rect))
+            .collect();
+        grid_children.sort_by_key(|(id, _)| *id);
+
+        let grid_col0_width = grid_frame.children[0].rect.width;
+        let grid_col1_width = grid_frame.children[1].rect.width;
+        let inner_main = (cw - 2.0 * pad - gap).max(0.0);
+        let expected_fill = (cw - 2.0 * pad - gap - 80.0).max(0.0);
+        let expected_col1 = inner_main * 2.0 / 3.0;
+        let fill_exact = (fill_child_w - expected_fill).abs() < 1e-9;
+        let fr_exact = (grid_col1_width - expected_col1).abs() < 1e-9
+            && (grid_col1_width - 2.0 * grid_col0_width).abs() < 1e-9;
+
         let mut out = BTreeMap::new();
         out.insert("svg_resource".into(), svg_resource);
         out.insert("image".into(), image_handle);
         out.insert("solved_width".into(), Value::F64(solved_w));
         out.insert("solved_height".into(), Value::F64(solved_h));
         out.insert("fill_child_width".into(), Value::F64(fill_child_w));
-        out.insert("grid_col1_width".into(), Value::F64(grid_frame.children[1].rect.width));
+        out.insert("grid_col0_width".into(), Value::F64(grid_col0_width));
+        out.insert("grid_col1_width".into(), Value::F64(grid_col1_width));
+        out.insert("flex_fill_exact".into(), Value::Bool(fill_exact));
+        out.insert("grid_fr_exact".into(), Value::Bool(fr_exact));
+        out.insert(
+            "flex_children".into(),
+            Value::List(
+                flex_children
+                    .into_iter()
+                    .map(|(id, r)| rect_record(id, r))
+                    .collect(),
+            ),
+        );
+        out.insert(
+            "grid_children".into(),
+            Value::List(
+                grid_children
+                    .into_iter()
+                    .map(|(id, r)| rect_record(id, r))
+                    .collect(),
+            ),
+        );
         Ok(Value::Record(out))
     }
 
@@ -263,13 +315,37 @@ impl AssetHost<'_> {
         page_svg.push_str("</svg>\n");
         let svg_resource = self.encode("svg", page_svg.into_bytes())?;
 
+        let footnote_in: i64 = paras.iter().map(|p| p.footnotes.len() as i64).sum();
+        let footnote_out: i64 = pages.iter().map(|p| p.footnotes.len() as i64).sum();
+        let page_numbers: Vec<Value> = pages
+            .iter()
+            .map(|p| Value::I64(p.number as i64))
+            .collect();
+        let monotonic_page_numbers = pages
+            .iter()
+            .enumerate()
+            .all(|(i, p)| p.number == i + 1);
+        let placed_item_count: i64 = pages.iter().map(|p| p.items.len() as i64).sum();
+
         let mut out = BTreeMap::new();
         out.insert("svg_resource".into(), svg_resource);
         out.insert("page_count".into(), Value::I64(pages.len() as i64));
-        out.insert("placed_item_count".into(), Value::I64(pages.iter().map(|p| p.items.len() as i64).sum()));
+        out.insert("placed_item_count".into(), Value::I64(placed_item_count));
         out.insert("equation_width_pt".into(), Value::F64(math_layout.width as f64));
         out.insert("equation_height_pt".into(), Value::F64(math_layout.height() as f64));
         out.insert("formatted_citation".into(), Value::String(inline_cite));
+        out.insert("page_numbers".into(), Value::List(page_numbers));
+        out.insert(
+            "monotonic_page_numbers".into(),
+            Value::Bool(monotonic_page_numbers),
+        );
+        out.insert("footnote_in".into(), Value::I64(footnote_in));
+        out.insert("footnote_out".into(), Value::I64(footnote_out));
+        out.insert(
+            "footnote_conserved".into(),
+            Value::Bool(footnote_in == footnote_out),
+        );
+        out.insert("column_count".into(), Value::I64(columns as i64));
         Ok(Value::Record(out))
     }
 
@@ -374,5 +450,98 @@ impl AssetHost<'_> {
         out.insert("math_result".into(), Value::F64(math_val));
         out.insert("morph_interpolated_shapes".into(), Value::I64(morph.shapes.len() as i64));
         Ok(Value::Record(out))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(
+        workspace: AssetWorkspace,
+        inputs: &'a [Resource],
+        cancel: &'a AtomicBool,
+        limits: &'a ToolLimits,
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace,
+            inputs,
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn test_layout_flex_grid_exact_fill_and_fr() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut args = Args::new();
+        args.insert("container_width".into(), Value::F64(320.0));
+        args.insert("container_height".into(), Value::F64(180.0));
+        args.insert("gap".into(), Value::F64(8.0));
+        args.insert("padding".into(), Value::F64(12.0));
+        let res = h
+            .solve_flexbox_grid_constraints(&args)
+            .expect("flex/grid exact");
+        let rec = record(&res).unwrap();
+        assert_eq!(rec.get("flex_fill_exact"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("grid_fr_exact"), Some(&Value::Bool(true)));
+        // inner = 320 - 24 - 8 = 288; fill = 288 - 80 = 208; col0 = 96; col1 = 192
+        assert_eq!(rec.get("fill_child_width"), Some(&Value::F64(208.0)));
+        assert_eq!(rec.get("grid_col0_width"), Some(&Value::F64(96.0)));
+        assert_eq!(rec.get("grid_col1_width"), Some(&Value::F64(192.0)));
+        let flex_kids = list(rec.get("flex_children").unwrap()).unwrap();
+        assert_eq!(flex_kids.len(), 2);
+        let grid_kids = list(rec.get("grid_children").unwrap()).unwrap();
+        assert_eq!(grid_kids.len(), 2);
+        let g1 = record(&grid_kids[1]).unwrap();
+        assert_eq!(g1.get("width"), Some(&Value::F64(192.0)));
+    }
+
+    #[test]
+    fn test_layout_paged_foliation_monotonic_pages() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut args = Args::new();
+        args.insert("columns".into(), Value::U64(2));
+        args.insert("paragraph_count".into(), Value::U64(24));
+        args.insert(
+            "latex_formula".into(),
+            Value::String("\\frac{a+b}{c}".into()),
+        );
+        let res = h
+            .typeset_paged_foliation(&args)
+            .expect("paged foliation");
+        let rec = record(&res).unwrap();
+        assert_eq!(rec.get("monotonic_page_numbers"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("footnote_conserved"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("footnote_in"), rec.get("footnote_out"));
+        assert_eq!(rec.get("column_count"), Some(&Value::I64(2)));
+        let page_count = match rec.get("page_count") {
+            Some(Value::I64(n)) => *n,
+            _ => panic!("page_count"),
+        };
+        assert!(page_count >= 1);
+        let nums = list(rec.get("page_numbers").unwrap()).unwrap();
+        assert_eq!(nums.len() as i64, page_count);
+        for (i, n) in nums.iter().enumerate() {
+            assert_eq!(n, &Value::I64((i as i64) + 1));
+        }
+        assert!(match rec.get("placed_item_count") {
+            Some(Value::I64(n)) => *n > 0,
+            _ => false,
+        });
+        let cite = match rec.get("formatted_citation") {
+            Some(Value::String(s)) => s,
+            _ => panic!("formatted_citation"),
+        };
+        assert!(cite.contains("United Nations"), "cite={cite}");
+        assert!(cite.contains("1948"), "cite={cite}");
     }
 }

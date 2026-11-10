@@ -5,6 +5,83 @@ use crate::geometry::color;
 use crate::*;
 use std::collections::BTreeMap;
 
+/// Freeze-and-redistribute free main-axis space so min/max clamps stay exact.
+fn distribute_flex_sizes(flex: &[f64], min: &[f64], max: &[f64], remaining: f64) -> Vec<f64> {
+    let n = flex.len();
+    let mut size = vec![0.0; n];
+    let mut frozen = vec![false; n];
+    let mut free = remaining.max(0.0);
+    loop {
+        let mut open_flex = 0.0;
+        let mut open_n = 0usize;
+        for i in 0..n {
+            if !frozen[i] {
+                open_flex += flex[i];
+                open_n += 1;
+            }
+        }
+        if open_n == 0 {
+            break;
+        }
+        let mut froze = false;
+        let mut consumed = 0.0;
+        for i in 0..n {
+            if frozen[i] {
+                continue;
+            }
+            let raw = if open_flex > 0.0 {
+                free * (flex[i] / open_flex)
+            } else {
+                free / open_n as f64
+            };
+            if raw < min[i] - 1e-12 {
+                size[i] = min[i];
+                frozen[i] = true;
+                consumed += min[i];
+                froze = true;
+            } else if raw > max[i] + 1e-12 {
+                size[i] = max[i];
+                frozen[i] = true;
+                consumed += max[i];
+                froze = true;
+            }
+        }
+        if !froze {
+            for i in 0..n {
+                if frozen[i] {
+                    continue;
+                }
+                size[i] = if open_flex > 0.0 {
+                    free * (flex[i] / open_flex)
+                } else {
+                    free / open_n as f64
+                };
+                frozen[i] = true;
+            }
+            break;
+        }
+        free = (free - consumed).max(0.0);
+    }
+    size
+}
+
+fn boxes_non_overlapping(boxes: &[LayoutBox]) -> bool {
+    for i in 0..boxes.len() {
+        for j in (i + 1)..boxes.len() {
+            let a = &boxes[i];
+            let b = &boxes[j];
+            let overlap = a.x < b.x + b.width - 1e-9
+                && b.x < a.x + a.width - 1e-9
+                && a.y < b.y + b.height - 1e-9
+                && b.y < a.y + a.height - 1e-9;
+            if overlap {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 impl AssetHost<'_> {
     /// Solves deterministic 2D spatial flex or CSS-grid-like layouts across viewports.
     pub(super) fn solve_box_tree(&mut self, a: &Args) -> Result<Value, String> {
@@ -74,6 +151,10 @@ impl AssetHost<'_> {
             fixed_w: Option<f64>,
             fixed_h: Option<f64>,
             flex: f64,
+            min_size: f64,
+            max_size: f64,
+            cross_size: Option<f64>,
+            span: usize,
             state: &'p str,
         }
 
@@ -82,7 +163,19 @@ impl AssetHost<'_> {
             let item_rec = record(item_val)?;
             fields(
                 item_rec,
-                &["id", "role", "label", "width", "height", "flex", "state"],
+                &[
+                    "id",
+                    "role",
+                    "label",
+                    "width",
+                    "height",
+                    "flex",
+                    "state",
+                    "min_size",
+                    "max_size",
+                    "cross_size",
+                    "span",
+                ],
             )?;
 
             let id = match item_rec.get("id") {
@@ -99,6 +192,8 @@ impl AssetHost<'_> {
                 "panel"
                     | "header"
                     | "sidebar"
+                    | "toolbar"
+                    | "footer"
                     | "card"
                     | "button"
                     | "input"
@@ -106,7 +201,7 @@ impl AssetHost<'_> {
                     | "canvas"
             ) {
                 return Err(format!(
-                    "Invalid role '{role}' for box '{id}': expected panel, header, sidebar, card, button, input, badge, or canvas"
+                    "Invalid role '{role}' for box '{id}': expected panel, header, sidebar, toolbar, footer, card, button, input, badge, or canvas"
                 ));
             }
 
@@ -158,6 +253,51 @@ impl AssetHost<'_> {
                 ));
             }
 
+            let min_size = match item_rec.get("min_size") {
+                Some(v) => {
+                    let m = num(v)?;
+                    if m < 0.0 {
+                        return Err(format!("Box '{id}' min_size must be >= 0"));
+                    }
+                    m
+                }
+                None => 0.0,
+            };
+            let max_size = match item_rec.get("max_size") {
+                Some(v) => {
+                    let m = num(v)?;
+                    if m < min_size {
+                        return Err(format!("Box '{id}' max_size must be >= min_size"));
+                    }
+                    m
+                }
+                None => 8192.0,
+            };
+            let cross_size = match item_rec.get("cross_size") {
+                Some(v) => {
+                    let c = num(v)?;
+                    if c < 0.0 {
+                        return Err(format!("Box '{id}' cross_size must be >= 0"));
+                    }
+                    if c > 0.0 {
+                        Some(c)
+                    } else {
+                        None
+                    }
+                }
+                None => None,
+            };
+            let span = match item_rec.get("span") {
+                Some(v) => {
+                    let s = integer(v, "span")?;
+                    if s == 0 || s > 32 {
+                        return Err(format!("Box '{id}' span outside 1..32"));
+                    }
+                    s
+                }
+                None => 1,
+            };
+
             items.push(ParsedItem {
                 id,
                 role,
@@ -165,6 +305,10 @@ impl AssetHost<'_> {
                 fixed_w,
                 fixed_h,
                 flex,
+                min_size,
+                max_size,
+                cross_size,
+                span,
                 state,
             });
         }
@@ -178,7 +322,19 @@ impl AssetHost<'_> {
 
         if grid_columns > 0 {
             let cols = grid_columns;
-            let rows = (items.len() + cols - 1) / cols;
+            let mut placements: Vec<(usize, usize, usize)> = Vec::with_capacity(items.len());
+            let mut col = 0usize;
+            let mut row = 0usize;
+            for item in &items {
+                let span = item.span.clamp(1, cols);
+                if col + span > cols {
+                    col = 0;
+                    row += 1;
+                }
+                placements.push((col, row, span));
+                col += span;
+            }
+            let rows = row + 1;
 
             let col_gap_total = (cols as f64 - 1.0).max(0.0) * gap;
             let col_w = ((avail_w - col_gap_total) / cols as f64).max(0.0);
@@ -186,43 +342,67 @@ impl AssetHost<'_> {
             let row_gap_total = (rows as f64 - 1.0).max(0.0) * gap;
             let avail_rows_h = (avail_h - row_gap_total).max(0.0);
 
-            let mut row_heights = Vec::with_capacity(rows);
-            let mut flex_rows = Vec::new();
+            let mut row_heights = vec![0.0; rows];
+            let mut flex_rows: Vec<(usize, f64)> = Vec::new();
             let mut fixed_height_sum = 0.0;
 
             for r in 0..rows {
-                let start_idx = r * cols;
-                let end_idx = (start_idx + cols).min(items.len());
-                let row_slice = &items[start_idx..end_idx];
-
-                let max_fixed = row_slice
-                    .iter()
-                    .filter_map(|it| it.fixed_h)
-                    .fold(0.0_f64, |acc, h| acc.max(h));
-
-                if max_fixed > 0.0 {
-                    row_heights.push(max_fixed);
+                let mut max_fixed = 0.0_f64;
+                let mut row_flex = 0.0_f64;
+                let mut any_fixed = false;
+                for (i, item) in items.iter().enumerate() {
+                    if placements[i].1 != r {
+                        continue;
+                    }
+                    if let Some(h) = item.fixed_h {
+                        max_fixed = max_fixed.max(h);
+                        any_fixed = true;
+                    } else {
+                        row_flex = row_flex.max(item.flex);
+                    }
+                }
+                if any_fixed {
+                    row_heights[r] = max_fixed;
                     fixed_height_sum += max_fixed;
                 } else {
-                    let row_flex = row_slice
-                        .iter()
-                        .map(|it| it.flex)
-                        .fold(1.0_f64, |acc, f| acc.max(f));
-                    row_heights.push(0.0);
-                    flex_rows.push((r, row_flex));
+                    flex_rows.push((r, row_flex.max(1.0)));
                 }
             }
 
             let total_row_flex: f64 = flex_rows.iter().map(|(_, f)| *f).sum();
             let remaining_row_h = (avail_rows_h - fixed_height_sum).max(0.0);
-
-            for (r, f) in flex_rows {
-                let h = if total_row_flex > 0.0 {
-                    remaining_row_h * (f / total_row_flex)
+            if !flex_rows.is_empty() {
+                let flex_vals: Vec<f64> = flex_rows.iter().map(|(_, f)| *f).collect();
+                let mins: Vec<f64> = flex_rows
+                    .iter()
+                    .map(|(r, _)| {
+                        items
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, _)| placements[*i].1 == *r)
+                            .map(|(_, it)| it.min_size)
+                            .fold(0.0_f64, f64::max)
+                    })
+                    .collect();
+                let maxs: Vec<f64> = flex_rows
+                    .iter()
+                    .map(|(r, _)| {
+                        items
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, _)| placements[*i].1 == *r)
+                            .map(|(_, it)| it.max_size)
+                            .fold(8192.0_f64, f64::min)
+                    })
+                    .collect();
+                let distributed = if total_row_flex > 0.0 {
+                    distribute_flex_sizes(&flex_vals, &mins, &maxs, remaining_row_h)
                 } else {
-                    remaining_row_h / rows as f64
+                    vec![remaining_row_h / flex_rows.len() as f64; flex_rows.len()]
                 };
-                row_heights[r] = h;
+                for (k, (r, _)) in flex_rows.iter().enumerate() {
+                    row_heights[*r] = distributed[k];
+                }
             }
 
             let mut row_y = Vec::with_capacity(rows);
@@ -233,14 +413,16 @@ impl AssetHost<'_> {
             }
 
             for (i, item) in items.iter().enumerate() {
-                let c = i % cols;
-                let r = i / cols;
-
+                let (c, r, span) = placements[i];
                 let cell_x = x0 + c as f64 * (col_w + gap);
                 let cell_y = row_y[r];
                 let cell_h = row_heights[r];
+                let cell_w = col_w * span as f64 + gap * (span.saturating_sub(1) as f64);
 
-                let w = item.fixed_w.unwrap_or(col_w);
+                let w = item
+                    .fixed_w
+                    .unwrap_or(cell_w)
+                    .clamp(item.min_size, item.max_size);
                 let h = item.fixed_h.unwrap_or(cell_h);
 
                 solved_boxes.push(LayoutBox {
@@ -258,30 +440,36 @@ impl AssetHost<'_> {
             let gaps_total = (items.len() as f64 - 1.0).max(0.0) * gap;
             let avail_main = (avail_w - gaps_total).max(0.0);
 
-            let fixed_sum: f64 = items.iter().filter_map(|it| it.fixed_w).sum();
-            let flex_sum: f64 = items
-                .iter()
-                .filter(|it| it.fixed_w.is_none())
-                .map(|it| it.flex)
-                .sum();
+            let mut widths = vec![0.0; items.len()];
+            let mut flex_idx = Vec::new();
+            let mut flex_w = Vec::new();
+            let mut flex_min = Vec::new();
+            let mut flex_max = Vec::new();
+            let mut fixed_sum = 0.0;
+            for (i, item) in items.iter().enumerate() {
+                if let Some(w) = item.fixed_w {
+                    widths[i] = w.clamp(item.min_size, item.max_size);
+                    fixed_sum += widths[i];
+                } else {
+                    flex_idx.push(i);
+                    flex_w.push(item.flex);
+                    flex_min.push(item.min_size);
+                    flex_max.push(item.max_size);
+                }
+            }
             let remaining_main = (avail_main - fixed_sum).max(0.0);
-            let unconstrained_count = items.iter().filter(|it| it.fixed_w.is_none()).count();
+            let distributed = distribute_flex_sizes(&flex_w, &flex_min, &flex_max, remaining_main);
+            for (k, &i) in flex_idx.iter().enumerate() {
+                widths[i] = distributed[k];
+            }
 
             let mut cur_x = x0;
-            for item in &items {
-                let w = match item.fixed_w {
-                    Some(w) => w,
-                    None => {
-                        if flex_sum > 0.0 {
-                            remaining_main * (item.flex / flex_sum)
-                        } else if unconstrained_count > 0 {
-                            remaining_main / unconstrained_count as f64
-                        } else {
-                            0.0
-                        }
-                    }
-                };
-                let h = item.fixed_h.unwrap_or(avail_h);
+            for (i, item) in items.iter().enumerate() {
+                let w = widths[i];
+                let h = item
+                    .fixed_h
+                    .or(item.cross_size)
+                    .unwrap_or(avail_h);
 
                 solved_boxes.push(LayoutBox {
                     id: item.id.to_string(),
@@ -300,30 +488,36 @@ impl AssetHost<'_> {
             let gaps_total = (items.len() as f64 - 1.0).max(0.0) * gap;
             let avail_main = (avail_h - gaps_total).max(0.0);
 
-            let fixed_sum: f64 = items.iter().filter_map(|it| it.fixed_h).sum();
-            let flex_sum: f64 = items
-                .iter()
-                .filter(|it| it.fixed_h.is_none())
-                .map(|it| it.flex)
-                .sum();
+            let mut heights = vec![0.0; items.len()];
+            let mut flex_idx = Vec::new();
+            let mut flex_h = Vec::new();
+            let mut flex_min = Vec::new();
+            let mut flex_max = Vec::new();
+            let mut fixed_sum = 0.0;
+            for (i, item) in items.iter().enumerate() {
+                if let Some(h) = item.fixed_h {
+                    heights[i] = h.clamp(item.min_size, item.max_size);
+                    fixed_sum += heights[i];
+                } else {
+                    flex_idx.push(i);
+                    flex_h.push(item.flex);
+                    flex_min.push(item.min_size);
+                    flex_max.push(item.max_size);
+                }
+            }
             let remaining_main = (avail_main - fixed_sum).max(0.0);
-            let unconstrained_count = items.iter().filter(|it| it.fixed_h.is_none()).count();
+            let distributed = distribute_flex_sizes(&flex_h, &flex_min, &flex_max, remaining_main);
+            for (k, &i) in flex_idx.iter().enumerate() {
+                heights[i] = distributed[k];
+            }
 
             let mut cur_y = y0;
-            for item in &items {
-                let h = match item.fixed_h {
-                    Some(h) => h,
-                    None => {
-                        if flex_sum > 0.0 {
-                            remaining_main * (item.flex / flex_sum)
-                        } else if unconstrained_count > 0 {
-                            remaining_main / unconstrained_count as f64
-                        } else {
-                            0.0
-                        }
-                    }
-                };
-                let w = item.fixed_w.unwrap_or(avail_w);
+            for (i, item) in items.iter().enumerate() {
+                let h = heights[i];
+                let w = item
+                    .fixed_w
+                    .or(item.cross_size)
+                    .unwrap_or(avail_w);
 
                 solved_boxes.push(LayoutBox {
                     id: item.id.to_string(),
@@ -340,6 +534,7 @@ impl AssetHost<'_> {
             }
         }
 
+        let non_overlapping = boxes_non_overlapping(&solved_boxes);
         let box_records = solved_boxes
             .into_iter()
             .map(|b| {
@@ -360,6 +555,7 @@ impl AssetHost<'_> {
             ("viewport_width".into(), Value::F64(viewport_width)),
             ("viewport_height".into(), Value::F64(viewport_height)),
             ("direction".into(), Value::String(direction.to_string())),
+            ("non_overlapping".into(), Value::Bool(non_overlapping)),
             ("boxes".into(), Value::List(box_records)),
         ])))
     }

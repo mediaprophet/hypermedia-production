@@ -159,6 +159,29 @@ impl AssetHost<'_> {
             (false, [0.0, 0.0], [0.0, 0.0])
         };
 
+        // Inverse homography: UV on the quad → world → pinhole screen, compared to pick.
+        let loc_x = (picked_uv[0] - 0.5) * qw;
+        let loc_y = (0.5 - picked_uv[1]) * qh;
+        let world = [
+            center[0] + loc_x * cy + loc_y * sy * sx,
+            center[1] + loc_y * cx,
+            center[2] + loc_x * (-sy) + loc_y * cy * sx,
+        ];
+        let (reproject_xy, reproject_error_px, pick_invertible) = if world[2].abs() > 1e-12 {
+            let rx = world[0] / world[2] * f;
+            let ry = world[1] / world[2] * f;
+            let sx_px = rx + vp_w as f64 * 0.5;
+            let sy_px = vp_h as f64 * 0.5 - ry;
+            let err = if hit_surface {
+                (sx_px - pick_screen_xy[0]).hypot(sy_px - pick_screen_xy[1])
+            } else {
+                0.0
+            };
+            ([sx_px, sy_px], err, !hit_surface || err < 0.75)
+        } else {
+            ([0.0, 0.0], f64::INFINITY, false)
+        };
+
         let projected_rgba = self.store_rgba(vp_w as u32, vp_h as u32, pixels)?;
 
         let mut record = BTreeMap::new();
@@ -175,6 +198,18 @@ impl AssetHost<'_> {
                 Value::F64(picked_ui_xy[1]),
             ]),
         );
+        record.insert(
+            "reprojected_xy".into(),
+            Value::List(vec![
+                Value::F64(reproject_xy[0]),
+                Value::F64(reproject_xy[1]),
+            ]),
+        );
+        record.insert(
+            "pick_reproject_error_px".into(),
+            Value::F64(reproject_error_px),
+        );
+        record.insert("pick_invertible".into(), Value::Bool(pick_invertible));
 
         Ok(Value::Record(record))
     }
@@ -377,5 +412,58 @@ impl AssetHost<'_> {
         record.insert("remapped_axis_strength".into(), Value::F64(remapped_strength));
 
         Ok(Value::Record(record))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(
+        workspace: AssetWorkspace,
+        inputs: &'a [Resource],
+        cancel: &'a AtomicBool,
+        limits: &'a ToolLimits,
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace,
+            inputs,
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn test_layout_diegetic_projection_invertible() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let pixels = vec![[64, 128, 200, 255]; 32 * 32];
+        let ui_handle = h.store_rgba(32, 32, pixels).expect("store rgba");
+
+        let mut args = BTreeMap::new();
+        args.insert("ui_image".into(), ui_handle);
+        args.insert("viewport_width".into(), Value::U64(256));
+        args.insert("viewport_height".into(), Value::U64(256));
+        args.insert("yaw_deg".into(), Value::F64(15.0));
+        args.insert("pitch_deg".into(), Value::F64(-5.0));
+        args.insert(
+            "pick_screen_xy".into(),
+            Value::List(vec![Value::F64(128.0), Value::F64(128.0)]),
+        );
+
+        let res = h
+            .project_diegetic_surface(&args)
+            .expect("project diegetic");
+        let rec = record(&res).unwrap();
+        assert_eq!(rec.get("hit_surface"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("pick_invertible"), Some(&Value::Bool(true)));
+        let Value::F64(err) = rec.get("pick_reproject_error_px").unwrap() else {
+            panic!("reproject error");
+        };
+        assert!(*err < 0.75, "homographic invertibility residual {err} px");
     }
 }
