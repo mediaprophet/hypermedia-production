@@ -1,10 +1,10 @@
 use super::*;
+use crate::electromagnetics_ops::parse_sealed_emf;
 use crate::*;
 use qualia_core_db::etalon_render::spectral::kernel::{
     linear_rgb_to_display, spd_to_xyz, xyz_to_linear_srgb, Spd, SPD_SAMPLES,
 };
 use qualia_core_db::etalon_render::spectral::metamer::{is_metameric, min_norm_spd_for_xyz};
-use qualia_core_db::q42::emf_container::EmfContainerReader;
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 
@@ -45,8 +45,7 @@ impl AssetHost<'_> {
 
         let (dims, voxels) = if let Some(emf_val) = a.get("emf") {
             let bytes = self.resolve_emf_bytes(emf_val)?;
-            let reader = EmfContainerReader::parse(&bytes)
-                .map_err(|e| format!("Invalid EMF container: {e}"))?;
+            let reader = parse_sealed_emf(&bytes)?;
 
             let dims_bricks = reader.header().grid_dims_bricks;
             let gx = (dims_bricks[0] * 8).clamp(4, 32) as usize;

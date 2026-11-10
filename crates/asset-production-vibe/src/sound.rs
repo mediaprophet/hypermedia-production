@@ -1,29 +1,8 @@
 use super::*;
-use crate::electromagnetics_ops::emf_cell_display_irradiance;
-use qualia_core_db::q42::emf_container::{EmfContainerReader, SPEED_OF_LIGHT};
+use crate::electromagnetics_ops::{emf_cell_display_irradiance, parse_sealed_emf};
+use qualia_core_db::q42::emf_container::SPEED_OF_LIGHT;
 
 impl AssetHost<'_> {
-    /// Resolves sealed `.emf` bytes from a retained key or encoded handle.
-    fn resolve_emf_bytes_for_sonic(&self, val: &Value) -> Result<Vec<u8>, String> {
-        if let Ok(key) = text(val) {
-            self.inputs
-                .iter()
-                .find(|r| r.key == key)
-                .map(|r| r.bytes.clone())
-                .ok_or_else(|| format!("Missing retained input: {key}"))
-        } else if let Ok(res) = self.workspace.encoded(val) {
-            if res.kind != "emf" {
-                return Err(format!(
-                    "Expected an 'emf' resource handle, found '{}'",
-                    res.kind
-                ));
-            }
-            Ok(res.bytes.clone())
-        } else {
-            Err("Expected retained resource key or encoded handle for emf".into())
-        }
-    }
-
     /// Heterodyne optical wavelength onto A4 (532 nm → 440 Hz) so the field is hearable.
     fn optical_nm_to_audio_hz(wavelength_nm: f64, nyquist: f64) -> f64 {
         if !(wavelength_nm > 0.0) {
@@ -41,9 +20,8 @@ impl AssetHost<'_> {
         frames: usize,
         amp: f32,
     ) -> Result<Vec<f32>, String> {
-        let bytes = self.resolve_emf_bytes_for_sonic(emf_val)?;
-        let reader = EmfContainerReader::parse(&bytes)
-            .map_err(|e| format!("Invalid EMF container: {e}"))?;
+        let bytes = self.resolve_emf_bytes(emf_val)?;
+        let reader = parse_sealed_emf(&bytes)?;
 
         let mut envelope: Vec<f32> = Vec::new();
         let mut irr_sum = 0.0f64;

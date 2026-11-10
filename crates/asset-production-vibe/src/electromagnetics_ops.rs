@@ -280,8 +280,7 @@ impl AssetHost<'_> {
 
         self.charge(bytes.len() / 64, bytes.len())?;
 
-        let reader = EmfContainerReader::parse(&bytes)
-            .map_err(|e| format!("Invalid EMF container: {e}"))?;
+        let reader = parse_sealed_emf(&bytes)?;
 
         let chunk_count = reader.chunk_count();
         let mut total_energy_density = 0.0f64;
@@ -367,8 +366,7 @@ impl AssetHost<'_> {
         let pixel_count = (width as usize) * (height as usize);
         self.charge(pixel_count, pixel_count * 4)?;
 
-        let reader = EmfContainerReader::parse(&bytes)
-            .map_err(|e| format!("Invalid EMF container: {e}"))?;
+        let reader = parse_sealed_emf(&bytes)?;
 
         let dims = reader.header().grid_dims_bricks;
         let vx_max = dims[0] * 8;
@@ -652,6 +650,21 @@ impl AssetHost<'_> {
             Err("Expected retained resource key or encoded handle for emf".into())
         }
     }
+}
+
+/// QualiaDB `parse` admits CRC-only files; untrusted paths require a writer Bao seal.
+pub(crate) fn parse_sealed_emf(bytes: &[u8]) -> Result<EmfContainerReader<'_>, String> {
+    let reader = EmfContainerReader::parse(bytes)
+        .map_err(|e| format!("Invalid EMF container: {e}"))?;
+    for chunk_idx in 0..reader.chunk_count() {
+        let entry = reader
+            .chunk_entry(chunk_idx)
+            .ok_or_else(|| format!("Missing chunk directory entry at index {chunk_idx}"))?;
+        if entry.bao_hash_prefix == [0u8; 16] || entry.flags & 2 == 0 {
+            return Err("EMF container omitted BLAKE3-Bao seal".into());
+        }
+    }
+    Ok(reader)
 }
 
 /// Vacuum-impedance irradiance (W/m²) used as the display-linear quantity.
@@ -953,6 +966,94 @@ mod tests {
         assert!(
             err.contains("Invalid EMF") || err.contains("Bao") || err.contains("Checksum"),
             "fail-closed error must name CRC/Bao verify, got: {err}"
+        );
+    }
+
+    fn strip_emf_bao_keep_crc(bytes: &mut [u8]) {
+        use qualia_core_db::q42::emf_container::EmfChunkDirectoryEntry;
+        let (dir_off, n) = {
+            let reader = EmfContainerReader::parse(bytes).expect("CRC-valid sealed emf");
+            (
+                reader.header().directory_offset as usize,
+                reader.chunk_count(),
+            )
+        };
+        for i in 0..n {
+            let off = dir_off + i * 64;
+            let mut entry: EmfChunkDirectoryEntry =
+                bytemuck::pod_read_unaligned(&bytes[off..off + 64]);
+            entry.flags &= !2;
+            entry.bao_hash_prefix = [0u8; 16];
+            entry.update_crc();
+            bytes[off..off + 64].copy_from_slice(bytemuck::bytes_of(&entry));
+        }
+    }
+
+    #[test]
+    fn test_verify_emf_refuses_crc_consistent_bao_omitted() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let inputs = vec![];
+        let mut host = create_test_host(&inputs, &cancel, &limits);
+        let emf_handle = compile_green_dipole(&mut host);
+        let mut unsigned = host
+            .workspace
+            .encoded(&emf_handle)
+            .expect("encoded emf")
+            .bytes
+            .clone();
+        strip_emf_bao_keep_crc(&mut unsigned);
+        assert!(
+            EmfContainerReader::parse(&unsigned).is_ok(),
+            "QualiaDB parse still admits CRC-only EMF"
+        );
+
+        let admitted = host
+            .admit_encoded("emf", unsigned.clone())
+            .expect("admit CRC-only emf");
+        let mut verify_args = BTreeMap::new();
+        verify_args.insert("emf".into(), admitted);
+        let err = host
+            .electromagnetics_op("hypermedia.electromagnetics.verify_emf", &verify_args)
+            .expect_err("Bao-omitted EMF must fail closed");
+        assert!(
+            err.contains("Bao") || err.contains("seal"),
+            "fail-closed error must name Bao seal, got: {err}"
+        );
+
+        let mut render_args = BTreeMap::new();
+        render_args.insert(
+            "emf".into(),
+            host.admit_encoded("emf", unsigned.clone())
+                .expect("admit CRC-only emf for render"),
+        );
+        render_args.insert("width".into(), Value::U64(8));
+        render_args.insert("height".into(), Value::U64(8));
+        let render_err = host
+            .electromagnetics_op(
+                "hypermedia.electromagnetics.render_spectral_slice",
+                &render_args,
+            )
+            .expect_err("Bao-omitted EMF render must fail closed");
+        assert!(
+            render_err.contains("Bao") || render_err.contains("seal"),
+            "render fail-closed must name Bao seal, got: {render_err}"
+        );
+
+        let retained = [Resource {
+            key: "unsigned.emf".into(),
+            kind: "emf".into(),
+            bytes: unsigned,
+        }];
+        let mut retained_host = create_test_host(&retained, &cancel, &limits);
+        let mut retained_args = BTreeMap::new();
+        retained_args.insert("emf".into(), Value::String("unsigned.emf".into()));
+        let retained_err = retained_host
+            .electromagnetics_op("hypermedia.electromagnetics.verify_emf", &retained_args)
+            .expect_err("retained Bao-omitted EMF must fail closed");
+        assert!(
+            retained_err.contains("Bao") || retained_err.contains("seal"),
+            "retained fail-closed must name Bao seal, got: {retained_err}"
         );
     }
 

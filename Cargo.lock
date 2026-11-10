@@ -306,6 +306,7 @@ dependencies = [
  "audio-timebase",
  "base64 0.22.1",
  "bitstream-codec",
+ "blake3",
  "bytemuck",
  "chronicle-broadcast-containers",
  "chronicle-fiduciary-ledger",

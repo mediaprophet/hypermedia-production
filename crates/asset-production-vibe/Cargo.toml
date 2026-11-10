@@ -68,3 +68,4 @@ qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "e2
 png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"
+blake3 = { version = "1.8", default-features = false }

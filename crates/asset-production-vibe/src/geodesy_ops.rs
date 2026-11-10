@@ -174,6 +174,14 @@ fn self_verify_m64(buffer: &[u8], record_count: u64, expected_mode: u8) -> Resul
                         .into(),
                 );
             }
+            let prefix = reader
+                .chunk(0)
+                .map(|c| c.directory_entry().bao_root_hash_prefix);
+            if prefix == Some([0u8; 12]) {
+                return Err(
+                    "M64 self-verification failed: occupancy Bao prefix is unsigned".into(),
+                );
+            }
         }
         _ => {}
     }
@@ -589,6 +597,11 @@ impl AssetHost<'_> {
             &mut buffer[payload_off..],
         );
 
+        // Occupancy omits per-record CRC; a non-zero prefix makes M64Reader hash the brick.
+        let digest = blake3::hash(&buffer[payload_off..]);
+        let mut bao_root_hash_prefix = [0u8; 12];
+        bao_root_hash_prefix.copy_from_slice(&digest.as_bytes()[..12]);
+
         let mut header = M64Header::default();
         header.total_file_size = total_file_size as u64;
         header.chunk_count = 1;
@@ -609,7 +622,7 @@ impl AssetHost<'_> {
             lut_bank_epoch_id: 1,
             chunk_record_mode: mode,
             compression_flags: 0,
-            bao_root_hash_prefix: [0u8; 12],
+            bao_root_hash_prefix,
             entry_crc32c: 0,
         };
         entry.update_crc();
@@ -778,22 +791,41 @@ mod tests {
         assert_eq!(&bytes[..4], &M64_MAGIC);
 
         let reader = parse_m64(&bytes);
-        assert_eq!(
-            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
-            M64_MODE_HOLO
-        );
+        let chunk = reader.chunk(0).unwrap();
+        let entry = chunk.directory_entry();
+        assert_eq!(entry.chunk_record_mode, M64_MODE_HOLO);
         assert_eq!(reader.verification().record_crc_checked, 0);
         assert_eq!(
             reader.verification().records_without_checksum,
             M64_BRICK3D_RECORDS as u64
         );
-        assert_eq!(
-            reader
-                .chunk(0)
-                .unwrap()
-                .directory_entry()
-                .srid_geodetic_code,
-            M64_SRID_LOCAL_MICROMETER
+        assert_ne!(
+            entry.bao_root_hash_prefix,
+            [0u8; 12],
+            "occupancy Bao prefix must be non-zero"
+        );
+        assert_eq!(entry.srid_geodetic_code, M64_SRID_LOCAL_MICROMETER);
+
+        let mut verify_args = BTreeMap::new();
+        verify_args.insert("m64".into(), handle);
+        let summary = host
+            .geodesy_op("hypermedia.geodesy.verify_m64", &verify_args)
+            .expect("verify_m64 holo");
+        let rec = record(&summary).expect("record");
+        assert_eq!(required(rec, "valid").ok(), Some(&Value::Bool(true)));
+
+        let mut tampered = bytes.clone();
+        let payload_off = 64 + LRM3_BLOCK_BYTES + 64;
+        tampered[payload_off] ^= 0x01;
+        let limits = M64ReadLimits {
+            max_file_bytes: tampered.len() + 1024,
+            max_chunks: 4,
+            max_records: 8192,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        assert!(
+            M64Reader::parse(&tampered, limits, &mut scratch).is_err(),
+            "occupancy payload tamper must fail Bao"
         );
     }
 
@@ -983,14 +1015,26 @@ mod tests {
         assert!(has_m64_magic(&bytes));
 
         let reader = parse_m64(&bytes);
-        assert_eq!(
-            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
-            M64_MODE_POINT
-        );
+        let chunk = reader.chunk(0).unwrap();
+        let entry = chunk.directory_entry();
+        assert_eq!(entry.chunk_record_mode, M64_MODE_POINT);
         assert_eq!(reader.verification().record_crc_checked, 0);
         assert_eq!(
             reader.verification().records_without_checksum,
             M64_BRICK3D_RECORDS as u64
         );
+        assert_ne!(
+            entry.bao_root_hash_prefix,
+            [0u8; 12],
+            "occupancy Bao prefix must be non-zero"
+        );
+
+        let mut verify_args = BTreeMap::new();
+        verify_args.insert("m64".into(), handle);
+        let summary = host
+            .geodesy_op("hypermedia.geodesy.verify_m64", &verify_args)
+            .expect("verify_m64 point");
+        let rec = record(&summary).expect("record");
+        assert_eq!(required(rec, "valid").ok(), Some(&Value::Bool(true)));
     }
 }
