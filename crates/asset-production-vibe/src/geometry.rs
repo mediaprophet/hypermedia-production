@@ -226,7 +226,20 @@ impl AssetHost<'_> {
                 self.store_mesh(v, t)
             }
             "hypermedia.manifold.loft" | "hypermedia.mesh.loft" => {
-                fields(a, &["a", "b", "sections", "caps"])?;
+                let interpolation = match a.get("interpolation") {
+                    Some(v) => text(v)?,
+                    None => "linear",
+                };
+                if interpolation == "cubic" {
+                    return self.manifold_ext("hypermedia.manifold.loft", a);
+                }
+                if interpolation != "linear" {
+                    return Err(
+                        "Unknown interpolation: expected 'linear' (ruled) or 'cubic' (Catmull-Rom)"
+                            .into(),
+                    );
+                }
+                fields(a, &["a", "b", "sections", "caps", "interpolation", "samples"])?;
                 if let Some(sections_val) = a.get("sections") {
                     let ring_vals = list(sections_val)?;
                     if ring_vals.len() < 2 || ring_vals.len() > 256 {

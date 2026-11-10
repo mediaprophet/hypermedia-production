@@ -71,7 +71,7 @@ impl AssetHost<'_> {
                 self.analyze_ebu_r128_camelot_daw(a)
             }
             "hypermedia.electromagnetics.sense_wifi_csi_vitals_aoa" => {
-                self.sense_wifi_csi_vitals_aoa(a)
+                self.electromagnetics_op(canonical_id, a)
             }
             "hypermedia.geodesy.kriging_variogram_morphometry" => {
                 self.kriging_variogram_morphometry(a)

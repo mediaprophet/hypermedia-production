@@ -13,7 +13,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.revolve", "QualiaDB/parametric_cad",
      "Positive radial contour revolved around axis -> 3D surface manifold"),
     ("hypermedia.manifold.loft", "QualiaDB/parametric_cad",
-     "Two corresponding 3D boundary curves -> ruled 3D loft surface manifold"),
+     "Two corresponding 3D boundary curves -> ruled origin loft; interpolation=cubic Catmull-Rom densified manifold"),
     ("hypermedia.manifold.compile_10d", "QualiaDB/render/compile_10d",
      "3D manifold -> sealed QualiaDB native .10d spatial container resource"),
     ("hypermedia.radiance.rasterize_loci", "hypermedia/vector-cpu-render-adapter",
@@ -47,9 +47,9 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.radiance.filter_rgba", "QualiaDB/hypermedia_authoring/image",
      "Bounded Gaussian blur, unsharp mask sharpen, hue rotation, or directional emboss -> RGBA8 lattice"),
     ("hypermedia.radiance.encode_rgba_png", "png codec",
-     "Straight-alpha RGBA8 lattice -> lossless 32-bit transparent PNG resource"),
+     "Straight-alpha RGBA8 lattice + optional profile=16-bit -> lossless 8-bit or 16-bit transparent PNG resource"),
     ("hypermedia.radiance.import_rgba_png", "png codec",
-     "Retained 8-bit PNG (RGBA/RGB/grayscale/indexed) -> straight-alpha RGBA8 lattice"),
+     "Retained 8-bit or 16-bit PNG (RGBA/RGB/grayscale/indexed) + lattice profile -> straight-alpha RGBA8 lattice"),
     ("hypermedia.surface.synthesize_maps", "Etalon/surface_frames/authoring via QualiaDB",
      "Procedural surface field parameters -> tileable PBR {colour, normal, orm} RGBA8 handles"),
     ("hypermedia.discourse.review_gallery", "hypermedia/asset-production-vibe",
@@ -101,7 +101,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.project_dxf", "hypermedia/asset-production-vibe/manifold_ops",
      "2D locus and/or 3D manifold -> standards-compliant AutoCAD ASCII .dxf resource"),
     ("hypermedia.manifold.compile_10d_pbr", "QualiaDB/render/compile_10d",
-     "3D manifold + optional PBR albedo RGBA + topology/BVH extras + smooth normals -> sealed .10d container"),
+     "3D manifold + optional PBR albedo RGBA + topology/BVH extras + unwrap UV01 source_10d -> sealed .10d container"),
     ("hypermedia.electromagnetics.compile_emf", "QualiaDB/q42/emf_container",
      "Wave/dipole emitter parameters + 3D Hilbert brick grid -> sealed Q42EMF64 .emf container"),
     ("hypermedia.electromagnetics.verify_emf", "QualiaDB/q42/emf_container",
@@ -111,7 +111,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.geodesy.sculpt_terrain", "hypermedia/terrain-brushes",
      "CoW heightfield tile + reversible brush strokes -> hypsometric relief RGBA8 handle & elevation stats"),
     ("hypermedia.geodesy.compile_m64", "QualiaDB/q42/m64_matter + hypermedia/terrain-brushes",
-     "Geodetic origin + sculpted terrain & subsurface strata columns -> sealed Matter-64 .m64 container"),
+     "Geodetic origin + sculpted terrain & subsurface strata columns -> sealed Matter-64 .m64 STRATA/HOLO/POINT container"),
     ("hypermedia.geodesy.verify_m64", "QualiaDB/q42/m64_matter",
      "Sealed .m64 container -> structural & per-record CRC-32C verification summary record"),
     ("hypermedia.kinetics.solve_two_bone_ik", "Etalon/etalon-render/skeletal + QualiaDB/world3d",
@@ -135,7 +135,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.discourse.compile_prose_docx", "hypermedia/asset-production-vibe/discourse_docs",
      "Structured prose sections, paragraphs, and tabular cells -> ECMA-376 OpenXML .docx document resource"),
     ("hypermedia.discourse.compile_deck_pptx", "hypermedia/asset-production-vibe/discourse_docs",
-     "Ordered slide specifications with titles and bullet hierarchies -> ECMA-376 OpenXML .pptx presentation deck"),
+     "Ordered slide specifications with titles and bullet hierarchies -> ECMA-376 OpenXML .pptx with one DrawingML paragraph per bullet"),
     ("hypermedia.discourse.render_chart_svg", "hypermedia/asset-production-vibe/discourse_docs",
      "Quantitative data series + bar|line|area|scatter chart mode -> standalone UTF-8 data visualization .svg"),
     ("hypermedia.locus.fillet", "hypermedia/asset-production-vibe/locus_generative",
@@ -173,7 +173,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.fspm_vascular_grow", "QualiaDB/modalities/botany + manifold_fields_sdf",
      "Allometric seed + Murray's Law exponent + Hagen-Poiseuille xylem conductance -> 3D botanical organ manifold & NQuin48 state"),
     ("hypermedia.surface.unwrap_slim", "hypermedia/asset-production-vibe/surface_bsdf_uv",
-     "3D manifold + SLIM iterations -> bijective flip-free Symmetric Dirichlet UV parameterization & SVG chart"),
+     "3D manifold + SLIM iterations -> bijective flip-free Symmetric Dirichlet UV parameterization, SVG chart & UV01-sealed .10d"),
     ("hypermedia.surface.compute_mikktspace", "hypermedia/asset-production-vibe/surface_bsdf_uv",
      "3D manifold -> orthogonal MikkTSpace [Tx, Ty, Tz, sign] tangent frame attributes & normal-map verification RGBA8"),
     ("hypermedia.surface.compile_bsdf_graph", "Etalon/etalon-render + surface_bsdf_uv",
@@ -281,9 +281,9 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.kinetics.schedule_cpm_evm_montecarlo", "hypermedia/kinetics-schedule-cpm",
      "Task dependency network + trial count -> CPM forward/backward critical path, ANSI/EIA-748 EVM metrics, Monte Carlo P50/P90 risk & Gantt SVG resource"),
     ("hypermedia.acoustics.analyze_ebu_r128_camelot_daw", "hypermedia/acoustics-daw-session + audio-timebase",
-     "Audio signal + tempo map + 5.1 azimuth -> ITU-R BS.1770-4 LUFS loudness, YIN pitch/MIDI, VBAP surround gains, Camelot harmony & SMPTE/35mm timecode"),
+     "Audio signal + tempo map + 5.1 azimuth -> ITU-R BS.1770-4 / EBU R128 gated integrated LUFS, YIN pitch/MIDI, VBAP surround gains, Camelot harmony & SMPTE/35mm timecode"),
     ("hypermedia.electromagnetics.sense_wifi_csi_vitals_aoa", "hypermedia/electromagnetics-rf-sensing",
-     "802.11 CSI subcarrier phases + ULA snapshots -> sanitized CSI phase, contactless respiration/cardiac BPM, MUSIC AoA peak & camera-free privacy witness receipt"),
+     "CsiFrame 802.11 CSI subcarrier phases + ULA snapshots -> sanitized CSI phase, contactless respiration/cardiac BPM, MUSIC AoA peak & camera-free privacy witness receipt"),
     ("hypermedia.geodesy.kriging_variogram_morphometry", "hypermedia/geodesy-spatial-analysis",
      "WGS84 control points + variogram model + DEM grid -> Karney geodesic inverse, Ordinary Kriging estimate/variance, Horn slope/contours & Dijkstra shortest route"),
     ("hypermedia.discourse.audit_tex_pdf_ua_matlang", "hypermedia/discourse-academic-tex + discourse-pdf-compliance + discourse-scientific-matlang + multimodal-synthesis-schema",
@@ -293,3 +293,231 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("qualia.species.assemble_corpus", "QualiaDB/q42/species_corpus",
      "Sources and evidenced assertions -> species .q42 volume, CBOR-LD projection, digest, conflicts and gaps"),
 ];
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+    use qualia_core_db::container_10d::read_texture_coordinate_section_into;
+    use qualia_core_db::render::assets::Mesh;
+    use std::collections::BTreeMap;
+    use std::sync::atomic::AtomicBool;
+    use vibe::Value;
+
+    fn host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn vec3(x: f64, y: f64, z: f64) -> Value {
+        Value::List(vec![Value::F64(x), Value::F64(y), Value::F64(z)])
+    }
+
+    fn square_ring(z: f64, s: f64) -> Value {
+        Value::List(vec![
+            vec3(-s, -s, z),
+            vec3(s, -s, z),
+            vec3(s, s, z),
+            vec3(-s, s, z),
+        ])
+    }
+
+    fn catalog_text() -> String {
+        OPERATIONS
+            .iter()
+            .flat_map(|(id, owner, summary)| [*id, *owner, *summary])
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    #[test]
+    fn catalog_rows_raise_wave_b_objects() {
+        let text = catalog_text();
+        for needle in [
+            "CsiFrame",
+            "interpolation=cubic",
+            "UV01",
+            "metamer",
+            "STRATA/HOLO",
+            "SKL1",
+            "OTIO",
+            "ProRes",
+            "Live Corners",
+            "16-bit",
+            "gated",
+            "paragraph per bullet",
+        ] {
+            assert!(
+                text.contains(needle),
+                "catalog must raise Wave B object {needle}"
+            );
+        }
+        assert_eq!(OPERATIONS.len(), ontology::MORPHISMS.len());
+    }
+
+    #[test]
+    fn catalog_dispatch_csi_hits_csiframe() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let mut args = BTreeMap::new();
+        args.insert("breathing_hz".into(), Value::F64(0.25));
+        args.insert("heart_hz".into(), Value::F64(1.2));
+        args.insert("carrier_ghz".into(), Value::F64(5.18));
+        let res = host
+            .invoke(
+                "hypermedia.electromagnetics.sense_wifi_csi_vitals_aoa",
+                &Value::Record(args),
+            )
+            .expect("public CSI name must hit raised CsiFrame produce");
+        let rec = record(&res).expect("csi record");
+        let aoa = match rec.get("dominant_aoa_deg") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("dominant_aoa_deg"),
+        };
+        assert!(
+            (aoa - 25.0).abs() <= 2.0,
+            "CsiFrame MUSIC AoA must recover 25°, got {aoa}"
+        );
+        assert_eq!(rec.get("camera_free_verified"), Some(&Value::Bool(true)));
+        assert_eq!(
+            rec.get("sanitized_subcarrier_count"),
+            Some(&Value::I64(7))
+        );
+    }
+
+    #[test]
+    fn catalog_dispatch_cubic_loft_not_interpolation_rejected() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let origin = host
+            .invoke(
+                "hypermedia.manifold.loft",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("a".into(), square_ring(0.0, 1.0));
+                    a.insert("b".into(), square_ring(1.0, 1.0));
+                    a.insert("interpolation".into(), Value::String("linear".into()));
+                    a
+                }),
+            )
+            .expect("linear interpolation remains ruled origin");
+        let origin_n = match host.workspace.get(&origin).expect("origin mesh") {
+            Artifact::Mesh(m) => m.positions.len(),
+            _ => panic!("expected mesh"),
+        };
+
+        let cubic = host
+            .invoke(
+                "hypermedia.manifold.loft",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "sections".into(),
+                        Value::List(vec![
+                            square_ring(0.0, 1.0),
+                            square_ring(1.0, 2.0),
+                            square_ring(2.0, 1.0),
+                        ]),
+                    );
+                    a.insert("caps".into(), Value::Bool(false));
+                    a.insert("interpolation".into(), Value::String("cubic".into()));
+                    a.insert("samples".into(), Value::U64(4));
+                    a
+                }),
+            )
+            .unwrap_or_else(|e| {
+                panic!("cubic loft must not be interpolation-rejected, got {e}")
+            });
+        let Artifact::Mesh(cubic_mesh) = host.workspace.get(&cubic).expect("cubic mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(
+            cubic_mesh.positions.len() > origin_n,
+            "raised cubic loft densifies stations"
+        );
+        let densified = cubic_mesh.positions[4];
+        let linear_chord = 1.0 + 0.25 * (2.0 - 1.0);
+        assert!(
+            (densified[0].abs() - linear_chord as f32).abs() > 1e-4,
+            "cubic loft must leave the ruled chord, got {}",
+            densified[0]
+        );
+        assert!(!format!("{densified:?}").contains("interpolation rejected"));
+    }
+
+    #[test]
+    fn catalog_compile_10d_pbr_consumes_unwrap_uv01() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let mesh_h = host
+            .workspace
+            .insert(
+                Artifact::Mesh(Mesh {
+                    positions: vec![
+                        [0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0],
+                        [1.0, 1.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                    ],
+                    triangles: vec![[0, 1, 2], [0, 2, 3]],
+                    min: [0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 0.0],
+                }),
+                host.limits,
+            )
+            .expect("quad");
+
+        let unwrap = host
+            .invoke(
+                "hypermedia.surface.unwrap_slim",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), mesh_h.clone());
+                    a.insert("iterations".into(), Value::U64(8));
+                    a
+                }),
+            )
+            .expect("unwrap");
+        let urec = record(&unwrap).expect("unwrap record");
+        let source_10d = required(urec, "container_10d")
+            .expect("unwrap sealed UV01")
+            .clone();
+
+        let compiled = host
+            .invoke(
+                "hypermedia.manifold.compile_10d_pbr",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), mesh_h);
+                    a.insert("source_10d".into(), source_10d);
+                    a.insert("topology".into(), Value::Bool(false));
+                    a
+                }),
+            )
+            .expect("compile_10d_pbr consumes unwrap UV01");
+        let bytes = host
+            .workspace
+            .encoded(&compiled)
+            .expect("compiled 10d")
+            .bytes
+            .clone();
+        let mut recovered = vec![[0.0f32; 2]; 4];
+        let n = read_texture_coordinate_section_into(&bytes, 4, &mut recovered)
+            .expect("compiled 10d must carry unwrap UV01");
+        assert_eq!(n, 4);
+        let span_u = recovered
+            .iter()
+            .map(|p| p[0])
+            .fold(f32::NEG_INFINITY, f32::max)
+            - recovered.iter().map(|p| p[0]).fold(f32::INFINITY, f32::min);
+        assert!(span_u > 0.2, "consumed UV01 island must be non-degenerate");
+    }
+}
