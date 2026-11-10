@@ -10,7 +10,6 @@ pub use shaping_svg::shape_glyph_run;
 use std::fmt::Write;
 
 /// Retained font metric ratios normalized to the 1.0 em-box.
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub struct FontMetrics {
     pub em_size: f64,
