@@ -130,6 +130,9 @@ impl AssetHost<'_> {
                 let r = self.rgba(required(a, "image")?)?;
                 let n = r.pixels.len();
                 let profile = lattice_profile(a)?;
+                if r.width > profile.max_dim || r.height > profile.max_dim {
+                    return Err(format!("PNG dimensions outside 1..{}", profile.max_dim));
+                }
                 self.charge(n * 10, n * 16 + 65536)?;
                 let r = self.rgba(required(a, "image")?)?;
                 let mut bytes = Vec::new();
@@ -141,7 +144,8 @@ impl AssetHost<'_> {
                         let mut packed = Vec::with_capacity(n * 8);
                         for p in &r.pixels {
                             for c in p {
-                                packed.extend_from_slice(&u8_to_u16_lattice(*c).to_ne_bytes());
+                                // PNG 16-bit samples are BE; native endian swaps on LE hosts.
+                                packed.extend_from_slice(&u8_to_u16_lattice(*c).to_be_bytes());
                             }
                         }
                         let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
@@ -223,7 +227,8 @@ impl AssetHost<'_> {
                     .chunks_exact(stride)
                     .map(|p| {
                         let sample = |i: usize| {
-                            u16_to_u8_lattice(u16::from_ne_bytes([p[i * 2], p[i * 2 + 1]]))
+                            // IDENTITY leaves file-order BE bytes; high byte is the 8-bit lattice.
+                            u16_to_u8_lattice(u16::from_be_bytes([p[i * 2], p[i * 2 + 1]]))
                         };
                         match channels {
                             1 => [sample(0), sample(0), sample(0), 255],
@@ -797,5 +802,32 @@ mod tests {
             )
             .expect_err("named 1024 profile must refuse 2k");
         assert!(err.contains("1280") || err.contains("1024") || err.contains("width"));
+    }
+
+    #[test]
+    fn test_radiance_png_16bit_be_high_byte() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let mut bytes = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut bytes, 1, 1);
+            encoder.set_color(png::ColorType::Rgba);
+            encoder.set_depth(png::BitDepth::Sixteen);
+            // 0x12FF is not 0xVVVV; BE high byte must survive import on LE hosts.
+            let packed = [0x12u8, 0xFF, 0x34, 0xAA, 0x56, 0xBB, 0xAB, 0xCD];
+            let mut writer = encoder.write_header().expect("png header");
+            writer.write_image_data(&packed).expect("png data");
+        }
+        let png = h.admit_encoded("png", bytes).expect("admit be png");
+        let imported = h
+            .graphics(
+                "hypermedia.radiance.import_rgba_png",
+                &BTreeMap::from([("input".into(), png)]),
+            )
+            .expect("import 16-bit be png");
+        let got = h.rgba(&imported).expect("rgba");
+        assert_eq!(got.pixels[0][0], 0x12, "BE sample 0x12FF must keep high byte 0x12");
+        assert_eq!(got.pixels[0], [0x12, 0x34, 0x56, 0xab]);
     }
 }

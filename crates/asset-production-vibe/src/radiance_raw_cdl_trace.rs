@@ -14,16 +14,20 @@ impl AssetHost<'_> {
 
         let (width, height, raw) = if let Some(v) = a.get("image") {
             let img = self.rgba(v)?;
-            let w = (img.width as usize).clamp(4, max_side);
-            let h = (img.height as usize).clamp(4, max_side);
+            // Named origin profiles refuse; do not crop or invent Bayer photosites.
+            if img.width < 4
+                || img.height < 4
+                || img.width > profile.max_dim
+                || img.height > profile.max_dim
+            {
+                return Err(format!("RAW dimensions outside 1..{}", profile.max_dim));
+            }
+            let w = img.width as usize;
+            let h = img.height as usize;
             let mut bayer = vec![1024u16; w * h];
             for y in 0..h {
                 for x in 0..w {
-                    let px = img
-                        .pixels
-                        .get(y * (img.width as usize) + x)
-                        .copied()
-                        .unwrap_or([128, 128, 128, 255]);
+                    let px = img.pixels[y * w + x];
                     let ch = match (y & 1, x & 1) {
                         (0, 0) => px[0],
                         (1, 1) => px[2],
@@ -123,8 +127,7 @@ impl AssetHost<'_> {
         let slope_g = number(a, "slope_g", 1.0)?;
         let slope_b = number(a, "slope_b", 0.9)?;
         let sat = number(a, "saturation", 1.15)?;
-
-        self.charge(256, 4096)?;
+        let profile = crate::graphics::lattice_profile(a)?;
 
         use radiance_color_grading::{
             AscCdl, ColorWheels, LogCurve, Lut3d,
@@ -135,26 +138,15 @@ impl AssetHost<'_> {
         };
         use raster_blend_operators::{BlendMode, blend_mode_rgb, cmyk_planes, planes_cmyk};
 
-        let cdl = AscCdl {
-            slope: [slope_r, slope_g, slope_b],
-            offset: [0.01, 0.0, -0.01],
-            power: [1.0, 1.0, 1.0],
-            sat,
-        };
-        let wheels = ColorWheels::default();
-        let lut = Lut3d::from_fn(4, |rgb| {
-            let w = wheels.apply(rgb);
-            let g = cdl.apply([w[0] as f64, w[1] as f64, w[2] as f64], true);
-            [g[0] as f32, g[1] as f32, g[2] as f32]
-        });
-
-        let sample_log = LogCurve::LogC4.encode(0.18);
-        let sample_lin = LogCurve::LogC4.decode(sample_log) as f32;
-        let graded_rgb = lut.apply([sample_lin, sample_lin, sample_lin]);
-        let blended = blend_mode_rgb(BlendMode::SoftLight, [0.5, 0.5, 0.5], graded_rgb);
-
         let (w, h, src_pixels) = if let Some(v) = a.get("image") {
             let img = self.rgba(v)?;
+            if img.width == 0
+                || img.height == 0
+                || img.width > profile.max_dim
+                || img.height > profile.max_dim
+            {
+                return Err(format!("CDL dimensions outside 1..{}", profile.max_dim));
+            }
             (img.width, img.height, img.pixels.clone())
         } else {
             let mut bars = Vec::with_capacity(16 * 16);
@@ -182,6 +174,28 @@ impl AssetHost<'_> {
             }
             (16, 16, bars)
         };
+
+        let n = w as usize * h as usize;
+        // Work/bytes follow pixel count; 4096 covers LUT + scope paint payload.
+        self.charge(n * 8 + 4096, n * 16)?;
+
+        let cdl = AscCdl {
+            slope: [slope_r, slope_g, slope_b],
+            offset: [0.01, 0.0, -0.01],
+            power: [1.0, 1.0, 1.0],
+            sat,
+        };
+        let wheels = ColorWheels::default();
+        let lut = Lut3d::from_fn(4, |rgb| {
+            let w = wheels.apply(rgb);
+            let g = cdl.apply([w[0] as f64, w[1] as f64, w[2] as f64], true);
+            [g[0] as f32, g[1] as f32, g[2] as f32]
+        });
+
+        let sample_log = LogCurve::LogC4.encode(0.18);
+        let sample_lin = LogCurve::LogC4.decode(sample_log) as f32;
+        let graded_rgb = lut.apply([sample_lin, sample_lin, sample_lin]);
+        let blended = blend_mode_rgb(BlendMode::SoftLight, [0.5, 0.5, 0.5], graded_rgb);
 
         let mut graded_pixels = Vec::with_capacity(src_pixels.len());
         let mut rgba_frame = Vec::with_capacity(src_pixels.len() * 4);
@@ -425,5 +439,71 @@ mod tests {
         let wf = num(required(rec, "waveform_bins").expect("waveform")).expect("num");
         let vs = num(required(rec, "vectorscope_bins").expect("vectorscope")).expect("num");
         assert!(wf > 0.0 && vs > 0.0);
+    }
+
+    #[test]
+    fn test_radiance_raw_hdr_profile_refuses_outside_lattice() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let wide = h
+            .store_rgba(1280, 8, vec![[0x12, 0x34, 0x56, 0xff]; 1280 * 8])
+            .expect("store 1280");
+        let err = h
+            .develop_camera_raw_hdr(&BTreeMap::from([
+                ("image".into(), wide),
+                ("profile".into(), Value::String("1024".into())),
+            ]))
+            .expect_err("named 1024 must refuse 1280-wide RAW");
+        assert!(
+            err.contains("1280") || err.contains("1024") || err.contains("dimensions"),
+            "admission message, got {err}"
+        );
+
+        let tiny = h
+            .store_rgba(8, 2, vec![[128, 128, 128, 255]; 16])
+            .expect("store 8x2");
+        let err = h
+            .develop_camera_raw_hdr(&BTreeMap::from([("image".into(), tiny)]))
+            .expect_err("height < 4 must refuse");
+        assert!(
+            err.contains("dimensions") || err.contains("4") || err.contains("height"),
+            "admission message, got {err}"
+        );
+    }
+
+    #[test]
+    fn test_radiance_cdl_scopes_profile_admit_and_charge() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let wide = h
+            .store_rgba(1280, 8, vec![[0x40, 0x80, 0xc0, 0xff]; 1280 * 8])
+            .expect("store 1280");
+        let err = h
+            .grade_cdl_scopes(&BTreeMap::from([
+                ("image".into(), wide),
+                ("profile".into(), Value::String("1024".into())),
+            ]))
+            .expect_err("named 1024 must refuse 1280-wide CDL");
+        assert!(
+            err.contains("1280") || err.contains("1024") || err.contains("dimensions"),
+            "admission message, got {err}"
+        );
+
+        let img = h
+            .store_rgba(32, 16, vec![[0x40, 0x80, 0xc0, 0xff]; 32 * 16])
+            .expect("store grade source");
+        let before = h.work;
+        h.grade_cdl_scopes(&BTreeMap::from([
+            ("image".into(), img),
+            ("profile".into(), Value::String("2k".into())),
+        ]))
+        .expect("grade 32x16 under 2k");
+        assert!(
+            h.work - before >= 32 * 16,
+            "CDL must charge O(w*h), charged {}",
+            h.work - before
+        );
     }
 }

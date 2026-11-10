@@ -94,7 +94,7 @@ impl AssetHost<'_> {
                         let mut packed = Vec::with_capacity(image.rgb.len() * 2);
                         for c in &image.rgb {
                             packed.extend_from_slice(
-                                &crate::graphics::u8_to_u16_lattice(*c).to_ne_bytes(),
+                                &crate::graphics::u8_to_u16_lattice(*c).to_be_bytes(),
                             );
                         }
                         let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
