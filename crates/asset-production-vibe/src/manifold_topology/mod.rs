@@ -462,8 +462,11 @@ mod tests {
             .manifold_topology_op("hypermedia.manifold.subdivide_catmull_clark", &args)
             .expect("subdivide level 1");
         let mesh1 = host.mesh(&res1).expect("mesh handle");
-        // 4 * 4 = 16 triangles
-        assert_eq!(mesh1.triangles.len(), 16);
+        // Each triangle becomes 3 quads = 6 triangles.
+        assert_eq!(mesh1.triangles.len(), 24);
+        for p in &mesh1.positions {
+            assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+        }
 
         args.insert("levels".into(), Value::U64(2));
         args.insert("crease".into(), Value::F64(0.8));
@@ -471,7 +474,69 @@ mod tests {
             .manifold_topology_op("hypermedia.manifold.subdivide_catmull_clark", &args)
             .expect("subdivide level 2");
         let mesh2 = host.mesh(&res2).expect("mesh handle");
-        // 4 * 16 = 64 triangles
-        assert_eq!(mesh2.triangles.len(), 64);
+        assert_eq!(mesh2.triangles.len(), 144);
+    }
+
+    #[test]
+    fn test_manifold_subdivide_catmull_clark_produce_safe_and_rounds() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let positions = vec![
+            [-1.0, -1.0, -1.0],
+            [1.0, -1.0, -1.0],
+            [1.0, 1.0, -1.0],
+            [-1.0, 1.0, -1.0],
+            [-1.0, -1.0, 1.0],
+            [1.0, -1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [-1.0, 1.0, 1.0],
+        ];
+        let triangles = vec![
+            [0, 3, 2],
+            [0, 2, 1],
+            [4, 5, 6],
+            [4, 6, 7],
+            [0, 1, 5],
+            [0, 5, 4],
+            [3, 7, 6],
+            [3, 6, 2],
+            [0, 4, 7],
+            [0, 7, 3],
+            [1, 2, 6],
+            [1, 6, 5],
+        ];
+        let cube_h = host
+            .store_mesh_artifact(positions, triangles)
+            .expect("store cube");
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube_h);
+        args.insert("levels".into(), Value::U64(1));
+        args.insert("crease".into(), Value::F64(0.0));
+
+        let a = host
+            .manifold_topology_op("hypermedia.manifold.subdivide_catmull_clark", &args)
+            .expect("cc a");
+        let b = host
+            .manifold_topology_op("hypermedia.manifold.subdivide_catmull_clark", &args)
+            .expect("cc b");
+        let mesh_a = host.mesh(&a).expect("a");
+        let mesh_b = host.mesh(&b).expect("b");
+        assert_eq!(mesh_a.positions, mesh_b.positions);
+        assert_eq!(mesh_a.triangles, mesh_b.triangles);
+        // Cube corners pull toward the origin under Catmull-Clark.
+        let corner = mesh_a
+            .positions
+            .iter()
+            .cloned()
+            .max_by(|p, q| {
+                let lp = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
+                let lq = q[0] * q[0] + q[1] * q[1] + q[2] * q[2];
+                lp.partial_cmp(&lq).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .unwrap();
+        let r2 = corner[0] * corner[0] + corner[1] * corner[1] + corner[2] * corner[2];
+        assert!(r2 < 3.0 - 1e-3, "CC should round the cube, r^2={r2}");
     }
 }

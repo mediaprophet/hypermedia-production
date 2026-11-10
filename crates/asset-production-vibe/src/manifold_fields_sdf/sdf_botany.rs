@@ -140,10 +140,16 @@ impl AssetHost<'_> {
 
                     if count > 0.0 {
                         let avg_coord = [sum_p[0] / count, sum_p[1] / count, sum_p[2] / count];
+                        // Clamp dual vertex into the cell so Surface Nets stay produce-safe.
+                        let clamped = [
+                            avg_coord[0].clamp(cx as f32, (cx + 1) as f32),
+                            avg_coord[1].clamp(cy as f32, (cy + 1) as f32),
+                            avg_coord[2].clamp(cz as f32, (cz + 1) as f32),
+                        ];
                         let world_p = [
-                            origin[0] + avg_coord[0] * voxel_size[0],
-                            origin[1] + avg_coord[1] * voxel_size[1],
-                            origin[2] + avg_coord[2] * voxel_size[2],
+                            origin[0] + clamped[0] * voxel_size[0],
+                            origin[1] + clamped[1] * voxel_size[1],
+                            origin[2] + clamped[2] * voxel_size[2],
                         ];
                         let v_idx = positions.len() as u32;
                         positions.push(world_p);

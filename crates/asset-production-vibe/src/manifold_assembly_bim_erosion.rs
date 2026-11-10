@@ -26,6 +26,8 @@ impl AssetHost<'_> {
                 "caps",
                 "parts",
                 "axis",
+                "interpolation",
+                "samples",
             ],
         )?;
         let title_str = opt_str(a, "title", "Hierarchical CAD Assembly")?;
@@ -204,7 +206,7 @@ impl AssetHost<'_> {
                     segments: 16,
                 }
             };
-            let axis: Vec<[f64; 3]> = if let Some(ax_val) = a.get("axis") {
+            let mut axis: Vec<[f64; 3]> = if let Some(ax_val) = a.get("axis") {
                 list(ax_val)?
                     .iter()
                     .map(vector::<3>)
@@ -212,6 +214,17 @@ impl AssetHost<'_> {
             } else {
                 vec![[0.0, 0.0, 0.0], [0.0, 0.0, length]]
             };
+            let interpolation = match a.get("interpolation") {
+                Some(v) => text(v)?,
+                None => "linear",
+            };
+            if interpolation != "linear" && interpolation != "cubic" {
+                return Err("Unknown interpolation: expected 'linear' or 'cubic'".into());
+            }
+            let samples = count(a, "samples", 4, 16)?;
+            if interpolation == "cubic" && axis.len() >= 3 {
+                axis = densify_axis_cubic(&axis, samples);
+            }
             let swept = profile_sweep(&channel, &axis, caps, GeometryLimits::default())
                 .map_err(|e| format!("profile_sweep failed: {e}"))?;
             let sph = sphere(0.25, 16, 12, GeometryLimits::default())
@@ -431,6 +444,7 @@ impl AssetHost<'_> {
         let parsed_step =
             parse_step(ifc_text.as_bytes()).map_err(|e| format!("STEP parse failed: {e}"))?;
         let step_entity_count = parsed_step.entities.len();
+        let rt = ifc4_roundtrip_wall(&parsed_step);
         let ifc_handle = self.encode("ifc", ifc_text.into_bytes())?;
 
         let mut out = BTreeMap::new();
@@ -440,6 +454,20 @@ impl AssetHost<'_> {
         out.insert("net_volume_m3".into(), Value::F64(net_volume_m3));
         out.insert("stair_riser_count".into(), Value::I64(stair.runs.first().map(|r| r.risers as i64).unwrap_or(0)));
         out.insert("ifc_step_entity_count".into(), Value::I64(step_entity_count as i64));
+        out.insert("ifc_schema".into(), Value::String(parsed_step.schema.clone()));
+        out.insert(
+            "ifc_has_wall".into(),
+            Value::Bool(rt.has_wall),
+        );
+        if let Some(len) = rt.wall_length_m {
+            out.insert("ifc_wall_length_m".into(), Value::F64(len));
+        }
+        if let Some(thk) = rt.wall_thickness_m {
+            out.insert("ifc_wall_thickness_m".into(), Value::F64(thk));
+        }
+        if let Some(h) = rt.wall_height_m {
+            out.insert("ifc_wall_height_m".into(), Value::F64(h));
+        }
         Ok(Value::Record(out))
     }
 
@@ -571,5 +599,224 @@ impl AssetHost<'_> {
         out.insert("max_elevation".into(), Value::F64(max_h as f64));
         out.insert("max_flow_accumulation".into(), Value::F64(max_accum as f64));
         Ok(Value::Record(out))
+    }
+}
+
+fn catmull_rom_axis(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3], t: f64) -> [f64; 3] {
+    let t2 = t * t;
+    let t3 = t2 * t;
+    let mut out = [0.0; 3];
+    for i in 0..3 {
+        out[i] = 0.5
+            * ((2.0 * p1[i])
+                + (-p0[i] + p2[i]) * t
+                + (2.0 * p0[i] - 5.0 * p1[i] + 4.0 * p2[i] - p3[i]) * t2
+                + (-p0[i] + 3.0 * p1[i] - 3.0 * p2[i] + p3[i]) * t3);
+    }
+    out
+}
+
+fn densify_axis_cubic(axis: &[[f64; 3]], samples: usize) -> Vec<[f64; 3]> {
+    let n = axis.len();
+    let steps = samples.max(1);
+    let mut out = Vec::with_capacity((n - 1) * steps + 1);
+    out.push(axis[0]);
+    for seg in 0..(n - 1) {
+        let i0 = if seg == 0 { 0 } else { seg - 1 };
+        let i1 = seg;
+        let i2 = seg + 1;
+        let i3 = (seg + 2).min(n - 1);
+        for s in 1..=steps {
+            if s == steps {
+                out.push(axis[i2]);
+            } else {
+                let t = s as f64 / steps as f64;
+                out.push(catmull_rom_axis(axis[i0], axis[i1], axis[i2], axis[i3], t));
+            }
+        }
+    }
+    out
+}
+
+struct Ifc4WallRoundtrip {
+    has_wall: bool,
+    wall_length_m: Option<f64>,
+    wall_thickness_m: Option<f64>,
+    wall_height_m: Option<f64>,
+}
+
+fn step_real(v: &manifold_bim_csg::StepVal) -> Option<f64> {
+    match v {
+        manifold_bim_csg::StepVal::Real(x) => Some(*x),
+        manifold_bim_csg::StepVal::Int(x) => Some(*x as f64),
+        _ => None,
+    }
+}
+
+fn ifc4_roundtrip_wall(file: &manifold_bim_csg::StepFile) -> Ifc4WallRoundtrip {
+    let mut ids: Vec<u64> = file.entities.keys().copied().collect();
+    ids.sort_unstable();
+    let mut has_wall = false;
+    let mut wall_length_m = None;
+    let mut wall_thickness_m = None;
+    let mut wall_height_m = None;
+    for id in ids {
+        let Some(ent) = file.entities.get(&id) else {
+            continue;
+        };
+        let name = ent.name.to_ascii_uppercase();
+        if name == "IFCWALLSTANDARDCASE" || name == "IFCWALL" {
+            has_wall = true;
+        }
+        if name == "IFCRECTANGLEPROFILEDEF" && ent.args.len() >= 5 {
+            wall_length_m = step_real(&ent.args[3]).or(wall_length_m);
+            wall_thickness_m = step_real(&ent.args[4]).or(wall_thickness_m);
+        }
+        if name == "IFCEXTRUDEDAREASOLID" && ent.args.len() >= 4 {
+            wall_height_m = step_real(&ent.args[3]).or(wall_height_m);
+        }
+    }
+    Ifc4WallRoundtrip {
+        has_wall,
+        wall_length_m,
+        wall_thickness_m,
+        wall_height_m,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn make_test_host<'a>(
+        limits: &'a ToolLimits,
+        cancel: &'a AtomicBool,
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn vec3(x: f64, y: f64, z: f64) -> Value {
+        Value::List(vec![Value::F64(x), Value::F64(y), Value::F64(z)])
+    }
+
+    #[test]
+    fn test_manifold_sweep_assembly_linear_and_cubic() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel);
+
+        let mut linear_args = BTreeMap::new();
+        linear_args.insert(
+            "axis".into(),
+            Value::List(vec![
+                vec3(0.0, 0.0, 0.0),
+                vec3(0.0, 1.0, 1.0),
+                vec3(0.0, 0.0, 2.0),
+            ]),
+        );
+        linear_args.insert("interpolation".into(), Value::String("linear".into()));
+        linear_args.insert("caps".into(), Value::Bool(true));
+        let linear = host
+            .sweep_assembly_profile(&linear_args)
+            .expect("linear sweep");
+        let rec_l = record(&linear).expect("record");
+        let mesh_l = rec_l.get("mesh").expect("mesh").clone();
+        let n_linear = {
+            let Artifact::Mesh(linear_mesh) = host.workspace.get(&mesh_l).expect("linear mesh")
+            else {
+                panic!("expected mesh");
+            };
+            assert!(!linear_mesh.triangles.is_empty());
+            assert!(linear_mesh.positions.len() >= 8);
+            linear_mesh.positions.len()
+        };
+
+        let mut cubic_args = linear_args.clone();
+        cubic_args.insert("interpolation".into(), Value::String("cubic".into()));
+        cubic_args.insert("samples".into(), Value::U64(4));
+        let cubic = host
+            .sweep_assembly_profile(&cubic_args)
+            .expect("cubic sweep");
+        let rec_c = record(&cubic).expect("record");
+        let mesh_c = rec_c.get("mesh").expect("mesh");
+        let Artifact::Mesh(cubic_mesh) = host.workspace.get(mesh_c).expect("cubic mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(
+            cubic_mesh.positions.len() > n_linear,
+            "cubic densify must add sweep stations"
+        );
+        for p in &cubic_mesh.positions {
+            assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+        }
+        let container = rec_c.get("container_10d").expect("10d");
+        assert_eq!(host.workspace.encoded(container).unwrap().kind, "10d");
+    }
+
+    #[test]
+    fn test_manifold_compile_bim_ifc4_roundtrip() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel);
+
+        let mut args = BTreeMap::new();
+        args.insert(
+            "project_name".into(),
+            Value::String("Roundtrip Hall".into()),
+        );
+        args.insert("wall_length_m".into(), Value::F64(8.0));
+        args.insert("wall_height_m".into(), Value::F64(3.2));
+        args.insert("wall_thickness_m".into(), Value::F64(0.25));
+        args.insert("floor_to_floor_m".into(), Value::F64(3.2));
+        let res = host.compile_bim_ifc4(&args).expect("ifc4");
+        let rec = record(&res).expect("record");
+        let mesh_h = rec.get("mesh").expect("mesh");
+        let Artifact::Mesh(mesh) = host.workspace.get(mesh_h).expect("bim mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(!mesh.triangles.is_empty());
+        assert!(!mesh.positions.is_empty());
+
+        let ifc_h = rec.get("ifc_resource").expect("ifc");
+        let encoded = host.workspace.encoded(ifc_h).expect("ifc bytes");
+        assert_eq!(encoded.kind, "ifc");
+        let text = std::str::from_utf8(&encoded.bytes).unwrap();
+        assert!(text.contains("FILE_SCHEMA(('IFC4'))"));
+        assert!(text.contains("IFCWALLSTANDARDCASE"));
+        assert!(text.contains("IFCEXTRUDEDAREASOLID"));
+        assert_eq!(
+            rec.get("ifc_schema"),
+            Some(&Value::String("IFC4".into()))
+        );
+        assert_eq!(rec.get("ifc_has_wall"), Some(&Value::Bool(true)));
+        let len = match rec.get("ifc_wall_length_m") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("missing wall length roundtrip"),
+        };
+        let thk = match rec.get("ifc_wall_thickness_m") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("missing wall thickness roundtrip"),
+        };
+        let h = match rec.get("ifc_wall_height_m") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("missing wall height roundtrip"),
+        };
+        assert!((len - 8.0).abs() < 1e-6);
+        assert!((thk - 0.25).abs() < 1e-6);
+        assert!((h - 3.2).abs() < 1e-6);
+
+        let reparsed =
+            manifold_bim_csg::parse_step(&encoded.bytes).expect("reparse IFC STEP");
+        assert_eq!(reparsed.schema.to_ascii_uppercase(), "IFC4");
+        let rt = ifc4_roundtrip_wall(&reparsed);
+        assert!(rt.has_wall);
+        assert_eq!(rt.wall_length_m, Some(8.0));
     }
 }

@@ -384,14 +384,14 @@ mod tests {
             [-1.0, 1.0, 1.0],
         ];
         let triangles = vec![
-            [0, 2, 1],
             [0, 3, 2],
+            [0, 2, 1],
             [4, 5, 6],
             [4, 6, 7],
             [0, 1, 5],
             [0, 5, 4],
-            [2, 3, 7],
-            [2, 7, 6],
+            [3, 7, 6],
+            [3, 6, 2],
             [0, 4, 7],
             [0, 7, 3],
             [1, 2, 6],
@@ -474,10 +474,32 @@ mod tests {
         };
         assert!(!extracted.positions.is_empty());
         assert!(!extracted.triangles.is_empty());
-
+        // Must be a reconstructed cube surface, not the empty-brick proxy box.
+        let mut min = [f32::INFINITY; 3];
+        let mut max = [f32::NEG_INFINITY; 3];
         for p in &extracted.positions {
             assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+            for i in 0..3 {
+                min[i] = min[i].min(p[i]);
+                max[i] = max[i].max(p[i]);
+            }
         }
+        for i in 0..3 {
+            assert!(
+                min[i] < -0.5 && max[i] > 0.5,
+                "SDF round-trip AABB must overlap the unit cube, axis {i} [{}, {}]",
+                min[i],
+                max[i]
+            );
+            assert!(
+                min[i] > -1.5 && max[i] < 1.5,
+                "SDF round-trip AABB must stay near the padded cube, axis {i} [{}, {}]",
+                min[i],
+                max[i]
+            );
+        }
+        let span = (max[0] - min[0]).min(max[1] - min[1]).min(max[2] - min[2]);
+        assert!(span > 1.0, "extracted solid too small to be the source cube, span={span}");
     }
 
     #[test]
