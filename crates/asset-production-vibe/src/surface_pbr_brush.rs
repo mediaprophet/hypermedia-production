@@ -13,7 +13,7 @@ impl AssetHost<'_> {
     /// 126: `hypermedia.surface.bake_pbr_materialx`
     /// (`surface-pbr-studio` + `surface-layered-codecs`)
     pub(crate) fn bake_pbr_materialx(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "resolution", "samples", "material_name"])?;
+        fields(a, &["mesh", "resolution", "samples", "material_name", "uvs"])?;
         let resolution = count(a, "resolution", 32, 256)? as u32;
         let samples = count(a, "samples", 4, 64)? as u32;
         let material_name = opt_str(a, "material_name", "Architectural_Bronze")?;
@@ -38,16 +38,23 @@ impl AssetHost<'_> {
                 .iter()
                 .map(|p| PbrVec3::new(p[0], p[1], p[2]))
                 .collect();
-            let uvs: Vec<PbrVec2> = src
-                .positions
-                .iter()
-                .map(|p| {
-                    PbrVec2::new(
-                        ((p[0] - src.min[0]) / span_x).clamp(0.0, 1.0),
-                        ((p[1] - src.min[1]) / span_y).clamp(0.0, 1.0),
-                    )
-                })
-                .collect();
+            // Prefer SLIM UVs from unwrap; planar XY is only the no-unwrap fallback.
+            let uvs: Vec<PbrVec2> = if let Some(v) = a.get("uvs") {
+                crate::surface_bsdf_uv::parse_vertex_uvs(self, v, src.positions.len())?
+                    .into_iter()
+                    .map(|uv| PbrVec2::new(uv[0] as f32, uv[1] as f32))
+                    .collect()
+            } else {
+                src.positions
+                    .iter()
+                    .map(|p| {
+                        PbrVec2::new(
+                            ((p[0] - src.min[0]) / span_x).clamp(0.0, 1.0),
+                            ((p[1] - src.min[1]) / span_y).clamp(0.0, 1.0),
+                        )
+                    })
+                    .collect()
+            };
             let indices: Vec<u32> = src.triangles.iter().flatten().copied().collect();
             let mut m = PbrMesh {
                 positions,
@@ -118,6 +125,7 @@ impl AssetHost<'_> {
         out.insert("ao_pixel_count".into(), Value::I64((ao_map.width * ao_map.height) as i64));
         out.insert("normal_z_center".into(), Value::F64(norm_map.pixel(resolution / 2, resolution / 2)[2] as f64));
         out.insert("psd_roundtrip_valid".into(), Value::Bool(psd_decoded.header.version == PsdVersion::Psd));
+        out.insert("used_slim_uvs".into(), Value::Bool(a.get("uvs").is_some()));
         Ok(Value::Record(out))
     }
 

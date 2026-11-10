@@ -1,6 +1,9 @@
 //! Cycles-class physical BSDF closure compilation and procedural field synthesis.
 
 use crate::*;
+use qualia_core_db::etalon_render::frame_quality::lighting::{
+    evaluate_fragment_radiance, DirectionalLight, SurfaceParameters,
+};
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 use vibe::Value;
@@ -92,7 +95,7 @@ impl AssetHost<'_> {
         let albedo_luminance =
             0.2126 * base_color[0] + 0.7152 * base_color[1] + 0.0722 * base_color[2];
 
-        // Physically shaded preview sphere rendering
+        // Sphere preview: QualiaDB/Etalon GGX; closure lobes stay CPU-side and do not duplicate WGSL.
         let ps_f = preview_size as f64;
         let mut pixels = Vec::with_capacity(n_pixels);
         let light_dir = {
@@ -102,6 +105,33 @@ impl AssetHost<'_> {
         };
         let view_dir = [0.0f64, 0.0, 1.0];
         let sphere_radius = 0.88f64;
+        let f0_dielectric = ((ior - 1.0) / (ior + 1.0)).powi(2);
+        let sun = DirectionalLight {
+            direction: [
+                -light_dir[0] as f32,
+                -light_dir[1] as f32,
+                -light_dir[2] as f32,
+            ],
+            illuminance_lux: std::f32::consts::PI,
+            color_linear: [1.0, 1.0, 1.0],
+            cast_shadows: false,
+        };
+        let surface = SurfaceParameters {
+            base_color: [base_color[0] as f32, base_color[1] as f32, base_color[2] as f32],
+            metallic: metallic as f32,
+            roughness: roughness as f32,
+            reflectance_f0: f0_dielectric as f32,
+            emissive: [0.0; 3],
+            ambient_occlusion: 1.0,
+        };
+        let coat_surface = SurfaceParameters {
+            base_color: [0.0, 0.0, 0.0],
+            metallic: 0.0,
+            roughness: 0.04,
+            reflectance_f0: 0.04,
+            emissive: [0.0; 3],
+            ambient_occlusion: 1.0,
+        };
 
         for y in 0..preview_size {
             for x in 0..preview_size {
@@ -111,46 +141,32 @@ impl AssetHost<'_> {
                 if r2 <= sphere_radius * sphere_radius {
                     let z = (sphere_radius * sphere_radius - r2).sqrt();
                     let n = [u / sphere_radius, v / sphere_radius, z / sphere_radius];
+                    let n_f = [n[0] as f32, n[1] as f32, n[2] as f32];
+                    let v_f = [view_dir[0] as f32, view_dir[1] as f32, view_dir[2] as f32];
                     let nl =
                         (n[0] * light_dir[0] + n[1] * light_dir[1] + n[2] * light_dir[2]).max(0.0);
                     let nv =
                         (n[0] * view_dir[0] + n[1] * view_dir[1] + n[2] * view_dir[2]).max(1e-4);
-
-                    let h = [
-                        light_dir[0] + view_dir[0],
-                        light_dir[1] + view_dir[1],
-                        light_dir[2] + view_dir[2],
-                    ];
-                    let h_len = (h[0] * h[0] + h[1] * h[1] + h[2] * h[2]).sqrt().max(1e-6);
-                    let h = [h[0] / h_len, h[1] / h_len, h[2] / h_len];
-
-                    let nh = (n[0] * h[0] + n[1] * h[1] + n[2] * h[2]).max(0.0);
-                    let vh =
-                        (view_dir[0] * h[0] + view_dir[1] * h[1] + view_dir[2] * h[2]).max(0.0);
-
-                    // Microfacet GGX distribution
-                    let alpha = roughness.max(0.04) * roughness.max(0.04);
-                    let alpha2 = alpha * alpha;
-                    let d_denom = nh * nh * (alpha2 - 1.0) + 1.0;
-                    let d_ggx = alpha2 / (PI * d_denom * d_denom).max(1e-6);
-
-                    // Smith masking-shadowing G
-                    let g_v = 2.0 * nv / (nv + (alpha2 + (1.0 - alpha2) * nv * nv).sqrt());
-                    let g_l = 2.0 * nl / (nl + (alpha2 + (1.0 - alpha2) * nl * nl).sqrt());
-                    let g_smith = (g_v * g_l).min(1.0);
-
-                    // Schlick dielectric/conductor Fresnel
-                    let f0_dielectric = ((ior - 1.0) / (ior + 1.0)).powi(2);
-                    let mut f_rgb = [
-                        f0_dielectric * (1.0 - metallic) + base_color[0] * metallic,
-                        f0_dielectric * (1.0 - metallic) + base_color[1] * metallic,
-                        f0_dielectric * (1.0 - metallic) + base_color[2] * metallic,
-                    ];
-                    for c in 0..3 {
-                        f_rgb[c] = f_rgb[c] + (1.0 - f_rgb[c]) * (1.0 - vh).powi(5);
+                    let vh = {
+                        let h = [
+                            light_dir[0] + view_dir[0],
+                            light_dir[1] + view_dir[1],
+                            light_dir[2] + view_dir[2],
+                        ];
+                        let h_len = (h[0] * h[0] + h[1] * h[1] + h[2] * h[2]).sqrt().max(1e-6);
+                        (view_dir[0] * h[0] + view_dir[1] * h[1] + view_dir[2] * h[2]) / h_len
                     }
+                    .max(0.0);
 
-                    // Airy Thin-Film wave interference
+                    let mut pbr = evaluate_fragment_radiance(
+                        &surface,
+                        n_f,
+                        v_f,
+                        Some(&sun),
+                        1.0,
+                        [0.06, 0.06, 0.06],
+                        None,
+                    );
                     if thin_film_nm > 0.0 {
                         let wavelengths = [650.0, 532.0, 450.0];
                         let film_n = 1.38;
@@ -158,32 +174,26 @@ impl AssetHost<'_> {
                         let cos_t = (1.0 - sin_t2).max(0.0).sqrt();
                         for c in 0..3 {
                             let delta = 4.0 * PI * film_n * thin_film_nm * cos_t / wavelengths[c];
-                            let airy = 0.5 + 0.5 * delta.cos();
-                            f_rgb[c] = (f_rgb[c] * airy).clamp(0.0, 1.0);
+                            pbr[c] = (pbr[c] as f64 * (0.5 + 0.5 * delta.cos())).clamp(0.0, 8.0)
+                                as f32;
                         }
                     }
 
-                    let spec_coeff = (d_ggx * g_smith / (4.0 * nv + 1e-4)).min(8.0);
-
-                    // Evaluate specific physical closure
                     let mut final_rgb = match closure {
                         "principled_v2" => {
-                            let diffuse_factor = (1.0 - metallic) * nl / PI;
-                            let mut c_out = [0.0f64; 3];
-                            for c in 0..3 {
-                                let diff = base_color[c] * diffuse_factor;
-                                let spec = f_rgb[c] * spec_coeff * nl;
-                                c_out[c] = diff + spec + base_color[c] * 0.06;
-                            }
+                            let mut c_out = [pbr[0] as f64, pbr[1] as f64, pbr[2] as f64];
                             if coat_weight > 0.0 {
-                                let coat_d = 0.04 * 0.04
-                                    / (PI * (nh * nh * (0.0016 - 1.0) + 1.0).powi(2)).max(1e-6);
-                                let coat_f = 0.04 + 0.96 * (1.0 - vh).powi(5);
-                                let coat_spec = (coat_d * coat_f / (4.0 * nv + 1e-4)).min(4.0)
-                                    * nl
-                                    * coat_weight;
+                                let coat = evaluate_fragment_radiance(
+                                    &coat_surface,
+                                    n_f,
+                                    v_f,
+                                    Some(&sun),
+                                    1.0,
+                                    [0.0, 0.0, 0.0],
+                                    None,
+                                );
                                 for c in 0..3 {
-                                    c_out[c] += coat_spec;
+                                    c_out[c] += coat[c] as f64 * coat_weight;
                                 }
                             }
                             c_out
@@ -197,7 +207,7 @@ impl AssetHost<'_> {
                                 (-(sin_theta_r - sin_theta_i + 0.04).powi(2) / 0.06).exp();
                             let mut c_out = [0.0f64; 3];
                             for c in 0..3 {
-                                let r_lobe = longitudinal_m * 0.8 * f_rgb[c] * nl;
+                                let r_lobe = pbr[c] as f64 * longitudinal_m * 0.85;
                                 let tt_lobe =
                                     base_color[c] * 0.45 * (cos_theta_i * cos_theta_r).max(0.0);
                                 c_out[c] = r_lobe + tt_lobe + base_color[c] * 0.08;
@@ -214,10 +224,7 @@ impl AssetHost<'_> {
                             for c in 0..3 {
                                 let scatter = phase_ff * base_color[c] * 0.35 * nl;
                                 let deep_blue = (1.0 - absorption[c]) * 0.25 * nv;
-                                let surface_f =
-                                    f0_dielectric + (1.0 - f0_dielectric) * (1.0 - vh).powi(5);
-                                let spec = surface_f * spec_coeff * nl;
-                                c_out[c] = scatter + deep_blue + spec;
+                                c_out[c] = scatter + deep_blue + pbr[c] as f64 * 0.65;
                             }
                             c_out
                         }
@@ -234,8 +241,7 @@ impl AssetHost<'_> {
                             for c in 0..3 {
                                 let sss = base_color[c] * (wrap_nl * 0.8 + rim_trans)
                                     + base_color[c] * 0.12;
-                                let spec = f_rgb[c] * spec_coeff * 0.25 * nl;
-                                c_out[c] = sss + spec;
+                                c_out[c] = sss + pbr[c] as f64 * 0.35;
                             }
                             c_out
                         }
