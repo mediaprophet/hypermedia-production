@@ -305,6 +305,12 @@ impl AssetHost<'_> {
         if otio_rt.video_tracks.len() != 1 || otio_rt.video_tracks[0].clips.len() != 1 {
             return Err("OTIO round-trip lost the locked-dt video clip".into());
         }
+        let otio_dur = otio_rt.video_tracks[0].clips[0].timeline_duration;
+        if otio_dur == chronicle_timeline_interchange::Tick::ZERO
+            || rate.frame_at(otio_dur) != rgba_frames.len() as i64
+        {
+            return Err("OTIO clip duration did not round-trip locked-dt frames".into());
+        }
 
         let mp4_bytes = match self.workspace.get(mp4) {
             Ok(Artifact::Encoded(r)) => r.bytes.clone(),
@@ -813,7 +819,7 @@ fn build_avc_mp4(
 mod tests {
     use super::*;
     use chronicle_fiduciary_ledger::FiduciaryAuditTrail;
-    use chronicle_timeline_interchange::{parse_otio, TICKS_PER_SECOND};
+    use chronicle_timeline_interchange::{parse_otio, FrameRate, TICKS_PER_SECOND};
     use std::collections::BTreeMap;
 
     fn host<'a>(
@@ -926,7 +932,20 @@ mod tests {
             seq.video_tracks[0].clips[0].source_path,
             "file:///chronicle/locked_dt.mov"
         );
-        // write_otio stores duration as RationalTime frames; locked-dt ticks live on the map.
+        let clip_dur = seq.video_tracks[0].clips[0].timeline_duration;
+        assert!(clip_dur.0 > 0, "OTIO clip duration must be > 0");
+        assert_eq!(
+            FrameRate::FPS_24.frame_at(clip_dur),
+            2,
+            "OTIO duration must match locked-dt frame count"
+        );
+        let otio_json: serde_json::Value = serde_json::from_str(otio_str).expect("otio json");
+        let duration_value = otio_json["tracks"]["children"][0]["children"][0]["source_range"]
+            ["duration"]["value"]
+            .as_f64()
+            .expect("RationalTime.value");
+        assert!(duration_value > 0.0);
+        assert_eq!(duration_value, 2.0);
         assert!(otio_str.contains("locked_dt.mov"));
         assert!(otio_str.contains("RationalTime.1"));
 
