@@ -262,31 +262,29 @@ impl AssetHost<'_> {
             }
         }
 
-        let mut bidi_chars: Vec<BidiChar> = chars
-            .into_iter()
-            .enumerate()
-            .map(|(i, ch)| BidiChar {
-                orig_idx: i,
-                ch,
-                level: levels[i],
-            })
-            .collect();
-
         let mut rtl_run_count = 0u64;
         let mut idx = 0;
-        while idx < bidi_chars.len() {
-            if bidi_chars[idx].level % 2 == 1 {
+        while idx < levels.len() {
+            if levels[idx] % 2 == 1 {
                 rtl_run_count += 1;
-                let start = idx;
-                while idx < bidi_chars.len() && bidi_chars[idx].level % 2 == 1 {
+                while idx < levels.len() && levels[idx] % 2 == 1 {
                     idx += 1;
                 }
-                let end = idx;
-                bidi_chars[start..end].reverse();
             } else {
                 idx += 1;
             }
         }
+
+        // UAX #9 L2: reverse contiguous sequences from the highest level down.
+        let visual_order = vector_glyph_shaping::reorder_visual(&levels);
+        let bidi_chars: Vec<BidiChar> = visual_order
+            .into_iter()
+            .map(|i| BidiChar {
+                orig_idx: i,
+                ch: chars[i],
+                level: levels[i],
+            })
+            .collect();
 
         let visual_text: String = bidi_chars.iter().map(|bc| bc.ch).collect();
 
@@ -353,15 +351,14 @@ impl AssetHost<'_> {
             return Err("px_range outside 1.0..=16.0".into());
         }
 
-        let mut unique_chars = Vec::new();
+        let mut unique = BTreeMap::new();
         for ch in charset_str.chars() {
-            if !unique_chars.contains(&ch) {
-                unique_chars.push(ch);
-            }
+            unique.entry(ch as u32).or_insert(ch);
         }
-        if unique_chars.is_empty() {
-            unique_chars.push('?');
+        if unique.is_empty() {
+            unique.insert('?' as u32, '?');
         }
+        let unique_chars: Vec<char> = unique.into_values().collect();
         let glyph_count = unique_chars.len();
 
         let cols = ((glyph_count as f64).sqrt().ceil() as usize).max(1);
@@ -451,10 +448,15 @@ impl AssetHost<'_> {
             }
 
             let advance = crate::glyph::glyph_advance(ch);
-            let u0 = cell_x as f64 / atlas_w as f64;
-            let v0 = cell_y as f64 / atlas_h as f64;
-            let u1 = (cell_x + cell_size) as f64 / atlas_w as f64;
-            let v1 = (cell_y + cell_size) as f64 / atlas_h as f64;
+            // em (0,0) maps to (origin_x, origin_y); em (advance, 1) maps to that plus scale.
+            let atlas_left = origin_x;
+            let atlas_top = origin_y;
+            let atlas_right = origin_x + advance * scale;
+            let atlas_bottom = origin_y + scale;
+            let u0 = atlas_left / atlas_w as f64;
+            let v0 = atlas_top / atlas_h as f64;
+            let u1 = atlas_right / atlas_w as f64;
+            let v1 = atlas_bottom / atlas_h as f64;
 
             let gm = serde_json::json!({
                 "char": ch.to_string(),
@@ -474,14 +476,21 @@ impl AssetHost<'_> {
                 },
                 "plane_bounds": {
                     "left": 0.0,
-                    "bottom": 0.0,
+                    "top": 0.0,
                     "right": advance,
-                    "top": 1.0
+                    "bottom": 1.0
+                },
+                "atlas_bounds": {
+                    "left": atlas_left,
+                    "top": atlas_top,
+                    "right": atlas_right,
+                    "bottom": atlas_bottom
                 }
             });
             glyph_metrics.push(gm);
         }
 
+        let fm = crate::glyph::FontMetrics::default();
         let atlas_meta = serde_json::json!({
             "atlas": {
                 "type": "msdf",
@@ -489,7 +498,18 @@ impl AssetHost<'_> {
                 "cell_size": cell_size,
                 "width": atlas_w,
                 "height": atlas_h,
-                "glyph_count": glyph_count
+                "glyph_count": glyph_count,
+                "y_origin": "top",
+                "em_size": fm.em_size
+            },
+            "metrics": {
+                "em_size": fm.em_size,
+                "ascender": fm.ascender,
+                "cap_height": fm.cap_height,
+                "x_height": fm.x_height,
+                "baseline": fm.baseline,
+                "descender": fm.descender,
+                "line_height": fm.line_height
             },
             "glyphs": glyph_metrics
         });
@@ -508,5 +528,145 @@ impl AssetHost<'_> {
         record.insert("atlas_height".into(), Value::U64(atlas_h as u64));
 
         Ok(Value::Record(record))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn test_host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn shape_harfbuzz_bidi_mixed_and_rtl_numbers_l2() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        let mut mixed = BTreeMap::new();
+        mixed.insert("text".into(), Value::String("Hello שלום".into()));
+        mixed.insert("font_size".into(), Value::F64(16.0));
+        let res = host.shape_harfbuzz_bidi(&mixed).expect("mixed bidi");
+        let Value::Record(r) = res else { panic!("expected record") };
+        assert_eq!(r.get("resolved_direction"), Some(&Value::String("ltr".into())));
+        assert_eq!(r.get("visual_text"), Some(&Value::String("Hello םולש".into())));
+        assert_eq!(r.get("rtl_run_count"), Some(&Value::U64(1)));
+
+        let mut rtl_num = BTreeMap::new();
+        rtl_num.insert("text".into(), Value::String("שלום 123".into()));
+        let res = host.shape_harfbuzz_bidi(&rtl_num).expect("rtl numbers");
+        let Value::Record(r) = &res else { panic!("expected record") };
+        assert_eq!(r.get("resolved_direction"), Some(&Value::String("rtl".into())));
+        assert_eq!(
+            r.get("visual_text"),
+            Some(&Value::String("123 םולש".into())),
+            "UAX #9 L2 keeps European numbers LTR on the visual left of RTL"
+        );
+
+        let again = host.shape_harfbuzz_bidi(&rtl_num).expect("rtl numbers b");
+        assert_eq!(res, again, "two BiDi produces must match");
+    }
+
+    #[test]
+    fn pack_msdf_font_atlas_metrics_map_em_box_and_two_produces_match() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        let mut args = BTreeMap::new();
+        args.insert("charset".into(), Value::String("CAB012".into()));
+        args.insert("cell_size".into(), Value::U64(24));
+        args.insert("px_range".into(), Value::F64(4.0));
+
+        let a = host.pack_msdf_font_atlas(&args).expect("atlas a");
+        let b = host.pack_msdf_font_atlas(&args).expect("atlas b");
+        let Value::Record(ra) = &a else { panic!("expected record") };
+        let Value::Record(rb) = &b else { panic!("expected record") };
+        assert_eq!(ra.get("glyph_count"), Some(&Value::U64(6)));
+        assert_eq!(ra.get("atlas_width"), Some(&Value::U64(72)));
+        assert_eq!(ra.get("atlas_height"), Some(&Value::U64(48)));
+
+        let json_a = host.workspace.encoded(ra.get("metrics_json").unwrap()).expect("json a");
+        let json_b = host.workspace.encoded(rb.get("metrics_json").unwrap()).expect("json b");
+        assert_eq!(json_a.bytes, json_b.bytes, "two metrics JSON produces must match");
+
+        let parsed: serde_json::Value = serde_json::from_slice(&json_a.bytes).expect("valid json");
+        assert_eq!(parsed["atlas"]["type"], "msdf");
+        assert_eq!(parsed["atlas"]["y_origin"], "top");
+        assert_eq!(parsed["metrics"]["em_size"], 1.0);
+        assert_eq!(parsed["metrics"]["baseline"], 0.78);
+        assert_eq!(parsed["metrics"]["line_height"], 1.25);
+        assert_eq!(parsed["metrics"]["ascender"], 0.12);
+        assert_eq!(parsed["metrics"]["descender"], 0.96);
+
+        let glyphs = parsed["glyphs"].as_array().expect("glyphs array");
+        assert_eq!(glyphs.len(), 6);
+        let cps: Vec<u32> = glyphs
+            .iter()
+            .map(|g| g["codepoint"].as_u64().unwrap() as u32)
+            .collect();
+        let mut sorted = cps.clone();
+        sorted.sort_unstable();
+        assert_eq!(cps, sorted, "atlas glyphs packed in codepoint order");
+
+        let cell_size = 24.0f64;
+        let scale = cell_size * 0.82;
+        let pad_x = cell_size * 0.10;
+        let pad_y = cell_size * 0.08;
+        let atlas_w = 72.0f64;
+        let atlas_h = 48.0f64;
+        for g in glyphs {
+            let adv = g["advance"].as_f64().unwrap();
+            let expected_adv = crate::glyph::glyph_advance(
+                char::from_u32(g["codepoint"].as_u64().unwrap() as u32).unwrap(),
+            );
+            assert!((adv - expected_adv).abs() < 1e-12);
+            assert_eq!(g["plane_bounds"]["left"], 0.0);
+            assert_eq!(g["plane_bounds"]["top"], 0.0);
+            assert_eq!(g["plane_bounds"]["bottom"], 1.0);
+            assert!((g["plane_bounds"]["right"].as_f64().unwrap() - adv).abs() < 1e-12);
+
+            let cell_x = g["cell"]["x"].as_f64().unwrap();
+            let cell_y = g["cell"]["y"].as_f64().unwrap();
+            let ab_left = g["atlas_bounds"]["left"].as_f64().unwrap();
+            let ab_top = g["atlas_bounds"]["top"].as_f64().unwrap();
+            let ab_right = g["atlas_bounds"]["right"].as_f64().unwrap();
+            let ab_bottom = g["atlas_bounds"]["bottom"].as_f64().unwrap();
+            assert!((ab_left - (cell_x + pad_x)).abs() < 1e-9);
+            assert!((ab_top - (cell_y + pad_y)).abs() < 1e-9);
+            assert!((ab_right - (cell_x + pad_x + adv * scale)).abs() < 1e-9);
+            assert!((ab_bottom - (cell_y + pad_y + scale)).abs() < 1e-9);
+            assert!((g["uv"]["u0"].as_f64().unwrap() - ab_left / atlas_w).abs() < 1e-12);
+            assert!((g["uv"]["v0"].as_f64().unwrap() - ab_top / atlas_h).abs() < 1e-12);
+            assert!((g["uv"]["u1"].as_f64().unwrap() - ab_right / atlas_w).abs() < 1e-12);
+            assert!((g["uv"]["v1"].as_f64().unwrap() - ab_bottom / atlas_h).abs() < 1e-12);
+        }
+
+        let atlas_a = host.rgba(ra.get("atlas_rgba").unwrap()).expect("rgba a");
+        let atlas_b = host.rgba(rb.get("atlas_rgba").unwrap()).expect("rgba b");
+        assert_eq!(atlas_a.pixels, atlas_b.pixels, "two atlas rasters must match");
+        let max_ch = atlas_a
+            .pixels
+            .iter()
+            .flat_map(|p| p.iter().copied())
+            .max()
+            .unwrap_or(0);
+        let min_ch = atlas_a
+            .pixels
+            .iter()
+            .flat_map(|p| p.iter().copied())
+            .min()
+            .unwrap_or(255);
+        assert!(max_ch > 128, "MSDF must have near/inside-stroke samples, max={max_ch}");
+        assert!(min_ch < 128, "MSDF must have outside-stroke samples, min={min_ch}");
     }
 }
