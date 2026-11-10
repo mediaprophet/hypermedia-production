@@ -744,4 +744,49 @@ mod tests {
             .profile(required(brush_rec, "profile").unwrap())
             .expect("brush outline stays a named profile");
     }
+
+    #[test]
+    fn test_compile_bsdf_graph_ior_affects_preview() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let compile = |host: &mut AssetHost<'_>, ior: f64| {
+            let mut args = BTreeMap::new();
+            args.insert("closure".into(), Value::String("principled_v2".into()));
+            args.insert(
+                "base_color".into(),
+                Value::List(vec![Value::F64(0.8), Value::F64(0.4), Value::F64(0.15)]),
+            );
+            // Dielectric so IOR F0 is not swamped by metallic mix or coat.
+            args.insert("metallic".into(), Value::F64(0.0));
+            args.insert("coat_weight".into(), Value::F64(0.0));
+            args.insert("roughness".into(), Value::F64(0.2));
+            args.insert("ior".into(), Value::F64(ior));
+            args.insert("preview_size".into(), Value::U64(32));
+            let res = host
+                .surface_bsdf_uv_op("hypermedia.surface.compile_bsdf_graph", &args)
+                .expect("compile_bsdf_graph");
+            let rec = record(&res).expect("record");
+            host.rgba(required(rec, "preview_rgba").unwrap())
+                .expect("preview")
+                .pixels
+                .clone()
+        };
+
+        let glass = compile(&mut host, 2.4);
+        let dielectric = compile(&mut host, 1.5);
+        assert!(
+            still_has_nontrivial_pixel(&glass, [0, 0, 0, 0]),
+            "ior=2.4 preview must contain a non-trivial shaded pixel"
+        );
+        assert!(
+            still_has_nontrivial_pixel(&dielectric, [0, 0, 0, 0]),
+            "ior=1.5 preview must contain a non-trivial shaded pixel"
+        );
+        assert_ne!(
+            glass, dielectric,
+            "Etalon GGX preview must honor IOR-derived reflectance_f0"
+        );
+    }
 }
