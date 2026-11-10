@@ -4,10 +4,55 @@ use crate::*;
 use drafting_geometry::Vec2;
 use vibe::Value;
 
+/// 300 DPI chord in document points (1/72 in). G2 cubics flatten to this.
+const PRINT_CHORD: f64 = 72.0 / 300.0;
+
+fn dist2(a: [f64; 2], b: [f64; 2]) -> f64 {
+    let dx = a[0] - b[0];
+    let dy = a[1] - b[1];
+    dx * dx + dy * dy
+}
+
+fn cubic_eval(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], t: f64) -> [f64; 2] {
+    let u = 1.0 - t;
+    let uu = u * u;
+    let tt = t * t;
+    [
+        uu * u * p0[0] + 3.0 * uu * t * p1[0] + 3.0 * u * tt * p2[0] + tt * t * p3[0],
+        uu * u * p0[1] + 3.0 * uu * t * p1[1] + 3.0 * u * tt * p2[1] + tt * t * p3[1],
+    ]
+}
+
+fn push_cubic(
+    out: &mut Vec<[f64; 2]>,
+    p0: [f64; 2],
+    p1: [f64; 2],
+    p2: [f64; 2],
+    p3: [f64; 2],
+    n: usize,
+) {
+    let n = n.max(1);
+    for k in 0..=n {
+        let pt = cubic_eval(p0, p1, p2, p3, k as f64 / n as f64);
+        if k == 0 && out.last().is_some_and(|p| dist2(*p, pt) < 1e-18) {
+            continue;
+        }
+        out.push(pt);
+    }
+}
+
+/// Print-density sample count for a circular sweep; `min_seg` is the origin floor.
+fn print_arc_segments(radius: f64, sweep: f64, min_seg: usize) -> usize {
+    let chord = PRINT_CHORD.min(radius.abs() * 0.01).max(1e-6);
+    drafting_geometry::arc_segments(radius, sweep, chord)
+        .max(min_seg)
+        .clamp(1, 64)
+}
+
 impl AssetHost<'_> {
     /// Corner filleting on a 2D polyline or closed polygon.
     /// Clamps tangent distance d = (radius / tan(half_angle)).min(0.45 * L_in).min(0.45 * L_out)
-    /// and replaces sharp corners with circular arc or chamfer segments.
+    /// and replaces sharp corners with G2 cubic (kappa) fillets or linear chamfers.
     pub(super) fn locus_fillet(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["profile", "radius", "segments", "closed"])?;
         let radius = number(a, "radius", 0.15)?;
@@ -23,7 +68,7 @@ impl AssetHost<'_> {
         }
 
         let n = raw_pts.len();
-        self.charge(n * segments * 4 + 1024, n * segments * 64 + 4096)?;
+        self.charge(n * 64 * 4 + 1024, n * 64 * 64 + 4096)?;
 
         // Clean consecutive duplicates
         let mut clean_pts: Vec<[f64; 2]> = Vec::with_capacity(n);
@@ -134,15 +179,27 @@ impl AssetHost<'_> {
             }
 
             if segments == 1 {
-                // Chamfer segment: chord between tangent points
+                // Ruled/linear chamfer stays a named two-point profile span.
                 out_pts.push(t1);
                 out_pts.push(t2);
             } else {
-                for k in 0..=segments {
-                    let t = k as f64 / segments as f64;
-                    let ang = phi1 + t * dphi;
-                    let pt = [center[0] + r_eff * ang.cos(), center[1] + r_eff * ang.sin()];
-                    out_pts.push(pt);
+                // G2 cubic (4/3 tan(sweep/4) kappa) split at 90°, flattened at print density.
+                let splits = ((dphi.abs() / std::f64::consts::FRAC_PI_2).ceil() as usize).clamp(1, 4);
+                let dir = if dphi >= 0.0 { 1.0 } else { -1.0 };
+                let min_each = (segments / splits).max(2);
+                for s in 0..splits {
+                    let a0 = phi1 + dphi * (s as f64 / splits as f64);
+                    let a1 = phi1 + dphi * ((s + 1) as f64 / splits as f64);
+                    let sweep = a1 - a0;
+                    let p0 = [center[0] + r_eff * a0.cos(), center[1] + r_eff * a0.sin()];
+                    let p3 = [center[0] + r_eff * a1.cos(), center[1] + r_eff * a1.sin()];
+                    let tan0 = [-a0.sin() * dir, a0.cos() * dir];
+                    let tan1 = [-a1.sin() * dir, a1.cos() * dir];
+                    let h = r_eff * (4.0 / 3.0) * (sweep.abs() * 0.25).tan();
+                    let c1 = [p0[0] + tan0[0] * h, p0[1] + tan0[1] * h];
+                    let c2 = [p3[0] - tan1[0] * h, p3[1] - tan1[1] * h];
+                    let n_tess = print_arc_segments(r_eff, sweep.abs(), min_each);
+                    push_cubic(&mut out_pts, p0, c1, c2, p3, n_tess);
                 }
             }
         }
