@@ -245,7 +245,8 @@ impl AssetHost<'_> {
                     "Content",
                     Xfrm::new(54.0, 126.0, 612.0, 236.0),
                 )
-                .with_text(slide.bullets.join("\n")),
+                // One <a:p> per bullet; joining with U+000A is illegal in DrawingML a:t.
+                .with_paragraphs(slide.bullets.clone()),
             );
             pres.slides.push(s);
         }

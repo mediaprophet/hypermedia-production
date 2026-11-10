@@ -1032,6 +1032,63 @@ mod tests {
     }
 
     #[test]
+    fn compile_deck_pptx_emits_one_paragraph_per_bullet() {
+        use layout_presentation_deck::model::shape::ShapeContent;
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(&cancel, &limits);
+
+        let mut slide = BTreeMap::new();
+        slide.insert("title".into(), Value::String("Two Bullets".into()));
+        slide.insert(
+            "bullets".into(),
+            Value::List(vec![
+                Value::String("A".into()),
+                Value::String("B".into()),
+            ]),
+        );
+        let mut args = Args::new();
+        args.insert("title".into(), Value::String("Hypermedia Deck".into()));
+        args.insert("slides".into(), Value::List(vec![Value::Record(slide)]));
+        let val = h
+            .discourse_op("hypermedia.discourse.compile_deck_pptx", &args)
+            .expect("compile_deck_pptx");
+
+        let bytes = encoded_bytes(&h, &val);
+        assert_eq!(&bytes[..2], b"PK");
+        let pkg = ZipPackage::parse(&bytes).expect("parse pptx zip");
+        let slide_xml = std::str::from_utf8(
+            pkg.get("ppt/slides/slide1.xml")
+                .expect("slide1.xml"),
+        )
+        .expect("utf8 slide xml");
+        assert!(
+            !slide_xml.contains("A\nB"),
+            "ECMA-376 forbids U+000A in a:t; bullets must not flatten to A\\nB"
+        );
+        assert!(slide_xml.contains("<a:t>A</a:t>"));
+        assert!(slide_xml.contains("<a:t>B</a:t>"));
+
+        let pres = parse_pptx_package(&pkg).expect("parse_pptx_package");
+        let content = pres.slides[0]
+            .shapes
+            .iter()
+            .find(|s| s.name == "Content")
+            .expect("content shape");
+        let paras: Vec<String> = match &content.content {
+            ShapeContent::Text(tb) => tb.paragraphs.iter().map(|p| p.text()).collect(),
+            other => panic!("content shape must be text, got {other:?}"),
+        };
+        assert_eq!(
+            paras,
+            vec!["A".to_string(), "B".to_string()],
+            "two bullets must round-trip as two paragraphs, not a single A\\nB run"
+        );
+        assert!(paras.iter().all(|t| !t.contains('\n')));
+    }
+
+    #[test]
     fn review_gallery_presents_10d_m64_emf_q42_maps() {
         let cancel = AtomicBool::new(false);
         let limits = ToolLimits::default();
