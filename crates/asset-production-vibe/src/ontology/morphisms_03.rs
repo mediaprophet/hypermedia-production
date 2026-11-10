@@ -397,9 +397,9 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         domain: "(Manifold3D, TargetTrianglesUsize, MaxErrorF64)",
         codomain: "Manifold3D",
         morphism_kind: "Endomorphism",
-        teleology: "Reduces triangle count: default mode=decimate is Garland-Heckbert QEM; remesh is isotropic; anisotropic runs the anisotropic remesher under an identity metric unless a field is supplied.",
-        units_and_frames: "target_triangles in 4..=200000; max_error in [1e-6, 1e4].",
-        arguments: "mesh: handle, target_triangles: u64 (4..200000), max_error=0.05, mode=decimate|remesh|anisotropic (default decimate = QEM decimate_qem)",
+        teleology: "Reduces triangle count: default mode=decimate is Garland-Heckbert QEM; remesh is isotropic; anisotropic remeshes under a spatially varying per-vertex isotropic(local mean edge) metric, or a Uniform metric from optional target_edge or SPD metric[6].",
+        units_and_frames: "target_triangles in 4..=200000; max_error in [1e-6, 1e4]; anisotropic target_edge > 0 or metric[6] SPD; default per-vertex isotropic(local mean edge length).",
+        arguments: "mesh: handle, target_triangles: u64 (4..200000), max_error=0.05, mode=decimate|remesh|anisotropic (default decimate = QEM decimate_qem), anisotropic: target_edge>0 or metric=[m00,m10,m11,m20,m21,m22] SPD (default per-vertex isotropic local mean edge)",
         composable_with: &[
             "hypermedia.manifold.compile_10d",
             "hypermedia.manifold.compile_10d_pbr",

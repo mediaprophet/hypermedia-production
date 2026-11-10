@@ -1,5 +1,5 @@
 use super::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use qualia_core_db::hypermedia_authoring::Camera3D;
 use qualia_core_db::container_10d::header::Container10dHeader;
 use qualia_core_db::container_10d::section::{parse_section_table, SectionType};
@@ -114,6 +114,8 @@ impl AssetHost<'_> {
                 "mode",
                 "iterations",
                 "target_edge_length",
+                "target_edge",
+                "metric",
             ],
         )?;
         let mode = match a.get("mode") {
@@ -236,9 +238,7 @@ impl AssetHost<'_> {
             return Err("Mesh has too few triangles or vertices for anisotropic remesh".into());
         }
         let iterations = count(a, "iterations", 2, 8)? as u32;
-        let field = AnisotropyField::Uniform {
-            metric: MetricTensor::IDENTITY,
-        };
+        let field = anisotropy_field_from_args(a, &vertices, &triangles)?;
         let (cap_v, cap_t) = cg::required_anisotropic_output_capacity(nv, nt, iterations);
         let cap_v = cap_v.min(200_000);
         let cap_t = cap_t.min(400_000);
@@ -920,6 +920,86 @@ fn catmull_rom_point3(p0: Point3, p1: Point3, p2: Point3, p3: Point3, t: f64) ->
     )
 }
 
+fn anisotropy_field_from_args(
+    a: &Args,
+    vertices: &[Point3],
+    triangles: &[[u32; 3]],
+) -> Result<AnisotropyField, String> {
+    if let Some(mval) = a.get("metric") {
+        let comps = list(mval)?;
+        if comps.len() != 6 {
+            return Err("metric requires 6 numbers [m00, m10, m11, m20, m21, m22]".into());
+        }
+        let metric = MetricTensor {
+            m00: num(&comps[0])?,
+            m10: num(&comps[1])?,
+            m11: num(&comps[2])?,
+            m20: num(&comps[3])?,
+            m21: num(&comps[4])?,
+            m22: num(&comps[5])?,
+        };
+        if !metric.is_positive_definite() {
+            return Err("metric is not positive definite".into());
+        }
+        return Ok(AnisotropyField::Uniform { metric });
+    }
+    if a.get("target_edge").is_some() {
+        let h = number(a, "target_edge", 1.0)?;
+        if !h.is_finite() || h <= 0.0 {
+            return Err("target_edge must be finite and > 0".into());
+        }
+        return Ok(AnisotropyField::Uniform {
+            metric: MetricTensor::isotropic(h),
+        });
+    }
+    Ok(AnisotropyField::Background {
+        bg_metrics: per_vertex_isotropic_metrics(vertices, triangles),
+        bg_vertices: vertices.to_vec(),
+        bg_triangles: triangles.to_vec(),
+        extrapolate: true,
+    })
+}
+
+fn per_vertex_isotropic_metrics(vertices: &[Point3], triangles: &[[u32; 3]]) -> Vec<MetricTensor> {
+    let nv = vertices.len();
+    let mut sum = vec![0.0f64; nv];
+    let mut cnt = vec![0u32; nv];
+    let mut seen = BTreeSet::new();
+    for tri in triangles {
+        for k in 0..3 {
+            let i = tri[k] as usize;
+            let j = tri[(k + 1) % 3] as usize;
+            if i >= nv || j >= nv || i == j {
+                continue;
+            }
+            let edge = if i < j { (i, j) } else { (j, i) };
+            if !seen.insert(edge) {
+                continue;
+            }
+            let a = vertices[edge.0];
+            let b = vertices[edge.1];
+            let dx = a.x - b.x;
+            let dy = a.y - b.y;
+            let dz = a.z - b.z;
+            let len = (dx * dx + dy * dy + dz * dz).sqrt();
+            sum[edge.0] += len;
+            cnt[edge.0] += 1;
+            sum[edge.1] += len;
+            cnt[edge.1] += 1;
+        }
+    }
+    let mut out = Vec::with_capacity(nv);
+    for i in 0..nv {
+        let h = if cnt[i] > 0 {
+            sum[i] / f64::from(cnt[i])
+        } else {
+            1.0
+        };
+        out.push(MetricTensor::isotropic(h.clamp(1e-4, 1e2)));
+    }
+    out
+}
+
 fn mean_triangle_edge_length(vertices: &[Point3], triangles: &[[u32; 3]]) -> f64 {
     let mut sum = 0.0;
     let mut n = 0.0;
@@ -1563,6 +1643,87 @@ mod tests {
         };
         assert!(!aniso_mesh.triangles.is_empty());
         assert!(!aniso_mesh.positions.is_empty());
+    }
+
+    #[test]
+    fn test_manifold_simplify_anisotropic_target_edge_differs() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let ico = unit_icosphere_mesh(&mut host);
+
+        let mut default_args = BTreeMap::new();
+        default_args.insert("mesh".into(), ico.clone());
+        default_args.insert("mode".into(), Value::String("anisotropic".into()));
+        default_args.insert("iterations".into(), Value::U64(2));
+        let default_h = host
+            .manifold_ext("hypermedia.manifold.simplify", &default_args)
+            .expect("anisotropic default per-vertex metric");
+
+        let mut te_args = default_args.clone();
+        te_args.insert("target_edge".into(), Value::F64(0.5));
+        let te_h = host
+            .manifold_ext("hypermedia.manifold.simplify", &te_args)
+            .expect("anisotropic target_edge=0.5");
+
+        let (default_n, default_t, default_hash) = {
+            let Artifact::Mesh(m) = host.workspace.get(&default_h).expect("default mesh") else {
+                panic!("expected mesh");
+            };
+            assert!(!m.triangles.is_empty());
+            assert!(!m.positions.is_empty());
+            (
+                m.positions.len(),
+                m.triangles.len(),
+                mesh_golden_checksum(&m.positions, &m.triangles),
+            )
+        };
+        let (te_n, te_t, te_hash) = {
+            let Artifact::Mesh(m) = host.workspace.get(&te_h).expect("target_edge mesh") else {
+                panic!("expected mesh");
+            };
+            assert!(!m.triangles.is_empty());
+            assert!(!m.positions.is_empty());
+            (
+                m.positions.len(),
+                m.triangles.len(),
+                mesh_golden_checksum(&m.positions, &m.triangles),
+            )
+        };
+        assert!(
+            default_n != te_n || default_t != te_t || default_hash != te_hash,
+            "target_edge=0.5 must differ from default per-vertex metric"
+        );
+    }
+
+    #[test]
+    fn test_manifold_simplify_anisotropic_indefinite_metric_errors() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube);
+        args.insert("mode".into(), Value::String("anisotropic".into()));
+        args.insert("iterations".into(), Value::U64(2));
+        args.insert(
+            "metric".into(),
+            Value::List(vec![
+                Value::F64(0.0),
+                Value::F64(0.0),
+                Value::F64(0.0),
+                Value::F64(0.0),
+                Value::F64(0.0),
+                Value::F64(0.0),
+            ]),
+        );
+        let err = host
+            .manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect_err("indefinite metric must fail-closed");
+        assert!(
+            err.contains("positive definite") || err.contains("indefinite"),
+            "expected positive-definite error, got {err}"
+        );
     }
 
     #[test]

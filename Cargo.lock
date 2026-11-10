@@ -320,6 +320,7 @@ dependencies = [
  "discourse-scientific-matlang",
  "drafting-geometry",
  "electromagnetics-rf-sensing",
+ "etalon",
  "geodesy-spatial-analysis",
  "kinetics-block-simulation",
  "kinetics-continuum-multiphysics",

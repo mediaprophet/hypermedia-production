@@ -69,3 +69,6 @@ png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"
 blake3 = { version = "1.8", default-features = false }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wgpu = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952" }

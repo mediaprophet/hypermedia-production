@@ -6,6 +6,7 @@
 //! 5. Hierarchical light tree bounding-cone clustering and direct lighting preview
 
 mod filters_cryptomatte;
+mod gpu_gi;
 mod sdfgi_light_tree;
 
 use crate::*;
@@ -288,6 +289,126 @@ mod tests {
         let lit_img = host.rgba(img_val).expect("lit rgba");
         assert_eq!(lit_img.width, 4);
         assert_eq!(lit_img.height, 4);
+
+        let backend = text(required(rec, "backend").expect("backend")).expect("string");
+        assert_eq!(backend, "cpu");
+    }
+
+    #[test]
+    fn test_solve_sdfgi_froxel_backend_cpu() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = create_test_host(&limits, &cancel, &[]);
+
+        let pixels = vec![[80, 90, 100, 255]; 16];
+        let img = host.store_rgba(4, 4, pixels).expect("store image");
+        let args = BTreeMap::from([
+            ("image".into(), img),
+            ("cascades".into(), Value::U64(2)),
+            ("backend".into(), Value::String("cpu".into())),
+        ]);
+
+        let res = host
+            .radiance_compositor_gi_op("hypermedia.radiance.solve_sdfgi_froxel", &args)
+            .expect("cpu backend");
+        let rec = record(&res).expect("record");
+        let backend = text(required(rec, "backend").expect("backend")).expect("string");
+        assert_eq!(backend, "cpu");
+        let img_val = required(rec, "image").expect("image");
+        let lit_img = host.rgba(img_val).expect("lit rgba");
+        assert_eq!(lit_img.width, 4);
+        assert_eq!(lit_img.height, 4);
+        assert_eq!(lit_img.pixels.len(), 16);
+    }
+
+    #[test]
+    fn test_solve_sdfgi_froxel_backend_gpu() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = create_test_host(&limits, &cancel, &[]);
+
+        let pixels = vec![[120, 110, 90, 255]; 16];
+        let img = host.store_rgba(4, 4, pixels).expect("store image");
+        let args = BTreeMap::from([
+            ("image".into(), img),
+            ("cascades".into(), Value::U64(2)),
+            ("fog_density".into(), Value::F64(0.2)),
+            ("scattering_anisotropy_g".into(), Value::F64(0.4)),
+            ("backend".into(), Value::String("gpu".into())),
+        ]);
+
+        match host.radiance_compositor_gi_op("hypermedia.radiance.solve_sdfgi_froxel", &args) {
+            Ok(res) => {
+                let rec = record(&res).expect("record");
+                let backend = text(required(rec, "backend").expect("backend")).expect("string");
+                assert_eq!(
+                    backend, "gpu",
+                    "caller asked gpu; must not label a cpu receipt as gpu or return cpu"
+                );
+                let img_val = required(rec, "image").expect("image");
+                let lit_img = host.rgba(img_val).expect("lit rgba");
+                assert_eq!(lit_img.width, 4);
+                assert_eq!(lit_img.height, 4);
+                let adapter = text(required(rec, "adapter").expect("adapter")).expect("string");
+                let mean_irr =
+                    num(required(rec, "mean_irradiance").expect("mean_irradiance")).expect("num");
+                assert!(mean_irr.is_finite());
+                let cascades = num(required(rec, "cascades").expect("cascades")).expect("num");
+                assert_eq!(cascades, 2.0);
+                eprintln!(
+                    "gpu sdfgi dispatched compute passes adapter={adapter} mean_irradiance={mean_irr}"
+                );
+            }
+            Err(e) => {
+                assert!(
+                    e.contains("gpu backend requires"),
+                    "fail-closed GPU error must contain 'gpu backend requires', got: {e}"
+                );
+                eprintln!("gpu sdfgi fail-closed: {e}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_solve_sdfgi_froxel_unknown_backend() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = create_test_host(&limits, &cancel, &[]);
+
+        let pixels = vec![[10, 10, 10, 255]; 4];
+        let img = host.store_rgba(2, 2, pixels).expect("store image");
+        let args = BTreeMap::from([
+            ("image".into(), img),
+            ("backend".into(), Value::String("metal".into())),
+        ]);
+        let err = host
+            .radiance_compositor_gi_op("hypermedia.radiance.solve_sdfgi_froxel", &args)
+            .expect_err("unknown backend");
+        assert!(
+            err.contains("Unknown backend"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn test_solve_sdfgi_froxel_unknown_arg_fail_closed() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = create_test_host(&limits, &cancel, &[]);
+
+        let pixels = vec![[10, 10, 10, 255]; 4];
+        let img = host.store_rgba(2, 2, pixels).expect("store image");
+        let args = BTreeMap::from([
+            ("image".into(), img),
+            ("not_a_field".into(), Value::U64(1)),
+        ]);
+        let err = host
+            .radiance_compositor_gi_op("hypermedia.radiance.solve_sdfgi_froxel", &args)
+            .expect_err("unknown arg");
+        assert!(
+            err.contains("Unknown argument"),
+            "fields() must fail-closed, got: {err}"
+        );
     }
 
     #[test]

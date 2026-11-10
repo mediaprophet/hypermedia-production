@@ -376,9 +376,9 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         domain: "(Manifold3D, FieldDomain, FieldExpression, Amplitude, Frequency, ApplyDisplacementBool)",
         codomain: "FieldEvalRecord{mesh, domain, element_count, chunk_count, min_value, max_value, mean_value}",
         morphism_kind: "Functor",
-        teleology: "Evaluates composable procedural fields across Point, Edge, or Face domains in deterministic 256-element zero-heap chunks (`VFieldEvaluator`) and applies normal displacement.",
-        units_and_frames: "256-element chunk stride; domain in {point, edge, face}; expression in {radial_wave, height_gradient, curvature_proxy, normal_displace}.",
-        arguments: "mesh: handle, domain=point|edge|face, expression=radial_wave|height_gradient|curvature_proxy|normal_displace, amplitude=0.15, frequency=2.0, apply_displacement=true",
+        teleology: "Evaluates composable procedural fields across Point, Edge, or Face domains in deterministic 256-element zero-heap chunks (`VFieldEvaluator`) and applies normal displacement; expression=clay is a real brush (add|subtract|smooth|pinch) with falloff-weighted strength, smooth as 1-ring Laplacian, pinch as lerp toward brush_center.",
+        units_and_frames: "256-element chunk stride; domain in {point, edge, face}; expression in {radial_wave, height_gradient, curvature_proxy, normal_displace, clay}; clay radius in (1e-4..=10), strength in (-10..=10), falloff in (0.5..=8).",
+        arguments: "mesh: handle, domain=point|edge|face, expression=radial_wave|height_gradient|curvature_proxy|normal_displace|clay, amplitude=0.15, frequency=2.0, apply_displacement=true, clay_mode=add|subtract|smooth|pinch, brush_center=[x,y,z] (mesh centroid), radius=0.35, strength=amplitude, falloff=2.0",
         composable_with: &["hypermedia.manifold.mesh_to_sdf_brick", "hypermedia.manifold.compile_10d_pbr"],
         human_preview_affordance: "Compile `result.mesh` to `.10d` via hypermedia.manifold.compile_10d_pbr.",
         abi_descriptor: morphism_func!(

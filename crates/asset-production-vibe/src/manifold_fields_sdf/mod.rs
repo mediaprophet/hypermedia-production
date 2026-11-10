@@ -436,6 +436,75 @@ mod tests {
     }
 
     #[test]
+    fn test_evaluate_field_clay_add_displaces_near_brush() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let cube_h = store_test_cube(&mut host);
+        let original = {
+            let Artifact::Mesh(m) = host.workspace.get(&cube_h).expect("cube") else {
+                panic!("expected mesh");
+            };
+            m.positions.clone()
+        };
+
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube_h);
+        args.insert("domain".into(), Value::String("point".into()));
+        args.insert("expression".into(), Value::String("clay".into()));
+        args.insert("clay_mode".into(), Value::String("add".into()));
+        args.insert(
+            "brush_center".into(),
+            Value::List(vec![Value::F64(1.0), Value::F64(1.0), Value::F64(1.0)]),
+        );
+        args.insert("radius".into(), Value::F64(0.5));
+        args.insert("strength".into(), Value::F64(0.2));
+        args.insert("falloff".into(), Value::F64(2.0));
+        args.insert("apply_displacement".into(), Value::Bool(true));
+
+        let res = host
+            .manifold_fields_sdf_op("hypermedia.manifold.evaluate_field", &args)
+            .expect("evaluate_field clay add");
+        let rec = record(&res).expect("record");
+        assert_eq!(rec.get("expression"), Some(&Value::String("clay".into())));
+        assert_eq!(rec.get("clay_mode"), Some(&Value::String("add".into())));
+
+        let out_mesh_h = rec.get("mesh").expect("mesh handle");
+        let Artifact::Mesh(displaced) = host.workspace.get(out_mesh_h).expect("mesh artifact")
+        else {
+            panic!("expected mesh");
+        };
+        assert_eq!(displaced.positions.len(), original.len());
+        let near = original
+            .iter()
+            .position(|p| (p[0] - 1.0).abs() < 1e-5 && (p[1] - 1.0).abs() < 1e-5 && (p[2] - 1.0).abs() < 1e-5)
+            .expect("near vertex");
+        let far = original
+            .iter()
+            .position(|p| {
+                (p[0] + 1.0).abs() < 1e-5 && (p[1] + 1.0).abs() < 1e-5 && (p[2] + 1.0).abs() < 1e-5
+            })
+            .expect("far vertex");
+        let dn = displaced.positions[near];
+        let on = original[near];
+        let moved = ((dn[0] - on[0]).powi(2) + (dn[1] - on[1]).powi(2) + (dn[2] - on[2]).powi(2))
+            .sqrt();
+        assert!(
+            moved > 0.05,
+            "vertex near brush must move along normals, delta={moved}"
+        );
+        let df = displaced.positions[far];
+        let of = original[far];
+        let stayed = ((df[0] - of[0]).powi(2) + (df[1] - of[1]).powi(2) + (df[2] - of[2]).powi(2))
+            .sqrt();
+        assert!(
+            stayed < 1e-5,
+            "vertex far from brush must stay, delta={stayed}"
+        );
+    }
+
+    #[test]
     fn test_mesh_to_sdf_brick_and_dual_contouring_roundtrip() {
         let limits = ToolLimits::default();
         let cancel = AtomicBool::new(false);

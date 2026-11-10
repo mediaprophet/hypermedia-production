@@ -95,7 +95,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.boolean_3d", "QualiaDB/computational_geometry/boolean_3",
      "Two closed 3D triangle manifolds + union|intersection|difference -> 3D manifold"),
     ("hypermedia.manifold.simplify", "QualiaDB/computational_geometry/decimate_qem",
-     "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic -> simplified 3D manifold (default decimate = QEM decimate_qem)"),
+     "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic -> simplified 3D manifold (default decimate = QEM decimate_qem); anisotropic default per-vertex isotropic(local mean edge), optional target_edge or metric[6]"),
     ("hypermedia.manifold.import_mesh", "QualiaDB/render/assets/import_asset_with_normals",
      "Retained OBJ, STL, or GLB binary/ASCII input -> 3D triangle manifold handle"),
     ("hypermedia.manifold.project_dxf", "hypermedia/asset-production-vibe/manifold_ops",
@@ -161,7 +161,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.subdivide_catmull_clark", "hypermedia/asset-production-vibe/manifold_topology",
      "3D manifold + subdivision levels + edge crease weight -> Catmull-Clark/Loop smoothed 3D manifold"),
     ("hypermedia.manifold.evaluate_field", "hypermedia/asset-production-vibe/manifold_fields_sdf",
-     "3D manifold + domain (point|edge|face|instance) + lazy field expression -> chunk-evaluated field & displaced manifold"),
+     "3D manifold + domain (point|edge|face|instance) + lazy field expression (radial_wave|height_gradient|curvature_proxy|normal_displace|clay) -> chunk-evaluated field & displaced manifold; clay_mode=add|subtract|smooth|pinch"),
     ("hypermedia.manifold.mesh_to_sdf_brick", "hypermedia/asset-production-vibe/manifold_fields_sdf",
      "3D manifold + voxel resolution + narrow-band half-width -> sparse Q42SDF16 narrow-band SDF brick resource"),
     ("hypermedia.manifold.sdf_brick_to_mesh", "hypermedia/asset-production-vibe/manifold_fields_sdf",
@@ -187,7 +187,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.radiance.vector_motion_blur", "hypermedia/asset-production-vibe/radiance_compositor_gi",
      "Straight-alpha RGBA8 + 2D velocity vector + shutter integration -> line-integral motion-blurred RGBA8"),
     ("hypermedia.radiance.solve_sdfgi_froxel", "Etalon/etalon-render + radiance_compositor_gi",
-     "Base RGBA8 + cascaded SDFGI probes + Henyey-Greenstein volumetric froxel phase -> global-illuminated RGBA8"),
+     "Base RGBA8 + cascaded SDFGI probes + Henyey-Greenstein froxel + backend=cpu|gpu -> global-illuminated RGBA8"),
     ("hypermedia.radiance.build_light_tree", "Etalon/etalon-render + radiance_compositor_gi",
      "Emitter descriptors -> Cycles-grade hierarchical bounding-cone Light Tree BVH & importance-sampled preview RGBA8"),
     ("hypermedia.glyph.shape_harfbuzz_bidi", "hypermedia/asset-production-vibe/glyph_layout_diegetic",
@@ -293,7 +293,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("qualia.species.assemble_corpus", "QualiaDB/q42/species_corpus",
      "Sources and evidenced assertions -> species .q42 volume, CBOR-LD projection, digest, conflicts and gaps"),
     ("hypermedia.radiance.pack_sprite_sheet", "QualiaDB/hypermedia_authoring/image",
-     "RGBA tiles packed row-major into one lattice + JSON frames (no overlap, padding empty)"),
+     "RGBA tiles packed row-major into one lattice + JSON frames (no overlap, padding empty); mode=grid|autotile, wrap=clamp|repeat|mirror"),
     ("hypermedia.radiance.pack_nine_slice", "QualiaDB/hypermedia_authoring/image",
      "9-slice blit of an RGBA lattice + sidecar JSON insets (corners unstretched)"),
     ("hypermedia.surface.pack_pbr_set", "Etalon/surface_frames/authoring via QualiaDB",
@@ -1323,6 +1323,93 @@ mod tests {
         let ha = sha256_hex(&bytes_a);
         let hb = sha256_hex(&bytes_b);
         assert_eq!(ha, hb, "two-produce SHA-256 of encoded PNG must match");
+        assert_eq!(bytes_a, bytes_b);
+    }
+
+    #[test]
+    fn catalog_pack_sprite_sheet_autotile_wrap_repeat() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let red = solid_rgba(&mut host, 8, 8, 220, 16, 16, 255);
+        let blue = solid_rgba(&mut host, 8, 8, 16, 16, 220, 255);
+        let packed = host
+            .invoke(
+                "hypermedia.radiance.pack_sprite_sheet",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("tiles".into(), Value::List(vec![red, blue]));
+                    a.insert("columns".into(), Value::U64(2));
+                    a.insert("mode".into(), Value::String("autotile".into()));
+                    a.insert("wrap".into(), Value::String("repeat".into()));
+                    a
+                }),
+            )
+            .expect("pack_sprite_sheet autotile");
+        let rec = record(&packed).expect("sheet record");
+        assert_eq!(rec.get("mode"), Some(&Value::String("autotile".into())));
+        assert_eq!(rec.get("wrap"), Some(&Value::String("repeat".into())));
+        let png = png_bytes(&host, rec, "png");
+        assert!(
+            png.starts_with(&[0x89, 0x50, 0x4E, 0x47]),
+            "PNG magic 89 50 4E 47"
+        );
+        let frames = list(rec.get("frames").expect("frames")).expect("frames list");
+        assert_eq!(frames.len(), 2);
+        let mut rects = Vec::new();
+        for f in frames {
+            let fr = record(f).expect("frame");
+            assert_eq!(fr.get("wrap"), Some(&Value::String("repeat".into())));
+            assert_eq!(fr.get("mode"), Some(&Value::String("autotile".into())));
+            let x = u64_field(fr, "x");
+            let y = u64_field(fr, "y");
+            let w = u64_field(fr, "w");
+            let h = u64_field(fr, "h");
+            for (ox, oy, ow, oh) in &rects {
+                let overlap = x < ox + ow && *ox < x + w && y < oy + oh && *oy < y + h;
+                assert!(!overlap, "autotile frames must not overlap");
+            }
+            rects.push((x, y, w, h));
+        }
+        let image = rec.get("image").expect("image");
+        let rgba = host.rgba(image).expect("sheet rgba");
+        let (x0, y0, w0, _h0) = rects[0];
+        let gutter = rgba.pixels[(y0 as usize) * rgba.width as usize + (x0 + w0) as usize];
+        let left = rgba.pixels[(y0 as usize) * rgba.width as usize + x0 as usize];
+        assert_eq!(gutter, left, "right gutter copies the tile's left column");
+    }
+
+    #[test]
+    fn catalog_pack_sprite_sheet_autotile_two_produce_sha256() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let red = solid_rgba(&mut host, 8, 8, 220, 16, 16, 255);
+        let blue = solid_rgba(&mut host, 8, 8, 16, 16, 220, 255);
+        let args = Value::Record({
+            let mut a = BTreeMap::new();
+            a.insert("tiles".into(), Value::List(vec![red, blue]));
+            a.insert("columns".into(), Value::U64(2));
+            a.insert("mode".into(), Value::String("autotile".into()));
+            a.insert("wrap".into(), Value::String("repeat".into()));
+            a
+        });
+        let a = host
+            .invoke("hypermedia.radiance.pack_sprite_sheet", &args)
+            .expect("autotile pack 1");
+        let b = host
+            .invoke("hypermedia.radiance.pack_sprite_sheet", &args)
+            .expect("autotile pack 2");
+        let rec_a = record(&a).expect("a");
+        let rec_b = record(&b).expect("b");
+        let bytes_a = png_bytes(&host, rec_a, "png");
+        let bytes_b = png_bytes(&host, rec_b, "png");
+        let ha = sha256_hex(&bytes_a);
+        let hb = sha256_hex(&bytes_b);
+        assert_eq!(
+            ha, hb,
+            "two-produce SHA-256 of autotile encoded PNG must match"
+        );
         assert_eq!(bytes_a, bytes_b);
     }
 

@@ -1,6 +1,7 @@
 //! Cascaded SDFGI irradiance probes, 3D froxel atmospheric scattering, and
 //! hierarchical light tree bounding-cone clustering.
-//! GI evaluation goes through Etalon CPU APIs; WGSL is not duplicated here.
+//! Default `backend=cpu` uses Etalon CPU APIs. `backend=gpu` dispatches the
+//! Etalon/wgpu compute path in `gpu_gi` (fail-closed without an adapter).
 
 use crate::*;
 use qualia_core_db::etalon_render::frame_quality::{
@@ -290,6 +291,7 @@ impl AssetHost<'_> {
                 "sun_direction",
                 "sky_radiance",
                 "bounce_intensity",
+                "backend",
                 "profile",
             ],
         )?;
@@ -339,8 +341,51 @@ impl AssetHost<'_> {
             return Err("bounce_intensity outside 0.0..=4.0".into());
         }
 
+        let backend = match a.get("backend") {
+            None => "cpu",
+            Some(v) => text(v)?,
+        };
+        if backend != "cpu" && backend != "gpu" {
+            return Err(format!(
+                "Unknown backend '{backend}'; expected cpu or gpu"
+            ));
+        }
+
         let n = (w as usize) * (h as usize);
         self.charge(n * (cascades * 3 + 10), n * 4)?;
+
+        if backend == "gpu" {
+            let img = self.rgba(image_val)?;
+            let gpu = super::gpu_gi::dispatch_gpu_sdfgi(
+                &img.pixels,
+                super::gpu_gi::GpuGiParams {
+                    width: w,
+                    height: h,
+                    cascades: cascades as u32,
+                    fog_density: fog_density as f32,
+                    anisotropy_g: g as f32,
+                    sun_dir: [sun_dir[0] as f32, sun_dir[1] as f32, sun_dir[2] as f32],
+                    sky_radiance: [
+                        sky_radiance[0] as f32,
+                        sky_radiance[1] as f32,
+                        sky_radiance[2] as f32,
+                    ],
+                    bounce_intensity: bounce_intensity as f32,
+                },
+            )?;
+            let img_handle = self.store_rgba(w, h, gpu.pixels)?;
+            return Ok(Value::Record(BTreeMap::from([
+                ("adapter".into(), Value::String(gpu.adapter_name)),
+                ("backend".into(), Value::String("gpu".into())),
+                ("cascades".into(), Value::U64(cascades as u64)),
+                ("image".into(), img_handle),
+                ("mean_irradiance".into(), Value::F64(gpu.mean_irradiance)),
+                (
+                    "transmittance".into(),
+                    Value::F64(gpu.mean_transmittance),
+                ),
+            ])));
+        }
 
         let sun_f = [sun_dir[0] as f32, sun_dir[1] as f32, sun_dir[2] as f32];
         let sky_f = [
@@ -481,6 +526,7 @@ impl AssetHost<'_> {
         let img_handle = self.store_rgba(w, h, out_pixels)?;
 
         Ok(Value::Record(BTreeMap::from([
+            ("backend".into(), Value::String("cpu".into())),
             ("cascades".into(), Value::U64(cascades as u64)),
             ("image".into(), img_handle),
             ("mean_irradiance".into(), Value::F64(mean_irradiance)),

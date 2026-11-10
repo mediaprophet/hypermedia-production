@@ -1,9 +1,9 @@
 //! Zero-heap chunked Lazy Field Evaluator (`VFieldEvaluator`), prototype point instancing,
 //! and welded instance realization.
 
-use super::{p_add, p_cross, p_normalize, p_scale, p_sub, CHUNK_SIZE};
+use super::{p_add, p_cross, p_dot, p_normalize, p_scale, p_sub, CHUNK_SIZE};
 use crate::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use vibe::Value;
 
 impl AssetHost<'_> {
@@ -19,6 +19,11 @@ impl AssetHost<'_> {
                 "amplitude",
                 "frequency",
                 "apply_displacement",
+                "clay_mode",
+                "brush_center",
+                "radius",
+                "strength",
+                "falloff",
             ],
         )?;
 
@@ -47,10 +52,10 @@ impl AssetHost<'_> {
             None => "radial_wave",
         };
         match expression {
-            "radial_wave" | "height_gradient" | "curvature_proxy" | "normal_displace" => {}
+            "radial_wave" | "height_gradient" | "curvature_proxy" | "normal_displace" | "clay" => {}
             _ => {
                 return Err(format!(
-                    "Unknown expression: {expression}; expected 'radial_wave', 'height_gradient', 'curvature_proxy', or 'normal_displace'"
+                    "Unknown expression: {expression}; expected 'radial_wave', 'height_gradient', 'curvature_proxy', 'normal_displace', or 'clay'"
                 ))
             }
         }
@@ -66,6 +71,46 @@ impl AssetHost<'_> {
         }
 
         let apply_displacement = boolean(a, "apply_displacement", true)?;
+
+        let clay_mode = match a.get("clay_mode") {
+            Some(v) => text(v)?,
+            None => "add",
+        };
+        if expression == "clay" {
+            match clay_mode {
+                "add" | "subtract" | "smooth" | "pinch" => {}
+                _ => {
+                    return Err(format!(
+                        "Unknown clay_mode: {clay_mode}; expected 'add', 'subtract', 'smooth', or 'pinch'"
+                    ))
+                }
+            }
+        }
+
+        let clay_radius = number(a, "radius", 0.35)?;
+        if expression == "clay"
+            && (!clay_radius.is_finite() || !(1e-4..=10.0).contains(&clay_radius))
+        {
+            return Err("radius outside 1e-4..=10 range".into());
+        }
+
+        let clay_strength = if a.get("strength").is_some() {
+            number(a, "strength", 0.15)?
+        } else {
+            amplitude
+        };
+        if expression == "clay"
+            && (!clay_strength.is_finite() || !(-10.0..=10.0).contains(&clay_strength))
+        {
+            return Err("strength outside -10.0..=10.0 range".into());
+        }
+
+        let clay_falloff = number(a, "falloff", 2.0)?;
+        if expression == "clay"
+            && (!clay_falloff.is_finite() || !(0.5..=8.0).contains(&clay_falloff))
+        {
+            return Err("falloff outside 0.5..=8 range".into());
+        }
 
         // Compute smooth unit normals for vertices
         let mut vertex_normals = vec![[0.0f32; 3]; mesh.positions.len()];
@@ -94,6 +139,41 @@ impl AssetHost<'_> {
             (mesh.min[1] + mesh.max[1]) * 0.5,
             (mesh.min[2] + mesh.max[2]) * 0.5,
         ];
+        let vertex_centroid = if mesh.positions.is_empty() {
+            centroid
+        } else {
+            let n = mesh.positions.len() as f32;
+            let mut s = [0.0f32; 3];
+            for p in &mesh.positions {
+                s[0] += p[0];
+                s[1] += p[1];
+                s[2] += p[2];
+            }
+            [s[0] / n, s[1] / n, s[2] / n]
+        };
+        let brush_center = if let Some(v) = a.get("brush_center") {
+            let c = vector::<3>(v)?;
+            [c[0] as f32, c[1] as f32, c[2] as f32]
+        } else {
+            vertex_centroid
+        };
+
+        let mut clay_adj: Vec<BTreeSet<u32>> = Vec::new();
+        if expression == "clay" && clay_mode == "smooth" {
+            clay_adj = vec![BTreeSet::new(); mesh.positions.len()];
+            for tri in &mesh.triangles {
+                for k in 0..3 {
+                    let u = tri[k];
+                    let v = tri[(k + 1) % 3];
+                    let iu = u as usize;
+                    let iv = v as usize;
+                    if iu < clay_adj.len() && iv < clay_adj.len() && u != v {
+                        clay_adj[iu].insert(v);
+                        clay_adj[iv].insert(u);
+                    }
+                }
+            }
+        }
 
         // Gather domain elements & coordinate positions
         let mut element_positions: Vec<[f32; 3]> = Vec::new();
@@ -186,6 +266,55 @@ impl AssetHost<'_> {
                         let dist = ((p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) as f64).sqrt();
                         amplitude * (frequency * dist).cos()
                     }
+                    "clay" => {
+                        let dx = (p[0] - brush_center[0]) as f64;
+                        let dy = (p[1] - brush_center[1]) as f64;
+                        let dz = (p[2] - brush_center[2]) as f64;
+                        let d = (dx * dx + dy * dy + dz * dz).sqrt();
+                        let w = if d >= clay_radius {
+                            0.0
+                        } else {
+                            (1.0 - d / clay_radius).powf(clay_falloff)
+                        };
+                        match clay_mode {
+                            "add" => clay_strength * w,
+                            "subtract" => -clay_strength * w,
+                            "pinch" => clay_strength * w,
+                            "smooth" => {
+                                if domain != "point" {
+                                    0.0
+                                } else {
+                                    let vi = start + i;
+                                    let neighbors = clay_adj.get(vi);
+                                    let empty = neighbors.map(|n| n.is_empty()).unwrap_or(true);
+                                    if empty {
+                                        0.0
+                                    } else {
+                                        let nbrs = neighbors.unwrap();
+                                        let mut avg = [0.0f32; 3];
+                                        for &j in nbrs {
+                                            let q = mesh
+                                                .positions
+                                                .get(j as usize)
+                                                .copied()
+                                                .unwrap_or([0.0; 3]);
+                                            avg[0] += q[0];
+                                            avg[1] += q[1];
+                                            avg[2] += q[2];
+                                        }
+                                        avg = p_scale(avg, 1.0 / nbrs.len() as f32);
+                                        let lap = p_sub(avg, p);
+                                        let nrm = vertex_normals
+                                            .get(vi)
+                                            .copied()
+                                            .unwrap_or([0.0, 1.0, 0.0]);
+                                        (p_dot(lap, nrm) as f64) * clay_strength * w
+                                    }
+                                }
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
                     _ => unreachable!(),
                 };
                 chunk_buf[i] = val;
@@ -203,46 +332,67 @@ impl AssetHost<'_> {
             (min_val, max_val, sum_val / (total_elements as f64))
         };
 
-        // Displace mesh vertices along normals if requested
+        // Displace mesh vertices along normals if requested.
+        // clay+pinch lerps toward brush_center; other clay modes keep normal displacement.
         let displaced_positions = if apply_displacement && !mesh.positions.is_empty() {
             let mut new_pos = mesh.positions.clone();
-            match domain {
-                "point" => {
-                    for (i, p) in new_pos.iter_mut().enumerate() {
-                        let d = evaluated_values.get(i).copied().unwrap_or(0.0) as f32;
-                        let n = vertex_normals[i];
-                        *p = p_add(*p, p_scale(n, d));
-                    }
+            if expression == "clay" && clay_mode == "pinch" {
+                for (i, p) in new_pos.iter_mut().enumerate() {
+                    let t = if domain == "point" {
+                        evaluated_values.get(i).copied().unwrap_or(0.0) as f32
+                    } else {
+                        let dx = (p[0] - brush_center[0]) as f64;
+                        let dy = (p[1] - brush_center[1]) as f64;
+                        let dz = (p[2] - brush_center[2]) as f64;
+                        let d = (dx * dx + dy * dy + dz * dz).sqrt();
+                        let w = if d >= clay_radius {
+                            0.0
+                        } else {
+                            (1.0 - d / clay_radius).powf(clay_falloff)
+                        };
+                        (clay_strength * w) as f32
+                    };
+                    *p = p_add(*p, p_scale(p_sub(brush_center, *p), t));
                 }
-                "face" => {
-                    let mut vert_disp = vec![0.0f32; mesh.positions.len()];
-                    let mut vert_cnt = vec![0u32; mesh.positions.len()];
-                    for (f_idx, tri) in mesh.triangles.iter().enumerate() {
-                        let d = evaluated_values.get(f_idx).copied().unwrap_or(0.0) as f32;
-                        for &v in tri {
-                            let idx = v as usize;
-                            if idx < vert_disp.len() {
-                                vert_disp[idx] += d;
-                                vert_cnt[idx] += 1;
-                            }
-                        }
-                    }
-                    for (i, p) in new_pos.iter_mut().enumerate() {
-                        if vert_cnt[i] > 0 {
-                            let d = vert_disp[i] / (vert_cnt[i] as f32);
+            } else {
+                match domain {
+                    "point" => {
+                        for (i, p) in new_pos.iter_mut().enumerate() {
+                            let d = evaluated_values.get(i).copied().unwrap_or(0.0) as f32;
                             let n = vertex_normals[i];
                             *p = p_add(*p, p_scale(n, d));
                         }
                     }
-                }
-                "edge" | "instance" => {
-                    let uniform_disp = mean_value as f32;
-                    for (i, p) in new_pos.iter_mut().enumerate() {
-                        let n = vertex_normals[i];
-                        *p = p_add(*p, p_scale(n, uniform_disp));
+                    "face" => {
+                        let mut vert_disp = vec![0.0f32; mesh.positions.len()];
+                        let mut vert_cnt = vec![0u32; mesh.positions.len()];
+                        for (f_idx, tri) in mesh.triangles.iter().enumerate() {
+                            let d = evaluated_values.get(f_idx).copied().unwrap_or(0.0) as f32;
+                            for &v in tri {
+                                let idx = v as usize;
+                                if idx < vert_disp.len() {
+                                    vert_disp[idx] += d;
+                                    vert_cnt[idx] += 1;
+                                }
+                            }
+                        }
+                        for (i, p) in new_pos.iter_mut().enumerate() {
+                            if vert_cnt[i] > 0 {
+                                let d = vert_disp[i] / (vert_cnt[i] as f32);
+                                let n = vertex_normals[i];
+                                *p = p_add(*p, p_scale(n, d));
+                            }
+                        }
                     }
+                    "edge" | "instance" => {
+                        let uniform_disp = mean_value as f32;
+                        for (i, p) in new_pos.iter_mut().enumerate() {
+                            let n = vertex_normals[i];
+                            *p = p_add(*p, p_scale(n, uniform_disp));
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
             new_pos
         } else {
@@ -251,7 +401,7 @@ impl AssetHost<'_> {
 
         let mesh_handle = self.store_mesh_positions(displaced_positions, mesh.triangles)?;
 
-        Ok(Value::Record(BTreeMap::from([
+        let mut out = BTreeMap::from([
             ("mesh".into(), mesh_handle),
             ("domain".into(), Value::String(domain.to_string())),
             ("element_count".into(), Value::U64(total_elements as u64)),
@@ -259,7 +409,12 @@ impl AssetHost<'_> {
             ("min_value".into(), Value::F64(min_value)),
             ("max_value".into(), Value::F64(max_value)),
             ("mean_value".into(), Value::F64(mean_value)),
-        ])))
+        ]);
+        if expression == "clay" {
+            out.insert("expression".into(), Value::String(expression.to_string()));
+            out.insert("clay_mode".into(), Value::String(clay_mode.to_string()));
+        }
+        Ok(Value::Record(out))
     }
 
     // ── Morphism 4: Instance on Points ───────────────────────────────────────

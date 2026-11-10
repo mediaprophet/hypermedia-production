@@ -87,6 +87,43 @@ fn rects_overlap(ax: u32, ay: u32, aw: u32, ah: u32, bx: u32, by: u32, bw: u32, 
         && by < ay.saturating_add(ah)
 }
 
+/// Copy 1px wrap gutter after an opaque tile blit: right from the tile's left
+/// column, bottom from the top row, corner from the top-left pixel. Writes only
+/// into padding / trailing sheet pixels so frames stay disjoint.
+fn copy_autotile_gutter(
+    dest: &mut [[u8; 4]],
+    dw: u32,
+    dh: u32,
+    ox: u32,
+    oy: u32,
+    tw: u32,
+    th: u32,
+) {
+    if tw == 0 || th == 0 {
+        return;
+    }
+    let right_x = ox.saturating_add(tw);
+    let bottom_y = oy.saturating_add(th);
+    if right_x < dw {
+        for sy in 0..th {
+            let dy = oy.saturating_add(sy);
+            if dy >= dh {
+                break;
+            }
+            dest[(dy * dw + right_x) as usize] = dest[(dy * dw + ox) as usize];
+        }
+    }
+    if bottom_y < dh {
+        for sx in 0..=tw {
+            let dx = ox.saturating_add(sx);
+            if dx >= dw {
+                break;
+            }
+            dest[(bottom_y * dw + dx) as usize] = dest[(oy * dw + dx) as usize];
+        }
+    }
+}
+
 impl AssetHost<'_> {
     fn encode_rgba_png_handle(
         &mut self,
@@ -110,12 +147,57 @@ impl AssetHost<'_> {
     }
 
     pub(crate) fn pack_sprite_sheet(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["tiles", "columns", "padding", "names", "profile"])?;
+        fields(
+            a,
+            &[
+                "tiles",
+                "columns",
+                "padding",
+                "names",
+                "profile",
+                "mode",
+                "wrap",
+            ],
+        )?;
         let profile = lattice_profile(a)?;
         let tiles_v = list(required(a, "tiles")?)?;
         if tiles_v.is_empty() || tiles_v.len() > 64 {
             return Err("tiles needs 1..64".into());
         }
+        let pack_mode = match a.get("mode") {
+            Some(v) => {
+                let m = text(v)?;
+                match m {
+                    "grid" | "autotile" => m,
+                    _ => {
+                        return Err(
+                            "Unknown pack mode: expected 'grid' or 'autotile'".into(),
+                        )
+                    }
+                }
+            }
+            None => "grid",
+        };
+        let wrap = match a.get("wrap") {
+            Some(v) => {
+                let w = text(v)?;
+                match w {
+                    "clamp" | "repeat" | "mirror" => w,
+                    _ => {
+                        return Err(
+                            "Unknown wrap: expected 'clamp', 'repeat', or 'mirror'".into(),
+                        )
+                    }
+                }
+            }
+            None => {
+                if pack_mode == "autotile" {
+                    "repeat"
+                } else {
+                    "clamp"
+                }
+            }
+        };
         let names = match a.get("names") {
             None => None,
             Some(v) => {
@@ -137,7 +219,17 @@ impl AssetHost<'_> {
         }
         default_cols = default_cols.clamp(1, 64);
         let columns = count(a, "columns", default_cols, 64)?;
-        let padding = nonnegative(a, "padding", 0, 64)? as u32;
+        let padding = if a.get("padding").is_some() {
+            let p = nonnegative(a, "padding", 0, 64)? as u32;
+            if pack_mode == "autotile" && p == 0 {
+                return Err("autotile needs padding>=1".into());
+            }
+            p
+        } else if pack_mode == "autotile" {
+            1
+        } else {
+            0
+        };
 
         let mut dims = Vec::with_capacity(n_tiles);
         for t in tiles_v {
@@ -191,7 +283,15 @@ impl AssetHost<'_> {
                 .ok_or("sprite sheet overflow")?;
             col += 1;
         }
-        let sheet_h = y.checked_add(row_h).ok_or("sprite sheet overflow")?;
+        let mut sheet_h = y.checked_add(row_h).ok_or("sprite sheet overflow")?;
+        if pack_mode == "autotile" {
+            sheet_w = sheet_w
+                .checked_add(1)
+                .ok_or("sprite sheet overflow")?;
+            sheet_h = sheet_h
+                .checked_add(1)
+                .ok_or("sprite sheet overflow")?;
+        }
         if sheet_w == 0
             || sheet_h == 0
             || sheet_w > profile.max_dim
@@ -235,6 +335,17 @@ impl AssetHost<'_> {
                 frames[i].x,
                 frames[i].y,
             );
+            if pack_mode == "autotile" {
+                copy_autotile_gutter(
+                    &mut dest,
+                    sheet_w,
+                    sheet_h,
+                    frames[i].x,
+                    frames[i].y,
+                    frames[i].w,
+                    frames[i].h,
+                );
+            }
         }
         let image = self.store_rgba(sheet_w, sheet_h, dest)?;
         let png = self.encode_rgba_png_handle(image.clone(), a.get("profile"))?;
@@ -246,6 +357,10 @@ impl AssetHost<'_> {
             rec.insert("y".into(), Value::U64(f.y as u64));
             rec.insert("w".into(), Value::U64(f.w as u64));
             rec.insert("h".into(), Value::U64(f.h as u64));
+            if pack_mode == "autotile" {
+                rec.insert("wrap".into(), Value::String(wrap.to_string()));
+                rec.insert("mode".into(), Value::String("autotile".into()));
+            }
             frame_list.push(Value::Record(rec));
         }
         let mut out = BTreeMap::new();
@@ -254,6 +369,8 @@ impl AssetHost<'_> {
         out.insert("width".into(), Value::U64(sheet_w as u64));
         out.insert("height".into(), Value::U64(sheet_h as u64));
         out.insert("frames".into(), Value::List(frame_list));
+        out.insert("mode".into(), Value::String(pack_mode.to_string()));
+        out.insert("wrap".into(), Value::String(wrap.to_string()));
         Ok(Value::Record(out))
     }
 
