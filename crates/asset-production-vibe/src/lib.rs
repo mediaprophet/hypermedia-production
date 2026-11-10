@@ -12,6 +12,7 @@ mod geometry;
 mod glyph;
 mod glyph_layout_diegetic;
 mod graphics;
+mod graphics_pack;
 mod kinetics_ops;
 mod kinetics_sim;
 mod layout_ops;

@@ -230,8 +230,8 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         codomain: "MaterialSheaf{colour: RadianceLatticeRgba8, normal: RadianceLatticeRgba8, orm: RadianceLatticeRgba8}",
         morphism_kind: "Constructor",
         teleology: "Synthesizes deterministic, seamlessly tileable PBR material texture sets (albedo colour, tangent-space normal map, and Occlusion-Roughness-Metallic map) from Etalon's surface frame kernels.",
-        units_and_frames: "Toroidally periodic 2D grid (side in 8..512); tangent-space normal map encoded in [0,255] -> [-1,1] with +Z up; ORM packed as R=Occlusion, G=Roughness, B=Metallic.",
-        arguments: "side=128 (8..512),seed=0,tint=[1,1,1],contrast=0.2,relief=0.002,bands=[12,1],band_strength=0.7,roughness=0.8,metallic=0 -> {colour,normal,orm} rgba handles",
+        units_and_frames: "Toroidally periodic 2D grid (side in 8..1024); tangent-space normal map encoded in [0,255] -> [-1,1] with +Z up; ORM packed as R=Occlusion, G=Roughness, B=Metallic.",
+        arguments: "side=128 (8..1024),seed=0,tint=[1,1,1],contrast=0.2,relief=0.002,bands=[12,1],band_strength=0.7,roughness=0.8,metallic=0 -> {colour,normal,orm} rgba handles",
         composable_with: &[
             "hypermedia.radiance.compose_rgba",
             "hypermedia.radiance.filter_rgba",

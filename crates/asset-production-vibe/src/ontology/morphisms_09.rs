@@ -1,4 +1,4 @@
-﻿//! Ontological and agentic utility specifications for morphisms 128..144.
+﻿//! Ontological and agentic utility specifications for morphisms 128..147.
 
 use super::{AgenticMorphismSpec, DEFAULT_ENVELOPE, DEFAULT_PARAMS};
 use vibescript_abi::{
@@ -412,6 +412,87 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
             24,
             "(SpeciesCorpusDocument) -> SealedSpeciesCorpus",
             144
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "hypermedia.radiance.pack_sprite_sheet",
+        aliases: &["radiance.pack_sprite_sheet", "synth.radiance.pack_sprite_sheet", "pack_sprite_sheet"],
+        category: "radiance",
+        morphism: "pack_sprite_sheet",
+        owner: "QualiaDB/hypermedia_authoring/image",
+        summary: "RGBA tiles packed row-major into one lattice + JSON frames (no overlap, padding empty)",
+        domain: "(List<RadianceLatticeRgba8>, ColumnsU64, PaddingU64, Names)",
+        codomain: "SpriteSheetRecord{image, png, width, height, frames:[{name,x,y,w,h}]}",
+        morphism_kind: "AlgebraicFold",
+        teleology: "Packs ordered RGBA tiles into a single sprite-sheet lattice with disjoint frame rectangles so UI atlases and 2D animation strips can be encoded once.",
+        units_and_frames: "Row-major columns in 1..64; padding in 0..64 empty pixels; destination lattice charged per packed pixel; frames are axis-aligned and non-overlapping.",
+        arguments: "tiles:[rgba handles],columns=ceil(sqrt(n)) (1..64),padding=0 (0..64),names:[strings same length as tiles],profile",
+        composable_with: &[
+            "hypermedia.radiance.create_rgba",
+            "hypermedia.radiance.encode_rgba_png",
+        ],
+        human_preview_affordance: "Inspect `result.frames` and encode `result.image` via hypermedia.radiance.encode_rgba_png.",
+        abi_descriptor: morphism_func!(
+            "pack_sprite_sheet",
+            "https://qualiadb.org/ext/hypermedia/radiance#pack_sprite_sheet",
+            4,
+            29,
+            "(RgbaTileList, u64, u64) -> SpriteSheetRecord",
+            145
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "hypermedia.radiance.pack_nine_slice",
+        aliases: &["radiance.pack_nine_slice", "synth.radiance.pack_nine_slice", "pack_nine_slice"],
+        category: "radiance",
+        morphism: "pack_nine_slice",
+        owner: "QualiaDB/hypermedia_authoring/image",
+        summary: "9-slice blit of an RGBA lattice + sidecar JSON insets (corners unstretched)",
+        domain: "(RadianceLatticeRgba8, Insets, DestWidthU64, DestHeightU64)",
+        codomain: "NineSliceRecord{image, png, insets:{left,right,top,bottom}, dest_width, dest_height}",
+        morphism_kind: "Endomorphism",
+        teleology: "Blits a source patch into a destination lattice using classic 9-slice scaling so panel chrome and UI frames keep unstretched corners.",
+        units_and_frames: "Straight-alpha RGBA8; insets in pixels; corners copied 1:1; edges/center nearest-neighbour scaled; opaque blit (no blend).",
+        arguments: "image:rgba handle,left=0,right=0,top=0,bottom=0,dest_width,dest_height,profile",
+        composable_with: &[
+            "hypermedia.radiance.create_rgba",
+            "hypermedia.radiance.encode_rgba_png",
+        ],
+        human_preview_affordance: "Inspect `result.insets` and encode `result.image` via hypermedia.radiance.encode_rgba_png.",
+        abi_descriptor: morphism_func!(
+            "pack_nine_slice",
+            "https://qualiadb.org/ext/hypermedia/radiance#pack_nine_slice",
+            4,
+            30,
+            "(RadianceLatticeRgba8, Insets, Dimensions2D) -> NineSliceRecord",
+            146
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "hypermedia.surface.pack_pbr_set",
+        aliases: &["surface.pack_pbr_set", "synth.surface.pack_pbr_set", "pack_pbr_set"],
+        category: "surface",
+        morphism: "pack_pbr_set",
+        owner: "Etalon/surface_frames/authoring via QualiaDB",
+        summary: "Colour/normal/orm handles packed to encoded PNG resources (deterministic BTree key order)",
+        domain: "(ColourHandle, NormalHandle, OrmHandle)",
+        codomain: "PbrSetRecord{colour: EncodedPng, normal: EncodedPng, orm: EncodedPng}",
+        morphism_kind: "CoalgebricProjection",
+        teleology: "Admits a PBR map triple and emits lossless PNG handles (or passes through already-encoded PNG) with BTree key order colour/normal/orm.",
+        units_and_frames: "Straight-alpha RGBA8 or existing PNG; encode path is hypermedia.radiance.encode_rgba_png.",
+        arguments: "colour:rgba|png handle,normal:rgba|png handle,orm:rgba|png handle,profile",
+        composable_with: &[
+            "hypermedia.surface.synthesize_maps",
+            "hypermedia.radiance.encode_rgba_png",
+        ],
+        human_preview_affordance: "Inspect the three PNG handles side-by-side in hypermedia.discourse.review_gallery.",
+        abi_descriptor: morphism_func!(
+            "pack_pbr_set",
+            "https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set",
+            3,
+            8,
+            "(ColourHandle, NormalHandle, OrmHandle) -> PbrSetRecord",
+            147
         ),
     },
 ];

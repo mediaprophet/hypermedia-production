@@ -59,6 +59,7 @@ static SURFACE_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[88].abi_descriptor,
     MORPHISMS[126].abi_descriptor,
     MORPHISMS[127].abi_descriptor,
+    MORPHISMS[147].abi_descriptor,
 ];
 static RADIANCE_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[7].abi_descriptor,
@@ -89,6 +90,8 @@ static RADIANCE_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[128].abi_descriptor,
     MORPHISMS[129].abi_descriptor,
     MORPHISMS[130].abi_descriptor,
+    MORPHISMS[145].abi_descriptor,
+    MORPHISMS[146].abi_descriptor,
 ];
 static GLYPH_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[30].abi_descriptor,

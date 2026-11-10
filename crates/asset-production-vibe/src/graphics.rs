@@ -165,6 +165,9 @@ impl AssetHost<'_> {
             "hypermedia.radiance.import_rgba_png" | "hypermedia.rgba.import_png" => {
                 self.import_rgba(a)
             }
+            "hypermedia.radiance.pack_sprite_sheet" => self.pack_sprite_sheet(a),
+            "hypermedia.radiance.pack_nine_slice" => self.pack_nine_slice(a),
+            "hypermedia.surface.pack_pbr_set" => self.pack_pbr_set(a),
             "hypermedia.surface.synthesize_maps" | "hypermedia.surface.maps" => self.surface(a),
             _ => Err("Unknown graphics operation".into()),
         }
@@ -398,9 +401,9 @@ impl AssetHost<'_> {
                 "metallic",
             ],
         )?;
-        let side = count(a, "side", 128, 512)? as u32;
+        let side = count(a, "side", 128, 1024)? as u32;
         if side < 8 {
-            return Err("Surface side must be 8..512".into());
+            return Err("Surface side must be 8..1024".into());
         }
         let seed = a
             .get("seed")
@@ -435,7 +438,19 @@ impl AssetHost<'_> {
             metallic: number(a, "metallic", 0.)? as f32,
         };
         let n = side as usize * side as usize;
-        self.charge(n * 128, n * 24)?;
+        let dest_pixels = n
+            .checked_mul(3)
+            .ok_or("synthesize_maps pixel overflow")?;
+        let scratch = dest_pixels.saturating_mul(4);
+        if self.work.saturating_add(dest_pixels as u64) > self.limits.asset_work_units
+            || scratch > self.limits.total_resource_bytes
+        {
+            return Err(format!(
+                "synthesize_maps {side}²×3 maps exceed envelope (work {dest_pixels}, scratch {scratch}; budget work {} scratch {})",
+                self.limits.asset_work_units, self.limits.total_resource_bytes
+            ));
+        }
+        self.charge(dest_pixels, scratch)?;
         let mut colour = vec![0; n * 4];
         let mut normal = vec![0; n * 4];
         let mut orm = vec![0; n * 4];

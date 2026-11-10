@@ -292,6 +292,12 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
      "Spreadsheet formulas + double-entry journal + timeline clips -> DAG recalculated cells, hash-chained fiduciary audit, DOCX/OTIO/Matroska & Apple ProRes 422"),
     ("qualia.species.assemble_corpus", "QualiaDB/q42/species_corpus",
      "Sources and evidenced assertions -> species .q42 volume, CBOR-LD projection, digest, conflicts and gaps"),
+    ("hypermedia.radiance.pack_sprite_sheet", "QualiaDB/hypermedia_authoring/image",
+     "RGBA tiles packed row-major into one lattice + JSON frames (no overlap, padding empty)"),
+    ("hypermedia.radiance.pack_nine_slice", "QualiaDB/hypermedia_authoring/image",
+     "9-slice blit of an RGBA lattice + sidecar JSON insets (corners unstretched)"),
+    ("hypermedia.surface.pack_pbr_set", "Etalon/surface_frames/authoring via QualiaDB",
+     "Colour/normal/orm handles packed to encoded PNG resources (deterministic BTree key order)"),
 ];
 
 #[cfg(test)]
@@ -899,6 +905,340 @@ mod tests {
         assert!(
             err.contains("UV01") || err.contains("vertex"),
             "fail-closed error must name UV01/vertex mismatch, got: {err}"
+        );
+    }
+
+    fn solid_rgba(
+        host: &mut AssetHost<'_>,
+        w: u64,
+        h: u64,
+        r: u64,
+        g: u64,
+        b: u64,
+        a: u64,
+    ) -> Value {
+        let mut args = BTreeMap::new();
+        args.insert("width".into(), Value::U64(w));
+        args.insert("height".into(), Value::U64(h));
+        args.insert(
+            "color".into(),
+            Value::List(vec![
+                Value::U64(r),
+                Value::U64(g),
+                Value::U64(b),
+                Value::U64(a),
+            ]),
+        );
+        host.invoke("hypermedia.radiance.create_rgba", &Value::Record(args))
+            .expect("create_rgba")
+    }
+
+    fn png_bytes(host: &AssetHost<'_>, rec: &Args, key: &str) -> Vec<u8> {
+        let handle = rec.get(key).expect("png handle");
+        host.workspace
+            .encoded(handle)
+            .expect("encoded png")
+            .bytes
+            .clone()
+    }
+
+    fn u64_field(rec: &Args, k: &str) -> u64 {
+        match rec.get(k) {
+            Some(Value::U64(v)) => *v,
+            Some(Value::I64(v)) => *v as u64,
+            other => panic!("{k} expected integer, got {other:?}"),
+        }
+    }
+
+    fn sha256_hex(bytes: &[u8]) -> String {
+        fn rotr(x: u32, n: u32) -> u32 {
+            x.rotate_right(n)
+        }
+        const K: [u32; 64] = [
+            0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+            0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+            0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+            0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+            0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+            0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+            0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+            0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+            0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+            0xc67178f2,
+        ];
+        let mut h: [u32; 8] = [
+            0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+            0x5be0cd19,
+        ];
+        let bit_len = (bytes.len() as u64).saturating_mul(8);
+        let mut msg = bytes.to_vec();
+        msg.push(0x80);
+        while msg.len() % 64 != 56 {
+            msg.push(0);
+        }
+        msg.extend_from_slice(&bit_len.to_be_bytes());
+        for chunk in msg.chunks_exact(64) {
+            let mut w = [0u32; 64];
+            for i in 0..16 {
+                w[i] = u32::from_be_bytes(chunk[i * 4..i * 4 + 4].try_into().unwrap());
+            }
+            for i in 16..64 {
+                let s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
+                let s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
+                w[i] = w[i - 16]
+                    .wrapping_add(s0)
+                    .wrapping_add(w[i - 7])
+                    .wrapping_add(s1);
+            }
+            let mut a = h;
+            for i in 0..64 {
+                let s1 = rotr(a[4], 6) ^ rotr(a[4], 11) ^ rotr(a[4], 25);
+                let ch = (a[4] & a[5]) ^ ((!a[4]) & a[6]);
+                let t1 = a[7]
+                    .wrapping_add(s1)
+                    .wrapping_add(ch)
+                    .wrapping_add(K[i])
+                    .wrapping_add(w[i]);
+                let s0 = rotr(a[0], 2) ^ rotr(a[0], 13) ^ rotr(a[0], 22);
+                let maj = (a[0] & a[1]) ^ (a[0] & a[2]) ^ (a[1] & a[2]);
+                let t2 = s0.wrapping_add(maj);
+                a[7] = a[6];
+                a[6] = a[5];
+                a[5] = a[4];
+                a[4] = a[3].wrapping_add(t1);
+                a[3] = a[2];
+                a[2] = a[1];
+                a[1] = a[0];
+                a[0] = t1.wrapping_add(t2);
+            }
+            for i in 0..8 {
+                h[i] = h[i].wrapping_add(a[i]);
+            }
+        }
+        let mut out = String::with_capacity(64);
+        for v in h {
+            out.push_str(&format!("{v:08x}"));
+        }
+        out
+    }
+
+    #[test]
+    fn catalog_pack_sprite_sheet_frames_no_overlap() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let red = solid_rgba(&mut host, 8, 8, 220, 16, 16, 255);
+        let blue = solid_rgba(&mut host, 8, 8, 16, 16, 220, 255);
+        let packed = host
+            .invoke(
+                "hypermedia.radiance.pack_sprite_sheet",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("tiles".into(), Value::List(vec![red, blue]));
+                    a.insert("columns".into(), Value::U64(2));
+                    a.insert("padding".into(), Value::U64(0));
+                    a.insert(
+                        "names".into(),
+                        Value::List(vec![
+                            Value::String("red".into()),
+                            Value::String("blue".into()),
+                        ]),
+                    );
+                    a
+                }),
+            )
+            .expect("pack_sprite_sheet");
+        let rec = record(&packed).expect("sheet record");
+        let png = png_bytes(&host, rec, "png");
+        assert!(
+            png.starts_with(&[0x89, 0x50, 0x4E, 0x47]),
+            "PNG magic 89 50 4E 47"
+        );
+        let frames = list(rec.get("frames").expect("frames")).expect("frames list");
+        assert_eq!(frames.len(), 2);
+        let mut rects = Vec::new();
+        for f in frames {
+            let fr = record(f).expect("frame");
+            let x = u64_field(fr, "x");
+            let y = u64_field(fr, "y");
+            let w = u64_field(fr, "w");
+            let h = u64_field(fr, "h");
+            for (ox, oy, ow, oh) in &rects {
+                let overlap = x < ox + ow && *ox < x + w && y < oy + oh && *oy < y + h;
+                assert!(!overlap, "frames must not overlap");
+            }
+            rects.push((x, y, w, h));
+        }
+        let image = rec.get("image").expect("image");
+        let rgba = host.rgba(image).expect("sheet rgba");
+        let (x0, y0, _, _) = rects[0];
+        let (x1, y1, _, _) = rects[1];
+        let p0 = rgba.pixels[(y0 as usize) * rgba.width as usize + x0 as usize];
+        let p1 = rgba.pixels[(y1 as usize) * rgba.width as usize + x1 as usize];
+        assert!(
+            p0[0] > 180 && p0[1] < 64 && p0[2] < 64,
+            "tile0 red-ish, got {p0:?}"
+        );
+        assert!(
+            p1[2] > 180 && p1[0] < 64 && p1[1] < 64,
+            "tile1 blue-ish, got {p1:?}"
+        );
+    }
+
+    #[test]
+    fn catalog_pack_nine_slice_insets_sidecar() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let src = solid_rgba(&mut host, 8, 8, 40, 80, 120, 255);
+        let packed = host
+            .invoke(
+                "hypermedia.radiance.pack_nine_slice",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("image".into(), src);
+                    a.insert("left".into(), Value::U64(2));
+                    a.insert("right".into(), Value::U64(2));
+                    a.insert("top".into(), Value::U64(2));
+                    a.insert("bottom".into(), Value::U64(2));
+                    a.insert("dest_width".into(), Value::U64(16));
+                    a.insert("dest_height".into(), Value::U64(16));
+                    a
+                }),
+            )
+            .expect("pack_nine_slice");
+        let rec = record(&packed).expect("nine-slice record");
+        let png = png_bytes(&host, rec, "png");
+        assert!(
+            png.starts_with(&[0x89, 0x50, 0x4E, 0x47]),
+            "PNG magic 89 50 4E 47"
+        );
+        let insets = record(rec.get("insets").expect("insets")).expect("insets record");
+        assert_eq!(u64_field(insets, "left"), 2);
+        assert_eq!(u64_field(insets, "right"), 2);
+        assert_eq!(u64_field(insets, "top"), 2);
+        assert_eq!(u64_field(insets, "bottom"), 2);
+        assert_eq!(u64_field(rec, "dest_width"), 16);
+        assert_eq!(u64_field(rec, "dest_height"), 16);
+    }
+
+    #[test]
+    fn catalog_pack_pbr_set_encoded_png() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let colour = solid_rgba(&mut host, 4, 4, 200, 40, 40, 255);
+        let normal = solid_rgba(&mut host, 4, 4, 128, 128, 255, 255);
+        let orm = solid_rgba(&mut host, 4, 4, 255, 80, 0, 255);
+        let packed = host
+            .invoke(
+                "hypermedia.surface.pack_pbr_set",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("colour".into(), colour);
+                    a.insert("normal".into(), normal);
+                    a.insert("orm".into(), orm);
+                    a
+                }),
+            )
+            .expect("pack_pbr_set");
+        let rec = record(&packed).expect("pbr record");
+        let keys: Vec<_> = rec.keys().cloned().collect();
+        assert_eq!(keys, vec!["colour", "normal", "orm"]);
+        for key in ["colour", "normal", "orm"] {
+            let bytes = png_bytes(&host, rec, key);
+            assert!(
+                bytes.starts_with(&[0x89, 0x50, 0x4E, 0x47]),
+                "{key} must be encoded PNG"
+            );
+        }
+    }
+
+    #[test]
+    fn catalog_synthesize_maps_side_1024_envelope() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let result = host.invoke(
+            "hypermedia.surface.synthesize_maps",
+            &Value::Record({
+                let mut a = BTreeMap::new();
+                a.insert("side".into(), Value::U64(1024));
+                a
+            }),
+        );
+        match result {
+            Ok(Value::Record(rec)) => {
+                assert!(rec.contains_key("colour"));
+                assert!(rec.contains_key("normal"));
+                assert!(rec.contains_key("orm"));
+                let colour = rec.get("colour").expect("colour");
+                let rgba = host.rgba(colour).expect("colour rgba");
+                assert_eq!(rgba.width, 1024);
+                assert_eq!(rgba.height, 1024);
+            }
+            Err(e) => {
+                assert!(
+                    e.to_lowercase().contains("envelope")
+                        || e.contains("budget")
+                        || e.contains("1024"),
+                    "fail-closed envelope message, got {e}"
+                );
+            }
+            other => panic!("unexpected synthesize_maps 1024 result: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn catalog_pack_sprite_sheet_two_produce_sha256() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let red = solid_rgba(&mut host, 8, 8, 220, 16, 16, 255);
+        let blue = solid_rgba(&mut host, 8, 8, 16, 16, 220, 255);
+        let args = Value::Record({
+            let mut a = BTreeMap::new();
+            a.insert("tiles".into(), Value::List(vec![red, blue]));
+            a.insert("columns".into(), Value::U64(2));
+            a.insert("padding".into(), Value::U64(0));
+            a
+        });
+        let a = host
+            .invoke("hypermedia.radiance.pack_sprite_sheet", &args)
+            .expect("pack 1");
+        let b = host
+            .invoke("hypermedia.radiance.pack_sprite_sheet", &args)
+            .expect("pack 2");
+        let rec_a = record(&a).expect("a");
+        let rec_b = record(&b).expect("b");
+        let bytes_a = png_bytes(&host, rec_a, "png");
+        let bytes_b = png_bytes(&host, rec_b, "png");
+        let ha = sha256_hex(&bytes_a);
+        let hb = sha256_hex(&bytes_b);
+        assert_eq!(ha, hb, "two-produce SHA-256 of encoded PNG must match");
+        assert_eq!(bytes_a, bytes_b);
+    }
+
+    #[test]
+    fn catalog_pack_sprite_sheet_unknown_argument() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let red = solid_rgba(&mut host, 8, 8, 220, 16, 16, 255);
+        let err = host
+            .invoke(
+                "hypermedia.radiance.pack_sprite_sheet",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("tiles".into(), Value::List(vec![red]));
+                    a.insert("bogus".into(), Value::U64(1));
+                    a
+                }),
+            )
+            .expect_err("unknown arg must fail-closed");
+        assert!(
+            err.contains("Unknown argument"),
+            "expected Unknown argument, got {err}"
         );
     }
 }

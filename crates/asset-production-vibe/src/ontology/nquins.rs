@@ -439,4 +439,13 @@ pub static ONTOLOGY_NQUINS: &[NQuin48] = &[
     NQuin48::precondition("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#SourcesAndEvidencedAssertions", 145),
     NQuin48::postcondition("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#SealedSpeciesCorpusVolume", 145),
     NQuin48::invariant("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#ConflictsKeptAndUnsourcedValuesAreModelAssumptions", 145),
+    NQuin48::precondition("https://qualiadb.org/ext/hypermedia/radiance#pack_sprite_sheet", "https://qualiadb.org/ontology/hypermedia#BoundedRgbaTileListAndPackingColumns", 146),
+    NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/radiance#pack_sprite_sheet", "https://qualiadb.org/ontology/hypermedia#PackedSpriteSheetLatticeAndNonOverlappingFrames", 146),
+    NQuin48::invariant("https://qualiadb.org/ext/hypermedia/radiance#pack_sprite_sheet", "https://qualiadb.org/ontology/hypermedia#FrameRectsDisjointAndPaddingEmpty", 146),
+    NQuin48::precondition("https://qualiadb.org/ext/hypermedia/radiance#pack_nine_slice", "https://qualiadb.org/ontology/hypermedia#SourceRgbaLatticeAndNineSliceInsets", 147),
+    NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/radiance#pack_nine_slice", "https://qualiadb.org/ontology/hypermedia#NineSliceBlitLatticeAndInsetSidecar", 147),
+    NQuin48::invariant("https://qualiadb.org/ext/hypermedia/radiance#pack_nine_slice", "https://qualiadb.org/ontology/hypermedia#CornerPatchesUnstretchedAndInsetsPreserved", 147),
+    NQuin48::precondition("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#ColourNormalOrmHandleTriple", 148),
+    NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#EncodedPbrPngHandleSet", 148),
+    NQuin48::invariant("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#DeterministicBTreeKeyOrderAndPngMagic", 148),
 ];
