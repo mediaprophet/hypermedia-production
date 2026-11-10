@@ -241,7 +241,6 @@ impl AssetHost<'_> {
                 | "hypermedia.kinetics.simulate_causal_block_diagram"
                 | "hypermedia.kinetics.schedule_cpm_evm_montecarlo"
                 | "hypermedia.acoustics.analyze_ebu_r128_camelot_daw"
-                | "hypermedia.electromagnetics.sense_wifi_csi_vitals_aoa"
                 | "hypermedia.geodesy.kriging_variogram_morphometry"
                 | "hypermedia.discourse.audit_tex_pdf_ua_matlang"
                 | "hypermedia.chronicle.recalculate_tabular_fiduciary_archive"
@@ -303,7 +302,12 @@ impl AssetHost<'_> {
                 | "hypermedia.manifold.project_dxf"
                 | "hypermedia.manifold.compile_10d_pbr"
         ) {
-            self.manifold_ext(canonical_id, args)
+            let produced = self.manifold_ext(canonical_id, args)?;
+            if canonical_id == "hypermedia.manifold.compile_10d_pbr" {
+                self.consume_unwrap_uv01(args, produced)
+            } else {
+                Ok(produced)
+            }
         } else if canonical_id.starts_with("hypermedia.locus.")
             || canonical_id.starts_with("hypermedia.manifold.")
         {
@@ -422,6 +426,35 @@ impl AssetHost<'_> {
         }?;
         self.charge(0, 0)?;
         Ok(result)
+    }
+
+    /// When unwrap sealed UV01 into `.10d`, public compile_10d_pbr consumes it.
+    fn consume_unwrap_uv01(&mut self, a: &Args, compiled: Value) -> Result<Value, String> {
+        let Some(src) = a.get("source_10d") else {
+            return Ok(compiled);
+        };
+        let src_bytes = self.workspace.encoded(src)?.bytes.clone();
+        let nv = match self.workspace.get(required(a, "mesh")?)? {
+            Artifact::Mesh(m) => m.positions.len(),
+            _ => return Ok(compiled),
+        };
+        if nv == 0 {
+            return Ok(compiled);
+        }
+        let mut uvs = vec![[0.0f32; 2]; nv];
+        match qualia_core_db::container_10d::read_texture_coordinate_section_into(
+            &src_bytes, nv, &mut uvs,
+        ) {
+            Ok(n) if n == nv => {}
+            _ => return Ok(compiled),
+        }
+        let compiled_bytes = self.workspace.encoded(&compiled)?.bytes.clone();
+        let with_uv = qualia_core_db::container_10d::attach_texture_coordinate_section(
+            &compiled_bytes,
+            &uvs,
+        )
+        .map_err(|e| format!("UV01 attach failed: {e:?}"))?;
+        self.encode("10d", with_uv)
     }
 }
 type Args = BTreeMap<String, Value>;
