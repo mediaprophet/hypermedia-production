@@ -11,9 +11,9 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.extrude", "QualiaDB/computational_geometry",
      "2D locus swept along a 3D transport path -> 3D surface/solid manifold"),
     ("hypermedia.manifold.revolve", "QualiaDB/parametric_cad",
-     "Positive radial contour revolved around axis -> 3D surface manifold"),
+     "Positive radial contour revolved around axis -> 3D surface manifold; interpolation=nurbs optional profile densify via nurbs_eval then revolve_profile"),
     ("hypermedia.manifold.loft", "QualiaDB/parametric_cad",
-     "Two corresponding 3D boundary curves -> ruled origin loft; interpolation=cubic Catmull-Rom densified manifold"),
+     "Two corresponding 3D boundary curves -> ruled origin loft; interpolation=cubic Catmull-Rom densified manifold; interpolation=nurbs via parametric_cad::nurbs_eval"),
     ("hypermedia.manifold.compile_10d", "QualiaDB/render/compile_10d",
      "3D manifold -> sealed QualiaDB native .10d spatial container resource"),
     ("hypermedia.radiance.rasterize_loci", "hypermedia/vector-cpu-render-adapter",
@@ -95,7 +95,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.boolean_3d", "QualiaDB/computational_geometry/boolean_3",
      "Two closed 3D triangle manifolds + union|intersection|difference -> 3D manifold"),
     ("hypermedia.manifold.simplify", "QualiaDB/computational_geometry/decimate_qem",
-     "3D triangle manifold + target_triangles + max_error -> simplified QEM 3D manifold"),
+     "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic -> simplified 3D manifold (default decimate = QEM decimate_qem)"),
     ("hypermedia.manifold.import_mesh", "QualiaDB/render/assets/import_asset_with_normals",
      "Retained OBJ, STL, or GLB binary/ASCII input -> 3D triangle manifold handle"),
     ("hypermedia.manifold.project_dxf", "hypermedia/asset-production-vibe/manifold_ops",
@@ -173,7 +173,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.fspm_vascular_grow", "QualiaDB/modalities/botany + manifold_fields_sdf",
      "Allometric seed + Murray's Law exponent + Hagen-Poiseuille xylem conductance -> 3D botanical organ manifold & NQuin48 state"),
     ("hypermedia.surface.unwrap_slim", "hypermedia/asset-production-vibe/surface_bsdf_uv",
-     "3D manifold + SLIM iterations -> bijective flip-free Symmetric Dirichlet UV parameterization, SVG chart & UV01-sealed .10d"),
+     "3D manifold + SLIM iterations -> bijective flip-free Symmetric Dirichlet UV parameterization, SVG chart & UV01-sealed .10d; mode=slim|atlas (atlas = uv_atlas unwrap_atlas_into, may split verts, fail-closed 1:1 UV01)"),
     ("hypermedia.surface.compute_mikktspace", "hypermedia/asset-production-vibe/surface_bsdf_uv",
      "3D manifold -> orthogonal MikkTSpace [Tx, Ty, Tz, sign] tangent frame attributes & normal-map verification RGBA8"),
     ("hypermedia.surface.compile_bsdf_graph", "Etalon/etalon-render + surface_bsdf_uv",
@@ -456,6 +456,113 @@ mod tests {
             densified[0]
         );
         assert!(!format!("{densified:?}").contains("interpolation rejected"));
+    }
+
+    #[test]
+    fn catalog_dispatch_nurbs_loft_and_revolve_optional() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let linear = host
+            .invoke(
+                "hypermedia.manifold.loft",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "sections".into(),
+                        Value::List(vec![
+                            square_ring(0.0, 1.0),
+                            square_ring(1.0, 2.0),
+                            square_ring(2.0, 1.0),
+                        ]),
+                    );
+                    a.insert("caps".into(), Value::Bool(false));
+                    a.insert("interpolation".into(), Value::String("linear".into()));
+                    a
+                }),
+            )
+            .expect("linear loft still ruled");
+        let linear_n = match host.workspace.get(&linear).expect("linear mesh") {
+            Artifact::Mesh(m) => m.positions.len(),
+            _ => panic!("expected mesh"),
+        };
+        assert_eq!(linear_n, 12);
+
+        let nurbs = host
+            .invoke(
+                "hypermedia.manifold.loft",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "sections".into(),
+                        Value::List(vec![
+                            square_ring(0.0, 1.0),
+                            square_ring(1.0, 2.0),
+                            square_ring(2.0, 1.0),
+                        ]),
+                    );
+                    a.insert("caps".into(), Value::Bool(false));
+                    a.insert("interpolation".into(), Value::String("nurbs".into()));
+                    a.insert("samples".into(), Value::U64(4));
+                    a
+                }),
+            )
+            .expect("nurbs loft");
+        let Artifact::Mesh(nurbs_mesh) = host.workspace.get(&nurbs).expect("nurbs mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(nurbs_mesh.positions.len() > linear_n);
+
+        let linear_revolve = host
+            .invoke(
+                "hypermedia.manifold.revolve",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "points".into(),
+                        Value::List(vec![
+                            Value::List(vec![Value::F64(1.0), Value::F64(0.0)]),
+                            Value::List(vec![Value::F64(1.2), Value::F64(0.5)]),
+                            Value::List(vec![Value::F64(0.8), Value::F64(1.0)]),
+                        ]),
+                    );
+                    a.insert("segments".into(), Value::U64(8));
+                    a
+                }),
+            )
+            .expect("linear revolve default");
+        let linear_rv = match host.workspace.get(&linear_revolve).expect("revolve mesh") {
+            Artifact::Mesh(m) => m.positions.len(),
+            _ => panic!("expected mesh"),
+        };
+        assert_eq!(linear_rv, 24);
+
+        let nurbs_revolve = host
+            .invoke(
+                "hypermedia.manifold.revolve",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "points".into(),
+                        Value::List(vec![
+                            Value::List(vec![Value::F64(1.0), Value::F64(0.0)]),
+                            Value::List(vec![Value::F64(1.2), Value::F64(0.5)]),
+                            Value::List(vec![Value::F64(0.8), Value::F64(1.0)]),
+                        ]),
+                    );
+                    a.insert("segments".into(), Value::U64(8));
+                    a.insert("interpolation".into(), Value::String("nurbs".into()));
+                    a.insert("samples".into(), Value::U64(8));
+                    a
+                }),
+            )
+            .expect("nurbs revolve");
+        let Artifact::Mesh(nurbs_rv) = host.workspace.get(&nurbs_revolve).expect("nurbs revolve")
+        else {
+            panic!("expected mesh");
+        };
+        assert!(nurbs_rv.positions.len() >= linear_rv);
     }
 
     #[test]

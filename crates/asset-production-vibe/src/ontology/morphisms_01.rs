@@ -123,7 +123,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "Functor",
         teleology: "Generates axisymmetric 3D lathe geometry such as vessels, columns, lenses, dials, and turned mechanical components.",
         units_and_frames: "Radial profile (r > 0, height z) swept 2*pi radians in `segments` angular divisions.",
-        arguments: "points:[[positive_radius,height],...], segments=32",
+        arguments: "points:[[positive_radius,height],...], segments=32, interpolation=linear|nurbs (optional NURBS profile densify via nurbs_eval then revolve_profile), samples=8",
         composable_with: &["hypermedia.manifold.compile_10d"],
         human_preview_affordance: "Compile to .10d via hypermedia.manifold.compile_10d and render via `synth preview`.",
         abi_descriptor: morphism_func!(
@@ -147,7 +147,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "Functor",
         teleology: "Constructs transitional surfaces, hulls, wings, and architectural canopies. `interpolation=linear` (default) remains the ruled origin loft; `interpolation=cubic` densifies stations with Catmull-Rom.",
         units_and_frames: "Each rail/section is 3..=4096 finite 3D points in [-1e6, 1e6] of identical cardinality; multi-section loft is 2..=256 rings; cubic samples in 1..=16.",
-        arguments: "a:[[x,y,z],...], b:[[x,y,z],...] (corresponding counts), sections:[[ring],...] optional, interpolation=linear|cubic, samples=4, caps=true",
+        arguments: "a:[[x,y,z],...], b:[[x,y,z],...] (corresponding counts), sections:[[ring],...] optional, interpolation=linear|cubic|nurbs, samples=4, caps=true",
         composable_with: &["hypermedia.manifold.compile_10d"],
         human_preview_affordance: "Compile to .10d via hypermedia.manifold.compile_10d and render via `synth preview`.",
         abi_descriptor: morphism_func!(

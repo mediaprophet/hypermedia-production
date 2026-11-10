@@ -479,6 +479,77 @@ mod tests {
     }
 
     #[test]
+    fn test_unwrap_slim_mode_slim_default_and_atlas() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mesh_h = store_quad_mesh(&mut host);
+        let mut slim_args = BTreeMap::new();
+        slim_args.insert("mesh".into(), mesh_h.clone());
+        slim_args.insert("iterations".into(), Value::U64(8));
+        let slim = host
+            .surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &slim_args)
+            .expect("mode=slim default");
+        let slim_rec = record(&slim).expect("record");
+        let slim_uv = integer(required(slim_rec, "uv_count").unwrap(), "uv_count").unwrap();
+        assert_eq!(slim_uv, 4, "default slim is 1:1 with source verts");
+
+        slim_args.insert("mode".into(), Value::String("slim".into()));
+        let slim_explicit = host
+            .surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &slim_args)
+            .expect("mode=slim explicit");
+        let slim_explicit_rec = record(&slim_explicit).expect("record");
+        assert_eq!(
+            integer(
+                required(slim_explicit_rec, "uv_count").unwrap(),
+                "uv_count"
+            )
+            .unwrap(),
+            4
+        );
+
+        let mut atlas_args = BTreeMap::new();
+        atlas_args.insert("mesh".into(), mesh_h);
+        atlas_args.insert("mode".into(), Value::String("atlas".into()));
+        atlas_args.insert("iterations".into(), Value::U64(16));
+        match host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &atlas_args) {
+            Ok(res) => {
+                let rec = record(&res).expect("record");
+                let uv_count = integer(required(rec, "uv_count").unwrap(), "uv_count").unwrap();
+                assert!(
+                    uv_count >= 4,
+                    "atlas may split verts; got uv_count={uv_count}"
+                );
+            }
+            Err(e) => {
+                assert!(
+                    e.contains("1:1") || e.contains("atlas"),
+                    "atlas fail-closed 1:1 UV01, got {e}"
+                );
+            }
+        }
+
+        let tet = store_tetrahedron_mesh(&mut host);
+        let mut tet_args = BTreeMap::new();
+        tet_args.insert("mesh".into(), tet);
+        tet_args.insert("mode".into(), Value::String("atlas".into()));
+        match host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &tet_args) {
+            Ok(res) => {
+                let rec = record(&res).expect("record");
+                let uv_count = integer(required(rec, "uv_count").unwrap(), "uv_count").unwrap();
+                assert!(uv_count >= 4, "atlas tetra may split verts");
+            }
+            Err(e) => {
+                assert!(
+                    e.contains("1:1") || e.contains("atlas") || e.contains("disk") || e.contains("seam"),
+                    "closed mesh atlas fail-closed, got {e}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn test_compute_mikktspace_tetrahedron() {
         let limits = ToolLimits::default();
         let cancel = AtomicBool::new(false);

@@ -8,7 +8,8 @@ use qualia_core_db::render::compile_10d::{
     compile_mesh_to_10d_with_extras_and_frames, decode_10d_mesh, Compile10dExtras,
 };
 use qualia_core_db::specialized_libs::computational_geometry::{
-    self as cg, boolean_3::Boolean3Op, DecimateOptions, Point3,
+    self as cg, boolean_3::Boolean3Op, AnisotropicRemeshOptions, AnisotropyField,
+    DecimateOptions, MetricTensor, Point3, RemeshOptions,
 };
 use vibe::Value;
 
@@ -104,7 +105,46 @@ impl AssetHost<'_> {
     }
 
     fn manifold_simplify(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "target_triangles", "max_error"])?;
+        fields(
+            a,
+            &[
+                "mesh",
+                "target_triangles",
+                "max_error",
+                "mode",
+                "iterations",
+                "target_edge_length",
+            ],
+        )?;
+        let mode = match a.get("mode") {
+            Some(v) => text(v)?,
+            None => "decimate",
+        };
+        match mode {
+            "decimate" => self.manifold_simplify_decimate(a),
+            "remesh" => self.manifold_simplify_remesh(a),
+            "anisotropic" => self.manifold_simplify_anisotropic(a),
+            _ => Err(
+                "Unknown simplify mode: expected 'decimate' (QEM), 'remesh' (isotropic), or 'anisotropic'"
+                    .into(),
+            ),
+        }
+    }
+
+    fn simplify_mesh_buffers(&self, a: &Args) -> Result<(Vec<Point3>, Vec<[u32; 3]>), String> {
+        let Artifact::Mesh(mesh) = self.workspace.get(required(a, "mesh")?)? else {
+            return Err("Expected mesh handle".into());
+        };
+        let v: Vec<Point3> = mesh
+            .positions
+            .iter()
+            .map(|p| Point3::new(p[0] as f64, p[1] as f64, p[2] as f64))
+            .collect();
+        let t = mesh.triangles.clone();
+        Ok((v, t))
+    }
+
+    fn manifold_simplify_decimate(&mut self, a: &Args) -> Result<Value, String> {
         let target_triangles = integer(required(a, "target_triangles")?, "target_triangles")?;
         if target_triangles < 4 || target_triangles > 200_000 {
             return Err("target_triangles outside 4..=200000 range".into());
@@ -114,19 +154,7 @@ impl AssetHost<'_> {
             return Err("max_error outside 1e-6..=1e4 range".into());
         }
 
-        let (vertices, triangles) = {
-            let Artifact::Mesh(mesh) = self.workspace.get(required(a, "mesh")?)? else {
-                return Err("Expected mesh handle".into());
-            };
-            let v: Vec<Point3> = mesh
-                .positions
-                .iter()
-                .map(|p| Point3::new(p[0] as f64, p[1] as f64, p[2] as f64))
-                .collect();
-            let t = mesh.triangles.clone();
-            (v, t)
-        };
-
+        let (vertices, triangles) = self.simplify_mesh_buffers(a)?;
         let nv = vertices.len();
         let nt = triangles.len();
         if nt < 4 || nv < 3 {
@@ -153,6 +181,86 @@ impl AssetHost<'_> {
 
         out_v.truncate(report.vertices);
         out_t.truncate(report.faces);
+        self.store_mesh(out_v, out_t)
+    }
+
+    fn manifold_simplify_remesh(&mut self, a: &Args) -> Result<Value, String> {
+        let (vertices, triangles) = self.simplify_mesh_buffers(a)?;
+        let nv = vertices.len();
+        let nt = triangles.len();
+        if nt < 1 || nv < 3 {
+            return Err("Mesh has too few triangles or vertices for remesh".into());
+        }
+        let iterations = count(a, "iterations", 3, 8)? as u32;
+        let target_edge_length = if a.get("target_edge_length").is_some() {
+            let l = number(a, "target_edge_length", 1.0)?;
+            if !l.is_finite() || l <= 0.0 {
+                return Err("target_edge_length must be finite and > 0".into());
+            }
+            l
+        } else {
+            let mean = mean_triangle_edge_length(&vertices, &triangles);
+            let target_triangles = match a.get("target_triangles") {
+                Some(v) => integer(v, "target_triangles")?.max(1),
+                None => nt.max(1),
+            };
+            (mean * (nt as f64 / target_triangles as f64).sqrt()).max(1e-6)
+        };
+        let (cap_v, cap_t) = cg::required_output_capacity(nv, nt, iterations);
+        let cap_v = cap_v.min(200_000);
+        let cap_t = cap_t.min(400_000);
+        self.mesh_budget(cap_v, cap_t)?;
+        let mut out_v = vec![Point3::default(); cap_v];
+        let mut out_t = vec![[0u32; 3]; cap_t];
+        let report = cg::isotropic_remesh(
+            &vertices,
+            &triangles,
+            RemeshOptions {
+                target_edge_length,
+                iterations,
+            },
+            &mut out_v,
+            &mut out_t,
+        )
+        .map_err(|e| format!("Simplify remesh failed: {e:?}"))?;
+        out_v.truncate(report.vertex_count);
+        out_t.truncate(report.triangle_count);
+        self.store_mesh(out_v, out_t)
+    }
+
+    fn manifold_simplify_anisotropic(&mut self, a: &Args) -> Result<Value, String> {
+        let (vertices, triangles) = self.simplify_mesh_buffers(a)?;
+        let nv = vertices.len();
+        let nt = triangles.len();
+        if nt < 1 || nv < 3 {
+            return Err("Mesh has too few triangles or vertices for anisotropic remesh".into());
+        }
+        let iterations = count(a, "iterations", 2, 8)? as u32;
+        let field = AnisotropyField::Uniform {
+            metric: MetricTensor::IDENTITY,
+        };
+        let (cap_v, cap_t) = cg::required_anisotropic_output_capacity(nv, nt, iterations);
+        let cap_v = cap_v.min(200_000);
+        let cap_t = cap_t.min(400_000);
+        self.mesh_budget(cap_v, cap_t)?;
+        let mut out_v = vec![Point3::default(); cap_v];
+        let mut out_t = vec![[0u32; 3]; cap_t];
+        let report = cg::anisotropic_remesh(
+            &vertices,
+            &triangles,
+            &field,
+            &[],
+            &[],
+            AnisotropicRemeshOptions {
+                iterations,
+                ..AnisotropicRemeshOptions::default()
+            },
+            &mut out_v,
+            &mut out_t,
+        )
+        .map_err(|e| format!("Simplify anisotropic remesh failed: {e:?}"))?;
+        out_v.truncate(report.vertex_count);
+        out_t.truncate(report.triangle_count);
         self.store_mesh(out_v, out_t)
     }
 
@@ -342,9 +450,9 @@ impl AssetHost<'_> {
             Some(v) => text(v)?,
             None => "linear",
         };
-        if interpolation != "linear" && interpolation != "cubic" {
+        if interpolation != "linear" && interpolation != "cubic" && interpolation != "nurbs" {
             return Err(
-                "Unknown interpolation: expected 'linear' (ruled) or 'cubic' (Catmull-Rom)"
+                "Unknown interpolation: expected 'linear' (ruled), 'cubic' (Catmull-Rom), or 'nurbs'"
                     .into(),
             );
         }
@@ -379,6 +487,8 @@ impl AssetHost<'_> {
 
         if interpolation == "cubic" && rings.len() >= 3 {
             rings = densify_loft_rings_cubic(&rings, samples);
+        } else if interpolation == "nurbs" {
+            rings = densify_loft_rings_nurbs(&rings, samples)?;
         }
 
         let ring_len = rings[0].len();
@@ -810,6 +920,27 @@ fn catmull_rom_point3(p0: Point3, p1: Point3, p2: Point3, p3: Point3, t: f64) ->
     )
 }
 
+fn mean_triangle_edge_length(vertices: &[Point3], triangles: &[[u32; 3]]) -> f64 {
+    let mut sum = 0.0;
+    let mut n = 0.0;
+    for tri in triangles {
+        for k in 0..3 {
+            let a = vertices[tri[k] as usize];
+            let b = vertices[tri[(k + 1) % 3] as usize];
+            let dx = a.x - b.x;
+            let dy = a.y - b.y;
+            let dz = a.z - b.z;
+            sum += (dx * dx + dy * dy + dz * dz).sqrt();
+            n += 1.0;
+        }
+    }
+    if n > 0.0 {
+        sum / n
+    } else {
+        1.0
+    }
+}
+
 /// Cubic Catmull-Rom densify of loft stations. Linear/ruled skinning is applied after.
 fn densify_loft_rings_cubic(rings: &[Vec<Point3>], samples: usize) -> Vec<Vec<Point3>> {
     let n = rings.len();
@@ -842,6 +973,44 @@ fn densify_loft_rings_cubic(rings: &[Vec<Point3>], samples: usize) -> Vec<Vec<Po
         }
     }
     out
+}
+
+/// NURBS densify of loft stations via `parametric_cad::nurbs_eval` (unit weights).
+fn densify_loft_rings_nurbs(
+    rings: &[Vec<Point3>],
+    samples: usize,
+) -> Result<Vec<Vec<Point3>>, String> {
+    let n = rings.len();
+    if n < 2 {
+        return Err("NURBS loft requires at least 2 sections".into());
+    }
+    let ring_len = rings[0].len();
+    let degree = (n - 1).min(3).max(1);
+    if degree >= n {
+        return Ok(rings.to_vec());
+    }
+    let steps = samples.max(1);
+    let n_samples = (n - 1) * steps + 1;
+    let denom = (n_samples - 1).max(1) as f64;
+    let mut out = Vec::with_capacity(n_samples);
+    for s in 0..n_samples {
+        let t = s as f64 / denom;
+        let mut ring = Vec::with_capacity(ring_len);
+        for k in 0..ring_len {
+            let control: Vec<cg::NurbsControlPoint> = rings
+                .iter()
+                .map(|r| cg::NurbsControlPoint {
+                    point: r[k],
+                    weight: 1.0,
+                })
+                .collect();
+            let p = cg::nurbs_eval(&control, degree, t)
+                .map_err(|e| format!("NURBS loft eval: {e:?}"))?;
+            ring.push(p);
+        }
+        out.push(ring);
+    }
+    Ok(out)
 }
 
 struct ParsedDxf {
@@ -1254,5 +1423,221 @@ mod tests {
         }
         assert!((min[0] + 1.0).abs() < 1e-3 && (max[0] - 1.0).abs() < 1e-3);
         assert!((min[2] + 1.0).abs() < 1e-3 && (max[2] - 1.0).abs() < 1e-3);
+    }
+
+    fn unit_icosphere_mesh(host: &mut AssetHost<'_>) -> Value {
+        let positions = vec![
+            [1.0, 0.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, -1.0],
+        ];
+        let triangles = vec![
+            [0, 2, 4],
+            [2, 1, 4],
+            [1, 3, 4],
+            [3, 0, 4],
+            [0, 5, 2],
+            [2, 5, 1],
+            [1, 5, 3],
+            [3, 5, 0],
+        ];
+        let vertices: Vec<Point3> = positions
+            .iter()
+            .map(|p| Point3::new(p[0] as f64, p[1] as f64, p[2] as f64))
+            .collect();
+        host.store_mesh(vertices, triangles).expect("store icosphere")
+    }
+
+    fn mesh_golden_checksum(positions: &[[f32; 3]], triangles: &[[u32; 3]]) -> String {
+        let mut quantized: Vec<(i64, i64, i64)> = positions
+            .iter()
+            .map(|p| {
+                (
+                    (p[0] as f64 * 1e5).round() as i64,
+                    (p[1] as f64 * 1e5).round() as i64,
+                    (p[2] as f64 * 1e5).round() as i64,
+                )
+            })
+            .collect();
+        quantized.sort_unstable();
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&(positions.len() as u64).to_le_bytes());
+        hasher.update(&(triangles.len() as u64).to_le_bytes());
+        for (x, y, z) in &quantized {
+            hasher.update(&x.to_le_bytes());
+            hasher.update(&y.to_le_bytes());
+            hasher.update(&z.to_le_bytes());
+        }
+        hasher.finalize().to_hex().to_string()
+    }
+
+    #[test]
+    fn test_manifold_simplify_decimate_default_qem() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube);
+        args.insert("target_triangles".into(), Value::U64(8));
+        args.insert("max_error".into(), Value::F64(1.0));
+        let decimated = host
+            .manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect("default simplify is QEM decimate");
+        let (decimated_t, decimated_v) = {
+            let Artifact::Mesh(mesh) = host.workspace.get(&decimated).expect("decimated mesh")
+            else {
+                panic!("expected mesh");
+            };
+            assert!(mesh.triangles.len() <= 12);
+            assert!(!mesh.triangles.is_empty());
+            assert!(!mesh.positions.is_empty());
+            (mesh.triangles.len(), mesh.positions.len())
+        };
+
+        args.insert("mode".into(), Value::String("decimate".into()));
+        let explicit = host
+            .manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect("mode=decimate");
+        let Artifact::Mesh(explicit_mesh) = host.workspace.get(&explicit).expect("explicit mesh")
+        else {
+            panic!("expected mesh");
+        };
+        assert_eq!(explicit_mesh.triangles.len(), decimated_t);
+        assert_eq!(explicit_mesh.positions.len(), decimated_v);
+    }
+
+    #[test]
+    fn test_manifold_simplify_remesh_and_anisotropic_small_mesh() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+        let ico = unit_icosphere_mesh(&mut host);
+
+        let mut remesh_args = BTreeMap::new();
+        remesh_args.insert("mesh".into(), cube.clone());
+        remesh_args.insert("target_triangles".into(), Value::U64(48));
+        remesh_args.insert("mode".into(), Value::String("remesh".into()));
+        remesh_args.insert("iterations".into(), Value::U64(2));
+        remesh_args.insert("target_edge_length".into(), Value::F64(1.0));
+        let remeshed = host
+            .manifold_ext("hypermedia.manifold.simplify", &remesh_args)
+            .expect("mode=remesh on cube");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&remeshed).expect("remesh mesh") else {
+                panic!("expected mesh");
+            };
+            assert!(!mesh.triangles.is_empty());
+            assert!(!mesh.positions.is_empty());
+            for p in &mesh.positions {
+                assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+            }
+        }
+
+        remesh_args.insert("mesh".into(), ico.clone());
+        remesh_args.insert("target_edge_length".into(), Value::F64(0.75));
+        let ico_remesh = host
+            .manifold_ext("hypermedia.manifold.simplify", &remesh_args)
+            .expect("mode=remesh on icosphere");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&ico_remesh).expect("ico remesh") else {
+                panic!("expected mesh");
+            };
+            assert!(mesh.triangles.len() >= 8);
+        }
+
+        let mut aniso_args = BTreeMap::new();
+        aniso_args.insert("mesh".into(), cube);
+        aniso_args.insert("target_triangles".into(), Value::U64(24));
+        aniso_args.insert("mode".into(), Value::String("anisotropic".into()));
+        aniso_args.insert("iterations".into(), Value::U64(2));
+        let aniso = host
+            .manifold_ext("hypermedia.manifold.simplify", &aniso_args)
+            .expect("mode=anisotropic on cube");
+        let Artifact::Mesh(aniso_mesh) = host.workspace.get(&aniso).expect("aniso mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(!aniso_mesh.triangles.is_empty());
+        assert!(!aniso_mesh.positions.is_empty());
+    }
+
+    #[test]
+    fn test_manifold_boolean_3d_golden_checksum() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let a = unit_cube_mesh(&mut host);
+        let b = translated_cube(&mut host, 0.6, 0.4, 0.5);
+
+        let mut union_args = BTreeMap::new();
+        union_args.insert("a".into(), a.clone());
+        union_args.insert("b".into(), b.clone());
+        union_args.insert("op".into(), Value::String("union".into()));
+        let union_h = host
+            .invoke("hypermedia.manifold.boolean_3d", &Value::Record(union_args))
+            .expect("boolean union");
+        let union_hash = {
+            let Artifact::Mesh(union_mesh) = host.workspace.get(&union_h).expect("union mesh")
+            else {
+                panic!("expected mesh");
+            };
+            mesh_golden_checksum(&union_mesh.positions, &union_mesh.triangles)
+        };
+        assert_eq!(
+            union_hash,
+            "1588a8ccb80d7ba41a163e13e8b02bf4ff9a9f07aef7bf1b72c2cfa4e6f6ae00",
+            "union golden checksum (counts + quantized positions)"
+        );
+
+        let mut diff_args = BTreeMap::new();
+        diff_args.insert("a".into(), a);
+        diff_args.insert("b".into(), b);
+        diff_args.insert("op".into(), Value::String("difference".into()));
+        let diff_h = host
+            .invoke(
+                "hypermedia.manifold.boolean_3d",
+                &Value::Record(diff_args),
+            )
+            .expect("boolean difference");
+        let Artifact::Mesh(diff_mesh) = host.workspace.get(&diff_h).expect("diff mesh") else {
+            panic!("expected mesh");
+        };
+        let diff_hash = mesh_golden_checksum(&diff_mesh.positions, &diff_mesh.triangles);
+        let again = mesh_golden_checksum(&diff_mesh.positions, &diff_mesh.triangles);
+        assert_eq!(diff_hash, again, "boolean checksum is stable");
+        assert_ne!(union_hash, diff_hash);
+    }
+
+    #[test]
+    fn test_manifold_loft_nurbs_optional_keeps_linear_cubic() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mut args = BTreeMap::new();
+        args.insert(
+            "sections".into(),
+            Value::List(vec![
+                square_ring(0.0, 1.0),
+                square_ring(1.0, 2.0),
+                square_ring(2.0, 1.0),
+            ]),
+        );
+        args.insert("caps".into(), Value::Bool(false));
+        args.insert("interpolation".into(), Value::String("nurbs".into()));
+        args.insert("samples".into(), Value::U64(4));
+        let nurbs_h = host
+            .manifold_ext("hypermedia.manifold.loft", &args)
+            .expect("nurbs loft");
+        let Artifact::Mesh(nurbs) = host.workspace.get(&nurbs_h).expect("nurbs mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(nurbs.positions.len() > 12);
+        for p in &nurbs.positions {
+            assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+        }
     }
 }

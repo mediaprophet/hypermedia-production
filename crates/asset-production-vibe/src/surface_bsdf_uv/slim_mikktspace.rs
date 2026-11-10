@@ -6,16 +6,32 @@ use super::{
     rasterize_uv_chart, seal_mesh_10d_with_slim_uvs, uv_island_hull, v_dot, v_len, v_norm, v_sub,
 };
 use crate::*;
+use qualia_core_db::specialized_libs::computational_geometry::uv_atlas::{
+    preflight_counts, unwrap_atlas_into, AtlasChart, AtlasLimits, AtlasOptions, AtlasOutput,
+};
+use qualia_core_db::specialized_libs::computational_geometry::Point3;
 use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::PI;
+use std::sync::atomic::Ordering;
 use vibe::Value;
 
 impl AssetHost<'_> {
     // ── 1. Flip-avoiding Symmetric Dirichlet SLIM UV Parameterization ────────
 
     pub(super) fn unwrap_slim(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "iterations", "chart_padding"])?;
+        fields(a, &["mesh", "iterations", "chart_padding", "mode"])?;
+        let mode = match a.get("mode") {
+            Some(v) => text(v)?,
+            None => "slim",
+        };
+        match mode {
+            "slim" => self.unwrap_slim_parameterize(a),
+            "atlas" => self.unwrap_atlas_parameterize(a),
+            _ => Err("Unknown unwrap_slim mode: expected 'slim' or 'atlas'".into()),
+        }
+    }
 
+    fn unwrap_slim_parameterize(&mut self, a: &Args) -> Result<Value, String> {
         let mesh = self.mesh(required(a, "mesh")?)?.clone();
         let nv = mesh.positions.len();
         let nt = mesh.triangles.len();
@@ -301,6 +317,158 @@ impl AssetHost<'_> {
 
         let uv_island_rgba = self.store_rgba(32, 32, rasterize_uv_chart(&uv, &mesh.triangles, 32, 32))?;
 
+        let sample_uvs: Vec<Value> = uv
+            .iter()
+            .map(|coord| Value::List(vec![Value::F64(coord[0]), Value::F64(coord[1])]))
+            .collect();
+
+        Ok(Value::Record(BTreeMap::from([
+            ("uv_count".into(), Value::U64(uv.len() as u64)),
+            (
+                "symmetric_dirichlet_energy".into(),
+                Value::F64(mean_sd_energy),
+            ),
+            ("flipped_triangles".into(), Value::U64(flipped_count)),
+            ("uv_chart_svg".into(), svg_handle),
+            ("uvs".into(), Value::List(sample_uvs)),
+            ("uv_island_profile".into(), uv_island_profile),
+            ("container_10d".into(), container_10d),
+            ("uv_island_rgba".into(), uv_island_rgba),
+        ])))
+    }
+
+    fn unwrap_atlas_parameterize(&mut self, a: &Args) -> Result<Value, String> {
+        let mesh = self.mesh(required(a, "mesh")?)?.clone();
+        let nv = mesh.positions.len();
+        let nt = mesh.triangles.len();
+        if nv < 3 || nt == 0 {
+            return Err("unwrap_slim requires at least 3 vertices and 1 triangle".into());
+        }
+
+        let iterations = count(a, "iterations", 8, 64)?;
+        let chart_padding = number(a, "chart_padding", 0.02)?;
+        if !(0.0..=0.25).contains(&chart_padding) || !chart_padding.is_finite() {
+            return Err("chart_padding outside 0.0..=0.25".into());
+        }
+
+        let positions: Vec<Point3> = mesh
+            .positions
+            .iter()
+            .map(|p| Point3::new(p[0] as f64, p[1] as f64, p[2] as f64))
+            .collect();
+        let options = AtlasOptions {
+            atlas_size: 256,
+            gutter_pixels: ((chart_padding * 256.0).round() as u32).clamp(1, 64),
+            texels_per_metre: 16.0,
+            iterations,
+        };
+        let limits = AtlasLimits::default();
+        let max_verts = preflight_counts(nv, nt, 0, options, limits)
+            .map_err(|e| format!("atlas preflight: {e:?}"))?;
+        self.charge(
+            nv * 12 + nt * 20 + iterations * (nv + nt) * 4 + 4096,
+            max_verts * 48 + nt * 24 + 65536,
+        )?;
+
+        let mut source_vertices = vec![0u32; max_verts];
+        let mut out_tris = vec![[0u32; 3]; nt];
+        let mut triangle_charts = vec![0u32; nt];
+        let mut uv0 = vec![[0.0f32; 2]; max_verts];
+        let mut charts = vec![AtlasChart::default(); nt.max(1)];
+        let cancel = self.cancel;
+        let counts = unwrap_atlas_into(
+            &positions,
+            &mesh.triangles,
+            &[],
+            options,
+            limits,
+            &|| cancel.load(Ordering::Acquire),
+            AtlasOutput {
+                source_vertices: &mut source_vertices,
+                triangles: &mut out_tris,
+                triangle_charts: &mut triangle_charts,
+                uv0: &mut uv0,
+                charts: &mut charts,
+            },
+        )
+        .map_err(|e| format!("atlas unwrap failed (fail-closed 1:1 UV01): {e:?}"))?;
+
+        source_vertices.truncate(counts.vertices);
+        uv0.truncate(counts.vertices);
+        out_tris.truncate(counts.triangles);
+        triangle_charts.truncate(counts.triangles);
+
+        let atlas_mesh = if counts.vertices != nv {
+            // Atlas may duplicate verts at seams. UV01 is 1:1 with the split mesh,
+            // never silently attached to the original vertex buffer.
+            let mut split_positions = Vec::with_capacity(counts.vertices);
+            for &src in &source_vertices {
+                let i = src as usize;
+                if i >= positions.len() {
+                    return Err("atlas split vertices; 1:1 UV01 required".into());
+                }
+                split_positions.push(positions[i]);
+            }
+            let handle = self.store_mesh(split_positions, out_tris.clone())?;
+            self.mesh(&handle)?.clone()
+        } else {
+            mesh
+        };
+
+        let uv: Vec<[f64; 2]> = uv0.iter().map(|c| [c[0] as f64, c[1] as f64]).collect();
+        let uv_f32: Vec<[f32; 2]> = uv0.clone();
+        let (rest_tris, total_rest_area) = build_rest_tris(&atlas_mesh);
+        let mut total_weighted_energy = 0.0;
+        let mut flipped_count = 0u64;
+        for rt in &rest_tris {
+            let (e, flip) = eval_tri_sd(rt, &uv);
+            if flip {
+                flipped_count += 1;
+            }
+            total_weighted_energy += rt.area * e.min(1e6);
+        }
+        let mean_sd_energy = if total_rest_area > 0.0 {
+            total_weighted_energy / total_rest_area
+        } else {
+            0.0
+        };
+
+        let mut svg = String::with_capacity(atlas_mesh.triangles.len() * 96 + 512);
+        svg.push_str(r##"<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">"##);
+        svg.push_str(r##"<rect width="1024" height="1024" fill="#0f172a"/>"##);
+        for tri in &atlas_mesh.triangles {
+            let p0 = uv[tri[0] as usize];
+            let p1 = uv[tri[1] as usize];
+            let p2 = uv[tri[2] as usize];
+            let (x0, y0) = (p0[0] * 1024.0, (1.0 - p0[1]) * 1024.0);
+            let (x1, y1) = (p1[0] * 1024.0, (1.0 - p1[1]) * 1024.0);
+            let (x2, y2) = (p2[0] * 1024.0, (1.0 - p2[1]) * 1024.0);
+            svg.push_str(&format!(
+                r##"<polygon points="{x0:.1},{y0:.1} {x1:.1},{y1:.1} {x2:.1},{y2:.1}" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="0.75"/>"##
+            ));
+        }
+        svg.push_str("</svg>");
+        let svg_handle = self.encode("svg", svg.into_bytes())?;
+
+        let normals = compute_smooth_vertex_normals(&atlas_mesh);
+        let container_10d =
+            self.encode("10d", seal_mesh_10d_with_slim_uvs(&atlas_mesh, &uv_f32, &normals)?)?;
+
+        let island_pts = uv_island_hull(&uv);
+        let uv_island_profile = match self.store_profile(island_pts) {
+            Ok(h) => h,
+            Err(_) => {
+                let pad = chart_padding.max(0.02);
+                self.store_profile(vec![
+                    [pad, pad],
+                    [1.0 - pad, pad],
+                    [1.0 - pad, 1.0 - pad],
+                    [pad, 1.0 - pad],
+                ])?
+            }
+        };
+        let uv_island_rgba =
+            self.store_rgba(32, 32, rasterize_uv_chart(&uv, &atlas_mesh.triangles, 32, 32))?;
         let sample_uvs: Vec<Value> = uv
             .iter()
             .map(|coord| Value::List(vec![Value::F64(coord[0]), Value::F64(coord[1])]))

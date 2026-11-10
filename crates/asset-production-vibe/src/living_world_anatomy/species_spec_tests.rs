@@ -162,6 +162,48 @@ fn rules_value_parsing_fails_closed() {
     assert_eq!(forbid[0].kind.opcode(), 0x12);
 }
 
+/// `compile_vertebrate_anatomy_10d` is a stacked-ellipsoid / primitive scaffold
+/// (lofts, cylinders, long-bones, fusiform bellies — see `push_ellipsoid` in
+/// QualiaDB `vertebrate_anatomy` and portable_scaffold). It is **not** a
+/// clinic-grade heart or organ mesh. Do not "fix" this into a fake anatomical organ.
+#[test]
+fn compile_vertebrate_anatomy_10d_is_stacked_ellipsoids_not_a_clinic_heart() {
+    let out = run(&[], &Args::new()).unwrap();
+    let verts = match out.get("vertex_count") {
+        Some(Value::I64(n)) => *n,
+        other => panic!("vertex_count I64, got {other:?}"),
+    };
+    assert!(
+        verts > 100,
+        "stacked ellipsoid/primitive Scale-5 twin, not a single clinic organ, verts={verts}"
+    );
+    assert_eq!(
+        out.get("submesh_count"),
+        Some(&Value::I64(17)),
+        "17 primitive submeshes (osteology/myology/integument), not a clinic heart"
+    );
+    let ost = match out.get("osteology_vertex_count") {
+        Some(Value::I64(n)) => *n,
+        other => panic!("osteology_vertex_count I64, got {other:?}"),
+    };
+    let myo = match out.get("myology_vertex_count") {
+        Some(Value::I64(n)) => *n,
+        other => panic!("myology_vertex_count I64, got {other:?}"),
+    };
+    let integ = match out.get("integument_vertex_count") {
+        Some(Value::I64(n)) => *n,
+        other => panic!("integument_vertex_count I64, got {other:?}"),
+    };
+    assert!(ost > 0 && myo > 0 && integ > 0);
+    assert_eq!(ost + myo + integ, verts);
+
+    let mut spec_args = Args::new();
+    spec_args.insert("spec".into(), test_spec());
+    let spec_out = run(&[], &spec_args).unwrap();
+    assert_eq!(spec_out.get("submesh_count"), Some(&Value::I64(3)));
+    assert_eq!(spec_out.get("spec_source"), Some(&s("vibescript")));
+}
+
 #[test]
 fn vertebrate_op_compiles_vibescript_spec_with_rules() {
     let mut a = Args::new();

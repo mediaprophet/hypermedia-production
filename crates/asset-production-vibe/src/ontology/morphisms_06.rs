@@ -138,7 +138,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "CoalgebricProjection",
         teleology: "Parameterizes a 3D surface manifold into [0,1]^2 UV space minimizing Symmetric Dirichlet isometric distortion energy without triangle flips, then seals TEXCOORD_0 as a UV01 section in `.10d` for `compile_10d_pbr`.",
         units_and_frames: "iterations in 1..=64, chart_padding in 0.0..=0.25.",
-        arguments: "mesh: handle, iterations=8, chart_padding=0.02",
+        arguments: "mesh: handle, iterations=8, chart_padding=0.02, mode=slim|atlas (default slim; atlas may split verts, fail-closed if 1:1 UV01 required)",
         composable_with: &["hypermedia.surface.compute_mikktspace", "hypermedia.manifold.compile_10d_pbr", "hypermedia.discourse.review_gallery"],
         human_preview_affordance: "View `result.uv_chart_svg` in hypermedia.discourse.review_gallery.",
         abi_descriptor: morphism_func!(

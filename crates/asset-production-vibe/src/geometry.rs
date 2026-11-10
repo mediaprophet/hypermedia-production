@@ -206,7 +206,7 @@ impl AssetHost<'_> {
                 self.store_mesh(vertices, triangles)
             }
             "hypermedia.manifold.revolve" | "hypermedia.mesh.revolve" => {
-                fields(a, &["points", "segments"])?;
+                fields(a, &["points", "segments", "interpolation", "samples"])?;
                 let points = points2(required(a, "points")?, 2)?;
                 if points.iter().any(|p| p[0] <= 0.) {
                     return Err("Revolve radii must be positive (surface only)".into());
@@ -215,13 +215,56 @@ impl AssetHost<'_> {
                 if segments < 3 {
                     return Err("Revolve needs at least 3 segments".into());
                 }
-                let nv = points.len() * segments;
-                let nt = (points.len() - 1) * segments * 2;
+                let interpolation = match a.get("interpolation") {
+                    Some(v) => text(v)?,
+                    None => "linear",
+                };
+                if interpolation != "linear" && interpolation != "nurbs" {
+                    return Err(
+                        "Unknown interpolation: expected 'linear' or 'nurbs'".into(),
+                    );
+                }
+                let profile: Vec<Point3> = if interpolation == "nurbs" {
+                    let n = points.len();
+                    let degree = (n - 1).min(3).max(1);
+                    if degree >= n {
+                        return Err("NURBS revolve needs at least 2 profile points".into());
+                    }
+                    let samples = count(a, "samples", n.max(8).min(64), 64)?;
+                    if samples < 2 {
+                        return Err("NURBS revolve samples must be >= 2".into());
+                    }
+                    let control: Vec<cg::NurbsControlPoint> = points
+                        .iter()
+                        .map(|p| cg::NurbsControlPoint {
+                            point: Point3::new(p[0], p[1], 0.),
+                            weight: 1.0,
+                        })
+                        .collect();
+                    let denom = (samples - 1) as f64;
+                    let mut sampled = Vec::with_capacity(samples);
+                    for i in 0..samples {
+                        let t = i as f64 / denom;
+                        let p = cg::parametric_cad::nurbs_eval(&control, degree, t)
+                            .map_err(|e| format!("NURBS revolve eval: {e:?}"))?;
+                        if p.x <= 0. {
+                            return Err("Revolve radii must be positive (surface only)".into());
+                        }
+                        sampled.push(p);
+                    }
+                    sampled
+                } else {
+                    points
+                        .iter()
+                        .map(|p| Point3::new(p[0], p[1], 0.))
+                        .collect()
+                };
+                let nv = profile.len() * segments;
+                let nt = (profile.len() - 1) * segments * 2;
                 self.mesh_budget(nv, nt)?;
-                let points: Vec<_> = points.iter().map(|p| Point3::new(p[0], p[1], 0.)).collect();
                 let mut v = vec![Point3::default(); nv];
                 let mut t = vec![[0; 3]; nt];
-                cg::parametric_cad::revolve_profile(&points, segments, &mut v, &mut t)
+                cg::parametric_cad::revolve_profile(&profile, segments, &mut v, &mut t)
                     .map_err(|e| format!("Revolve: {e:?}"))?;
                 self.store_mesh(v, t)
             }

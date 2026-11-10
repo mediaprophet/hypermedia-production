@@ -399,7 +399,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "Endomorphism",
         teleology: "Reduces triangle count using Garland-Heckbert Quadric Error Metrics (QEM) for LOD generation and runtime `.10d` budget optimization.",
         units_and_frames: "target_triangles in 4..=200000; max_error in [1e-6, 1e4].",
-        arguments: "mesh: handle, target_triangles: u64 (4..200000), max_error=0.05",
+        arguments: "mesh: handle, target_triangles: u64 (4..200000), max_error=0.05, mode=decimate|remesh|anisotropic (default decimate = QEM decimate_qem)",
         composable_with: &[
             "hypermedia.manifold.compile_10d",
             "hypermedia.manifold.compile_10d_pbr",
