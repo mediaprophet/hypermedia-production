@@ -31,6 +31,7 @@ impl AssetHost<'_> {
             let Artifact::Mesh(src) = self.workspace.get(v)? else {
                 return Err("Expected mesh handle".into());
             };
+            let src = src.clone();
             let span_x = (src.max[0] - src.min[0]).max(1e-4);
             let span_y = (src.max[1] - src.min[1]).max(1e-4);
             let positions: Vec<PbrVec3> = src
@@ -38,23 +39,44 @@ impl AssetHost<'_> {
                 .iter()
                 .map(|p| PbrVec3::new(p[0], p[1], p[2]))
                 .collect();
-            // Prefer SLIM UVs from unwrap; planar XY is only the no-unwrap fallback.
-            let uvs: Vec<PbrVec2> = if let Some(v) = a.get("uvs") {
-                crate::surface_bsdf_uv::parse_vertex_uvs(self, v, src.positions.len())?
-                    .into_iter()
-                    .map(|uv| PbrVec2::new(uv[0] as f32, uv[1] as f32))
-                    .collect()
-            } else {
-                src.positions
-                    .iter()
-                    .map(|p| {
-                        PbrVec2::new(
-                            ((p[0] - src.min[0]) / span_x).clamp(0.0, 1.0),
-                            ((p[1] - src.min[1]) / span_y).clamp(0.0, 1.0),
-                        )
-                    })
-                    .collect()
+            let nv = src.positions.len();
+            let authored = match a.get("uvs") {
+                Some(uv) => Some(crate::surface_bsdf_uv::parse_vertex_uvs(self, uv, nv)?),
+                None => None,
             };
+            let slim = if authored.is_none() && nv >= 3 && !src.triangles.is_empty() {
+                let mut ua = BTreeMap::new();
+                ua.insert("mesh".into(), v.clone());
+                ua.insert("iterations".into(), Value::U64(8));
+                match self.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &ua) {
+                    Ok(Value::Record(rec)) => rec.get("uvs").and_then(|uv| {
+                        crate::surface_bsdf_uv::parse_vertex_uvs(self, uv, nv).ok()
+                    }),
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            let used_unwrap = authored.is_some() || slim.is_some();
+            // Prefer authored/SLIM UVs; planar XY is only the last fallback.
+            let uvs: Vec<PbrVec2> = authored
+                .or(slim)
+                .map(|uvs| {
+                    uvs.into_iter()
+                        .map(|uv| PbrVec2::new(uv[0] as f32, uv[1] as f32))
+                        .collect()
+                })
+                .unwrap_or_else(|| {
+                    src.positions
+                        .iter()
+                        .map(|p| {
+                            PbrVec2::new(
+                                ((p[0] - src.min[0]) / span_x).clamp(0.0, 1.0),
+                                ((p[1] - src.min[1]) / span_y).clamp(0.0, 1.0),
+                            )
+                        })
+                        .collect()
+                });
             let indices: Vec<u32> = src.triangles.iter().flatten().copied().collect();
             let mut m = PbrMesh {
                 positions,
@@ -65,10 +87,11 @@ impl AssetHost<'_> {
                 submeshes: Vec::new(),
             };
             m.compute_normals();
-            m
+            (m, used_unwrap)
         } else {
-            PbrMesh::create_quad(2.0)
+            (PbrMesh::create_quad(2.0), false)
         };
+        let (pbr_mesh, used_slim_uvs) = pbr_mesh;
 
         let bvh = Bvh::build(&pbr_mesh);
         let settings = BakeSettings {
@@ -125,7 +148,7 @@ impl AssetHost<'_> {
         out.insert("ao_pixel_count".into(), Value::I64((ao_map.width * ao_map.height) as i64));
         out.insert("normal_z_center".into(), Value::F64(norm_map.pixel(resolution / 2, resolution / 2)[2] as f64));
         out.insert("psd_roundtrip_valid".into(), Value::Bool(psd_decoded.header.version == PsdVersion::Psd));
-        out.insert("used_slim_uvs".into(), Value::Bool(a.get("uvs").is_some()));
+        out.insert("used_slim_uvs".into(), Value::Bool(used_slim_uvs));
         Ok(Value::Record(out))
     }
 

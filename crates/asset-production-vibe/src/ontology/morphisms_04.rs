@@ -40,7 +40,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         domain: "(Manifold3D, OptionalAlbedoRgba8, TopologyBool, SpatialIndexBool, OptionalSource10d)",
         codomain: "EncodedResource(10d)",
         morphism_kind: "CoalgebricProjection",
-        teleology: "Compiles a 3D manifold with smooth area-weighted vertex normal frames, Godot-style Camera3D look-at albedo projection (spherical-UV fallback), half-edge topology, and BVH spatial index into a self-verifying `.10d` container. When unwrap sealed UV01 into `source_10d`, those TEXCOORD_0 coordinates are consumed rather than re-unwrapped.",
+        teleology: "Compiles a 3D manifold with smooth area-weighted vertex normal frames, Godot-style Camera3D look-at albedo projection, half-edge topology, and BVH spatial index into a self-verifying `.10d` container. Albedo samples authored `source_10d` UV01, else auto-invokes `hypermedia.surface.unwrap_slim` (flip-avoiding SLIM) when no camera is set; camera look-at wins for photographs; spherical UV is the last fallback with no atlas. Compiled `.10d` seals TEXCOORD_0.",
         units_and_frames: "QualiaDB `.10d` container with QuantizedMesh, FieldSidecar normals, SurfaceReading RGBA, Topology, SpatialIndex, and optional UV01 texture-coordinate sections + whole-file CRC-32C. Camera uses vertical FOV degrees, Y-up look-at, viewport = albedo size.",
         arguments: "mesh: handle, albedo: optional rgba handle, source_10d: optional unwrap UV01 .10d handle, topology=true, spatial_index=true, camera_position:[x,y,z] optional Godot Camera3D look-at eye, camera_target:[x,y,z], camera_up:[0,1,0], camera_fov=45, camera_near=0.1",
         composable_with: &["hypermedia.discourse.review_gallery"],

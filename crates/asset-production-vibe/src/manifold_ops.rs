@@ -468,12 +468,52 @@ impl AssetHost<'_> {
             None
         };
 
-        let source_10d_colors = if let Some(sv) = a.get("source_10d") {
-            let res = self.workspace.encoded(sv)?;
-            decode_source_10d_vertex_colors(&res.bytes)
+        let source_10d_bytes = if let Some(sv) = a.get("source_10d") {
+            Some(self.workspace.encoded(sv)?.bytes.clone())
         } else {
             None
         };
+        let source_10d_colors = source_10d_bytes
+            .as_deref()
+            .and_then(decode_source_10d_vertex_colors);
+
+        let nv = mesh.positions.len();
+        let mut atlas_uvs = source_10d_bytes
+            .as_deref()
+            .and_then(|b| read_uv01_atlas(b, nv));
+        // Auto-unwrap only when the author did not pass source_10d. A present
+        // source_10d UV01 count must match the mesh (fail-closed in consume).
+        if atlas_uvs.is_none()
+            && a.get("source_10d").is_none()
+            && albedo.is_some()
+            && nv >= 3
+            && !mesh.triangles.is_empty()
+        {
+            let mut unwrap_args = BTreeMap::new();
+            unwrap_args.insert("mesh".into(), required(a, "mesh")?.clone());
+            unwrap_args.insert("iterations".into(), Value::U64(8));
+            if let Ok(Value::Record(rec)) =
+                self.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &unwrap_args)
+            {
+                if let Some(uv_val) = rec.get("uvs") {
+                    if let Ok(parsed) = crate::surface_bsdf_uv::parse_vertex_uvs(self, uv_val, nv) {
+                        atlas_uvs = Some(
+                            parsed
+                                .into_iter()
+                                .map(|uv| [uv[0] as f32, uv[1] as f32])
+                                .collect(),
+                        );
+                    }
+                }
+                if atlas_uvs.is_none() {
+                    if let Some(c10d) = rec.get("container_10d") {
+                        if let Ok(res) = self.workspace.encoded(c10d) {
+                            atlas_uvs = read_uv01_atlas(&res.bytes, nv);
+                        }
+                    }
+                }
+            }
+        }
 
         let n = mesh.positions.len() + mesh.triangles.len();
         self.charge(n * 50 + 2048, n * 256 + 16384)?;
@@ -515,9 +555,8 @@ impl AssetHost<'_> {
             }
         }
 
-        // Sample albedo pixels or transfer nearest-vertex colors from source_10d.
-        // Godot Camera3D look-at projects the albedo when camera_position is set;
-        // spherical UV remains the fallback for backfaces, off-frame, and keyed black.
+        // Sample albedo: SLIM UV01 atlas, then camera look-at projection, then
+        // spherical only when no atlas exists.
         let surface_reading: Option<Vec<[f32; 4]>> = if let Some(rgba) = albedo {
             if rgba.width == 0 || rgba.height == 0 || rgba.pixels.is_empty() {
                 return Err("Albedo image has empty dimensions".into());
@@ -563,15 +602,32 @@ impl AssetHost<'_> {
                 let dy = (p[1] - centroid[1]) as f64;
                 let dz = (p[2] - centroid[2]) as f64;
                 let r = (dx * dx + dy * dy + dz * dz).sqrt();
-                let spherical = if r < 1e-9 {
-                    sample_uv(0.5, 0.5)
+                let atlas = atlas_uvs.as_ref().and_then(|uvs| {
+                    uvs.get(i).map(|uv| {
+                        sample_uv(
+                            (uv[0] as f64).clamp(0.0, 1.0),
+                            (uv[1] as f64).clamp(0.0, 1.0),
+                        )
+                    })
+                });
+                // Camera look-at means albedo is a photograph: do not resample it
+                // through auto-unwrap UVs or spherical smear. Authored source_10d
+                // UVs remain a valid fallback. Spherical only when no camera and
+                // no atlas.
+                let use_atlas_albedo =
+                    atlas.is_some() && (camera_eye.is_none() || source_10d_bytes.is_some());
+                let spherical = if camera_eye.is_some() || atlas.is_some() {
+                    None
+                } else if r < 1e-9 {
+                    Some(sample_uv(0.5, 0.5))
                 } else {
                     let phi = dz.atan2(dx);
                     let u = (phi / two_pi + 0.5).clamp(0.0, 1.0);
                     let lat = (dy / r).clamp(-1.0, 1.0).asin();
                     let v = (lat / pi + 0.5).clamp(0.0, 1.0);
-                    sample_uv(u, v)
+                    Some(sample_uv(u, v))
                 };
+                let atlas = if use_atlas_albedo { atlas } else { None };
 
                 let projected = if let Some(eye) = camera_eye {
                     let world = [p[0] as f64, p[1] as f64, p[2] as f64];
@@ -607,7 +663,12 @@ impl AssetHost<'_> {
                     None
                 };
 
-                readings.push(projected.unwrap_or(spherical));
+                readings.push(
+                    projected
+                        .or(atlas)
+                        .or(spherical)
+                        .unwrap_or([0.5, 0.5, 0.5, 1.0]),
+                );
             }
             Some(readings)
         } else if let Some((ref_pos, ref_cols)) = source_10d_colors {
@@ -649,7 +710,27 @@ impl AssetHost<'_> {
             Err(e) => return Err(format!("10D PBR compile failed: {e:?}")),
         };
 
-        self.encode("10d", bytes)
+        let sealed = if let Some(uvs) = atlas_uvs.as_ref() {
+            qualia_core_db::container_10d::attach_texture_coordinate_section(&bytes, uvs)
+                .map_err(|e| format!("UV01 attach failed: {e:?}"))?
+        } else {
+            bytes
+        };
+        self.encode("10d", sealed)
+    }
+}
+
+fn read_uv01_atlas(bytes: &[u8], nv: usize) -> Option<Vec<[f32; 2]>> {
+    if nv == 0 {
+        return None;
+    }
+    let mut uvs = vec![[0.0f32; 2]; nv];
+    let n = qualia_core_db::container_10d::read_texture_coordinate_section_into(bytes, nv, &mut uvs)
+        .ok()?;
+    if n == nv {
+        Some(uvs)
+    } else {
+        None
     }
 }
 

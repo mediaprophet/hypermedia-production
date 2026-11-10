@@ -455,6 +455,19 @@ impl AssetHost<'_> {
             ));
         }
         let compiled_bytes = self.workspace.encoded(&compiled)?.bytes.clone();
+        let mut existing = vec![[0.0f32; 2]; nv];
+        if let Ok(n) = qualia_core_db::container_10d::read_texture_coordinate_section_into(
+            &compiled_bytes,
+            nv,
+            &mut existing,
+        ) {
+            if n != nv {
+                return Err(format!(
+                    "compiled UV01 count {n} != mesh vertex count {nv}"
+                ));
+            }
+            return Ok(compiled);
+        }
         let with_uv = qualia_core_db::container_10d::attach_texture_coordinate_section(
             &compiled_bytes,
             &uvs,

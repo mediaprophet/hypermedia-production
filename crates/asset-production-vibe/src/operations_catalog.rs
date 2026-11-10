@@ -522,6 +522,319 @@ mod tests {
     }
 
     #[test]
+    fn catalog_compile_10d_pbr_albedo_samples_unwrap_uv01() {
+        use crate::graphics::Rgba;
+        use qualia_core_db::container_10d::header::Container10dHeader;
+        use qualia_core_db::container_10d::section::{parse_section_table, SectionType};
+        use qualia_core_db::container_10d::surface_reading::decode_surface_reading;
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let mesh_h = host
+            .workspace
+            .insert(
+                Artifact::Mesh(Mesh {
+                    positions: vec![
+                        [0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0],
+                        [1.0, 1.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                    ],
+                    triangles: vec![[0, 1, 2], [0, 2, 3]],
+                    min: [0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 0.0],
+                }),
+                host.limits,
+            )
+            .expect("quad");
+        let side = 64usize;
+        let mut pixels = vec![[0u8, 0, 255, 255]; side * side];
+        for y in 0..side {
+            for x in 0..side {
+                if x < side / 2 {
+                    pixels[y * side + x] = [255, 0, 0, 255];
+                }
+            }
+        }
+        let albedo = host
+            .workspace
+            .insert(
+                Artifact::Rgba(Rgba {
+                    width: side as u32,
+                    height: side as u32,
+                    pixels,
+                }),
+                host.limits,
+            )
+            .expect("half-red half-blue albedo");
+
+        let unwrap = host
+            .invoke(
+                "hypermedia.surface.unwrap_slim",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), mesh_h.clone());
+                    a.insert("iterations".into(), Value::U64(8));
+                    a
+                }),
+            )
+            .expect("unwrap");
+        let urec = record(&unwrap).expect("unwrap record");
+        let source_10d = required(urec, "container_10d")
+            .expect("unwrap sealed UV01")
+            .clone();
+        let authored_uvs = required(urec, "uvs").expect("unwrap uvs").clone();
+
+        let compiled = host
+            .invoke(
+                "hypermedia.manifold.compile_10d_pbr",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), mesh_h);
+                    a.insert("albedo".into(), albedo);
+                    a.insert("source_10d".into(), source_10d);
+                    a.insert("topology".into(), Value::Bool(false));
+                    a
+                }),
+            )
+            .expect("compile samples atlas UVs");
+        let bytes = host
+            .workspace
+            .encoded(&compiled)
+            .expect("compiled 10d")
+            .bytes
+            .clone();
+        let header = Container10dHeader::parse(&bytes).expect("header");
+        let descs = parse_section_table(&bytes, &header).expect("sections");
+        let cols = descs
+            .iter()
+            .find(|d| d.typ() == Some(SectionType::SurfaceReading))
+            .and_then(|d| {
+                let start = d.byte_offset as usize;
+                let end = start.saturating_add(d.byte_length as usize);
+                decode_surface_reading(bytes.get(start..end)?)
+            })
+            .expect("surface reading");
+        assert_eq!(cols.len(), 4);
+
+        let uv_items = if let Value::List(items) = &authored_uvs {
+            items
+        } else {
+            panic!("unwrap uvs list");
+        };
+        for (i, col) in cols.iter().enumerate() {
+            let pair = if let Value::List(p) = &uv_items[i] {
+                p
+            } else {
+                panic!("uv pair");
+            };
+            let u = match &pair[0] {
+                Value::F64(v) => *v,
+                Value::I64(v) => *v as f64,
+                Value::U64(v) => *v as f64,
+                other => panic!("u got {other:?}"),
+            };
+            let v = match &pair[1] {
+                Value::F64(x) => *x,
+                Value::I64(x) => *x as f64,
+                Value::U64(x) => *x as f64,
+                other => panic!("v got {other:?}"),
+            };
+            if (u - 0.5).abs() < 0.08 {
+                continue;
+            }
+            let expected = if u < 0.5 {
+                [1.0f32, 0.0, 0.0, 1.0]
+            } else {
+                [0.0, 0.0, 1.0, 1.0]
+            };
+            assert!(
+                (col[0] - expected[0]).abs() < 0.02
+                    && (col[1] - expected[1]).abs() < 0.02
+                    && (col[2] - expected[2]).abs() < 0.02,
+                "vertex {i} UV ({u:.3},{v:.3}) must sample half-field via SLIM UV01, got {col:?} expected {expected:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn catalog_compile_10d_pbr_auto_unwraps_albedo_without_source_10d() {
+        use crate::graphics::Rgba;
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let mesh_h = host
+            .workspace
+            .insert(
+                Artifact::Mesh(Mesh {
+                    positions: vec![
+                        [0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0],
+                        [1.0, 1.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                    ],
+                    triangles: vec![[0, 1, 2], [0, 2, 3]],
+                    min: [0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 0.0],
+                }),
+                host.limits,
+            )
+            .expect("quad");
+        let albedo = host
+            .workspace
+            .insert(
+                Artifact::Rgba(Rgba {
+                    width: 2,
+                    height: 2,
+                    pixels: vec![
+                        [255, 32, 32, 255],
+                        [32, 32, 255, 255],
+                        [255, 32, 32, 255],
+                        [32, 32, 255, 255],
+                    ],
+                }),
+                host.limits,
+            )
+            .expect("albedo");
+        let compiled = host
+            .invoke(
+                "hypermedia.manifold.compile_10d_pbr",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), mesh_h);
+                    a.insert("albedo".into(), albedo);
+                    a.insert("topology".into(), Value::Bool(false));
+                    a
+                }),
+            )
+            .expect("auto-unwrap compile");
+        let bytes = host
+            .workspace
+            .encoded(&compiled)
+            .expect("compiled 10d")
+            .bytes
+            .clone();
+        let mut recovered = vec![[0.0f32; 2]; 4];
+        let n = read_texture_coordinate_section_into(&bytes, 4, &mut recovered)
+            .expect("auto-unwrap must seal UV01");
+        assert_eq!(n, 4);
+        let span_u = recovered
+            .iter()
+            .map(|p| p[0])
+            .fold(f32::NEG_INFINITY, f32::max)
+            - recovered.iter().map(|p| p[0]).fold(f32::INFINITY, f32::min);
+        assert!(span_u > 0.2, "auto-unwrap UV01 island must be non-degenerate");
+    }
+
+    #[test]
+    fn catalog_emf_spectral_png_is_non_black() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let emf = host
+            .invoke(
+                "hypermedia.electromagnetics.compile_emf",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert(
+                        "origin".into(),
+                        Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+                    );
+                    a.insert("voxel_size".into(), Value::F64(0.25));
+                    a.insert(
+                        "grid_dims".into(),
+                        Value::List(vec![Value::U64(1), Value::U64(1), Value::U64(1)]),
+                    );
+                    a.insert("epoch_s".into(), Value::F64(1_700_000_000.0));
+                    let mut src = BTreeMap::new();
+                    src.insert(
+                        "position".into(),
+                        Value::List(vec![Value::F64(0.5), Value::F64(0.5), Value::F64(0.5)]),
+                    );
+                    src.insert(
+                        "e_amplitude".into(),
+                        Value::List(vec![Value::F64(150.0), Value::F64(0.0), Value::F64(0.0)]),
+                    );
+                    src.insert("wavelength_nm".into(), Value::F64(532.0));
+                    src.insert("phase".into(), Value::F64(0.0));
+                    src.insert(
+                        "stokes".into(),
+                        Value::List(vec![Value::F64(1.0), Value::F64(0.0), Value::F64(0.0)]),
+                    );
+                    a.insert("sources".into(), Value::List(vec![Value::Record(src)]));
+                    a
+                }),
+            )
+            .expect("compile_emf");
+        let spectral = host
+            .invoke(
+                "hypermedia.electromagnetics.render_spectral_slice",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("emf".into(), emf.clone());
+                    a.insert("width".into(), Value::U64(32));
+                    a.insert("height".into(), Value::U64(32));
+                    a.insert("exposure".into(), Value::F64(1.0));
+                    a
+                }),
+            )
+            .expect("spectral slice");
+        let png = host
+            .invoke(
+                "hypermedia.radiance.encode_rgba_png",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("image".into(), spectral);
+                    a
+                }),
+            )
+            .expect("encode spectral png");
+        let bytes = host.workspace.encoded(&png).expect("png resource").bytes.clone();
+        assert!(bytes.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]), "PNG magic");
+        assert!(bytes.len() > 64, "spectral PNG must carry pixels, got {} bytes", bytes.len());
+
+        let marched = host
+            .invoke(
+                "hypermedia.electromagnetics.raymarch_vox0_dda",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("emf".into(), emf);
+                    a.insert("width".into(), Value::U64(32));
+                    a.insert("height".into(), Value::U64(32));
+                    a
+                }),
+            )
+            .expect("raymarch");
+        let rec = record(&marched).expect("raymarch record");
+        let image = required(rec, "image").expect("raymarch image").clone();
+        let rgba = host.rgba(&image).expect("raymarch rgba");
+        assert!(
+            rgba.pixels.iter().any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "raymarch PNG source must be non-black"
+        );
+        let marched_png = host
+            .invoke(
+                "hypermedia.radiance.encode_rgba_png",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("image".into(), image);
+                    a
+                }),
+            )
+            .expect("encode raymarch png");
+        let mbytes = host
+            .workspace
+            .encoded(&marched_png)
+            .expect("raymarch png")
+            .bytes
+            .clone();
+        assert!(mbytes.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]));
+        assert!(mbytes.len() > 64);
+    }
+
+    #[test]
     fn catalog_compile_10d_pbr_source_10d_uv_mismatch_fails_closed() {
         let cancel = AtomicBool::new(false);
         let limits = ToolLimits::default();

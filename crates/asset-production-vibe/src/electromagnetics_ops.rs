@@ -243,7 +243,7 @@ impl AssetHost<'_> {
                                     stokes_q: eff_q,
                                     stokes_u: eff_u,
                                     stokes_v: eff_v,
-                                    spectral_sigma: 0.0,
+                                    spectral_sigma: ((eff_wavelength - 400.0) / 300.0).clamp(0.0, 1.0),
                                     confidence_alpha: 1.0,
                                 };
                                 cell.poynting_flux = cell.poynting_flux_magnitude();
