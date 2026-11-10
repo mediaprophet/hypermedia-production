@@ -2,8 +2,18 @@
 
 use super::string;
 use crate::*;
+use qualia_core_db::container_10d::skeletal_container::attach_skeletal_section_into;
+use qualia_core_db::container_10d::skeletal_section::{
+    encode_skeletal_section_into, ClipRecord, Counts as SklCounts, SkeletalData,
+};
 use qualia_core_db::hypermedia_authoring::world3d::{
     AnimatedProperty, AnimationClip, AnimationTrack, Bone, Keyframe, Rig, Transform3D,
+};
+use qualia_core_db::q_hash;
+use qualia_core_db::render::assets::Mesh;
+use qualia_core_db::render::compile_10d::compile_mesh_to_10d;
+use qualia_core_db::render::skeletal::{
+    solve_two_bone_motor_ik_zero_heap, Joint, Key, Motor, SkinWeight, Track,
 };
 use std::collections::BTreeMap;
 use vibe::Value;
@@ -75,15 +85,12 @@ impl AssetHost<'_> {
             normalize(cross(u_dir, ref_axis))
         };
 
-        use qualia_core_db::etalon_render::skeletal::{
-            solve_two_bone_motor_ik_zero_heap, Motor as EtalonMotor,
-        };
-        let root_m = EtalonMotor::from_rotation_translation([1.0, 0.0, 0.0, 0.0], root);
-        let mid_m = EtalonMotor::from_rotation_translation(
+        let root_m = Motor::from_rotation_translation([1.0, 0.0, 0.0, 0.0], root);
+        let mid_m = Motor::from_rotation_translation(
             [1.0, 0.0, 0.0, 0.0],
             [root[0], root[1] + upper_length, root[2]],
         );
-        let end_m = EtalonMotor::from_rotation_translation(
+        let end_m = Motor::from_rotation_translation(
             [1.0, 0.0, 0.0, 0.0],
             [root[0], root[1] + upper_length + lower_length, root[2]],
         );
@@ -221,6 +228,17 @@ impl AssetHost<'_> {
         );
         out.insert("reachable".into(), Value::Bool(reachable));
         out.insert("bone_count".into(), Value::I64(rig.bone_count() as i64));
+
+        let (container_bytes, skl1_byte_len) = seal_ik_pose_skl1_10d(
+            root,
+            upper_length,
+            lower_length,
+            &ik_res.local_motors,
+        )?;
+        self.charge(256, container_bytes.len().max(1024))?;
+        out.insert("skl1_byte_len".into(), Value::I64(skl1_byte_len as i64));
+        out.insert("skl1_joint_count".into(), Value::I64(3));
+        out.insert("container_10d".into(), self.encode("10d", container_bytes)?);
 
         Ok(Value::Record(out))
     }
@@ -444,5 +462,187 @@ fn apply_easing(t: f64, easing: &str) -> f64 {
         }
         "smoothstep" => t * t * (3.0 - 2.0 * t),
         _ => t,
+    }
+}
+
+/// Bind-pose triangle + 3-joint SKL1 attached into a sealed `.10d`.
+fn seal_ik_pose_skl1_10d(
+    root: [f64; 3],
+    upper_length: f64,
+    lower_length: f64,
+    local_pose: &[Motor; 3],
+) -> Result<(Vec<u8>, usize), String> {
+    let rest_root = Motor::from_translation(root[0], root[1], root[2]);
+    let rest_mid_local = Motor::from_translation(0.0, upper_length, 0.0);
+    let rest_end_local = Motor::from_translation(0.0, lower_length, 0.0);
+    let mid_world = [
+        root[0],
+        root[1] + upper_length,
+        root[2],
+    ];
+    let end_world = [
+        root[0],
+        root[1] + upper_length + lower_length,
+        root[2],
+    ];
+
+    let joints = [
+        Joint {
+            parent: None,
+            rest_local: rest_root,
+            inverse_bind: Motor::from_translation(-root[0], -root[1], -root[2]),
+        },
+        Joint {
+            parent: Some(0),
+            rest_local: rest_mid_local,
+            inverse_bind: Motor::from_translation(-mid_world[0], -mid_world[1], -mid_world[2]),
+        },
+        Joint {
+            parent: Some(1),
+            rest_local: rest_end_local,
+            inverse_bind: Motor::from_translation(-end_world[0], -end_world[1], -end_world[2]),
+        },
+    ];
+    let joint_ids = [
+        q_hash("urn:hypermedia:kinetics:ik:root"),
+        q_hash("urn:hypermedia:kinetics:ik:mid"),
+        q_hash("urn:hypermedia:kinetics:ik:end"),
+    ];
+    let skin = [
+        SkinWeight {
+            joints: [0, 0, 0, 0],
+            weights: [1.0, 0.0, 0.0, 0.0],
+        },
+        SkinWeight {
+            joints: [1, 0, 0, 0],
+            weights: [1.0, 0.0, 0.0, 0.0],
+        },
+        SkinWeight {
+            joints: [2, 0, 0, 0],
+            weights: [1.0, 0.0, 0.0, 0.0],
+        },
+    ];
+    let duration = 1.0;
+    let clips = [ClipRecord {
+        id: q_hash("urn:hypermedia:kinetics:ik:clip"),
+        duration,
+        first_track: 0,
+        track_count: 3,
+        looping: false,
+    }];
+    let tracks = [
+        Track {
+            joint: 0,
+            first_key: 0,
+            key_count: 2,
+        },
+        Track {
+            joint: 1,
+            first_key: 2,
+            key_count: 2,
+        },
+        Track {
+            joint: 2,
+            first_key: 4,
+            key_count: 2,
+        },
+    ];
+    let keys = [
+        Key {
+            time: 0.0,
+            local: rest_root,
+        },
+        Key {
+            time: duration,
+            local: local_pose[0],
+        },
+        Key {
+            time: 0.0,
+            local: rest_mid_local,
+        },
+        Key {
+            time: duration,
+            local: local_pose[1],
+        },
+        Key {
+            time: 0.0,
+            local: rest_end_local,
+        },
+        Key {
+            time: duration,
+            local: local_pose[2],
+        },
+    ];
+    let counts = SklCounts {
+        joints: joints.len(),
+        vertices: skin.len(),
+        clips: clips.len(),
+        tracks: tracks.len(),
+        keys: keys.len(),
+    };
+    let encoded_len = counts
+        .encoded_len()
+        .ok_or_else(|| "SKL1 count limit exceeded".to_string())?;
+    let mut skl1_bytes = vec![0u8; encoded_len];
+    let skl1_data = SkeletalData {
+        joints: &joints,
+        joint_ids: &joint_ids,
+        skin: &skin,
+        clips: &clips,
+        tracks: &tracks,
+        keys: &keys,
+    };
+    let written = encode_skeletal_section_into(&skl1_data, &mut skl1_bytes)
+        .map_err(|e| format!("Failed to encode SKL1 section: {e:?}"))?;
+
+    let positions = [
+        [root[0] as f32, root[1] as f32, root[2] as f32],
+        [mid_world[0] as f32, mid_world[1] as f32, mid_world[2] as f32],
+        [
+            end_world[0] as f32 + 0.05,
+            end_world[1] as f32,
+            end_world[2] as f32,
+        ],
+    ];
+    let mut min = [f32::INFINITY; 3];
+    let mut max = [f32::NEG_INFINITY; 3];
+    for p in &positions {
+        for k in 0..3 {
+            min[k] = min[k].min(p[k]);
+            max[k] = max[k].max(p[k]);
+        }
+    }
+    let mesh = Mesh {
+        positions: positions.to_vec(),
+        triangles: vec![[0, 1, 2]],
+        min,
+        max,
+    };
+    let compiled = compile_mesh_to_10d(&mesh).map_err(|e| format!("IK .10d compile failed: {e:?}"))?;
+    let container = attach_skl1_into_10d(&compiled, &skl1_bytes[..written])?;
+    Ok((container, written))
+}
+
+fn attach_skl1_into_10d(compiled: &[u8], payload: &[u8]) -> Result<Vec<u8>, String> {
+    let mut out = vec![0u8; compiled.len().saturating_add(payload.len()).saturating_add(8192)];
+    match attach_skeletal_section_into(compiled, payload, &mut out) {
+        Ok(n) => {
+            out.truncate(n);
+            Ok(out)
+        }
+        Err(_) => {
+            let mut larger = vec![
+                0u8;
+                compiled
+                    .len()
+                    .saturating_add(payload.len())
+                    .saturating_mul(2)
+                    .saturating_add(65536)
+            ];
+            let n = attach_skeletal_section_into(compiled, payload, &mut larger)
+                .map_err(|e| format!("SKL1 attach failed: {e:?}"))?;
+            larger.truncate(n);
+            Ok(larger)
+        }
     }
 }

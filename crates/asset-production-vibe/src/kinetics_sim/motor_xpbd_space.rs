@@ -74,7 +74,7 @@ impl AssetHost<'_> {
         Ok(Value::Record(out))
     }
 
-    /// Morton-ordered deterministic Island-Parallel XPBD rigid-body simulation.
+    /// ID-sorted deterministic Island-Parallel XPBD rigid-body simulation.
     pub(super) fn step_island_xpbd(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["bodies", "area_override", "dt", "steps", "substeps", "ground_y"])?;
 
