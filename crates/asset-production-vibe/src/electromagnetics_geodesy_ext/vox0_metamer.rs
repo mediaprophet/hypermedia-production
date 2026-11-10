@@ -1,9 +1,9 @@
 use super::*;
 use crate::*;
 use qualia_core_db::etalon_render::spectral::kernel::{
-    spd_to_xyz, xyz_to_linear_srgb, Spd, SPD_SAMPLES,
+    linear_rgb_to_display, spd_to_xyz, xyz_to_linear_srgb, Spd, SPD_SAMPLES,
 };
-use qualia_core_db::etalon_render::spectral::metamer::min_norm_spd_for_xyz;
+use qualia_core_db::etalon_render::spectral::metamer::{is_metameric, min_norm_spd_for_xyz};
 use qualia_core_db::q42::emf_container::EmfContainerReader;
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
@@ -378,6 +378,7 @@ impl AssetHost<'_> {
         if !(-2.0..=2.0).contains(&nullspace_scale) {
             return Err("nullspace_scale outside -2.0..=2.0".into());
         }
+        self.charge(SPD_SAMPLES * 8, SPD_SAMPLES * 64)?;
 
         let spd = match a.get("spd_41") {
             Some(v) => {
@@ -428,6 +429,7 @@ impl AssetHost<'_> {
         let tristimulus_drift_l2 = (dx * dx + dy * dy + dz * dz).sqrt();
 
         let linear_rgb = xyz_to_linear_srgb(&mod_xyz);
+        let display_srgb = linear_rgb_to_display(&linear_rgb);
 
         let fundamental_energy: f64 = fund_spd
             .samples
@@ -439,6 +441,34 @@ impl AssetHost<'_> {
             .iter()
             .map(|&s| (s as f64) * (s as f64))
             .sum();
+
+        // Signed blacks stay in spd_samples_41; the bar is display-clamped so two produces stay in-gamut.
+        let preview_width = SPD_SAMPLES as u32;
+        let preview_height = 8u32;
+        let mut peak = 1e-9f64;
+        for &s in &mod_spd.samples {
+            peak = peak.max((s as f64).max(0.0));
+        }
+        let mut pixels = Vec::with_capacity(SPD_SAMPLES * preview_height as usize);
+        for row in 0..preview_height {
+            for i in 0..SPD_SAMPLES {
+                let pixel = if row < 2 {
+                    [display_srgb.0, display_srgb.1, display_srgb.2, 255]
+                } else {
+                    let wl = 380.0 + (i as f64) * 10.0;
+                    let rgb = super::spectral_wavelength_to_rgb(wl);
+                    let e = (mod_spd.samples[i] as f64).max(0.0) / peak;
+                    [
+                        (rgb[0] * e * 255.0).round().clamp(0.0, 255.0) as u8,
+                        (rgb[1] * e * 255.0).round().clamp(0.0, 255.0) as u8,
+                        (rgb[2] * e * 255.0).round().clamp(0.0, 255.0) as u8,
+                        255,
+                    ]
+                };
+                pixels.push(pixel);
+            }
+        }
+        let preview_rgba = self.store_rgba(preview_width, preview_height, pixels)?;
 
         let mut rec = BTreeMap::new();
         rec.insert(
@@ -479,7 +509,106 @@ impl AssetHost<'_> {
                     .collect(),
             ),
         );
+        rec.insert("preview_rgba".into(), preview_rgba);
+        rec.insert(
+            "metameric".into(),
+            Value::Bool(is_metameric(&mod_spd, &orig_xyz, 1e-3)),
+        );
 
         Ok(Value::Record(rec))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicBool;
+
+    fn create_test_host<'a>(
+        inputs: &'a [Resource],
+        cancel: &'a AtomicBool,
+        limits: &'a ToolLimits,
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs,
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn f64_field(rec: &BTreeMap<String, Value>, key: &str) -> f64 {
+        match rec.get(key) {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("Expected F64 {key}"),
+        }
+    }
+
+    #[test]
+    fn test_electromagnetics_metamer_nullspace_produce_safe_map() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(&[], &cancel, &limits);
+
+        let mut args = BTreeMap::new();
+        args.insert("nullspace_scale".into(), Value::F64(0.75));
+
+        let a = host
+            .electromagnetics_geodesy_ext_op(
+                "hypermedia.electromagnetics.project_metamer_nullspace",
+                &args,
+            )
+            .expect("metamer produce a");
+        let b = host
+            .electromagnetics_geodesy_ext_op(
+                "hypermedia.electromagnetics.project_metamer_nullspace",
+                &args,
+            )
+            .expect("metamer produce b");
+        let ra = record(&a).expect("metamer record a");
+        let rb = record(&b).expect("metamer record b");
+
+        let drift = f64_field(ra, "tristimulus_drift_l2");
+        assert!(
+            drift < 1e-4,
+            "CIE XYZ drift under nullspace scale must be negligible: {drift}"
+        );
+        assert_eq!(ra.get("metameric"), Some(&Value::Bool(true)));
+        assert!(f64_field(ra, "fundamental_energy") > 0.0);
+        assert!(f64_field(ra, "metameric_black_energy") > 0.0);
+
+        match ra.get("spd_samples_41") {
+            Some(Value::List(l)) => {
+                assert_eq!(l.len(), 41, "Must contain 41 spectral samples");
+                let spd_b = match rb.get("spd_samples_41") {
+                    Some(Value::List(x)) => x,
+                    _ => panic!("spd_samples_41 b"),
+                };
+                assert_eq!(l, spd_b, "SPD two produces must match");
+            }
+            _ => panic!("Expected spd_samples_41 as List"),
+        }
+
+        let img_a = host
+            .rgba(ra.get("preview_rgba").expect("preview_rgba a"))
+            .expect("rgba a");
+        let img_b = host
+            .rgba(rb.get("preview_rgba").expect("preview_rgba b"))
+            .expect("rgba b");
+        assert_eq!(img_a.width, 41);
+        assert_eq!(img_a.height, 8);
+        assert_eq!(img_a.pixels, img_b.pixels, "preview two produces must match");
+        assert!(
+            img_a
+                .pixels
+                .iter()
+                .any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "metamer preview map must be non-black"
+        );
+        assert!(
+            img_a.pixels.iter().all(|p| p[3] == 255),
+            "produce-safe map is opaque RGBA8"
+        );
     }
 }
