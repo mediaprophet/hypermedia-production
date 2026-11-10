@@ -947,6 +947,46 @@ mod tests {
     }
 
     #[test]
+    fn audit_tex_pdf_ua_matlang_emits_tagged_pdf_ua_object() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(&cancel, &limits);
+
+        let val = h
+            .domain_extension_op(
+                "hypermedia.discourse.audit_tex_pdf_ua_matlang",
+                &Args::new(),
+            )
+            .expect("audit_tex_pdf_ua_matlang");
+        let rec = record(&val).unwrap();
+        let pdf_handle = rec.get("pdf_ua_resource").expect("pdf_ua_resource");
+        let pdf_rec = record(pdf_handle).unwrap();
+        assert_eq!(pdf_rec.get("pdf_ua_tagged"), Some(&Value::Bool(true)));
+        assert_eq!(pdf_rec.get("pdf_ua_part"), Some(&Value::I64(1)));
+        match pdf_rec.get("pdf_ua_rules_passed") {
+            Some(Value::I64(n)) => {
+                assert!(*n >= 20, "PDF/UA must pass the auto-checkable rules, got {n}")
+            }
+            other => panic!("pdf_ua_rules_passed: {other:?}"),
+        }
+
+        let bytes = encoded_bytes(&h, pdf_handle);
+        assert!(
+            bytes.starts_with(b"%PDF-1.7"),
+            "object must be a PDF, not a catalog row"
+        );
+        let text = String::from_utf8_lossy(&bytes);
+        assert!(text.contains("/StructTreeRoot"), "PDF/UA requires a structure tree");
+        assert!(text.contains("/MarkInfo"), "PDF/UA requires MarkInfo");
+        assert!(text.contains("/Marked true"));
+        assert!(text.contains("/Lang"));
+        assert!(text.contains("pdfuaid:part"));
+        assert!(text.contains("BDC"), "marked content sequences");
+        assert!(text.contains("/Tabs /S"));
+        assert!(text.contains("%%EOF"));
+    }
+
+    #[test]
     fn compile_prose_docx_emits_openxml_object() {
         let cancel = AtomicBool::new(false);
         let limits = ToolLimits::default();
