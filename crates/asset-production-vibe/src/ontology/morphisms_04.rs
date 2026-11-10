@@ -172,7 +172,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "CoalgebricProjection",
         teleology: "Compiles sculpted surface elevations and 6-layer subsurface geological strata columns into QualiaDB's native 64-byte aligned `.m64` (`Q42M64\\0\\0`) Matter-64 container with per-record CRC-32C verification.",
         units_and_frames: "WGS84 SRID 4326 lat/lon origin; millimeter surface elevation (`surface_elevation_mm`); 64-byte `M64StrataColumnRecord` cells.",
-        arguments: "origin_lat_lon=[-35.78, 148.29], base_elevation_m=350.0, grid_side=8 (2..32), strokes:[...]",
+        arguments: "origin_lat_lon=[-35.78, 148.29], base_elevation_m=350.0, grid_side=8 (2..32), strokes:[...], record_mode=strata|holo|point",
         composable_with: &[
             "hypermedia.geodesy.verify_m64",
             "hypermedia.discourse.review_gallery",

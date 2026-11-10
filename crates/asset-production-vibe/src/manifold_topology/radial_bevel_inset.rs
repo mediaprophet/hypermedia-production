@@ -3,7 +3,7 @@
 use super::{v_add, v_cross, v_normalize, v_scale, v_sub, M64ShellRecord, M64_MODE_SHELL};
 use crate::*;
 use qualia_core_db::q42::m64_matter::{
-    M64ChunkDirectoryEntry, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader,
+    M64ChunkDirectoryEntry, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader, M64_MAGIC,
 };
 use std::collections::BTreeMap;
 use vibe::Value;
@@ -251,10 +251,7 @@ impl AssetHost<'_> {
             return Err("Radial-Edge Euler operation produced empty mesh".into());
         }
 
-        let non_manifold_count = edges
-            .iter()
-            .filter(|e| e.incident_faces.len() >= 3)
-            .count();
+        let non_manifold_count = edges.iter().filter(|e| e.incident_faces.len() >= 3).count();
 
         // Edge lookup map for shell records
         let edge_lookup: BTreeMap<(usize, usize), usize> = edges
@@ -322,9 +319,11 @@ impl AssetHost<'_> {
                 .copied()
                 .unwrap_or(0);
 
-            let is_nm = [e0, e1, e2]
-                .iter()
-                .any(|&idx| edges.get(idx).map_or(false, |e| e.incident_faces.len() >= 3));
+            let is_nm = [e0, e1, e2].iter().any(|&idx| {
+                edges
+                    .get(idx)
+                    .map_or(false, |e| e.incident_faces.len() >= 3)
+            });
 
             let mut rec = M64ShellRecord {
                 face_id: i as u32,
@@ -340,6 +339,25 @@ impl AssetHost<'_> {
 
             let offset = 128 + i * 64;
             buffer[offset..offset + 64].copy_from_slice(bytemuck::bytes_of(&rec));
+        }
+
+        // Fail closed: Mode 0x04 shell records carry CRC and must parse as SHELL.
+        let limits = M64ReadLimits {
+            max_file_bytes: total_file_size + 1024,
+            max_chunks: 4,
+            max_records: record_count as u64 + 16,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        let reader = M64Reader::parse(&buffer, limits, &mut scratch)
+            .map_err(|e| format!("M64 self-verification failed: {e}"))?;
+        if reader.header().magic != M64_MAGIC
+            || reader
+                .chunk(0)
+                .map(|c| c.directory_entry().chunk_record_mode)
+                != Some(M64_MODE_SHELL)
+            || reader.verification().record_crc_checked != record_count as u64
+        {
+            return Err("M64 self-verification failed: shell mode/CRC mismatch".into());
         }
 
         let shell_m64 = self.encode("m64", buffer)?;

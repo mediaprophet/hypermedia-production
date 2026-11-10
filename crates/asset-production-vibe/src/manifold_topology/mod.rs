@@ -6,11 +6,10 @@ mod radial_bevel_inset;
 mod solidify_bisect_subdivide;
 
 use crate::*;
-use qualia_core_db::q42::m64_matter::{M64ShellRecord, M64_MODE_SHELL};
 use qualia_core_db::render::assets::Mesh;
 use vibe::Value;
 
-pub use qualia_core_db::q42::m64_matter::{M64ShellRecord as _, M64_MODE_SHELL as _};
+pub use qualia_core_db::q42::m64_matter::{M64ShellRecord, M64_MODE_SHELL};
 
 // ── 3D Vector Math Helpers ───────────────────────────────────────────────────
 
@@ -173,7 +172,10 @@ impl AssetHost<'_> {
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use qualia_core_db::q42::m64_matter::M64Header;
+    use qualia_core_db::q42::m64_matter::{
+        has_m64_magic, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader, E64_MAGIC,
+        M64_MAGIC, M64_MODE_SHELL,
+    };
     use std::collections::BTreeMap;
     use std::sync::atomic::AtomicBool;
     use vibe::Value;
@@ -249,9 +251,71 @@ mod tests {
         assert!(resource.bytes.len() >= 128 + 5 * 64);
         assert_eq!(&resource.bytes[..4], b"m64\0");
 
-        // Verify M64Header CRC
+        // Verify M64Header CRC and Mode 0x04 shell admission
         let header: M64Header = bytemuck::pod_read_unaligned(&resource.bytes[..64]);
         assert_eq!(header.header_crc32c, header.compute_crc32c());
+        assert_eq!(header.magic, M64_MAGIC);
+        assert!(has_m64_magic(&resource.bytes));
+
+        let limits = M64ReadLimits {
+            max_file_bytes: resource.bytes.len() + 1024,
+            max_chunks: 4,
+            max_records: 64,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        let reader = M64Reader::parse(&resource.bytes, limits, &mut scratch).expect("shell parse");
+        assert_eq!(
+            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
+            M64_MODE_SHELL
+        );
+        assert!(reader.verification().record_crc_checked >= 5);
+    }
+
+    #[test]
+    fn test_radial_euler_e64_magic_alias_round_trip() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mesh_h = store_tetrahedron(&mut host);
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), mesh_h);
+
+        let res = host
+            .manifold_topology_op("hypermedia.manifold.radial_euler", &args)
+            .expect("radial_euler");
+        let rec = record(&res).expect("record");
+        let shell_val = required(rec, "shell_m64").unwrap();
+        let Artifact::Encoded(resource) = host.workspace.get(shell_val).expect("shell m64") else {
+            panic!("Expected encoded resource");
+        };
+
+        let mut bytes = resource.bytes.clone();
+        assert_eq!(&bytes[..4], &M64_MAGIC);
+        assert!(has_m64_magic(&bytes));
+
+        // e64\0 is an M64 magic alias, not a different suffix/format.
+        let mut header: M64Header = bytemuck::pod_read_unaligned(&bytes[..64]);
+        header.magic = E64_MAGIC;
+        header.update_crc();
+        bytes[..64].copy_from_slice(bytemuck::bytes_of(&header));
+        assert!(has_m64_magic(&bytes));
+        assert_eq!(&bytes[..4], &E64_MAGIC);
+
+        let read_limits = M64ReadLimits {
+            max_file_bytes: bytes.len() + 1024,
+            max_chunks: 4,
+            max_records: 64,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        let reader = M64Reader::parse(&bytes, read_limits, &mut scratch).expect("e64 alias");
+        assert_eq!(reader.header().magic, E64_MAGIC);
+        assert!(has_m64_magic(&reader.header().magic));
+        assert_eq!(
+            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
+            M64_MODE_SHELL
+        );
+        assert!(reader.verification().record_crc_checked > 0);
     }
 
     #[test]
