@@ -320,6 +320,14 @@ impl AssetHost<'_> {
 
             let orig_nv = current_positions.len();
             let orig_pos = current_positions.clone();
+            for tri in &current_triangles {
+                if (tri[0] as usize) >= orig_nv
+                    || (tri[1] as usize) >= orig_nv
+                    || (tri[2] as usize) >= orig_nv
+                {
+                    return Err("triangle index out of range".into());
+                }
+            }
             let mut edge_map: BTreeMap<(usize, usize), usize> = BTreeMap::new();
             let mut edge_list: Vec<EdgeInfo> = Vec::new();
             let mut vert_faces: Vec<Vec<usize>> = vec![Vec::new(); orig_nv];

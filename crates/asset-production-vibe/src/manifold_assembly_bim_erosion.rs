@@ -617,8 +617,17 @@ fn catmull_rom_axis(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3], t: f
 }
 
 fn densify_axis_cubic(axis: &[[f64; 3]], samples: usize) -> Vec<[f64; 3]> {
+    const MAX_STATIONS: usize = 4096;
     let n = axis.len();
-    let steps = samples.max(1);
+    if n < 2 {
+        return axis.to_vec();
+    }
+    // profile_sweep admits 2..=4096; uncapped (n-1)*samples+1 overflows at 257*16.
+    let max_steps = (MAX_STATIONS - 1) / (n - 1);
+    if max_steps == 0 {
+        return axis.to_vec();
+    }
+    let steps = samples.max(1).min(max_steps);
     let mut out = Vec::with_capacity((n - 1) * steps + 1);
     out.push(axis[0]);
     for seg in 0..(n - 1) {
@@ -758,6 +767,52 @@ mod tests {
         }
         let container = rec_c.get("container_10d").expect("10d");
         assert_eq!(host.workspace.encoded(container).unwrap().kind, "10d");
+    }
+
+    #[test]
+    fn test_manifold_sweep_cubic_densify_caps_at_4096() {
+        // 256*16+1 = 4097 without the cap; profile_sweep then rejects 2..=4096.
+        let n = 257usize;
+        let pts: Vec<[f64; 3]> = (0..n)
+            .map(|i| [0.0, 0.0, i as f64 * 0.01])
+            .collect();
+        let densified = densify_axis_cubic(&pts, 16);
+        assert!(
+            densified.len() >= 2 && densified.len() <= 4096,
+            "cubic densify must stay in 2..=4096, got {}",
+            densified.len()
+        );
+        let linear_4096: Vec<[f64; 3]> = (0..4096).map(|i| [0.0, 0.0, i as f64]).collect();
+        assert_eq!(
+            densify_axis_cubic(&linear_4096, 16).len(),
+            4096,
+            "cubic of a 4096-station spine must not grow past the sweep cap"
+        );
+
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel);
+        let axis: Vec<Value> = (0..n)
+            .map(|i| vec3(0.0, 0.0, i as f64 * 0.01))
+            .collect();
+        let mut args = BTreeMap::new();
+        args.insert("axis".into(), Value::List(axis));
+        args.insert("interpolation".into(), Value::String("cubic".into()));
+        args.insert("samples".into(), Value::U64(16));
+        args.insert("caps".into(), Value::Bool(true));
+        let cubic = host
+            .sweep_assembly_profile(&args)
+            .expect("cubic samples=16 on a 257-station spine");
+        let rec = record(&cubic).expect("record");
+        let mesh_h = rec.get("mesh").expect("mesh");
+        let Artifact::Mesh(mesh) = host.workspace.get(mesh_h).expect("mesh") else {
+            panic!("expected mesh");
+        };
+        assert!(!mesh.triangles.is_empty());
+        assert!(mesh.positions.len() >= 8);
+        for p in &mesh.positions {
+            assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
+        }
     }
 
     #[test]

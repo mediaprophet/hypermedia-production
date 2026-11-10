@@ -539,4 +539,28 @@ mod tests {
         let r2 = corner[0] * corner[0] + corner[1] * corner[1] + corner[2] * corner[2];
         assert!(r2 < 3.0 - 1e-3, "CC should round the cube, r^2={r2}");
     }
+
+    #[test]
+    fn test_manifold_subdivide_catmull_clark_rejects_oob_triangle() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let bad = host
+            .store_mesh_artifact(
+                vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
+                vec![[0, 1, 99]],
+            )
+            .expect("store");
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), bad);
+        args.insert("levels".into(), Value::U64(1));
+        args.insert("crease".into(), Value::F64(0.0));
+        let err = host
+            .manifold_topology_op("hypermedia.manifold.subdivide_catmull_clark", &args)
+            .expect_err("oob triangle must not panic");
+        assert!(
+            err.contains("out of range"),
+            "expected index error, got {err}"
+        );
+    }
 }
