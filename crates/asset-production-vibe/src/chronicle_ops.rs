@@ -1,10 +1,12 @@
 //! Bounded chronicle (temporal video container) morphisms: H.264 Baseline I_PCM
-//! MP4 muxing anddigest-verified frame extraction.
+//! MP4 muxing, locked-dt ProRes/OTIO/Matroska produce maps, and digest-verified frame extraction.
 
 use super::graphics::Rgba;
 use super::*;
 use bitstream_codec::{escape_rbsp, BitWriter};
 use media_isobmff::AvcConfig;
+use std::collections::BTreeMap;
+use std::io::Cursor;
 use std::sync::atomic::AtomicBool;
 
 impl AssetHost<'_> {
@@ -177,6 +179,280 @@ impl AssetHost<'_> {
             .collect();
         self.store_rgba(chosen.width, chosen.height, pixels)
     }
+
+    /// Locked-dt ProRes + OTIO + Matroska + fiduciary hash-chain maps.
+    /// Origin MP4 handle is threaded through so `workspace.encoded` still sees `.mp4`.
+    pub(super) fn produce_locked_dt_maps(
+        &mut self,
+        frame_items: &[Value],
+        fps: usize,
+        mp4: &Value,
+    ) -> Result<BTreeMap<String, Value>, String> {
+        let mut rgba_frames = Vec::with_capacity(frame_items.len());
+        let mut expected_dims: Option<(u32, u32)> = None;
+        for (idx, item) in frame_items.iter().enumerate() {
+            let img = self.rgba(item)?.clone();
+            if img.width == 0 || img.height == 0 || img.width > 256 || img.height > 256 {
+                return Err(format!(
+                    "Frame {idx} dimensions {}x{} outside 1..=256 preview profile",
+                    img.width, img.height
+                ));
+            }
+            if let Some((w, h)) = expected_dims {
+                if (img.width, img.height) != (w, h) {
+                    return Err(format!(
+                        "Frame {idx} dimensions {}x{} do not match first frame {w}x{h}",
+                        img.width, img.height
+                    ));
+                }
+            } else {
+                expected_dims = Some((img.width, img.height));
+            }
+            rgba_frames.push(img);
+        }
+        let (width, height) = expected_dims.ok_or("No frames provided")?;
+        let px = (width as usize) * (height as usize);
+        self.charge(
+            rgba_frames.len() * (px * 8 + 2048),
+            rgba_frames.len() * px * 4 + 65536,
+        )?;
+
+        use chronicle_broadcast_containers::{
+            MkvTrackKind, MkvTrackSpec, MkvWriter, MuxOptions, demux_matroska,
+        };
+        use chronicle_fiduciary_ledger::FiduciaryAuditTrail;
+        use chronicle_timeline_interchange::{
+            TimelineClip, TimelineSequence, TimelineTrack, TrackKind, parse_otio, write_otio,
+        };
+        use video_prores_codec::{
+            Encoder as ProResEncoder, Profile as ProResProfile, decode_frame as decode_prores,
+        };
+
+        let fps_u32 = fps as u32;
+        let frame_ns = 1_000_000_000u64 / u64::from(fps_u32.max(1));
+        let rate = locked_dt_frame_rate(fps);
+        let sample_duration_ticks = rate.tick_of(1).0;
+        let timeline_duration = rate.tick_of(rgba_frames.len() as i64);
+
+        let mut pr_enc = ProResEncoder::new(ProResProfile::Standard, width, height);
+        let mut prores_samples = Vec::with_capacity(rgba_frames.len());
+        for img in &rgba_frames {
+            let pr_frame = rgba_to_prores(img);
+            let sample = pr_enc
+                .encode(&pr_frame)
+                .map_err(|e| format!("ProRes encode failed: {e}"))?;
+            prores_samples.push(sample);
+        }
+        let first_prores = prores_samples
+            .first()
+            .cloned()
+            .ok_or("ProRes encode produced no samples")?;
+        let pr_dec = decode_prores(&first_prores).map_err(|e| format!("ProRes decode failed: {e}"))?;
+        if pr_dec.width != width || pr_dec.height != height {
+            return Err(format!(
+                "ProRes round-trip size {}x{} != source {width}x{height}",
+                pr_dec.width, pr_dec.height
+            ));
+        }
+
+        let mut mkv_track = MkvTrackSpec::new(MkvTrackKind::Video, "V_PRORES");
+        mkv_track.video_size = Some((width, height));
+        mkv_track.default_duration_ns = Some(frame_ns);
+        let mut writer = MkvWriter::new(
+            Cursor::new(Vec::new()),
+            vec![mkv_track],
+            MuxOptions::default(),
+        )
+        .map_err(|e| format!("MKV init failed: {e}"))?;
+        for (i, sample) in prores_samples.iter().enumerate() {
+            let pts_ns = (i as i64).saturating_mul(frame_ns as i64);
+            writer
+                .write_frame(0, pts_ns, true, sample, Some(frame_ns))
+                .map_err(|e| format!("MKV write failed: {e}"))?;
+        }
+        let mkv_bytes = writer
+            .finish()
+            .map_err(|e| format!("MKV finish failed: {e}"))?
+            .into_inner();
+        let mkv_demux = demux_matroska(&mkv_bytes).map_err(|e| format!("MKV demux failed: {e}"))?;
+        if mkv_demux.blocks.len() != rgba_frames.len() {
+            return Err(format!(
+                "Matroska block count {} != frame count {}",
+                mkv_demux.blocks.len(),
+                rgba_frames.len()
+            ));
+        }
+
+        let mut seq = TimelineSequence::default();
+        seq.name = "Locked-dt Chronicle".into();
+        seq.frame_rate = rate;
+        seq.duration = timeline_duration;
+        let mut vtrack = TimelineTrack::new("V1", TrackKind::Video);
+        vtrack.clips.push(TimelineClip {
+            id: "locked-dt-1".into(),
+            name: "locked_dt.mov".into(),
+            reel: "LDT".into(),
+            source_path: "file:///chronicle/locked_dt.mov".into(),
+            timeline_start: chronicle_timeline_interchange::Tick::ZERO,
+            timeline_duration,
+            source_in: chronicle_timeline_interchange::Tick::ZERO,
+            source_out: timeline_duration,
+            speed: 1.0,
+        });
+        seq.video_tracks.push(vtrack);
+        let otio_str = write_otio(&seq);
+        let otio_rt = parse_otio(&otio_str).map_err(|e| format!("OTIO parse failed: {e}"))?;
+        if otio_rt.video_tracks.len() != 1 || otio_rt.video_tracks[0].clips.len() != 1 {
+            return Err("OTIO round-trip lost the locked-dt video clip".into());
+        }
+
+        let mp4_bytes = match self.workspace.get(mp4) {
+            Ok(Artifact::Encoded(r)) => r.bytes.clone(),
+            _ => Vec::new(),
+        };
+
+        let mut audit = FiduciaryAuditTrail::new();
+        audit.append(
+            1_700_000_000,
+            "did:hypermedia:chronicle:locked-dt",
+            "movie.mux_mp4",
+            "movie",
+            "locked_dt.mp4",
+            format!("fnv1a:{}", fnv1a_hex(&mp4_bytes)),
+            None,
+        );
+        audit.append(
+            1_700_000_001,
+            "did:hypermedia:chronicle:locked-dt",
+            "movie.encode_prores",
+            "prores",
+            "locked_dt.prores",
+            format!("fnv1a:{}", fnv1a_hex(&first_prores)),
+            None,
+        );
+        audit.append(
+            1_700_000_002,
+            "did:hypermedia:chronicle:locked-dt",
+            "movie.mux_matroska",
+            "matroska",
+            "locked_dt.mkv",
+            format!("fnv1a:{}", fnv1a_hex(&mkv_bytes)),
+            None,
+        );
+        audit.append(
+            1_700_000_003,
+            "did:hypermedia:chronicle:locked-dt",
+            "movie.write_otio",
+            "otio",
+            "locked_dt.otio",
+            format!("fnv1a:{}", fnv1a_hex(otio_str.as_bytes())),
+            None,
+        );
+        audit
+            .verify_chain()
+            .map_err(|(i, e)| format!("ledger hash chain broken at {i}: {e}"))?;
+
+        let ledger_json = serde_json::json!({
+            "locked_dt": true,
+            "fps": fps,
+            "frame_count": rgba_frames.len(),
+            "sample_duration_ticks": sample_duration_ticks,
+            "fiduciary_chain_verified": true,
+            "entry_count": audit.entries.len(),
+            "head_hash": audit.entries.last().map(|e| e.entry_hash.clone()),
+            "audit_trail": audit,
+        });
+        let ledger_bytes =
+            serde_json::to_vec(&ledger_json).map_err(|e| format!("ledger JSON failed: {e}"))?;
+
+        let prores_resource = self.encode("prores", first_prores)?;
+        let otio_resource = self.encode("otio", otio_str.into_bytes())?;
+        let mkv_resource = self.encode("mkv", mkv_bytes)?;
+        let ledger_resource = self.encode("json", ledger_bytes)?;
+
+        let mut out = BTreeMap::new();
+        out.insert("prores".into(), prores_resource);
+        out.insert("otio".into(), otio_resource);
+        out.insert("mkv".into(), mkv_resource);
+        out.insert("ledger".into(), ledger_resource);
+        out.insert("fps".into(), Value::U64(fps as u64));
+        out.insert("frame_count".into(), Value::U64(rgba_frames.len() as u64));
+        out.insert("locked_dt".into(), Value::Bool(true));
+        out.insert(
+            "sample_duration_ticks".into(),
+            Value::I64(sample_duration_ticks),
+        );
+        out.insert(
+            "otio_video_track_count".into(),
+            Value::I64(otio_rt.video_tracks.len() as i64),
+        );
+        out.insert(
+            "otio_clip_count".into(),
+            Value::I64(otio_rt.video_tracks[0].clips.len() as i64),
+        );
+        out.insert(
+            "matroska_block_count".into(),
+            Value::I64(mkv_demux.blocks.len() as i64),
+        );
+        out.insert("ledger_chain_verified".into(), Value::Bool(true));
+        out.insert("ledger_entry_count".into(), Value::U64(4));
+        out.insert("prores_decoded_width".into(), Value::I64(pr_dec.width as i64));
+        out.insert(
+            "prores_decoded_height".into(),
+            Value::I64(pr_dec.height as i64),
+        );
+        Ok(out)
+    }
+}
+
+fn locked_dt_frame_rate(fps: usize) -> chronicle_timeline_interchange::FrameRate {
+    use chronicle_timeline_interchange::FrameRate;
+    match fps {
+        24 => FrameRate::FPS_24,
+        25 => FrameRate::FPS_25,
+        30 => FrameRate::FPS_30,
+        50 => FrameRate::FPS_50,
+        60 => FrameRate::FPS_60,
+        n => FrameRate {
+            num: n as i64,
+            den: 1,
+        },
+    }
+}
+
+fn rgba_to_prores(img: &Rgba) -> video_prores_codec::Frame {
+    use video_prores_codec::{ChromaFormat, Frame as ProResFrame};
+    let mut frame = ProResFrame::new(img.width, img.height, ChromaFormat::Yuv422, 10, false);
+    let cw = frame.chroma_width() as usize;
+    let w = img.width as usize;
+    let h = img.height as usize;
+    for y in 0..h {
+        for x in 0..w {
+            let px = img.pixels[y * w + x];
+            let r = px[0] as f32 / 255.0;
+            let g = px[1] as f32 / 255.0;
+            let b = px[2] as f32 / 255.0;
+            let y_norm = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            frame.y[y * w + x] = ((16.0 + 219.0 * y_norm) * 4.0).round().clamp(64.0, 940.0) as u16;
+            if x % 2 == 0 {
+                let cb_norm = (b - y_norm) / 1.8556;
+                let cr_norm = (r - y_norm) / 1.5748;
+                let ci = y * cw + x / 2;
+                frame.cb[ci] = ((128.0 + 224.0 * cb_norm) * 4.0).round().clamp(64.0, 960.0) as u16;
+                frame.cr[ci] = ((128.0 + 224.0 * cr_norm) * 4.0).round().clamp(64.0, 960.0) as u16;
+            }
+        }
+    }
+    frame
+}
+
+fn fnv1a_hex(bytes: &[u8]) -> String {
+    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+    for &b in bytes {
+        h ^= u64::from(b);
+        h = h.wrapping_mul(0x0100_0000_01b3);
+    }
+    format!("{h:016x}")
 }
 
 fn nal(header: u8, w: BitWriter) -> Vec<u8> {
@@ -531,4 +807,148 @@ fn build_avc_mp4(
     file.extend_from_slice(&mdat);
     file.extend_from_slice(&moov);
     file
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chronicle_fiduciary_ledger::FiduciaryAuditTrail;
+    use chronicle_timeline_interchange::{parse_otio, TICKS_PER_SECOND};
+    use std::collections::BTreeMap;
+
+    fn host<'a>(
+        limits: &'a ToolLimits,
+        cancel: &'a AtomicBool,
+        inputs: &'a [Resource],
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs,
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn solid_frame(host: &mut AssetHost<'_>, rgb: [u8; 3]) -> Value {
+        let pixels = vec![[rgb[0], rgb[1], rgb[2], 255]; 256];
+        host.workspace
+            .insert(
+                Artifact::Rgba(Rgba {
+                    width: 16,
+                    height: 16,
+                    pixels,
+                }),
+                host.limits,
+            )
+            .expect("rgba frame")
+    }
+
+    fn encoded<'a>(host: &'a AssetHost<'_>, handle: &Value) -> &'a Resource {
+        host.workspace.encoded(handle).expect("encoded resource")
+    }
+
+    #[test]
+    fn chronicle_mux_mp4_origin_still_returns_mp4() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = host(&limits, &cancel, &[]);
+        let f1 = solid_frame(&mut host, [200, 100, 50]);
+        let f2 = solid_frame(&mut host, [40, 80, 160]);
+        let mut args = BTreeMap::new();
+        args.insert("frames".into(), Value::List(vec![f1, f2]));
+        args.insert("fps".into(), Value::U64(24));
+        let res = host
+            .chronicle_op("hypermedia.chronicle.mux_mp4", &args)
+            .expect("origin mux_mp4");
+        let mp4 = encoded(&host, &res);
+        assert_eq!(mp4.kind, "mp4");
+        assert!(mp4.bytes.len() > 100);
+    }
+
+    #[test]
+    fn chronicle_locked_dt_movie_otio_ledger_objects() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = host(&limits, &cancel, &[]);
+        let f1 = solid_frame(&mut host, [200, 100, 50]);
+        let f2 = solid_frame(&mut host, [40, 80, 160]);
+        let mut args = BTreeMap::new();
+        args.insert("frames".into(), Value::List(vec![f1, f2]));
+        args.insert("fps".into(), Value::U64(24));
+
+        let res = host
+            .acoustics_discourse_chronicle_ext_op(
+                "hypermedia.chronicle.capture_deterministic_movie",
+                &args,
+            )
+            .expect("locked-dt capture");
+
+        // Origin MP4 handle is preserved on the produce-safe map.
+        let mp4 = encoded(&host, &res);
+        assert_eq!(mp4.kind, "mp4");
+        assert!(mp4.bytes.len() > 100);
+
+        let rec = record(&res).expect("produce-safe record");
+        assert_eq!(rec.get("locked_dt"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("frame_count"), Some(&Value::U64(2)));
+        assert_eq!(rec.get("fps"), Some(&Value::U64(24)));
+        assert_eq!(rec.get("ledger_chain_verified"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("matroska_block_count"), Some(&Value::I64(2)));
+        assert_eq!(rec.get("otio_video_track_count"), Some(&Value::I64(1)));
+        assert_eq!(rec.get("otio_clip_count"), Some(&Value::I64(1)));
+        let ticks = match rec.get("sample_duration_ticks") {
+            Some(Value::I64(t)) => *t,
+            other => panic!("sample_duration_ticks, got {other:?}"),
+        };
+        assert_eq!(ticks, TICKS_PER_SECOND / 24);
+
+        let prores = encoded(&host, rec.get("prores").expect("prores handle"));
+        assert_eq!(prores.kind, "prores");
+        let decoded = video_prores_codec::decode_frame(&prores.bytes).expect("decode ProRes");
+        assert_eq!((decoded.width, decoded.height), (16, 16));
+
+        let mkv = encoded(&host, rec.get("mkv").expect("mkv handle"));
+        assert_eq!(mkv.kind, "mkv");
+        let demux = chronicle_broadcast_containers::demux_matroska(&mkv.bytes).expect("demux mkv");
+        assert_eq!(demux.blocks.len(), 2);
+        assert_eq!(demux.tracks[0].codec_id, "V_PRORES");
+
+        let otio = encoded(&host, rec.get("otio").expect("otio handle"));
+        assert_eq!(otio.kind, "otio");
+        let otio_str = std::str::from_utf8(&otio.bytes).expect("otio utf8");
+        let seq = parse_otio(otio_str).expect("parse otio");
+        assert_eq!(seq.name, "Locked-dt Chronicle");
+        assert_eq!(seq.video_tracks.len(), 1);
+        assert_eq!(seq.video_tracks[0].clips.len(), 1);
+        assert_eq!(seq.video_tracks[0].clips[0].name, "locked_dt.mov");
+        assert_eq!(
+            seq.video_tracks[0].clips[0].source_path,
+            "file:///chronicle/locked_dt.mov"
+        );
+        // write_otio stores duration as RationalTime frames; locked-dt ticks live on the map.
+        assert!(otio_str.contains("locked_dt.mov"));
+        assert!(otio_str.contains("RationalTime.1"));
+
+        let ledger = encoded(&host, rec.get("ledger").expect("ledger handle"));
+        assert_eq!(ledger.kind, "json");
+        let proof: serde_json::Value =
+            serde_json::from_slice(&ledger.bytes).expect("ledger json");
+        assert_eq!(proof["fiduciary_chain_verified"], true);
+        assert_eq!(proof["locked_dt"], true);
+        assert_eq!(proof["frame_count"], 2);
+        let trail: FiduciaryAuditTrail =
+            serde_json::from_value(proof["audit_trail"].clone()).expect("audit trail");
+        assert_eq!(trail.entries.len(), 4);
+        trail
+            .verify_chain()
+            .expect("ledger hash chain must verify");
+        assert_eq!(trail.entries[0].action, "movie.mux_mp4");
+        assert_eq!(trail.entries[3].action, "movie.write_otio");
+        assert_ne!(trail.entries[0].entry_hash, trail.entries[1].entry_hash);
+        assert_eq!(
+            trail.entries[1].previous_hash,
+            trail.entries[0].entry_hash
+        );
+    }
 }

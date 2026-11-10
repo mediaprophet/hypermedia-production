@@ -301,7 +301,19 @@ impl AssetHost<'_> {
         mux_args.insert("frames".into(), frames_val.clone());
         mux_args.insert("fps".into(), Value::U64(fps as u64));
 
-        self.chronicle_op("hypermedia.chronicle.mux_mp4", &mux_args)
+        // Origin morphism: locked-dt H.264 MP4. Sidecars ride on the same handle+type.
+        let mp4 = self.chronicle_op("hypermedia.chronicle.mux_mp4", &mux_args)?;
+        let mut out = self.produce_locked_dt_maps(frame_items, fps, &mp4)?;
+        if let Value::Record(mp4_rec) = &mp4 {
+            if let Some(h) = mp4_rec.get("handle") {
+                out.insert("handle".into(), h.clone());
+            }
+            if let Some(t) = mp4_rec.get("type") {
+                out.insert("type".into(), t.clone());
+            }
+        }
+        out.insert("mp4".into(), mp4);
+        Ok(Value::Record(out))
     }
 
     // ------------------------------------------------------------------------
