@@ -89,7 +89,8 @@ impl FrameRate {
     }
 
     pub fn frame_at(self, t: Tick) -> i64 {
-        t.to_rational(self.num, self.den)
+        // Inverse of tick_of (from_rational(frame, den, num)), not of from_rational(pts, num, den).
+        t.to_rational(self.den, self.num)
     }
 
     pub fn tick_of(self, frame: i64) -> Tick {
@@ -205,4 +206,27 @@ pub fn format_clock(t: Tick, comma: bool) -> String {
     let hour = s / 3600;
     let sep = if comma { ',' } else { '.' };
     format!("{hour:02}:{min:02}:{sec:02}{sep}{rem_ms:03}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn frame_at_inverts_tick_of() {
+        for rate in [
+            FrameRate::FPS_24,
+            FrameRate::FPS_25,
+            FrameRate::FPS_30,
+            FrameRate::FPS_50,
+            FrameRate::FPS_60,
+            FrameRate { num: 48, den: 1 },
+        ] {
+            for n in 1..=64 {
+                assert_eq!(rate.frame_at(rate.tick_of(n)), n, "{rate:?} n={n}");
+            }
+        }
+        let ntsc = FrameRate::FPS_23_976;
+        assert_eq!(ntsc.frame_at(ntsc.tick_of(24_000)), 24_000);
+    }
 }
