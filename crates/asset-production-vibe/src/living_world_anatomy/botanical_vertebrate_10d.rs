@@ -1,11 +1,9 @@
 use super::*;
-use crate::*;
 use qualia_core_db::container_10d::integrity::verify_whole_file_crc32c;
 use qualia_core_db::render::assets::Mesh;
 use qualia_core_db::render::botanical_anatomy::{
-    build_scale1_whole_organism_10d, build_scale2_stem_bark_wedge_10d,
-    build_scale3_floral_and_gumnut_dissection_10d, build_scale4_leaf_venation_and_histology_10d,
-    DevelopmentalStage,
+    build_scale2_stem_bark_wedge_10d, build_scale3_floral_and_gumnut_dissection_10d,
+    build_scale4_leaf_venation_and_histology_10d, DevelopmentalStage,
 };
 use qualia_core_db::render::vertebrate_anatomy::{
     build_scale5_vertebrate_anatomy_10d, evaluate_anatomical_layer_peel_zero_heap,

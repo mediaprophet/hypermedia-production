@@ -24,15 +24,13 @@ use crate::graphics::Rgba;
 use crate::living_world_anatomy::turntable_render;
 use crate::*;
 use qualia_core_db::render::skeletal::fauna_rig::{
-    FaunaBiomechanicalArchetype, FaunaSkeletalRig10d, JOINT_CHEST, JOINT_HEAD, JOINT_JAW,
-    JOINT_LEFT_ANKLE, JOINT_LEFT_ELBOW, JOINT_LEFT_HIP, JOINT_LEFT_KNEE, JOINT_LEFT_SHOULDER,
-    JOINT_LEFT_WRIST_WING, JOINT_NECK, JOINT_RIGHT_ANKLE, JOINT_RIGHT_HIP, JOINT_RIGHT_KNEE,
-    JOINT_SPINE, JOINT_TAIL_BASE, JOINT_TAIL_MID, JOINT_TAIL_TIP,
+    FaunaSkeletalRig10d, JOINT_CHEST, JOINT_HEAD, JOINT_JAW, JOINT_LEFT_ANKLE, JOINT_LEFT_ELBOW,
+    JOINT_LEFT_HIP, JOINT_LEFT_KNEE, JOINT_LEFT_SHOULDER, JOINT_LEFT_WRIST_WING, JOINT_NECK,
+    JOINT_RIGHT_ANKLE, JOINT_RIGHT_HIP, JOINT_RIGHT_KNEE, JOINT_SPINE, JOINT_TAIL_BASE,
+    JOINT_TAIL_MID, JOINT_TAIL_TIP,
 };
 use qualia_core_db::render::skeletal::Motor as PgaMotor;
-use std::collections::BTreeMap;
 use std::f32::consts::TAU;
-use vibe::Value;
 
 #[inline]
 fn motor_axis_angle(axis: [f32; 3], angle_rad: f32) -> PgaMotor {

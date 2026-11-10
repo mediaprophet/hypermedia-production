@@ -1,6 +1,5 @@
 use super::*;
 use crate::electromagnetics_ops::parse_sealed_emf;
-use crate::*;
 use qualia_core_db::etalon_render::spectral::kernel::{
     linear_rgb_to_display, spd_to_xyz, xyz_to_linear_srgb, Spd, SPD_SAMPLES,
 };

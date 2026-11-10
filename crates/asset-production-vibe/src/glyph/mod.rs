@@ -5,6 +5,7 @@
 mod shaping_svg;
 mod stroke_table;
 
+#[allow(unused_imports)] // public glyph API; rust-audit indexes this re-export
 pub use shaping_svg::shape_glyph_run;
 
 use std::fmt::Write;

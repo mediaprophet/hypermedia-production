@@ -1,5 +1,4 @@
 use super::*;
-use crate::*;
 use chronicle_office_codecs::{
     parse_docx_package, parse_pptx_package, to_docx_package, to_pptx_package, FlowCell,
     FlowDoc, FlowKind, FlowPara, FlowRow, FlowTable, ZipPackage,
