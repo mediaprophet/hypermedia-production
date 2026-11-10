@@ -1,10 +1,65 @@
 //! Bounded adapters: rendering, filters, compositing and material generation stay
 //! with their library owners. Pixels are straight-alpha RGBA8 between operations.
+//! 16-bit / 2k lattices are available; ruled / 8-bit / 1024 remain named profiles.
 use super::geometry::color;
 use super::*;
 use anyrender::{ImageRenderer, PaintScene};
 use qualia_core_db::hypermedia_authoring::image as owner;
 use std::io::Cursor;
+
+/// Origin morphism cap (named profiles `ruled`, `8-bit`, `1024`).
+pub(crate) const LATTICE_ORIGIN_MAX: u32 = 1024;
+/// Raised 2k lattice cap (named profile `2k`, and default when unprofiled).
+pub(crate) const LATTICE_2K_MAX: u32 = 2048;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct LatticeProfile {
+    pub max_dim: u32,
+    pub bit_depth: u8,
+}
+
+impl LatticeProfile {
+    pub const ORIGIN: Self = Self {
+        max_dim: LATTICE_ORIGIN_MAX,
+        bit_depth: 8,
+    };
+    pub const RAISED: Self = Self {
+        max_dim: LATTICE_2K_MAX,
+        bit_depth: 8,
+    };
+    pub const SIXTEEN: Self = Self {
+        max_dim: LATTICE_2K_MAX,
+        bit_depth: 16,
+    };
+
+    /// Named origin profiles stay 8-bit; default/2k/16-bit admit 16-bit codecs.
+    pub fn admits_16bit(self) -> bool {
+        !matches!(self, Self::ORIGIN)
+    }
+}
+
+/// Parse an optional named lattice profile. Default admits 2k / 8-bit.
+pub(crate) fn lattice_profile(a: &Args) -> Result<LatticeProfile, String> {
+    match a.get("profile").map(text).transpose()? {
+        None => Ok(LatticeProfile::RAISED),
+        Some("ruled") | Some("8-bit") | Some("8bit") | Some("1024") => Ok(LatticeProfile::ORIGIN),
+        Some("16-bit") | Some("16bit") | Some("rgba16") => Ok(LatticeProfile::SIXTEEN),
+        Some("2k") | Some("2048") => Ok(LatticeProfile::RAISED),
+        Some(other) => Err(format!(
+            "Unknown lattice profile '{other}'. Expected ruled, 8-bit, 1024, 16-bit, or 2k"
+        )),
+    }
+}
+
+#[inline]
+pub(crate) fn u8_to_u16_lattice(v: u8) -> u16 {
+    (v as u16) * 257
+}
+
+#[inline]
+pub(crate) fn u16_to_u8_lattice(v: u16) -> u8 {
+    (v >> 8) as u8
+}
 
 #[derive(Clone)]
 pub struct Rgba {
@@ -13,8 +68,9 @@ pub struct Rgba {
     pub pixels: Vec<[u8; 4]>,
 }
 fn dimensions(a: &Args) -> Result<(u32, u32, usize), String> {
-    let w = count(a, "width", 256, 1024)? as u32;
-    let h = count(a, "height", 256, 1024)? as u32;
+    let profile = lattice_profile(a)?;
+    let w = count(a, "width", 256, profile.max_dim as usize)? as u32;
+    let h = count(a, "height", 256, profile.max_dim as usize)? as u32;
     Ok((w, h, w as usize * h as usize))
 }
 fn signed(a: &Args, key: &str) -> Result<i32, String> {
@@ -48,7 +104,7 @@ impl AssetHost<'_> {
     }
     fn image_limits(&self) -> owner::ImageLimits {
         owner::ImageLimits {
-            max_pixels: 1024 * 1024,
+            max_pixels: (LATTICE_2K_MAX as usize) * (LATTICE_2K_MAX as usize),
             max_work: self.limits.asset_work_units.saturating_sub(self.work) as usize,
             max_bytes: self.limits.total_resource_bytes,
         }
@@ -59,7 +115,7 @@ impl AssetHost<'_> {
                 self.vector_render(a)
             }
             "hypermedia.radiance.create_rgba" | "hypermedia.rgba.create" => {
-                fields(a, &["width", "height", "color"])?;
+                fields(a, &["width", "height", "color", "profile"])?;
                 let (w, h, n) = dimensions(a)?;
                 self.charge(n, n * 4)?;
                 let c = a.get("color").map(color).transpose()?.unwrap_or([0; 4]);
@@ -70,20 +126,39 @@ impl AssetHost<'_> {
             "hypermedia.radiance.compose_rgba" | "hypermedia.rgba.compose" => self.compose(a),
             "hypermedia.radiance.filter_rgba" | "hypermedia.rgba.filter" => self.filter(a),
             "hypermedia.radiance.encode_rgba_png" | "hypermedia.rgba.png" => {
-                fields(a, &["image"])?;
+                fields(a, &["image", "profile"])?;
                 let r = self.rgba(required(a, "image")?)?;
                 let n = r.pixels.len();
+                let profile = lattice_profile(a)?;
+                if r.width > profile.max_dim || r.height > profile.max_dim {
+                    return Err(format!("PNG dimensions outside 1..{}", profile.max_dim));
+                }
                 self.charge(n * 10, n * 16 + 65536)?;
                 let r = self.rgba(required(a, "image")?)?;
                 let mut bytes = Vec::new();
                 {
                     let mut encoder = png::Encoder::new(&mut bytes, r.width, r.height);
                     encoder.set_color(png::ColorType::Rgba);
-                    encoder.set_depth(png::BitDepth::Eight);
-                    let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
-                    writer
-                        .write_image_data(r.pixels.as_flattened())
-                        .map_err(|e| e.to_string())?;
+                    if profile.bit_depth == 16 {
+                        encoder.set_depth(png::BitDepth::Sixteen);
+                        let mut packed = Vec::with_capacity(n * 8);
+                        for p in &r.pixels {
+                            for c in p {
+                                // PNG 16-bit samples are BE; native endian swaps on LE hosts.
+                                packed.extend_from_slice(&u8_to_u16_lattice(*c).to_be_bytes());
+                            }
+                        }
+                        let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
+                        writer
+                            .write_image_data(&packed)
+                            .map_err(|e| e.to_string())?;
+                    } else {
+                        encoder.set_depth(png::BitDepth::Eight);
+                        let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
+                        writer
+                            .write_image_data(r.pixels.as_flattened())
+                            .map_err(|e| e.to_string())?;
+                    }
                 }
                 self.encode("png", bytes)
             }
@@ -95,25 +170,35 @@ impl AssetHost<'_> {
         }
     }
     fn import_rgba(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["input"])?;
-        let key = text(required(a, "input")?)?;
-        let b = &self
-            .inputs
-            .iter()
-            .find(|r| r.key == key)
-            .ok_or("Missing retained input")?
-            .bytes;
-        if b.len() < 33 || &b[..8] != b"\x89PNG\r\n\x1a\n" || &b[12..16] != b"IHDR" || b[24] > 8 {
-            return Err("Expected at most 8-bit PNG".into());
+        fields(a, &["input", "profile"])?;
+        let input_val = required(a, "input")?;
+        let owned: Vec<u8> = if let Ok(key) = text(input_val) {
+            self.inputs
+                .iter()
+                .find(|r| r.key == key)
+                .ok_or("Missing retained input")?
+                .bytes
+                .clone()
+        } else if let Ok(res) = self.workspace.encoded(input_val) {
+            res.bytes.clone()
+        } else {
+            return Err("Expected retained resource key or encoded handle for input".into());
+        };
+        let b = owned.as_slice();
+        let profile = lattice_profile(a)?;
+        if b.len() < 33 || &b[..8] != b"\x89PNG\r\n\x1a\n" || &b[12..16] != b"IHDR" || b[24] > 16 {
+            return Err("Expected at most 16-bit PNG".into());
+        }
+        if !profile.admits_16bit() && b[24] > 8 {
+            return Err("Named 8-bit profile refuses 16-bit PNG".into());
         }
         let w = u32::from_be_bytes(b[16..20].try_into().unwrap());
         let h = u32::from_be_bytes(b[20..24].try_into().unwrap());
-        if w == 0 || h == 0 || w > 1024 || h > 1024 {
-            return Err("PNG dimensions outside 1..1024".into());
+        if w == 0 || h == 0 || w > profile.max_dim || h > profile.max_dim {
+            return Err(format!("PNG dimensions outside 1..{}", profile.max_dim));
         }
         let n = w as usize * h as usize;
         self.charge(n * 20, n * 16 + 65536)?;
-        let b = &self.inputs.iter().find(|r| r.key == key).unwrap().bytes;
         let mut decoder = png::Decoder::new_with_limits(
             Cursor::new(b),
             png::Limits {
@@ -126,31 +211,52 @@ impl AssetHost<'_> {
             return Err("Animated PNG requires a frame sequence importer".into());
         }
         let size = reader.output_buffer_size().ok_or("PNG size overflow")?;
-        if size > n * 4 {
+        if size > n * 8 {
             return Err("PNG decoded size exceeds admission".into());
         }
         let mut bytes = vec![0; size];
         let info = reader.next_frame(&mut bytes).map_err(|e| e.to_string())?;
-        if info.width != w || info.height != h || info.bit_depth != png::BitDepth::Eight {
+        if info.width != w || info.height != h {
             return Err("PNG format changed after admission".into());
         }
         let channels = info.color_type.samples();
-        let pixels = bytes[..info.buffer_size()]
-            .chunks_exact(channels)
-            .map(|p| match channels {
-                1 => [p[0], p[0], p[0], 255],
-                2 => [p[0], p[0], p[0], p[1]],
-                3 => [p[0], p[1], p[2], 255],
-                _ => [p[0], p[1], p[2], p[3]],
-            })
-            .collect::<Vec<_>>();
+        let pixels = match info.bit_depth {
+            png::BitDepth::Sixteen => {
+                let stride = channels * 2;
+                bytes[..info.buffer_size()]
+                    .chunks_exact(stride)
+                    .map(|p| {
+                        let sample = |i: usize| {
+                            // IDENTITY leaves file-order BE bytes; high byte is the 8-bit lattice.
+                            u16_to_u8_lattice(u16::from_be_bytes([p[i * 2], p[i * 2 + 1]]))
+                        };
+                        match channels {
+                            1 => [sample(0), sample(0), sample(0), 255],
+                            2 => [sample(0), sample(0), sample(0), sample(1)],
+                            3 => [sample(0), sample(1), sample(2), 255],
+                            _ => [sample(0), sample(1), sample(2), sample(3)],
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }
+            png::BitDepth::Eight => bytes[..info.buffer_size()]
+                .chunks_exact(channels)
+                .map(|p| match channels {
+                    1 => [p[0], p[0], p[0], 255],
+                    2 => [p[0], p[0], p[0], p[1]],
+                    3 => [p[0], p[1], p[2], 255],
+                    _ => [p[0], p[1], p[2], p[3]],
+                })
+                .collect::<Vec<_>>(),
+            _ => return Err("PNG format changed after admission".into()),
+        };
         if pixels.len() != n {
             return Err("Invalid PNG pixel count".into());
         }
         self.store_rgba(w, h, pixels)
     }
     fn compose(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["width", "height", "layers"])?;
+        fields(a, &["width", "height", "layers", "profile"])?;
         let (w, h, n) = dimensions(a)?;
         let layers = list(required(a, "layers")?)?;
         if layers.len() > 64 {
@@ -395,7 +501,7 @@ fn paint(v: &Value) -> Result<peniko::Brush, String> {
 impl AssetHost<'_> {
     fn vector_render(&mut self, a: &Args) -> Result<Value, String> {
         use kurbo::Shape;
-        fields(a, &["width", "height", "layers"])?;
+        fields(a, &["width", "height", "layers", "profile"])?;
         let (w, h, n) = dimensions(a)?;
         let layers = list(required(a, "layers")?)?;
         if layers.len() > 64 {
@@ -550,5 +656,178 @@ impl AssetHost<'_> {
             })
             .collect();
         self.store_rgba(w, h, pixels)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+    use std::sync::atomic::AtomicBool;
+    use vibe::Value;
+
+    fn host<'a>(limits: &'a ToolLimits, cancel: &'a AtomicBool) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    #[test]
+    fn test_radiance_png_psd_lattice_roundtrip_nontrivial() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let pixel = [0x12, 0x34, 0x56, 0xab];
+        let img = h
+            .store_rgba(2, 2, vec![pixel, [0, 0, 0, 255], pixel, [9, 8, 7, 6]])
+            .expect("store");
+
+        let png = h
+            .graphics(
+                "hypermedia.radiance.encode_rgba_png",
+                &BTreeMap::from([
+                    ("image".into(), img.clone()),
+                    ("profile".into(), Value::String("16-bit".into())),
+                ]),
+            )
+            .expect("encode 16-bit png");
+        let png_bytes = h.workspace.encoded(&png).expect("png resource").bytes.clone();
+        assert_eq!(png_bytes[24], 16, "IHDR bit depth must be 16");
+        let refused = h.graphics(
+            "hypermedia.radiance.import_rgba_png",
+            &BTreeMap::from([
+                ("input".into(), png.clone()),
+                ("profile".into(), Value::String("8-bit".into())),
+            ]),
+        );
+        assert!(
+            refused.is_err(),
+            "named 8-bit profile must refuse 16-bit PNG"
+        );
+        let imported = h
+            .graphics(
+                "hypermedia.radiance.import_rgba_png",
+                &BTreeMap::from([("input".into(), png)]),
+            )
+            .expect("import 16-bit png");
+        let got = h.rgba(&imported).expect("rgba");
+        assert_eq!(got.pixels[0], pixel);
+        assert_eq!(got.pixels[2], pixel);
+
+        let psd = h
+            .radiance_photo_op(
+                "hypermedia.radiance.encode_psd",
+                &BTreeMap::from([
+                    ("width".into(), Value::U64(2)),
+                    ("height".into(), Value::U64(2)),
+                    ("profile".into(), Value::String("16-bit".into())),
+                    (
+                        "layers".into(),
+                        Value::List(vec![Value::Record(BTreeMap::from([
+                            ("name".into(), Value::String("Hero".into())),
+                            ("image".into(), img),
+                            ("opacity".into(), Value::F64(1.0)),
+                        ]))]),
+                    ),
+                ]),
+            )
+            .expect("encode 16-bit psd");
+        let psd_bytes = h.workspace.encoded(&psd).expect("psd resource").bytes.clone();
+        let depth = u16::from_be_bytes(psd_bytes[22..24].try_into().unwrap());
+        assert_eq!(depth, 16, "PSD header depth must be 16");
+        let refused_psd = h.radiance_photo_op(
+            "hypermedia.radiance.import_psd",
+            &BTreeMap::from([
+                ("input".into(), psd.clone()),
+                ("layer_index".into(), Value::U64(0)),
+                ("profile".into(), Value::String("ruled".into())),
+            ]),
+        );
+        assert!(
+            refused_psd.is_err(),
+            "named ruled profile must refuse 16-bit PSD"
+        );
+        let layer = h
+            .radiance_photo_op(
+                "hypermedia.radiance.import_psd",
+                &BTreeMap::from([
+                    ("input".into(), psd),
+                    ("layer_index".into(), Value::U64(0)),
+                ]),
+            )
+            .expect("import 16-bit psd layer");
+        let layer_rgba = h.rgba(&layer).expect("layer rgba");
+        assert_eq!(layer_rgba.pixels[0], pixel);
+        assert_eq!(layer_rgba.pixels[2], pixel);
+    }
+
+    #[test]
+    fn test_radiance_2k_lattice_and_named_1024_profile() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let two_k = h
+            .graphics(
+                "hypermedia.radiance.create_rgba",
+                &BTreeMap::from([
+                    ("width".into(), Value::U64(1280)),
+                    ("height".into(), Value::U64(2)),
+                    ("color".into(), Value::List(vec![
+                        Value::U64(18),
+                        Value::U64(52),
+                        Value::U64(86),
+                        Value::U64(255),
+                    ])),
+                    ("profile".into(), Value::String("2k".into())),
+                ]),
+            )
+            .expect("2k lattice");
+        let img = h.rgba(&two_k).expect("rgba");
+        assert_eq!(img.width, 1280);
+        assert_eq!(img.height, 2);
+        assert_eq!(img.pixels[0], [18, 52, 86, 255]);
+
+        let err = h
+            .graphics(
+                "hypermedia.radiance.create_rgba",
+                &BTreeMap::from([
+                    ("width".into(), Value::U64(1280)),
+                    ("height".into(), Value::U64(2)),
+                    ("profile".into(), Value::String("1024".into())),
+                ]),
+            )
+            .expect_err("named 1024 profile must refuse 2k");
+        assert!(err.contains("1280") || err.contains("1024") || err.contains("width"));
+    }
+
+    #[test]
+    fn test_radiance_png_16bit_be_high_byte() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut h = host(&limits, &cancel);
+        let mut bytes = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut bytes, 1, 1);
+            encoder.set_color(png::ColorType::Rgba);
+            encoder.set_depth(png::BitDepth::Sixteen);
+            // 0x12FF is not 0xVVVV; BE high byte must survive import on LE hosts.
+            let packed = [0x12u8, 0xFF, 0x34, 0xAA, 0x56, 0xBB, 0xAB, 0xCD];
+            let mut writer = encoder.write_header().expect("png header");
+            writer.write_image_data(&packed).expect("png data");
+        }
+        let png = h.admit_encoded("png", bytes).expect("admit be png");
+        let imported = h
+            .graphics(
+                "hypermedia.radiance.import_rgba_png",
+                &BTreeMap::from([("input".into(), png)]),
+            )
+            .expect("import 16-bit be png");
+        let got = h.rgba(&imported).expect("rgba");
+        assert_eq!(got.pixels[0][0], 0x12, "BE sample 0x12FF must keep high byte 0x12");
+        assert_eq!(got.pixels[0], [0x12, 0x34, 0x56, 0xab]);
     }
 }

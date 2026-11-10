@@ -10,28 +10,39 @@ impl AssetHost<'_> {
             return self.render(a);
         }
         if id == "hypermedia.radiance.import_rgb_png" || id == "hypermedia.image.import_png" {
-            fields(a, &["input"])?;
-            let key = text(required(a, "input")?)?;
-            let input = self
-                .inputs
-                .iter()
-                .find(|r| r.key == key)
-                .ok_or("Missing retained PNG input")?;
+            fields(a, &["input", "profile"])?;
+            let input_val = required(a, "input")?;
+            let owned: Vec<u8> = if let Ok(key) = text(input_val) {
+                self.inputs
+                    .iter()
+                    .find(|r| r.key == key)
+                    .ok_or("Missing retained PNG input")?
+                    .bytes
+                    .clone()
+            } else if let Ok(res) = self.workspace.encoded(input_val) {
+                res.bytes.clone()
+            } else {
+                return Err("Expected retained resource key or encoded handle for input".into());
+            };
+            let profile = crate::graphics::lattice_profile(a)?;
             // Preflight IHDR before the owner's decoder allocates its output. This
-            // initial contract admits opaque RGB8, with no transparency conversion.
-            let b = &input.bytes;
+            // contract admits opaque RGB8 and RGB16 (stripped to 8-bit), no tRNS.
+            let b = owned.as_slice();
             if b.len() < 33
                 || &b[..8] != b"\x89PNG\r\n\x1a\n"
                 || b[8..12] != 13u32.to_be_bytes()
                 || &b[12..16] != b"IHDR"
-                || b[24] != 8
+                || (b[24] != 8 && b[24] != 16)
                 || b[25] != 2
             {
-                return Err("PNG import requires RGB8 PNG".into());
+                return Err("PNG import requires RGB8 or RGB16 PNG".into());
+            }
+            if !profile.admits_16bit() && b[24] > 8 {
+                return Err("Named 8-bit profile refuses 16-bit PNG".into());
             }
             let width = u32::from_be_bytes(b[16..20].try_into().unwrap());
             let height = u32::from_be_bytes(b[20..24].try_into().unwrap());
-            let n = pixels(width, height)?;
+            let n = pixels(width, height, profile.max_dim)?;
             let mut pos = 8usize;
             while pos + 12 <= b.len() {
                 let len = u32::from_be_bytes(b[pos..pos + 4].try_into().unwrap()) as usize;
@@ -61,7 +72,7 @@ impl AssetHost<'_> {
         }
         let image = self.image(required(a, "image")?)?;
         let (width, height) = (image.width, image.height);
-        let n = pixels(width, height)?;
+        let n = pixels(width, height, crate::graphics::LATTICE_2K_MAX)?;
         let (work, scratch) = match id {
             "hypermedia.radiance.convolve_blur" | "hypermedia.image.blur" => (n * 36, n * 8),
             "hypermedia.radiance.morphology_mask" | "hypermedia.image.mask" => (n * 60, n * 40),
@@ -72,7 +83,27 @@ impl AssetHost<'_> {
         let image = self.image(required(a, "image")?)?;
         let rgb = match id {
             "hypermedia.radiance.encode_rgb_png" | "hypermedia.image.png" => {
-                fields(a, &["image"])?;
+                fields(a, &["image", "profile"])?;
+                let profile = crate::graphics::lattice_profile(a)?;
+                if profile.bit_depth == 16 {
+                    let mut bytes = Vec::new();
+                    {
+                        let mut encoder = png::Encoder::new(&mut bytes, image.width, image.height);
+                        encoder.set_color(png::ColorType::Rgb);
+                        encoder.set_depth(png::BitDepth::Sixteen);
+                        let mut packed = Vec::with_capacity(image.rgb.len() * 2);
+                        for c in &image.rgb {
+                            packed.extend_from_slice(
+                                &crate::graphics::u8_to_u16_lattice(*c).to_be_bytes(),
+                            );
+                        }
+                        let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
+                        writer
+                            .write_image_data(&packed)
+                            .map_err(|e| e.to_string())?;
+                    }
+                    return self.encode("png", bytes);
+                }
                 let bytes = cv::codecs::png_encode::encode_png(rgb_view(image)?)
                     .map_err(|e| format!("PNG encode: {e:?}"))?;
                 return self.encode("png", bytes);
@@ -151,7 +182,8 @@ impl AssetHost<'_> {
                     _ => return Err("Unknown mask mode".into()),
                 };
                 let limits = morphology::Limits {
-                    max_pixels: 1024 * 1024,
+                    max_pixels: (crate::graphics::LATTICE_2K_MAX as usize)
+                        * (crate::graphics::LATTICE_2K_MAX as usize),
                     max_work_units: n * 52,
                     max_edt_scratch_bytes: self.limits.total_resource_bytes,
                     max_algorithm_payload_bytes: self.limits.total_resource_bytes,
@@ -218,10 +250,11 @@ impl AssetHost<'_> {
         }
     }
     fn render(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["width", "height", "background", "layers"])?;
-        let width = count(a, "width", 256, 1024)? as u32;
-        let height = count(a, "height", 256, 1024)? as u32;
-        let n = pixels(width, height)?;
+        fields(a, &["width", "height", "background", "layers", "profile"])?;
+        let profile = crate::graphics::lattice_profile(a)?;
+        let width = count(a, "width", 256, profile.max_dim as usize)? as u32;
+        let height = count(a, "height", 256, profile.max_dim as usize)? as u32;
+        let n = pixels(width, height, profile.max_dim)?;
         let background = a
             .get("background")
             .map(color)
@@ -297,9 +330,9 @@ impl AssetHost<'_> {
             .insert(Artifact::Image(Raster { width, height, rgb }), self.limits)
     }
 }
-fn pixels(width: u32, height: u32) -> Result<usize, String> {
-    if width == 0 || height == 0 || width > 1024 || height > 1024 {
-        return Err("Image dimensions must be 1..1024".into());
+fn pixels(width: u32, height: u32, max: u32) -> Result<usize, String> {
+    if width == 0 || height == 0 || width > max || height > max {
+        return Err(format!("Image dimensions must be 1..{max}"));
     }
     Ok(width as usize * height as usize)
 }

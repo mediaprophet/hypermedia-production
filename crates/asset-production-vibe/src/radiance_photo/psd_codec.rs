@@ -6,8 +6,11 @@ use vibe::Value;
 
 impl AssetHost<'_> {
     pub(super) fn encode_psd(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["width", "height", "layers"])?;
+        fields(a, &["width", "height", "layers", "profile"])?;
         let (w, h, n) = parse_dimensions(a)?;
+        let profile = crate::graphics::lattice_profile(a)?;
+        let depth16 = profile.bit_depth == 16;
+        let bpp = if depth16 { 2usize } else { 1 };
         let layers_list = list(required(a, "layers")?)?;
         if layers_list.is_empty() || layers_list.len() > 64 {
             return Err("PSD layers count outside 1..64".into());
@@ -94,7 +97,7 @@ impl AssetHost<'_> {
         out.extend_from_slice(&4u16.to_be_bytes()); // 4 channels RGBA
         out.extend_from_slice(&h.to_be_bytes()); // Height
         out.extend_from_slice(&w.to_be_bytes()); // Width
-        out.extend_from_slice(&8u16.to_be_bytes()); // Depth 8
+        out.extend_from_slice(&(if depth16 { 16u16 } else { 8u16 }).to_be_bytes());
         out.extend_from_slice(&3u16.to_be_bytes()); // Color mode 3 = RGB
 
         // 2. Color Mode Data section (length = 0)
@@ -107,7 +110,7 @@ impl AssetHost<'_> {
         let mut layer_info = Vec::new();
         layer_info.extend_from_slice(&(parsed.len() as i16).to_be_bytes());
 
-        let ch_len = (2 + n) as u32; // 2 bytes compression 0 + n channel bytes
+        let ch_len = (2 + n * bpp) as u32; // 2 bytes compression 0 + planar samples
         for layer in &parsed {
             // Layer bounds: top, left, bottom, right
             layer_info.extend_from_slice(&0i32.to_be_bytes());
@@ -151,7 +154,13 @@ impl AssetHost<'_> {
             for ch in 0..4 {
                 layer_info.extend_from_slice(&0u16.to_be_bytes());
                 for p in layer.pixels {
-                    layer_info.push(p[ch]);
+                    if depth16 {
+                        layer_info.extend_from_slice(
+                            &crate::graphics::u8_to_u16_lattice(p[ch]).to_be_bytes(),
+                        );
+                    } else {
+                        layer_info.push(p[ch]);
+                    }
                 }
             }
         }
@@ -170,7 +179,11 @@ impl AssetHost<'_> {
         out.extend_from_slice(&0u16.to_be_bytes());
         for ch in 0..4 {
             for p in &composite {
-                out.push(p[ch]);
+                if depth16 {
+                    out.extend_from_slice(&crate::graphics::u8_to_u16_lattice(p[ch]).to_be_bytes());
+                } else {
+                    out.push(p[ch]);
+                }
             }
         }
 
@@ -178,7 +191,7 @@ impl AssetHost<'_> {
     }
 
     pub(super) fn import_psd(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["input", "layer_index"])?;
+        fields(a, &["input", "layer_index", "profile"])?;
         let input_val = required(a, "input")?;
         let b: Vec<u8> = if let Ok(key) = text(input_val) {
             self.inputs
@@ -210,14 +223,19 @@ impl AssetHost<'_> {
 
         let height = u32::from_be_bytes(b[14..18].try_into().unwrap());
         let width = u32::from_be_bytes(b[18..22].try_into().unwrap());
-        if width == 0 || height == 0 || width > 1024 || height > 1024 {
-            return Err("PSD dimensions outside 1..1024".into());
+        let profile = crate::graphics::lattice_profile(a)?;
+        if width == 0 || height == 0 || width > profile.max_dim || height > profile.max_dim {
+            return Err(format!("PSD dimensions outside 1..{}", profile.max_dim));
         }
 
         let depth = u16::from_be_bytes(b[22..24].try_into().unwrap());
-        if depth != 8 {
-            return Err("Only 8-bit depth PSD supported".into());
+        if depth != 8 && depth != 16 {
+            return Err("Only 8-bit or 16-bit depth PSD supported".into());
         }
+        if !profile.admits_16bit() && depth == 16 {
+            return Err("Named 8-bit profile refuses 16-bit PSD".into());
+        }
+        let bpp = if depth == 16 { 2usize } else { 1 };
 
         let color_mode = u16::from_be_bytes(b[24..26].try_into().unwrap());
         if color_mode != 3 {
@@ -345,8 +363,8 @@ impl AssetHost<'_> {
             if lw == 0 || lh == 0 {
                 return self.store_rgba(width, height, vec![[0u8; 4]; n]);
             }
-            if lw > 1024 || lh > 1024 {
-                return Err("Layer dimensions outside 1..1024".into());
+            if lw > profile.max_dim || lh > profile.max_dim {
+                return Err(format!("Layer dimensions outside 1..{}", profile.max_dim));
             }
 
             let ln = lw as usize * lh as usize;
@@ -371,7 +389,7 @@ impl AssetHost<'_> {
                 };
 
                 if let Some(buf) = target_buf {
-                    decode_psd_channel(ch_bytes, lw as usize, lh as usize, buf)?;
+                    decode_psd_channel(ch_bytes, lw as usize, lh as usize, buf, depth)?;
                 }
             }
 
@@ -399,17 +417,27 @@ impl AssetHost<'_> {
 
             match comp {
                 0 => {
-                    if pos + channels * n > b.len() {
+                    if pos + channels * n * bpp > b.len() {
                         return Err("Truncated composite raw image data".into());
                     }
-                    r_chan.copy_from_slice(&b[pos..pos + n]);
-                    pos += n;
-                    g_chan.copy_from_slice(&b[pos..pos + n]);
-                    pos += n;
-                    b_chan.copy_from_slice(&b[pos..pos + n]);
-                    pos += n;
+                    let fill = |dest: &mut [u8], src: &[u8]| {
+                        if bpp == 1 {
+                            dest.copy_from_slice(src);
+                        } else {
+                            for (i, out) in dest.iter_mut().enumerate() {
+                                let v = u16::from_be_bytes([src[i * 2], src[i * 2 + 1]]);
+                                *out = crate::graphics::u16_to_u8_lattice(v);
+                            }
+                        }
+                    };
+                    fill(&mut r_chan, &b[pos..pos + n * bpp]);
+                    pos += n * bpp;
+                    fill(&mut g_chan, &b[pos..pos + n * bpp]);
+                    pos += n * bpp;
+                    fill(&mut b_chan, &b[pos..pos + n * bpp]);
+                    pos += n * bpp;
                     if channels >= 4 {
-                        a_chan.copy_from_slice(&b[pos..pos + n]);
+                        fill(&mut a_chan, &b[pos..pos + n * bpp]);
                     }
                 }
                 1 => {
@@ -419,6 +447,8 @@ impl AssetHost<'_> {
                     }
                     let table = &b[pos..pos + table_len];
                     let mut data_pos = pos + table_len;
+                    let row_bytes = w_u * bpp;
+                    let mut row_buf = vec![0u8; row_bytes];
 
                     for c in 0..channels {
                         let mut dest = match c {
@@ -438,8 +468,22 @@ impl AssetHost<'_> {
                                 return Err("Truncated RLE scanline row data".into());
                             }
                             if let Some(d) = dest.as_deref_mut() {
-                                let row_slice = &mut d[row * w_u..(row + 1) * w_u];
-                                decode_packbits(&b[data_pos..data_pos + row_len], row_slice)?;
+                                decode_packbits(
+                                    &b[data_pos..data_pos + row_len],
+                                    &mut row_buf,
+                                )?;
+                                if bpp == 1 {
+                                    d[row * w_u..(row + 1) * w_u].copy_from_slice(&row_buf);
+                                } else {
+                                    for i in 0..w_u {
+                                        let v = u16::from_be_bytes([
+                                            row_buf[i * 2],
+                                            row_buf[i * 2 + 1],
+                                        ]);
+                                        d[row * w_u + i] =
+                                            crate::graphics::u16_to_u8_lattice(v);
+                                    }
+                                }
                             }
                             data_pos += row_len;
                         }

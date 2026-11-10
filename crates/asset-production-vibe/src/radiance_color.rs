@@ -129,7 +129,8 @@ impl AssetHost<'_> {
         let max_bytes = self.limits.total_resource_bytes;
         let adapter_limits = AdapterLimits {
             morphology: MorphologyLimits {
-                max_pixels: 1024 * 1024,
+                max_pixels: (crate::graphics::LATTICE_2K_MAX as usize)
+                    * (crate::graphics::LATTICE_2K_MAX as usize),
                 max_work_units: max_work,
                 max_edt_scratch_bytes: max_bytes,
                 max_algorithm_payload_bytes: max_bytes,
