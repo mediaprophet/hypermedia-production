@@ -301,6 +301,7 @@ impl AssetHost<'_> {
                 | "hypermedia.manifold.import_mesh"
                 | "hypermedia.manifold.project_dxf"
                 | "hypermedia.manifold.compile_10d_pbr"
+                | "hypermedia.manifold.loft"
         ) {
             let produced = self.manifold_ext(canonical_id, args)?;
             if canonical_id == "hypermedia.manifold.compile_10d_pbr" {
@@ -436,17 +437,22 @@ impl AssetHost<'_> {
         let src_bytes = self.workspace.encoded(src)?.bytes.clone();
         let nv = match self.workspace.get(required(a, "mesh")?)? {
             Artifact::Mesh(m) => m.positions.len(),
-            _ => return Ok(compiled),
+            _ => {
+                return Err("source_10d UV01 consume requires a mesh handle".into());
+            }
         };
         if nv == 0 {
-            return Ok(compiled);
+            return Err("source_10d UV01 consume requires a non-empty mesh".into());
         }
         let mut uvs = vec![[0.0f32; 2]; nv];
-        match qualia_core_db::container_10d::read_texture_coordinate_section_into(
+        let n = qualia_core_db::container_10d::read_texture_coordinate_section_into(
             &src_bytes, nv, &mut uvs,
-        ) {
-            Ok(n) if n == nv => {}
-            _ => return Ok(compiled),
+        )
+        .map_err(|e| format!("source_10d UV01 consume failed: {e:?}"))?;
+        if n != nv {
+            return Err(format!(
+                "source_10d UV01 count {n} != mesh vertex count {nv}"
+            ));
         }
         let compiled_bytes = self.workspace.encoded(&compiled)?.bytes.clone();
         let with_uv = qualia_core_db::container_10d::attach_texture_coordinate_section(

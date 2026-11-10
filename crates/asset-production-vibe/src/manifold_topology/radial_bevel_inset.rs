@@ -61,7 +61,7 @@ fn cycle_interior(cycle: &[usize], from: usize, to: usize) -> Result<Vec<usize>,
 }
 
 /// Join two face cycles at the shared oriented edge (v0, v1).
-/// Walks `loop2` from the far shared vertex to the near one, excluding that edge,
+/// Walks `loop2` from loop1's shared-edge start to its end, excluding that edge,
 /// and inserts the interior path into `loop1`'s shared-edge slot.
 fn splice_face_cycles(
     loop1: &[usize],
@@ -312,8 +312,7 @@ impl AssetHost<'_> {
             return Err("Radial-Edge Euler operation produced empty mesh".into());
         }
 
-        // Fan diagonals are not in the pre-triangulation radial table. Rebuild from
-        // the emitted triangles so shell edge_indices cannot collapse to 0.
+        // Rebuild edges after fan triangulation so diagonals exist for shell lookup.
         let tri_faces: Vec<RadialFace> = out_triangles
             .iter()
             .map(|t| RadialFace {

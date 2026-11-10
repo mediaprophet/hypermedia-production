@@ -4,6 +4,10 @@
 
 use crate::*;
 use base64::{engine::general_purpose::STANDARD, Engine};
+use qualia_core_db::container_10d::header::MAGIC_10D;
+use qualia_core_db::q42::emf_container::EMF_CONTAINER_MAGIC;
+use qualia_core_db::q42::m64_matter::has_m64_magic;
+use qualia_core_db::q42_volume::Q42_MAGIC;
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
@@ -170,25 +174,15 @@ pub(super) fn escape_pdf_str(s: &str) -> String {
 /// Produce-safe family for gallery presentation of sealed Q42 containers.
 /// Maps kind/magic onto {10d, m64, emf, q42} without inventing new file magics.
 fn container_family(kind: &str, bytes: &[u8]) -> Option<&'static str> {
-    let magic: String = bytes
-        .iter()
-        .take(8)
-        .map(|&b| {
-            if (0x20..=0x7e).contains(&b) {
-                b as char
-            } else {
-                '.'
-            }
-        })
-        .collect();
     match kind {
         "10d" => Some("10d"),
         "m64" => Some("m64"),
         "emf" => Some("emf"),
         "q42" => Some("q42"),
-        _ if magic.starts_with("Q42EMF") => Some("emf"),
-        _ if magic.starts_with("Q42M64") || magic.starts_with("E64") => Some("m64"),
-        _ if magic.starts_with("Q42") => Some("q42"),
+        _ if has_m64_magic(bytes) => Some("m64"),
+        _ if bytes.starts_with(&MAGIC_10D) => Some("10d"),
+        _ if bytes.starts_with(&EMF_CONTAINER_MAGIC) => Some("emf"),
+        _ if bytes.starts_with(b"Q42LOGIC") || bytes.starts_with(&Q42_MAGIC) => Some("q42"),
         _ => None,
     }
 }
@@ -1134,10 +1128,11 @@ mod tests {
         let limits = ToolLimits::default();
         let mut h = host(&cancel, &limits);
 
-        let d10 = h.admit_encoded("10d", b"10DMESH\0preview".to_vec()).unwrap();
-        let m64 = h.admit_encoded("m64", b"Q42M64\0\0strata".to_vec()).unwrap();
+        let d10 = h.admit_encoded("10d", b"10d\0mesh\0preview".to_vec()).unwrap();
+        let m64 = h.admit_encoded("m64", b"m64\0strata".to_vec()).unwrap();
         let emf = h.admit_encoded("emf", b"Q42EMF64lattice".to_vec()).unwrap();
-        let q42 = h.admit_encoded("q42", b"Q42QUIN\0slot".to_vec()).unwrap();
+        let q42 = h.admit_encoded("q42", b"Q42LOGIC\0slot".to_vec()).unwrap();
+        let e64_unknown = h.admit_encoded("bin", b"e64\0shell".to_vec()).unwrap();
 
         let file = |name: &str, resource: Value| {
             let mut rec = BTreeMap::new();
@@ -1152,6 +1147,7 @@ mod tests {
             Value::List(vec![
                 file("mesh.10d", d10),
                 file("matter.m64", m64),
+                file("alias.e64", e64_unknown),
                 file("field.emf", emf),
                 file("quin.q42", q42),
             ]),

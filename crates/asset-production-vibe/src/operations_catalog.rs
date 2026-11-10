@@ -520,4 +520,72 @@ mod tests {
             - recovered.iter().map(|p| p[0]).fold(f32::INFINITY, f32::min);
         assert!(span_u > 0.2, "consumed UV01 island must be non-degenerate");
     }
+
+    #[test]
+    fn catalog_compile_10d_pbr_source_10d_uv_mismatch_fails_closed() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+        let quad = host
+            .workspace
+            .insert(
+                Artifact::Mesh(Mesh {
+                    positions: vec![
+                        [0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0],
+                        [1.0, 1.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                    ],
+                    triangles: vec![[0, 1, 2], [0, 2, 3]],
+                    min: [0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 0.0],
+                }),
+                host.limits,
+            )
+            .expect("quad");
+        let tri = host
+            .workspace
+            .insert(
+                Artifact::Mesh(Mesh {
+                    positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
+                    triangles: vec![[0, 1, 2]],
+                    min: [0.0, 0.0, 0.0],
+                    max: [1.0, 1.0, 0.0],
+                }),
+                host.limits,
+            )
+            .expect("triangle");
+
+        let unwrap = host
+            .invoke(
+                "hypermedia.surface.unwrap_slim",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), quad);
+                    a.insert("iterations".into(), Value::U64(8));
+                    a
+                }),
+            )
+            .expect("unwrap quad");
+        let source_10d = required(record(&unwrap).expect("unwrap record"), "container_10d")
+            .expect("unwrap sealed UV01")
+            .clone();
+
+        let err = host
+            .invoke(
+                "hypermedia.manifold.compile_10d_pbr",
+                &Value::Record({
+                    let mut a = BTreeMap::new();
+                    a.insert("mesh".into(), tri);
+                    a.insert("source_10d".into(), source_10d);
+                    a.insert("topology".into(), Value::Bool(false));
+                    a
+                }),
+            )
+            .expect_err("present source_10d UV01 count must match mesh vertices");
+        assert!(
+            err.contains("UV01") || err.contains("vertex"),
+            "fail-closed error must name UV01/vertex mismatch, got: {err}"
+        );
+    }
 }
