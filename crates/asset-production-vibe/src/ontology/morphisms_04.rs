@@ -117,7 +117,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         codomain: "RadianceLatticeRgba8",
         morphism_kind: "Functor",
         teleology: "Projects a 2D axial cross-section of a `.emf` electromagnetic field volume into a human-viewable sRGB/RGBA8 image using CIE 1931 spectral wavelength mapping, exponential energy tone-mapping, and Stokes polarization modulation.",
-        units_and_frames: "Visible spectrum 380..780 nm mapped to spectral sRGB; UV (<380 nm) magenta; IR/RF (>780 nm) cyan.",
+        units_and_frames: "Visible spectrum 380..780 nm mapped to spectral sRGB; UV (<380 nm) magenta; IR/RF (>780 nm) cyan. Default exposure=1.0 is a gain on vacuum-impedance irradiance |E|²/Z0 (W/m²); SI energy density (J/m³) is not the display quantity.",
         arguments: "emf: encoded emf handle, axis=z|y|x, slice_index=0, width=128, height=128, exposure=1.0",
         composable_with: &[
             "hypermedia.radiance.encode_rgba_png",

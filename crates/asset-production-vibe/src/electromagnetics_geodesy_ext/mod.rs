@@ -218,6 +218,79 @@ mod tests {
             Some(Value::U64(hits)) => assert!(*hits > 0, "Brick hits must be positive"),
             _ => panic!("Expected brick_hits as U64"),
         }
+
+        let image = rec.get("image").expect("image handle");
+        let rgba = host.rgba(image).expect("valid rgba handle");
+        assert!(
+            rgba.pixels
+                .iter()
+                .any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "procedural DDA lattice must be non-black"
+        );
+    }
+
+    #[test]
+    fn test_raymarch_vox0_dda_sealed_emf_non_black() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = create_test_host(&[], &cancel, &limits);
+
+        let mut compile_args = BTreeMap::new();
+        compile_args.insert(
+            "origin".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        compile_args.insert("voxel_size".into(), Value::F64(0.25));
+        compile_args.insert(
+            "grid_dims".into(),
+            Value::List(vec![Value::U64(1), Value::U64(1), Value::U64(1)]),
+        );
+        compile_args.insert("epoch_s".into(), Value::F64(1_700_000_000.0));
+        let mut src = BTreeMap::new();
+        src.insert(
+            "position".into(),
+            Value::List(vec![Value::F64(1.0), Value::F64(1.0), Value::F64(1.0)]),
+        );
+        src.insert(
+            "e_amplitude".into(),
+            Value::List(vec![Value::F64(150.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        src.insert("wavelength_nm".into(), Value::F64(532.0));
+        src.insert("phase".into(), Value::F64(0.0));
+        src.insert(
+            "stokes".into(),
+            Value::List(vec![Value::F64(1.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        compile_args.insert("sources".into(), Value::List(vec![Value::Record(src)]));
+        let emf = host
+            .electromagnetics_op("hypermedia.electromagnetics.compile_emf", &compile_args)
+            .expect("compile_emf succeeds");
+
+        let mut args = BTreeMap::new();
+        args.insert("emf".into(), emf);
+        args.insert("width".into(), Value::U64(16));
+        args.insert("height".into(), Value::U64(16));
+        args.insert("deflection_mass".into(), Value::F64(0.0));
+        args.insert("step_limit".into(), Value::U64(48));
+
+        let val = host
+            .electromagnetics_geodesy_ext_op("hypermedia.electromagnetics.raymarch_vox0_dda", &args)
+            .expect("raymarch_vox0_dda over sealed .emf must succeed");
+        let rec = record(&val).expect("result must be record");
+        match rec.get("brick_hits") {
+            Some(Value::U64(hits)) => {
+                assert!(*hits > 0, "sealed EMF DDA must hit bricks, got {hits}")
+            }
+            _ => panic!("Expected brick_hits as U64"),
+        }
+        let image = rec.get("image").expect("image handle");
+        let rgba = host.rgba(image).expect("valid rgba handle");
+        assert!(
+            rgba.pixels
+                .iter()
+                .any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "DDA of a non-trivial sealed .emf must be non-black"
+        );
     }
 
     #[test]

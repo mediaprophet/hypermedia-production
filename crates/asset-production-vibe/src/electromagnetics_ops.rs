@@ -11,7 +11,7 @@ use super::*;
 use qualia_core_db::etalon_render::spectral::colour_kernel::cpu_batch_emf_to_display_gamut_mapped;
 use qualia_core_db::q42::emf_container::{
     emf_brick_voxel_linear_index, EmfCellRecord64, EmfContainerReader, EmfContainerWriter,
-    EMF_BRICK_CELLS, SPEED_OF_LIGHT,
+    EMF_BRICK_CELLS, MU_0, SPEED_OF_LIGHT,
 };
 use qualia_core_db::q42::m64_matter::brick3d::encode_hilbert3d_u64;
 use std::collections::BTreeMap;
@@ -437,7 +437,10 @@ impl AssetHost<'_> {
                     .unwrap_or_default();
 
                 let base_rgb = spectral_wavelength_to_rgb(cell.wavelength_nm as f64);
-                let u_em = (cell.energy_density() as f64).max(0.0);
+                // SI u_EM (J/m³) is ~ε0·|E|² ≈ 10⁻⁷ at compiled amplitudes, so
+                // 1-exp(-u_EM) rounds to 0 at documented exposure=1.0. Spectral
+                // preview is radiometric: vacuum-impedance irradiance (W/m²).
+                let u_em = emf_cell_display_irradiance(&cell);
                 let brightness = (1.0 - (-u_em * exposure).exp()).clamp(0.0, 1.0);
 
                 // Also evaluate Etalon's CIE 1931 SPD -> XYZ -> sRGB gamut-mapped CPU oracle
@@ -494,6 +497,24 @@ impl AssetHost<'_> {
             Err("Expected retained resource key or encoded handle for emf".into())
         }
     }
+}
+
+/// Vacuum-impedance irradiance (W/m²) used as the display-linear quantity.
+///
+/// Documented default `exposure=1.0` is a gain on this irradiance, not on SI
+/// energy density (J/m³), which maps compiled non-trivial fields to black.
+pub(crate) fn emf_cell_display_irradiance(cell: &EmfCellRecord64) -> f64 {
+    let ex = cell.e_field[0] as f64;
+    let ey = cell.e_field[1] as f64;
+    let ez = cell.e_field[2] as f64;
+    let z0 = (MU_0 as f64) * (SPEED_OF_LIGHT as f64);
+    let from_e = if z0 > 0.0 {
+        (ex * ex + ey * ey + ez * ez) / z0
+    } else {
+        0.0
+    };
+    let from_s = (cell.poynting_flux_magnitude() as f64).max(cell.poynting_flux as f64);
+    from_s.max(from_e).max(0.0)
 }
 
 /// CIE 1931 / Bruton piecewise spectral-to-sRGB mapping for wavelength in nanometers.
@@ -582,7 +603,7 @@ mod tests {
     }
 
     #[test]
-    fn test_compile_verify_and_render_roundtrip() {
+    fn test_compile_verify_and_render_spectral_slice_roundtrip() {
         let cancel = AtomicBool::new(false);
         let limits = ToolLimits::default();
         let inputs = vec![];
@@ -675,6 +696,127 @@ mod tests {
             assert_eq!(rgba.width, 32);
             assert_eq!(rgba.height, 32);
             assert_eq!(rgba.pixels.len(), 1024);
+            assert!(
+                rgba.pixels
+                    .iter()
+                    .any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+                "spectral slice at documented exposure=1.0 must be non-black on axis {axis}"
+            );
         }
+    }
+
+    fn compile_green_dipole(host: &mut AssetHost<'_>) -> Value {
+        let mut compile_args = BTreeMap::new();
+        compile_args.insert(
+            "origin".into(),
+            Value::List(vec![Value::F64(0.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        compile_args.insert("voxel_size".into(), Value::F64(0.25));
+        compile_args.insert(
+            "grid_dims".into(),
+            Value::List(vec![Value::U64(1), Value::U64(1), Value::U64(1)]),
+        );
+        compile_args.insert("epoch_s".into(), Value::F64(1_700_000_000.0));
+        let mut src = BTreeMap::new();
+        src.insert(
+            "position".into(),
+            Value::List(vec![Value::F64(0.5), Value::F64(0.5), Value::F64(0.5)]),
+        );
+        src.insert(
+            "e_amplitude".into(),
+            Value::List(vec![Value::F64(150.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        src.insert("wavelength_nm".into(), Value::F64(532.0));
+        src.insert("phase".into(), Value::F64(0.0));
+        src.insert(
+            "stokes".into(),
+            Value::List(vec![Value::F64(1.0), Value::F64(0.0), Value::F64(0.0)]),
+        );
+        compile_args.insert("sources".into(), Value::List(vec![Value::Record(src)]));
+        host.electromagnetics_op("hypermedia.electromagnetics.compile_emf", &compile_args)
+            .expect("compile_emf succeeds")
+    }
+
+    #[test]
+    fn test_render_spectral_slice_default_exposure_non_black() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let inputs = vec![];
+        let mut host = create_test_host(&inputs, &cancel, &limits);
+        let emf_handle = compile_green_dipole(&mut host);
+
+        let mut render_args = BTreeMap::new();
+        render_args.insert("emf".into(), emf_handle);
+        render_args.insert("width".into(), Value::U64(16));
+        render_args.insert("height".into(), Value::U64(16));
+
+        let rgba_handle = host
+            .electromagnetics_op(
+                "hypermedia.electromagnetics.render_spectral_slice",
+                &render_args,
+            )
+            .expect("render_spectral_slice at default exposure succeeds");
+        let rgba = host.rgba(&rgba_handle).expect("valid rgba handle");
+        assert!(
+            rgba.pixels
+                .iter()
+                .any(|p| p[0] > 0 || p[1] > 0 || p[2] > 0),
+            "documented default exposure must yield at least one non-zero RGB channel"
+        );
+    }
+
+    #[test]
+    fn test_render_spectral_slice_tampered_emf_fails_closed() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let inputs = vec![];
+        let mut host = create_test_host(&inputs, &cancel, &limits);
+        let emf_handle = compile_green_dipole(&mut host);
+        let mut tampered = host
+            .workspace
+            .encoded(&emf_handle)
+            .expect("encoded emf")
+            .bytes
+            .clone();
+        let payload = 64 + 64;
+        assert!(tampered.len() > payload + 10);
+        tampered[payload + 10] ^= 0xAA;
+        let bad = host
+            .admit_encoded("emf", tampered)
+            .expect("admit tampered bytes");
+
+        let mut render_args = BTreeMap::new();
+        render_args.insert("emf".into(), bad);
+        render_args.insert("width".into(), Value::U64(8));
+        render_args.insert("height".into(), Value::U64(8));
+        let err = host
+            .electromagnetics_op(
+                "hypermedia.electromagnetics.render_spectral_slice",
+                &render_args,
+            )
+            .expect_err("tampered Q42EMF64 must fail closed");
+        assert!(
+            err.contains("Invalid EMF") || err.contains("Bao") || err.contains("Checksum"),
+            "fail-closed error must name CRC/Bao verify, got: {err}"
+        );
+    }
+
+    #[test]
+    fn test_spectral_display_irradiance_visible_for_compiled_amplitude() {
+        let mut cell = EmfCellRecord64::default();
+        cell.e_field = [150.0, 0.0, 0.0];
+        cell.b_field = [0.0, 150.0 / SPEED_OF_LIGHT, 0.0];
+        cell.poynting_flux = cell.poynting_flux_magnitude();
+        let i = emf_cell_display_irradiance(&cell);
+        assert!(i > 1.0, "150 V/m must exceed 1 W/m² display irradiance, got {i}");
+        let brightness = 1.0 - (-i * 1.0f64).exp();
+        assert!(
+            brightness * 255.0 >= 1.0,
+            "documented exposure=1.0 must quantize to a visible 8-bit channel"
+        );
+        assert!(
+            (cell.energy_density() as f64) * 255.0 < 1.0,
+            "SI energy density at this amplitude still maps to a black 8-bit pixel"
+        );
     }
 }

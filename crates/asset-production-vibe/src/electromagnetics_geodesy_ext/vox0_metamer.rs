@@ -75,14 +75,17 @@ impl AssetHost<'_> {
                         let lz = (vz % 8) as u8;
                         if let Some(cell) = reader.lookup_brick_cell(bx, by, bz, lx, ly, lz, 2) {
                             let idx = vz * gx * gy + vy * gx + vx;
-                            let d = cell.energy_density() as f64;
                             let wl = if cell.wavelength_nm > 0.0 {
                                 cell.wavelength_nm as f64
                             } else {
                                 550.0
                             };
                             grid[idx] = VoxelCell {
-                                density: d.max(0.0),
+                                // Same display quantity as spectral slice: SI u_EM
+                                // is below the 0.005 hit threshold for compiled fields.
+                                density: crate::electromagnetics_ops::emf_cell_display_irradiance(
+                                    &cell,
+                                ),
                                 wavelength_nm: wl,
                                 stokes_q: cell.stokes_q as f64,
                                 stokes_u: cell.stokes_u as f64,

@@ -257,7 +257,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         codomain: "Vox0DdaRecord{image, dda_steps_total, brick_hits, width, height}",
         morphism_kind: "Functor",
         teleology: "Raymarches a 3D `.10d` `Vox0DagNode` / `.emf` brick lattice using exact Amanatides-Woo 3D DDA voxel traversal with ADM 3+1 relativistic gravitational deflection and spectral emission integration.",
-        units_and_frames: "width/height in 8..=512 px, deflection_mass in 0.0..=1.0, step_limit in 8..=256.",
+        units_and_frames: "width/height in 8..=512 px, deflection_mass in 0.0..=1.0, step_limit in 8..=256. EMF brick optical density is vacuum-impedance irradiance (W/m²), matching render_spectral_slice.",
         arguments: "emf: optional emf handle, width=64, height=64, deflection_mass=0.05, step_limit=48",
         composable_with: &["hypermedia.radiance.encode_rgba_png", "hypermedia.discourse.review_gallery"],
         human_preview_affordance: "Encode `result.image` via hypermedia.radiance.encode_rgba_png.",
