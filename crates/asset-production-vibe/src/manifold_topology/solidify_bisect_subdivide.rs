@@ -291,7 +291,7 @@ impl AssetHost<'_> {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 6. Catmull-Clark / Loop Subdivision with Semi-Sharp Creases
+    // 6. Produce-safe Catmull-Clark with semi-sharp crease blend
     // ─────────────────────────────────────────────────────────────────────────
     pub(super) fn manifold_subdivide_catmull_clark(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["mesh", "levels", "crease"])?;
@@ -308,132 +308,155 @@ impl AssetHost<'_> {
         let mut current_triangles: Vec<[u32; 3]> = mesh.triangles.clone();
 
         for _lvl in 0..levels {
-            if current_triangles.len() * 4 > 200_000 {
+            if current_triangles.len().saturating_mul(6) > 200_000 {
                 return Err("Subdivided mesh exceeds 200,000 triangle limit".into());
             }
 
             struct EdgeInfo {
                 u: usize,
                 v: usize,
-                opposites: Vec<usize>,
+                faces: Vec<usize>,
             }
 
+            let orig_nv = current_positions.len();
+            let orig_pos = current_positions.clone();
+            for tri in &current_triangles {
+                if (tri[0] as usize) >= orig_nv
+                    || (tri[1] as usize) >= orig_nv
+                    || (tri[2] as usize) >= orig_nv
+                {
+                    return Err("triangle index out of range".into());
+                }
+            }
             let mut edge_map: BTreeMap<(usize, usize), usize> = BTreeMap::new();
             let mut edge_list: Vec<EdgeInfo> = Vec::new();
+            let mut vert_faces: Vec<Vec<usize>> = vec![Vec::new(); orig_nv];
 
-            for tri in &current_triangles {
+            for (fi, tri) in current_triangles.iter().enumerate() {
                 let indices = [tri[0] as usize, tri[1] as usize, tri[2] as usize];
+                for &idx in &indices {
+                    if idx < orig_nv {
+                        vert_faces[idx].push(fi);
+                    }
+                }
                 for i in 0..3 {
                     let u = indices[i];
                     let v = indices[(i + 1) % 3];
-                    let opp = indices[(i + 2) % 3];
                     let key = if u < v { (u, v) } else { (v, u) };
                     if let Some(&e_idx) = edge_map.get(&key) {
-                        edge_list[e_idx].opposites.push(opp);
+                        edge_list[e_idx].faces.push(fi);
                     } else {
                         let e_idx = edge_list.len();
                         edge_map.insert(key, e_idx);
                         edge_list.push(EdgeInfo {
                             u: key.0,
                             v: key.1,
-                            opposites: vec![opp],
+                            faces: vec![fi],
                         });
                     }
                 }
             }
 
-            let orig_nv = current_positions.len();
+            // Face points (triangle centroids), then edge points, then vertex points.
+            // Original positions are snapshotted so later vertices do not see in-place updates.
+            let mut face_points: Vec<[f32; 3]> = Vec::with_capacity(current_triangles.len());
+            for tri in &current_triangles {
+                let p0 = orig_pos[tri[0] as usize];
+                let p1 = orig_pos[tri[1] as usize];
+                let p2 = orig_pos[tri[2] as usize];
+                face_points.push(v_scale(v_add(v_add(p0, p1), p2), 1.0 / 3.0));
+            }
 
-            // Compute new edge vertices
-            let mut edge_vertex_indices: Vec<u32> = Vec::with_capacity(edge_list.len());
+            let mut edge_points: Vec<[f32; 3]> = Vec::with_capacity(edge_list.len());
             for edge in &edge_list {
-                let pa = current_positions[edge.u];
-                let pb = current_positions[edge.v];
+                let pa = orig_pos[edge.u];
+                let pb = orig_pos[edge.v];
                 let p_sharp = v_scale(v_add(pa, pb), 0.5);
-
-                let p_smooth = if edge.opposites.len() >= 2 {
-                    let pc = current_positions[edge.opposites[0]];
-                    let pd = current_positions[edge.opposites[1]];
-                    v_add(
-                        v_scale(v_add(pa, pb), 0.375),
-                        v_scale(v_add(pc, pd), 0.125),
-                    )
+                let p_smooth = if edge.faces.len() >= 2 {
+                    let f0 = face_points[edge.faces[0]];
+                    let f1 = face_points[edge.faces[1]];
+                    v_scale(v_add(v_add(pa, pb), v_add(f0, f1)), 0.25)
                 } else {
                     p_sharp
                 };
-
-                let p_blended = v_add(
+                edge_points.push(v_add(
                     v_scale(p_smooth, 1.0 - blend_sharp),
                     v_scale(p_sharp, blend_sharp),
-                );
-                let new_idx = (orig_nv + edge_vertex_indices.len()) as u32;
-                edge_vertex_indices.push(new_idx);
-                current_positions.push(p_blended);
+                ));
             }
 
-            // Update existing vertices with Loop stencil
             let mut vertex_neighbors: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); orig_nv];
             let mut boundary_neighbors: Vec<Vec<usize>> = vec![Vec::new(); orig_nv];
-
             for edge in &edge_list {
                 vertex_neighbors[edge.u].insert(edge.v);
                 vertex_neighbors[edge.v].insert(edge.u);
-                if edge.opposites.len() == 1 {
+                if edge.faces.len() == 1 {
                     boundary_neighbors[edge.u].push(edge.v);
                     boundary_neighbors[edge.v].push(edge.u);
                 }
             }
 
+            let mut new_positions: Vec<[f32; 3]> =
+                Vec::with_capacity(orig_nv + edge_list.len() + face_points.len());
             for i in 0..orig_nv {
-                let p_sharp = current_positions[i];
+                let p_sharp = orig_pos[i];
                 let p_smooth = if boundary_neighbors[i].len() >= 2 {
-                    let b1 = current_positions[boundary_neighbors[i][0]];
-                    let b2 = current_positions[boundary_neighbors[i][1]];
+                    let b1 = orig_pos[boundary_neighbors[i][0]];
+                    let b2 = orig_pos[boundary_neighbors[i][1]];
                     v_add(v_scale(p_sharp, 0.75), v_scale(v_add(b1, b2), 0.125))
                 } else {
-                    let k = vertex_neighbors[i].len();
-                    if k >= 3 {
-                        let beta = if k == 3 {
-                            3.0 / 16.0
-                        } else {
-                            3.0 / (8.0 * k as f32)
-                        };
-                        let mut sum_nbr = [0.0f32; 3];
-                        for &nbr in &vertex_neighbors[i] {
-                            sum_nbr = v_add(sum_nbr, current_positions[nbr]);
+                    let n = vertex_neighbors[i].len();
+                    if n >= 3 {
+                        let mut q = [0.0f32; 3];
+                        let incident = &vert_faces[i];
+                        for &fi in incident {
+                            q = v_add(q, face_points[fi]);
                         }
-                        v_add(
-                            v_scale(p_sharp, 1.0 - k as f32 * beta),
-                            v_scale(sum_nbr, beta),
+                        q = v_scale(q, 1.0 / incident.len().max(1) as f32);
+                        let mut r = [0.0f32; 3];
+                        for &nbr in &vertex_neighbors[i] {
+                            r = v_add(r, v_scale(v_add(p_sharp, orig_pos[nbr]), 0.5));
+                        }
+                        r = v_scale(r, 1.0 / n as f32);
+                        let nf = n as f32;
+                        v_scale(
+                            v_add(v_add(q, v_scale(r, 2.0)), v_scale(p_sharp, nf - 3.0)),
+                            1.0 / nf,
                         )
                     } else {
                         p_sharp
                     }
                 };
-
-                current_positions[i] = v_add(
+                new_positions.push(v_add(
                     v_scale(p_smooth, 1.0 - blend_sharp),
                     v_scale(p_sharp, blend_sharp),
-                );
+                ));
             }
 
-            // Subdivide each triangle into 4 triangles
-            let mut next_triangles: Vec<[u32; 3]> = Vec::with_capacity(current_triangles.len() * 4);
-            for tri in &current_triangles {
+            let edge_base = new_positions.len() as u32;
+            new_positions.extend_from_slice(&edge_points);
+            let face_base = new_positions.len() as u32;
+            new_positions.extend_from_slice(&face_points);
+
+            let mut next_triangles: Vec<[u32; 3]> =
+                Vec::with_capacity(current_triangles.len() * 6);
+            for (fi, tri) in current_triangles.iter().enumerate() {
                 let v0 = tri[0] as usize;
                 let v1 = tri[1] as usize;
                 let v2 = tri[2] as usize;
-
-                let e01 = edge_vertex_indices[edge_map[&(v0.min(v1), v0.max(v1))]];
-                let e12 = edge_vertex_indices[edge_map[&(v1.min(v2), v1.max(v2))]];
-                let e20 = edge_vertex_indices[edge_map[&(v2.min(v0), v2.max(v0))]];
-
-                next_triangles.push([tri[0], e01, e20]);
-                next_triangles.push([tri[1], e12, e01]);
-                next_triangles.push([tri[2], e20, e12]);
-                next_triangles.push([e01, e12, e20]);
+                let e01 = edge_base + edge_map[&(v0.min(v1), v0.max(v1))] as u32;
+                let e12 = edge_base + edge_map[&(v1.min(v2), v1.max(v2))] as u32;
+                let e20 = edge_base + edge_map[&(v2.min(v0), v2.max(v0))] as u32;
+                let f = face_base + fi as u32;
+                next_triangles.push([tri[0], e01, f]);
+                next_triangles.push([tri[0], f, e20]);
+                next_triangles.push([tri[1], e12, f]);
+                next_triangles.push([tri[1], f, e01]);
+                next_triangles.push([tri[2], e20, f]);
+                next_triangles.push([tri[2], f, e12]);
             }
 
+            current_positions = new_positions;
             current_triangles = next_triangles;
         }
 
