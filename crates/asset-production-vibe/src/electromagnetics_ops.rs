@@ -1043,7 +1043,7 @@ mod tests {
         let retained = [Resource {
             key: "unsigned.emf".into(),
             kind: "emf".into(),
-            bytes: unsigned,
+            bytes: unsigned.clone(),
         }];
         let mut retained_host = create_test_host(&retained, &cancel, &limits);
         let mut retained_args = BTreeMap::new();
@@ -1054,6 +1054,45 @@ mod tests {
         assert!(
             retained_err.contains("Bao") || retained_err.contains("seal"),
             "retained fail-closed must name Bao seal, got: {retained_err}"
+        );
+
+        let mut ray_args = BTreeMap::new();
+        ray_args.insert(
+            "emf".into(),
+            host.admit_encoded("emf", unsigned.clone())
+                .expect("admit CRC-only emf for raymarch"),
+        );
+        ray_args.insert("width".into(), Value::U64(8));
+        ray_args.insert("height".into(), Value::U64(8));
+        let ray_err = host
+            .invoke(
+                "hypermedia.electromagnetics.raymarch_vox0_dda",
+                &Value::Record(ray_args),
+            )
+            .expect_err("Bao-omitted EMF raymarch must fail closed");
+        assert!(
+            ray_err.contains("Bao") || ray_err.contains("seal"),
+            "raymarch fail-closed must name Bao seal, got: {ray_err}"
+        );
+
+        let mut tone_args = BTreeMap::new();
+        tone_args.insert(
+            "emf".into(),
+            host.admit_encoded("emf", unsigned)
+                .expect("admit CRC-only emf for sonify"),
+        );
+        tone_args.insert("sample_rate".into(), Value::U64(8_000));
+        tone_args.insert("frames".into(), Value::U64(256));
+        tone_args.insert("amplitude".into(), Value::F64(0.25));
+        let tone_err = host
+            .invoke(
+                "hypermedia.acoustics.synthesize_tone",
+                &Value::Record(tone_args),
+            )
+            .expect_err("Bao-omitted EMF sonify must fail closed");
+        assert!(
+            tone_err.contains("Bao") || tone_err.contains("seal"),
+            "sonify fail-closed must name Bao seal, got: {tone_err}"
         );
     }
 

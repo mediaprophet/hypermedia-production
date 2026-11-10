@@ -663,6 +663,21 @@ impl AssetHost<'_> {
         let mut scratch = vec![M64PayloadInterval::default(); 1024];
         let reader = M64Reader::parse(&bytes, limits, &mut scratch)
             .map_err(|e| format!("M64 verification failed: {e}"))?;
+        // QualiaDB parse admits HOLO/POINT with a zero prefix; untrusted occupancy needs a Bao seal.
+        for i in 0..reader.verification().chunks {
+            let chunk = reader
+                .chunk(i)
+                .ok_or_else(|| format!("M64 verification failed: missing chunk {i}"))?;
+            let entry = chunk.directory_entry();
+            if matches!(
+                entry.chunk_record_mode,
+                M64_MODE_HOLO | M64_MODE_POINT
+            ) && entry.bao_root_hash_prefix == [0u8; 12]
+                && entry.compression_flags != 2
+            {
+                return Err("M64 occupancy omitted BLAKE3-Bao seal".into());
+            }
+        }
         let v = reader.verification();
         let h = reader.header();
 
@@ -826,6 +841,31 @@ mod tests {
         assert!(
             M64Reader::parse(&tampered, limits, &mut scratch).is_err(),
             "occupancy payload tamper must fail Bao"
+        );
+
+        let mut unsigned = bytes.clone();
+        strip_occupancy_bao_keep_dir_crc(&mut unsigned);
+        let unsigned_limits = M64ReadLimits {
+            max_file_bytes: unsigned.len() + 1024,
+            max_chunks: 4,
+            max_records: 8192,
+        };
+        let mut unsigned_scratch = [M64PayloadInterval::default(); 4];
+        assert!(
+            M64Reader::parse(&unsigned, unsigned_limits, &mut unsigned_scratch).is_ok(),
+            "QualiaDB parse still admits CRC-only occupancy"
+        );
+        let admitted = host
+            .admit_encoded("m64", unsigned)
+            .expect("admit CRC-only occupancy");
+        let mut unsigned_args = BTreeMap::new();
+        unsigned_args.insert("m64".into(), admitted);
+        let err = host
+            .geodesy_op("hypermedia.geodesy.verify_m64", &unsigned_args)
+            .expect_err("Bao-omitted occupancy must fail closed");
+        assert!(
+            err.contains("Bao") || err.contains("seal"),
+            "fail-closed error must name Bao seal, got: {err}"
         );
     }
 
@@ -1036,5 +1076,29 @@ mod tests {
             .expect("verify_m64 point");
         let rec = record(&summary).expect("record");
         assert_eq!(required(rec, "valid").ok(), Some(&Value::Bool(true)));
+
+        let mut tampered = bytes.clone();
+        let payload_off = 64 + LRM3_BLOCK_BYTES + 64;
+        tampered[payload_off] ^= 0x01;
+        let limits = M64ReadLimits {
+            max_file_bytes: tampered.len() + 1024,
+            max_chunks: 4,
+            max_records: 8192,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        assert!(
+            M64Reader::parse(&tampered, limits, &mut scratch).is_err(),
+            "occupancy payload tamper must fail Bao"
+        );
+    }
+
+    fn strip_occupancy_bao_keep_dir_crc(bytes: &mut [u8]) {
+        let dir_off = 64 + LRM3_BLOCK_BYTES;
+        let mut entry: M64ChunkDirectoryEntry =
+            bytemuck::pod_read_unaligned(&bytes[dir_off..dir_off + 64]);
+        entry.bao_root_hash_prefix = [0u8; 12];
+        entry.compression_flags = 0;
+        entry.update_crc();
+        bytes[dir_off..dir_off + 64].copy_from_slice(bytemuck::bytes_of(&entry));
     }
 }
