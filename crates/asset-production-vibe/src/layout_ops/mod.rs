@@ -260,7 +260,7 @@ pub(super) fn compute_box_corner_radius(role: &str, h: f64, base_r: f64) -> f64 
         "button" => base_r.min(h / 2.0),
         "badge" => (h / 2.0).max(base_r),
         "input" => (base_r * 0.6).min(h / 2.0),
-        "header" | "sidebar" => 0.0,
+        "header" | "sidebar" | "toolbar" | "footer" => 0.0,
         "canvas" => (base_r * 0.4).min(h / 2.0),
         _ => base_r.min(h / 2.0),
     }
@@ -269,7 +269,8 @@ pub(super) fn compute_box_corner_radius(role: &str, h: f64, base_r: f64) -> f64 
 pub(super) fn compute_box_colors(b: &LayoutBox, theme: &ThemeTokens) -> ([u8; 4], [u8; 4], f64) {
     let mut fill = match b.role.as_str() {
         "panel" => theme.panel_bg,
-        "header" => blend_color(theme.panel_bg, theme.surface_bg, 0.25),
+        "header" | "toolbar" => blend_color(theme.panel_bg, theme.surface_bg, 0.25),
+        "footer" => blend_color(theme.panel_bg, theme.surface_bg, 0.20),
         "sidebar" => blend_color(theme.panel_bg, theme.surface_bg, 0.15),
         "card" => theme.panel_bg,
         "button" => match b.state.as_str() {
@@ -350,4 +351,205 @@ pub(super) fn xml_escape(s: &str) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qualia_core_db::etalon_render::frame_lock::{
+        FrameLockPacket, FRAME_LOCK_MAGIC, FRAME_LOCK_VERSION,
+    };
+    use std::collections::BTreeMap;
+    use std::sync::atomic::AtomicBool;
+
+    fn host<'a>(
+        workspace: AssetWorkspace,
+        inputs: &'a [Resource],
+        cancel: &'a AtomicBool,
+        limits: &'a ToolLimits,
+    ) -> AssetHost<'a> {
+        AssetHost {
+            workspace,
+            inputs,
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn box_spec(id: &str, role: &str, extra: &[(&str, Value)]) -> Value {
+        let mut rec = BTreeMap::from([
+            ("id".into(), Value::String(id.into())),
+            ("role".into(), Value::String(role.into())),
+        ]);
+        for (k, v) in extra {
+            rec.insert((*k).into(), v.clone());
+        }
+        Value::Record(rec)
+    }
+
+    fn box_xywh(list: &[Value], id: &str) -> (f64, f64, f64, f64) {
+        for item in list {
+            let r = record(item).unwrap();
+            if text(r.get("id").unwrap()).unwrap() == id {
+                return (
+                    num(r.get("x").unwrap()).unwrap(),
+                    num(r.get("y").unwrap()).unwrap(),
+                    num(r.get("width").unwrap()).unwrap(),
+                    num(r.get("height").unwrap()).unwrap(),
+                );
+            }
+        }
+        panic!("missing box {id}");
+    }
+
+    #[test]
+    fn test_layout_box_tree_flex_grid_nonoverlapping() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(AssetWorkspace::default(), &[], &cancel, &limits);
+
+        let mut col = Args::new();
+        col.insert("width".into(), Value::F64(400.0));
+        col.insert("height".into(), Value::F64(300.0));
+        col.insert("direction".into(), Value::String("column".into()));
+        col.insert("padding".into(), Value::F64(10.0));
+        col.insert("gap".into(), Value::F64(8.0));
+        col.insert(
+            "boxes".into(),
+            Value::List(vec![
+                box_spec("header", "header", &[("height", Value::F64(40.0))]),
+                box_spec("body", "panel", &[("flex", Value::F64(1.0))]),
+                box_spec("footer", "footer", &[("height", Value::F64(32.0))]),
+            ]),
+        );
+        let solved = h
+            .layout_op("hypermedia.layout.solve_box_tree", &col)
+            .expect("column box-tree");
+        let rec = record(&solved).unwrap();
+        assert_eq!(rec.get("non_overlapping"), Some(&Value::Bool(true)));
+        let boxes = list(rec.get("boxes").unwrap()).unwrap();
+        assert_eq!(boxes.len(), 3);
+        let (hx, hy, hw, hh) = box_xywh(boxes, "header");
+        let (_bx, by, _bw, bh) = box_xywh(boxes, "body");
+        let (_fx, fy, _fw, fh) = box_xywh(boxes, "footer");
+        assert_eq!((hx, hy, hw, hh), (10.0, 10.0, 380.0, 40.0));
+        // avail_h = 280, gaps = 16, fixed = 72, flex body = 192
+        assert!((bh - 192.0).abs() < 1e-9, "body height {bh}");
+        assert!((by - 58.0).abs() < 1e-9, "body y {by}");
+        assert!((fy - (by + bh + 8.0)).abs() < 1e-9);
+        assert!((fh - 32.0).abs() < 1e-9);
+
+        let mut row = Args::new();
+        row.insert("width".into(), Value::F64(400.0));
+        row.insert("height".into(), Value::F64(100.0));
+        row.insert("direction".into(), Value::String("row".into()));
+        row.insert("padding".into(), Value::F64(0.0));
+        row.insert("gap".into(), Value::F64(0.0));
+        row.insert(
+            "boxes".into(),
+            Value::List(vec![
+                box_spec(
+                    "a",
+                    "sidebar",
+                    &[("flex", Value::F64(1.0)), ("max_size", Value::F64(80.0))],
+                ),
+                box_spec("b", "panel", &[("flex", Value::F64(1.0))]),
+                box_spec("c", "panel", &[("flex", Value::F64(1.0))]),
+            ]),
+        );
+        let solved_row = h
+            .layout_op("hypermedia.layout.solve_box_tree", &row)
+            .expect("row clamp");
+        let rec_row = record(&solved_row).unwrap();
+        assert_eq!(rec_row.get("non_overlapping"), Some(&Value::Bool(true)));
+        let row_boxes = list(rec_row.get("boxes").unwrap()).unwrap();
+        let (_ax, _, aw, _) = box_xywh(row_boxes, "a");
+        let (_bx, _, bw, _) = box_xywh(row_boxes, "b");
+        let (_cx, _, cw, _) = box_xywh(row_boxes, "c");
+        assert!((aw - 80.0).abs() < 1e-9, "clamped sidebar {aw}");
+        assert!((bw - 160.0).abs() < 1e-9, "flex b {bw}");
+        assert!((cw - 160.0).abs() < 1e-9, "flex c {cw}");
+
+        let mut grid = Args::new();
+        grid.insert("width".into(), Value::F64(220.0));
+        grid.insert("height".into(), Value::F64(120.0));
+        grid.insert("padding".into(), Value::F64(10.0));
+        grid.insert("gap".into(), Value::F64(10.0));
+        grid.insert("grid_columns".into(), Value::U64(2));
+        grid.insert(
+            "boxes".into(),
+            Value::List(vec![
+                box_spec("g0", "card", &[("span", Value::U64(2))]),
+                box_spec("g1", "button", &[]),
+                box_spec("g2", "badge", &[]),
+            ]),
+        );
+        let solved_grid = h
+            .layout_op("hypermedia.layout.solve_box_tree", &grid)
+            .expect("grid span");
+        let rec_grid = record(&solved_grid).unwrap();
+        assert_eq!(rec_grid.get("non_overlapping"), Some(&Value::Bool(true)));
+        let grid_boxes = list(rec_grid.get("boxes").unwrap()).unwrap();
+        let (g0x, g0y, g0w, _) = box_xywh(grid_boxes, "g0");
+        let (g1x, g1y, g1w, _) = box_xywh(grid_boxes, "g1");
+        let (g2x, _, g2w, _) = box_xywh(grid_boxes, "g2");
+        assert_eq!((g0x, g0y), (10.0, 10.0));
+        assert!((g0w - 200.0).abs() < 1e-9, "span-2 width {g0w}");
+        assert!(g1y > g0y);
+        assert!((g1w - g2w).abs() < 1e-9);
+        assert!(g2x > g1x);
+    }
+
+    #[test]
+    fn test_layout_framlock_crc32c() {
+        let mut pkt = FrameLockPacket {
+            magic: FRAME_LOCK_MAGIC,
+            protocol_version: FRAME_LOCK_VERSION,
+            cluster_id: 1,
+            lamport_clock: 7,
+            observer_pos: [0.0, 1.65, 0.0],
+            solar_irradiance_alpha: 1.0,
+            observer_rot: [0.0, 0.0, 0.0, 1.0],
+            quantum_branch_q: 0,
+            environmental_seed: 2026,
+            network_flags: 0,
+            packet_crc32c: 0,
+        };
+        pkt.update_crc();
+        assert!(pkt.validate().is_ok(), "FrameLock CRC-32C must validate");
+        assert_eq!(
+            std::mem::size_of::<FrameLockPacket>(),
+            64,
+            "FrameLockPacket is a 64-byte UDP multicast record"
+        );
+        let sealed = pkt.packet_crc32c;
+        pkt.lamport_clock = 8;
+        assert!(
+            pkt.validate().is_err(),
+            "tampered FrameLock without CRC refresh must fail-closed"
+        );
+        pkt.update_crc();
+        assert_ne!(pkt.packet_crc32c, sealed);
+        assert!(pkt.validate().is_ok());
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(AssetWorkspace::default(), &[], &cancel, &limits);
+        let mut args = Args::new();
+        args.insert("rows".into(), Value::U64(6));
+        args.insert("cols".into(), Value::U64(10));
+        args.insert("dome_fov_deg".into(), Value::F64(180.0));
+        args.insert("frame_index".into(), Value::U64(7));
+        let res = h
+            .living_world_anatomy_op(
+                "hypermedia.layout.synchronize_companion_frustum",
+                &args,
+            )
+            .expect("FrameLock morphism");
+        let rec = record(&res).unwrap();
+        assert_eq!(rec.get("wedge_count"), Some(&Value::I64(60)));
+        assert_eq!(rec.get("frame_index"), Some(&Value::I64(7)));
+        assert_eq!(rec.get("packet_valid_crc32c"), Some(&Value::Bool(true)));
+    }
 }
