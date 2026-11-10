@@ -190,6 +190,11 @@ impl AssetHost<'_> {
         Ok(())
     }
     fn encode(&mut self, kind: &str, bytes: Vec<u8>) -> Result<Value, String> {
+        self.admit_encoded(kind, bytes)
+    }
+
+    /// Admit bytes the production host already holds. The files producer accepts the handle.
+    pub fn admit_encoded(&mut self, kind: &str, bytes: Vec<u8>) -> Result<Value, String> {
         self.workspace.insert(
             Artifact::Encoded(Resource {
                 key: String::new(),
@@ -250,6 +255,7 @@ impl AssetHost<'_> {
                 | "hypermedia.discourse.query_anatomical_ontology_pin"
                 | "hypermedia.geodesy.step_sector_continuum_3d"
                 | "hypermedia.layout.synchronize_companion_frustum"
+                | "qualia.species.assemble_corpus"
         ) {
             self.living_world_anatomy_op(canonical_id, args)
         } else if matches!(

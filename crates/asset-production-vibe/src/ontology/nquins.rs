@@ -436,4 +436,7 @@ pub static ONTOLOGY_NQUINS: &[NQuin48] = &[
     NQuin48::precondition("https://qualiadb.org/ext/hypermedia/chronicle#recalculate_tabular_fiduciary_archive", "https://qualiadb.org/ontology/hypermedia#SpreadsheetFormulasBalancedJournalLinesAndTimelineClips", 144),
     NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/chronicle#recalculate_tabular_fiduciary_archive", "https://qualiadb.org/ontology/hypermedia#RecalculatedWorkbookHashChainedLedgerDocxOtioMkvProResRecord", 144),
     NQuin48::invariant("https://qualiadb.org/ext/hypermedia/chronicle#recalculate_tabular_fiduciary_archive", "https://qualiadb.org/ontology/hypermedia#ZeroSumDoubleEntryAccountingAndTamperEvidentAuditChain", 144),
+    NQuin48::precondition("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#SourcesAndEvidencedAssertions", 145),
+    NQuin48::postcondition("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#SealedSpeciesCorpusVolume", 145),
+    NQuin48::invariant("https://qualiadb.org/ext/qualia/species#assemble_corpus", "https://qualiadb.org/ontology/qualia#ConflictsKeptAndUnsourcedValuesAreModelAssumptions", 145),
 ];

@@ -1,4 +1,5 @@
 use super::*;
+use qualia_core_db::hypermedia_authoring::Camera3D;
 use qualia_core_db::container_10d::header::Container10dHeader;
 use qualia_core_db::container_10d::section::{parse_section_table, SectionType};
 use qualia_core_db::container_10d::surface_reading::decode_surface_reading;
@@ -295,7 +296,18 @@ impl AssetHost<'_> {
     fn manifold_compile_10d_pbr(&mut self, a: &Args) -> Result<Value, String> {
         fields(
             a,
-            &["mesh", "albedo", "source_10d", "topology", "spatial_index"],
+            &[
+                "mesh",
+                "albedo",
+                "source_10d",
+                "topology",
+                "spatial_index",
+                "camera_position",
+                "camera_target",
+                "camera_up",
+                "camera_fov",
+                "camera_near",
+            ],
         )?;
         let topology = boolean(a, "topology", true)?;
         let spatial_index = boolean(a, "spatial_index", true)?;
@@ -363,44 +375,99 @@ impl AssetHost<'_> {
             }
         }
 
-        // Sample albedo pixels or transfer nearest-vertex colors from source_10d
+        // Sample albedo pixels or transfer nearest-vertex colors from source_10d.
+        // Godot Camera3D look-at projects the albedo when camera_position is set;
+        // spherical UV remains the fallback for backfaces, off-frame, and keyed black.
         let surface_reading: Option<Vec<[f32; 4]>> = if let Some(rgba) = albedo {
             if rgba.width == 0 || rgba.height == 0 || rgba.pixels.is_empty() {
                 return Err("Albedo image has empty dimensions".into());
             }
             let centroid = mesh.centroid();
+            let camera_eye = match a.get("camera_position") {
+                Some(v) => Some(vector::<3>(v)?),
+                None => None,
+            };
+            let camera_target = match a.get("camera_target") {
+                Some(v) => vector::<3>(v)?,
+                None => [centroid[0] as f64, centroid[1] as f64, centroid[2] as f64],
+            };
+            let camera_up = match a.get("camera_up") {
+                Some(v) => vector::<3>(v)?,
+                None => [0.0, 1.0, 0.0],
+            };
+            let camera_fov = number(a, "camera_fov", 45.0)?;
+            let camera_near = number(a, "camera_near", 0.1)?;
             let mut readings = Vec::with_capacity(mesh.positions.len());
             let pi = std::f64::consts::PI;
             let two_pi = 2.0 * pi;
+            let max_x = (rgba.width - 1) as f64;
+            let max_y = (rgba.height - 1) as f64;
+            let vw = rgba.width as f64;
+            let vh = rgba.height as f64;
 
-            for p in &mesh.positions {
+            let sample_uv = |u: f64, v: f64| -> [f32; 4] {
+                let px = ((u * max_x).round() as usize).min(rgba.width as usize - 1);
+                let py = ((v * max_y).round() as usize).min(rgba.height as usize - 1);
+                let idx = py * rgba.width as usize + px;
+                let pix = rgba.pixels.get(idx).copied().unwrap_or([255, 255, 255, 255]);
+                [
+                    pix[0] as f32 / 255.0,
+                    pix[1] as f32 / 255.0,
+                    pix[2] as f32 / 255.0,
+                    pix[3] as f32 / 255.0,
+                ]
+            };
+
+            for (i, p) in mesh.positions.iter().enumerate() {
                 let dx = (p[0] - centroid[0]) as f64;
                 let dy = (p[1] - centroid[1]) as f64;
                 let dz = (p[2] - centroid[2]) as f64;
                 let r = (dx * dx + dy * dy + dz * dz).sqrt();
-
-                let (u, v) = if r < 1e-9 {
-                    (0.5, 0.5)
+                let spherical = if r < 1e-9 {
+                    sample_uv(0.5, 0.5)
                 } else {
                     let phi = dz.atan2(dx);
                     let u = (phi / two_pi + 0.5).clamp(0.0, 1.0);
                     let lat = (dy / r).clamp(-1.0, 1.0).asin();
                     let v = (lat / pi + 0.5).clamp(0.0, 1.0);
-                    (u, v)
+                    sample_uv(u, v)
                 };
 
-                let max_x = (rgba.width - 1) as f64;
-                let max_y = (rgba.height - 1) as f64;
-                let px = ((u * max_x).round() as usize).min(rgba.width as usize - 1);
-                let py = ((v * max_y).round() as usize).min(rgba.height as usize - 1);
-                let idx = py * rgba.width as usize + px;
-                let pix = rgba.pixels.get(idx).copied().unwrap_or([255, 255, 255, 255]);
-                readings.push([
-                    pix[0] as f32 / 255.0,
-                    pix[1] as f32 / 255.0,
-                    pix[2] as f32 / 255.0,
-                    pix[3] as f32 / 255.0,
-                ]);
+                let projected = if let Some(eye) = camera_eye {
+                    let world = [p[0] as f64, p[1] as f64, p[2] as f64];
+                    let n = normals[i];
+                    let view = [eye[0] - world[0], eye[1] - world[1], eye[2] - world[2]];
+                    let facing = n[0] as f64 * view[0] + n[1] as f64 * view[1] + n[2] as f64 * view[2];
+                    if facing > 0.0 {
+                        Camera3D::unproject_position_look_at(
+                            eye,
+                            camera_target,
+                            camera_up,
+                            camera_fov,
+                            world,
+                            (vw, vh),
+                            camera_near,
+                        )
+                        .and_then(|px| {
+                            if px[0] < 0.0 || px[1] < 0.0 || px[0] >= vw || px[1] >= vh {
+                                return None;
+                            }
+                            let color = sample_uv(px[0] / vw, px[1] / vh);
+                            // Key near-black studio backdrop so it does not stain the mesh.
+                            if color[0].max(color[1]).max(color[2]) < 0.05 {
+                                None
+                            } else {
+                                Some(color)
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                readings.push(projected.unwrap_or(spherical));
             }
             Some(readings)
         } else if let Some((ref_pos, ref_cols)) = source_10d_colors {

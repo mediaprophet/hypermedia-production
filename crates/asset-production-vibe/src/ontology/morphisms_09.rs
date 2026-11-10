@@ -1,4 +1,4 @@
-﻿//! Ontological and agentic utility specifications for morphisms 128..143.
+﻿//! Ontological and agentic utility specifications for morphisms 128..144.
 
 use super::{AgenticMorphismSpec, DEFAULT_ENVELOPE, DEFAULT_PARAMS};
 use vibescript_abi::{
@@ -388,6 +388,30 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
             5,
             "(f64, f64, i64) -> TabularFiduciaryArchiveRecord",
             143
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.species.assemble_corpus",
+        aliases: &["species.assemble_corpus", "assemble_species_corpus"],
+        category: "manifold",
+        morphism: "assemble_corpus",
+        owner: "QualiaDB/q42/species_corpus",
+        summary: "Sources and evidenced assertions -> species .q42 volume, CBOR-LD projection, digest, conflicts and gaps",
+        domain: "(SpeciesCorpusDocument)",
+        codomain: "SealedSpeciesCorpus{corpus_iri, assertion_count, gap_count, conflict_count, q42_sha256}",
+        morphism_kind: "InitialAlgebraConstructor",
+        teleology: "Assembles one taxon concept's ingest provenance and evidenced assertions into a species corpus volume. Conflicting values are kept. Missing expected facts stay as recorded gaps.",
+        units_and_frames: "QUDT quantities on each assertion; the volume digest is SHA-256 of the native .q42 bytes.",
+        arguments: "corpus={species corpus record} or corpus=\"corpus.q42\"",
+        composable_with: &["hypermedia.manifold.compile_vertebrate_anatomy_10d"],
+        human_preview_affordance: "Inspect assertion, gap and conflict counts and the volume digest.",
+        abi_descriptor: morphism_func!(
+            "assemble_corpus",
+            "https://qualiadb.org/ext/qualia/species#assemble_corpus",
+            2,
+            24,
+            "(SpeciesCorpusDocument) -> SealedSpeciesCorpus",
+            144
         ),
     },
 ];

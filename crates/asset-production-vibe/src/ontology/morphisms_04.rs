@@ -40,9 +40,9 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         domain: "(Manifold3D, OptionalAlbedoRgba8, TopologyBool, SpatialIndexBool)",
         codomain: "EncodedResource(10d)",
         morphism_kind: "CoalgebricProjection",
-        teleology: "Compiles a 3D manifold with smooth area-weighted vertex normal frames, spherical-UV sampled per-vertex PBR albedo surface readings, half-edge topology, and BVH spatial index into a self-verifying `.10d` container.",
-        units_and_frames: "QualiaDB `.10d` container with QuantizedMesh, FieldSidecar normals, SurfaceReading RGBA, Topology, and SpatialIndex sections + whole-file CRC-32C.",
-        arguments: "mesh: handle, albedo: optional rgba handle, topology=true, spatial_index=true",
+        teleology: "Compiles a 3D manifold with smooth area-weighted vertex normal frames, Godot-style Camera3D look-at albedo projection (spherical-UV fallback), half-edge topology, and BVH spatial index into a self-verifying `.10d` container.",
+        units_and_frames: "QualiaDB `.10d` container with QuantizedMesh, FieldSidecar normals, SurfaceReading RGBA, Topology, and SpatialIndex sections + whole-file CRC-32C. Camera uses vertical FOV degrees, Y-up look-at, viewport = albedo size.",
+        arguments: "mesh: handle, albedo: optional rgba handle, topology=true, spatial_index=true, camera_position:[x,y,z] optional Godot Camera3D look-at eye, camera_target:[x,y,z], camera_up:[0,1,0], camera_fov=45, camera_near=0.1",
         composable_with: &["hypermedia.discourse.review_gallery"],
         human_preview_affordance: "Render 2048x2048 PNG preview via `synth preview`.",
         abi_descriptor: morphism_func!(

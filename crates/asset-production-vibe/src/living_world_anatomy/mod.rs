@@ -34,6 +34,12 @@ pub mod whitegum_canopy;
 mod botanical_vertebrate_10d;
 pub mod portable_scaffold;
 mod rig_ontology_continuum_frustum;
+pub mod corpus_values;
+pub mod joint_rom;
+pub mod rule_pack;
+pub mod species_spec;
+#[cfg(test)]
+mod species_spec_tests;
 pub mod turntable_render;
 
 pub(super) fn opt_string(a: &Args, k: &str, default: &str) -> Result<String, String> {
@@ -312,6 +318,10 @@ impl AssetHost<'_> {
             | "layout.synchronize_companion_frustum"
             | "synth.layout.synchronize_companion_frustum"
             | "synchronize_companion_frustum" => self.synchronize_companion_frustum(a),
+
+            "qualia.species.assemble_corpus"
+            | "species.assemble_corpus"
+            | "assemble_species_corpus" => self.assemble_species_corpus(a),
 
             _ => Err(format!("Unknown living-world anatomy operation: {id}")),
         }

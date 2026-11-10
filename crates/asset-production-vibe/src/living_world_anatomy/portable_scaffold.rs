@@ -1,6 +1,7 @@
 //! Portable Model-Family Anatomical Scaffold Compiler (`portable_scaffold.rs`).
 //!
-//! Compiles portable JSON / VibeScript record scaffolds into a complete 3-layer
+//! Compiles VibeScript species-spec records (`qualia.portable-anatomy-scaffold/v1`, resolved by
+//! [`super::species_spec`]) into a complete 3-layer
 //! [`CompiledVertebrateAnatomy10d`] living container (`Osteology`, `MyologyAndTendons`,
 //! `ExternalIntegument`) with `mirror_x` bilateral symmetry, named palette lookup,
 //! named skeletal joint aliases, multi-station countershaded lofts, bicondylar long bones,
@@ -16,7 +17,8 @@ use qualia_core_db::render::vertebrate_anatomy::{
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 
-/// Compiles a 3-layer `.10d` vertebrate anatomical twin from a portable JSON scaffold.
+/// Compiles a 3-layer `.10d` vertebrate anatomical twin from a species spec (VibeScript record
+/// converted to its JSON data model).
 pub fn build_anatomy_from_portable_scaffold(
     scaffold: &JsonValue,
     default_archetype: FaunaBiomechanicalArchetype,
