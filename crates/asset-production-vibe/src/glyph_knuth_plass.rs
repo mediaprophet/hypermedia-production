@@ -16,33 +16,101 @@ fn escape_xml(s: &str) -> String {
         .replace('>', "&gt;")
 }
 
-/// UAX #9 L2 visual order for a single laid-out line (char-level levels).
-fn visual_reorder_line(line: &str) -> String {
-    use vector_glyph_shaping::{bidi_class, reorder_visual, resolve_bidi_runs, BidiClass, BidiDirection};
+/// Strong / number / neutral classes matching `shape_harfbuzz_bidi` I1+N1/N2.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum LineBidi {
+    L,
+    R,
+    EN,
+    AN,
+    N,
+}
+
+fn line_bidi_class(ch: char) -> LineBidi {
+    use vector_glyph_shaping::{bidi_class, BidiClass};
+    let cp = ch as u32;
+    // vector_glyph_shaping::bidi_class maps U+0660..=U+0669 to R, not AN.
+    if (0x0660..=0x0669).contains(&cp) || (0x06F0..=0x06F9).contains(&cp) {
+        return LineBidi::AN;
+    }
+    match bidi_class(ch) {
+        BidiClass::AL | BidiClass::R => LineBidi::R,
+        BidiClass::L => LineBidi::L,
+        BidiClass::EN => LineBidi::EN,
+        BidiClass::AN => LineBidi::AN,
+        _ => LineBidi::N,
+    }
+}
+
+/// UAX #9 L2 visual order for a laid-out line.
+/// `base_level` is the paragraph embedding (P2/P3), not re-detected from the line.
+fn visual_reorder_line(line: &str, base_level: u8) -> String {
+    use vector_glyph_shaping::reorder_visual;
 
     let chars: Vec<char> = line.chars().collect();
-    if chars.is_empty() {
+    let n = chars.len();
+    if n == 0 {
         return String::new();
     }
-    let (dir, _) = resolve_bidi_runs(line, None);
-    let base: u8 = if dir == BidiDirection::Rtl { 1 } else { 0 };
-    let mut levels = Vec::with_capacity(chars.len());
-    for &ch in &chars {
-        let lvl = match bidi_class(ch) {
-            BidiClass::AL | BidiClass::R => 1,
-            BidiClass::L => 0,
-            BidiClass::EN | BidiClass::AN => {
-                if base == 1 {
-                    2
-                } else {
-                    0
-                }
+    let classes: Vec<LineBidi> = chars.iter().copied().map(line_bidi_class).collect();
+    let mut levels = vec![base_level; n];
+    for i in 0..n {
+        match classes[i] {
+            LineBidi::R => levels[i] = 1,
+            LineBidi::L | LineBidi::EN | LineBidi::AN => {
+                levels[i] = if base_level == 1 { 2 } else { 0 };
             }
-            _ => base,
+            LineBidi::N => {}
+        }
+    }
+    for i in 0..n {
+        if classes[i] != LineBidi::N {
+            continue;
+        }
+        let mut prev_level = base_level;
+        for j in (0..i).rev() {
+            if classes[j] != LineBidi::N {
+                prev_level = levels[j];
+                break;
+            }
+        }
+        let mut next_level = base_level;
+        for j in (i + 1)..n {
+            if classes[j] != LineBidi::N {
+                next_level = levels[j];
+                break;
+            }
+        }
+        levels[i] = if (prev_level % 2) == (next_level % 2) {
+            prev_level
+        } else {
+            base_level
         };
-        levels.push(lvl);
     }
     reorder_visual(&levels).into_iter().map(|i| chars[i]).collect()
+}
+
+/// `\r\n` is one paragraph break; `\n` and `\r` each start a new paragraph.
+fn split_paragraphs(text: &str) -> Vec<&str> {
+    let mut paras = Vec::new();
+    let mut rest = text;
+    loop {
+        let n = rest.find('\n');
+        let r = rest.find('\r');
+        let (idx, skip) = match (n, r) {
+            (None, None) => {
+                paras.push(rest);
+                break;
+            }
+            (Some(n), None) => (n, 1),
+            (None, Some(r)) => (r, 1),
+            (Some(n), Some(r)) if n < r => (n, 1),
+            (Some(n), Some(r)) => (r, if n == r + 1 { 2 } else { 1 }),
+        };
+        paras.push(&rest[..idx]);
+        rest = &rest[idx + skip..];
+    }
+    paras
 }
 
 struct GlyphTok {
@@ -62,16 +130,6 @@ fn paragraph_glyphs(text: &str, em_px: f64) -> (Vec<GlyphTok>, Vec<vector_glyph_
     let mut i = 0;
     while i < chars.len() {
         let ch = chars[i];
-        if ch == '\n' || ch == '\r' {
-            if !toks.is_empty() {
-                cands.push(Breakpoint {
-                    end: toks.len(),
-                    hyphen: 0.0,
-                });
-            }
-            i += 1;
-            continue;
-        }
         if ch.is_whitespace() {
             let k = toks.last().map(|t| pair_kerning(t.ch, ch)).unwrap_or(0.0);
             toks.push(GlyphTok {
@@ -86,7 +144,7 @@ fn paragraph_glyphs(text: &str, em_px: f64) -> (Vec<GlyphTok>, Vec<vector_glyph_
             continue;
         }
         let start = i;
-        while i < chars.len() && !chars[i].is_whitespace() && chars[i] != '\n' && chars[i] != '\r' {
+        while i < chars.len() && !chars[i].is_whitespace() {
             i += 1;
         }
         let word: String = chars[start..i].iter().collect();
@@ -110,7 +168,7 @@ fn paragraph_glyphs(text: &str, em_px: f64) -> (Vec<GlyphTok>, Vec<vector_glyph_
     (toks, cands, hyphen_split_count)
 }
 
-fn lines_from_breaks(toks: &[GlyphTok], breaks: &[(usize, bool)]) -> Vec<String> {
+fn lines_from_breaks(toks: &[GlyphTok], breaks: &[(usize, bool)], base_level: u8) -> Vec<String> {
     let mut lines = Vec::new();
     let mut start = 0usize;
     for &(end, hyphenated) in breaks {
@@ -126,7 +184,7 @@ fn lines_from_breaks(toks: &[GlyphTok], breaks: &[(usize, bool)]) -> Vec<String>
             line.push('-');
         }
         if !line.is_empty() {
-            lines.push(visual_reorder_line(&line));
+            lines.push(visual_reorder_line(&line, base_level));
         }
         start = end;
     }
@@ -158,6 +216,7 @@ impl AssetHost<'_> {
         use vector_glyph_shaping::{
             AreaTextOptions, ComposerParams, OtFeatures, SfntTable, build_sfnt_font,
             calc_table_checksum, compose, layout_area_text, parse_sfnt_directory, resolve_bidi_runs,
+            BidiDirection,
         };
         use vector_locus_geometry::Rect;
 
@@ -169,27 +228,39 @@ impl AssetHost<'_> {
         let (_, bidi_runs) = resolve_bidi_runs(&text_str, None);
         let ot = OtFeatures::from_tags(["liga", "kern", "smcp"]);
 
-        let (toks, cands, hyphen_split_count) = paragraph_glyphs(&text_str, em_px);
-        let glyphs: Vec<_> = toks.iter().map(|t| t.glyph).collect();
+        // Compose each paragraph; KP has no forced-break penalty, so `\n` must not stay in one run.
         let measure_w = w.max(60.0);
-        let kp_breaks = compose(
-            &glyphs,
-            &|_| measure_w,
-            &|_| 0.0,
-            &cands,
-            &ComposerParams::default(),
-        );
-
-        let lines = if let Some(ref br) = kp_breaks {
-            lines_from_breaks(&toks, br)
-        } else {
-            let area_res = layout_area_text(
-                Rect::new(0.0, 0.0, w, h),
-                &text_str,
-                &AreaTextOptions::default(),
-            );
-            area_res.lines.into_iter().map(|l| l.text).collect()
-        };
+        let mut lines = Vec::new();
+        let mut hyphen_split_count = 0i64;
+        let mut kp_converged = true;
+        for para in split_paragraphs(&text_str) {
+            if para.is_empty() {
+                continue;
+            }
+            let (dir, _) = resolve_bidi_runs(para, None);
+            let base_level: u8 = if dir == BidiDirection::Rtl { 1 } else { 0 };
+            let (toks, cands, hyph) = paragraph_glyphs(para, em_px);
+            hyphen_split_count += hyph;
+            let glyphs: Vec<_> = toks.iter().map(|t| t.glyph).collect();
+            match compose(
+                &glyphs,
+                &|_| measure_w,
+                &|_| 0.0,
+                &cands,
+                &ComposerParams::default(),
+            ) {
+                Some(br) => lines.extend(lines_from_breaks(&toks, &br, base_level)),
+                None => {
+                    kp_converged = false;
+                    let area_res = layout_area_text(
+                        Rect::new(0.0, 0.0, w, h),
+                        para,
+                        &AreaTextOptions::default(),
+                    );
+                    lines.extend(area_res.lines.into_iter().map(|l| l.text));
+                }
+            }
+        }
 
         let mut svg_xml = format!(
             "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {w:.1} {h:.1}\">\n  <rect width=\"{w:.1}\" height=\"{h:.1}\" fill=\"#fdfbf7\"/>\n"
@@ -232,7 +303,7 @@ impl AssetHost<'_> {
         out.insert("hyphen_split_count".into(), Value::I64(hyphen_split_count));
         out.insert("small_caps_enabled".into(), Value::Bool(ot.small_caps));
         out.insert("laid_out_line_count".into(), Value::I64(lines.len() as i64));
-        out.insert("knuth_plass_converged".into(), Value::Bool(kp_breaks.is_some()));
+        out.insert("knuth_plass_converged".into(), Value::Bool(kp_converged));
         out.insert("sfnt_table_count".into(), Value::I64(sfnt_dir.len() as i64));
         Ok(Value::Record(out))
     }
@@ -326,5 +397,95 @@ mod tests {
         assert_eq!(svg_a.bytes, svg_b.bytes);
         let xml = String::from_utf8_lossy(&svg_a.bytes);
         assert!(xml.contains("םולש"), "RTL run must be L2-reversed in the SVG");
+    }
+
+    fn svg_text_lines(xml: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut rest = xml;
+        while let Some(start) = rest.find("<text ") {
+            rest = &rest[start..];
+            let Some(gt) = rest.find('>') else { break };
+            rest = &rest[gt + 1..];
+            let Some(end) = rest.find("</text>") else { break };
+            out.push(rest[..end].to_string());
+            rest = &rest[end + 7..];
+        }
+        out
+    }
+
+    fn produce_svg(host: &mut AssetHost<'_>, text: &str, w: f64, h: f64) -> (BTreeMap<String, Value>, String) {
+        let mut args = BTreeMap::new();
+        args.insert("text".into(), Value::String(text.into()));
+        args.insert("frame_width".into(), Value::F64(w));
+        args.insert("frame_height".into(), Value::F64(h));
+        let rec = host.compose_knuth_plass_paragraph(&args).expect("produce");
+        let Value::Record(r) = rec else { panic!("expected record") };
+        let svg = host.workspace.encoded(r.get("svg_resource").unwrap()).expect("svg");
+        let xml = String::from_utf8_lossy(&svg.bytes).into_owned();
+        (r, xml)
+    }
+
+    #[test]
+    fn visual_reorder_line_i1_n1_an_matches_bidi_msdf() {
+        assert_eq!(visual_reorder_line("שלום Hello", 1), "Hello םולש");
+        assert_eq!(visual_reorder_line("Hello שלום מה", 0), "Hello המ םולש");
+        assert_eq!(visual_reorder_line("שלום ١٢٣", 1), "١٢٣ םולש");
+    }
+
+    #[test]
+    fn compose_knuth_plass_rtl_latin_n1_and_arabic_indic_produce() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        let (ra, xml_a) = produce_svg(&mut host, "שלום Hello", 220.0, 80.0);
+        let (_, xml_b) = produce_svg(&mut host, "שלום Hello", 220.0, 80.0);
+        assert_eq!(ra.get("knuth_plass_converged"), Some(&Value::Bool(true)));
+        assert_eq!(xml_a, xml_b, "two produces must match");
+        let lines = svg_text_lines(&xml_a);
+        assert_eq!(lines, vec!["Hello םולש".to_string()], "RTL paragraph L2 must match bidi_msdf");
+
+        let (r, xml) = produce_svg(&mut host, "Hello שלום מה", 220.0, 80.0);
+        assert_eq!(r.get("knuth_plass_converged"), Some(&Value::Bool(true)));
+        let lines = svg_text_lines(&xml);
+        assert_eq!(
+            lines,
+            vec!["Hello המ םולש".to_string()],
+            "N1 must join adjacent RTL runs so מה sits visually left of שלום"
+        );
+
+        let (r, xml) = produce_svg(&mut host, "שלום ١٢٣", 220.0, 80.0);
+        assert_eq!(r.get("knuth_plass_converged"), Some(&Value::Bool(true)));
+        let lines = svg_text_lines(&xml);
+        assert_eq!(
+            lines,
+            vec!["١٢٣ םולש".to_string()],
+            "Arabic-Indic digits are AN and stay LTR on the visual left"
+        );
+        assert!(!xml.contains("שלום"), "digits must not reverse with the Hebrew letters");
+    }
+
+    #[test]
+    fn compose_knuth_plass_newline_splits_paragraphs() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        for text in ["Hello\nWorld", "Hello\r\nWorld", "Hello\rWorld"] {
+            let (r, xml) = produce_svg(&mut host, text, 220.0, 80.0);
+            assert_eq!(
+                r.get("knuth_plass_converged"),
+                Some(&Value::Bool(true)),
+                "converged for {text:?}"
+            );
+            assert_eq!(
+                r.get("laid_out_line_count"),
+                Some(&Value::I64(2)),
+                "paragraph break must yield two lines for {text:?}"
+            );
+            let lines = svg_text_lines(&xml);
+            assert_eq!(lines, vec!["Hello".to_string(), "World".to_string()], "{text:?}");
+            assert!(!xml.contains("HelloWorld"), "must not concatenate across {text:?}");
+        }
     }
 }
