@@ -225,9 +225,6 @@ impl AssetHost<'_> {
                     .map_err(|e| format!("Revolve: {e:?}"))?;
                 self.store_mesh(v, t)
             }
-            "hypermedia.manifold.loft" | "hypermedia.mesh.loft" => {
-                self.manifold_ext("hypermedia.manifold.loft", a)
-            }
             "hypermedia.manifold.compile_10d" | "hypermedia.mesh.encode" => {
                 fields(a, &["mesh"])?;
                 let Artifact::Mesh(mesh) = self.workspace.get(required(a, "mesh")?)? else {

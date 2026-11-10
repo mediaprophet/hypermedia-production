@@ -1188,4 +1188,52 @@ mod tests {
             "10d/m64/emf/q42 must be presented, not stubbed"
         );
     }
+
+    #[test]
+    fn review_gallery_e64_magic_fallback_presents_m64_without_kind_sibling() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut h = host(&cancel, &limits);
+
+        let e64_unknown = h.admit_encoded("bin", b"e64\0shell".to_vec()).unwrap();
+
+        let file = |name: &str, resource: Value| {
+            let mut rec = BTreeMap::new();
+            rec.insert("name".into(), Value::String(name.into()));
+            rec.insert("resource".into(), resource);
+            Value::Record(rec)
+        };
+        let mut args = Args::new();
+        args.insert("title".into(), Value::String("e64 magic fallback".into()));
+        args.insert(
+            "files".into(),
+            Value::List(vec![file("alias.e64", e64_unknown)]),
+        );
+        let val = h
+            .discourse_op("hypermedia.discourse.review_gallery", &args)
+            .expect("review_gallery");
+        let rec = record(&val).unwrap();
+        let families = match rec.get("presented_families") {
+            Some(Value::List(items)) => items
+                .iter()
+                .filter_map(|v| text(v).ok().map(|s| s.to_string()))
+                .collect::<Vec<_>>(),
+            other => panic!("presented_families: {other:?}"),
+        };
+        assert_eq!(
+            families,
+            vec!["m64".to_string()],
+            "e64 magic fallback must present m64 without a kind-keyed m64 sibling, got {families:?}"
+        );
+
+        let bytes = encoded_bytes(&h, &val);
+        let html = std::str::from_utf8(&bytes).expect("utf8 html");
+        assert!(html.contains("data-presented=\"m64\""));
+        assert!(html.contains("data-family=\"m64\""));
+        assert!(html.contains("produce-safe m64 map"));
+        assert!(
+            !html.contains("Use the format's native preview tool for this resource."),
+            "e64 magic fallback must be presented as m64, not stubbed"
+        );
+    }
 }

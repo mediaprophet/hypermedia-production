@@ -484,9 +484,6 @@ impl AssetHost<'_> {
     }
 
     /// 802.11 CSI → sanitized phase, contactless vitals, MUSIC AoA, camera-free receipt.
-    ///
-    /// Named apart from `sense_wifi_csi_vitals_aoa` so Wave 13's domain-extension
-    /// method can keep the origin morphism while this produce uses real CSI frames.
     fn produce_wifi_csi_vitals_aoa(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["audio", "breathing_hz", "heart_hz", "carrier_ghz"])?;
         let resp_hz = number(a, "breathing_hz", 0.25)? as f32;

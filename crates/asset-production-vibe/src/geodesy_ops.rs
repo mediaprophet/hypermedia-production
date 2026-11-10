@@ -145,7 +145,7 @@ fn sculpt_tile(
 
 fn self_verify_m64(buffer: &[u8], record_count: u64, expected_mode: u8) -> Result<(), String> {
     let limits = M64ReadLimits {
-        max_file_bytes: buffer.len() + 1024,
+        max_file_bytes: ToolLimits::default().resource_bytes,
         max_chunks: 4,
         max_records: record_count + 16,
     };
@@ -727,7 +727,7 @@ mod tests {
 
     fn parse_m64(bytes: &[u8]) -> M64Reader<'_> {
         let limits = M64ReadLimits {
-            max_file_bytes: bytes.len() + 1024,
+            max_file_bytes: ToolLimits::default().resource_bytes,
             max_chunks: 4,
             max_records: 8192,
         };
@@ -833,7 +833,7 @@ mod tests {
         let payload_off = 64 + LRM3_BLOCK_BYTES + 64;
         tampered[payload_off] ^= 0x01;
         let limits = M64ReadLimits {
-            max_file_bytes: tampered.len() + 1024,
+            max_file_bytes: ToolLimits::default().resource_bytes,
             max_chunks: 4,
             max_records: 8192,
         };
@@ -846,7 +846,7 @@ mod tests {
         let mut unsigned = bytes.clone();
         strip_occupancy_bao_keep_dir_crc(&mut unsigned);
         let unsigned_limits = M64ReadLimits {
-            max_file_bytes: unsigned.len() + 1024,
+            max_file_bytes: ToolLimits::default().resource_bytes,
             max_chunks: 4,
             max_records: 8192,
         };
@@ -1081,7 +1081,7 @@ mod tests {
         let payload_off = 64 + LRM3_BLOCK_BYTES + 64;
         tampered[payload_off] ^= 0x01;
         let limits = M64ReadLimits {
-            max_file_bytes: tampered.len() + 1024,
+            max_file_bytes: ToolLimits::default().resource_bytes,
             max_chunks: 4,
             max_records: 8192,
         };
