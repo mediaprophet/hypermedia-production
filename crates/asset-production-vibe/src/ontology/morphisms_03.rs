@@ -393,11 +393,11 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         category: "manifold",
         morphism: "simplify",
         owner: "QualiaDB/computational_geometry/decimate_qem",
-        summary: "3D triangle manifold + target_triangles + max_error -> simplified QEM 3D manifold",
+        summary: "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic -> simplified 3D manifold",
         domain: "(Manifold3D, TargetTrianglesUsize, MaxErrorF64)",
         codomain: "Manifold3D",
         morphism_kind: "Endomorphism",
-        teleology: "Reduces triangle count using Garland-Heckbert Quadric Error Metrics (QEM) for LOD generation and runtime `.10d` budget optimization.",
+        teleology: "Reduces triangle count: default mode=decimate is Garland-Heckbert QEM; remesh is isotropic; anisotropic runs the anisotropic remesher under an identity metric unless a field is supplied.",
         units_and_frames: "target_triangles in 4..=200000; max_error in [1e-6, 1e4].",
         arguments: "mesh: handle, target_triangles: u64 (4..200000), max_error=0.05, mode=decimate|remesh|anisotropic (default decimate = QEM decimate_qem)",
         composable_with: &[
