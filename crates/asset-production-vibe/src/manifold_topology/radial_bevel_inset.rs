@@ -25,6 +25,72 @@ struct RadialFace {
     active: bool,
 }
 
+fn undirected_edge_slot(cycle: &[usize], v0: usize, v1: usize) -> Option<usize> {
+    let n = cycle.len();
+    (0..n).find(|&i| {
+        let u = cycle[i];
+        let v = cycle[(i + 1) % n];
+        (u == v0 && v == v1) || (u == v1 && v == v0)
+    })
+}
+
+fn directed_edge_slot(cycle: &[usize], from: usize, to: usize) -> Option<usize> {
+    let n = cycle.len();
+    (0..n).find(|&i| cycle[i] == from && cycle[(i + 1) % n] == to)
+}
+
+/// Vertices strictly between `from` and `to` walking the cycle forward.
+fn cycle_interior(cycle: &[usize], from: usize, to: usize) -> Result<Vec<usize>, String> {
+    let n = cycle.len();
+    let start = cycle
+        .iter()
+        .position(|&v| v == from)
+        .ok_or_else(|| "JFKE: shared-edge vertices are not adjacent in both cycles".to_string())?;
+    let mut interior = Vec::new();
+    let mut i = (start + 1) % n;
+    let mut seen = 0usize;
+    while cycle[i] != to {
+        interior.push(cycle[i]);
+        i = (i + 1) % n;
+        seen += 1;
+        if seen >= n {
+            return Err("JFKE: shared-edge vertices are not adjacent in both cycles".into());
+        }
+    }
+    Ok(interior)
+}
+
+/// Join two face cycles at the shared oriented edge (v0, v1).
+/// Walks `loop2` from the far shared vertex to the near one, excluding that edge,
+/// and inserts the interior path into `loop1`'s shared-edge slot.
+fn splice_face_cycles(
+    loop1: &[usize],
+    loop2: &[usize],
+    v0: usize,
+    v1: usize,
+) -> Result<Vec<usize>, String> {
+    let slot1 = undirected_edge_slot(loop1, v0, v1)
+        .ok_or_else(|| "JFKE: shared-edge vertices are not adjacent in both cycles".to_string())?;
+    let a = loop1[slot1];
+    let b = loop1[(slot1 + 1) % loop1.len()];
+    if directed_edge_slot(loop2, b, a).is_none() {
+        return Err("JFKE: shared-edge vertices are not adjacent in both cycles".into());
+    }
+    let interior = cycle_interior(loop2, a, b)?;
+    let mut joined = Vec::with_capacity(loop1.len() + interior.len());
+    joined.push(a);
+    joined.extend(interior);
+    let mut i = (slot1 + 1) % loop1.len();
+    while i != slot1 {
+        joined.push(loop1[i]);
+        i = (i + 1) % loop1.len();
+    }
+    if joined.len() < 3 {
+        return Err("JFKE: joined face cycle has fewer than 3 vertices".into());
+    }
+    Ok(joined)
+}
+
 impl AssetHost<'_> {
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Radial-Edge B-Rep Topological Kernel + .m64 Mode 0x04 Serializer
@@ -184,30 +250,26 @@ impl AssetHost<'_> {
                         }
                     }
                     "JFKE" => {
-                        if !edges.is_empty() {
-                            let e_idx = edge_index % edges.len();
-                            if edges[e_idx].incident_faces.len() >= 2 {
-                                let f1 = edges[e_idx].incident_faces[0];
-                                let f2 = edges[e_idx].incident_faces[1];
-                                if f1 != f2 && faces[f1].active && faces[f2].active {
-                                    let v0 = edges[e_idx].v0;
-                                    let v1 = edges[e_idx].v1;
-                                    let mut loop1 = faces[f1].vertices.clone();
-                                    let loop2 = faces[f2].vertices.clone();
-                                    loop1.retain(|&idx| idx != v0 && idx != v1);
-                                    for idx in loop2 {
-                                        if !loop1.contains(&idx) {
-                                            loop1.push(idx);
-                                        }
-                                    }
-                                    if loop1.len() >= 3 {
-                                        faces[f1].vertices = loop1;
-                                        faces[f2].active = false;
-                                    }
-                                }
-                            }
-                            edges = rebuild_edges(&faces, crease_sharpness as f32);
+                        if edges.is_empty() {
+                            return Err("JFKE: mesh has no edges".into());
                         }
+                        let e_idx = edge_index % edges.len();
+                        // Join requires a 2-manifold edge; extra or missing radials are not a splice.
+                        if edges[e_idx].incident_faces.len() != 2 {
+                            return Err("JFKE: edge is not 2-manifold".into());
+                        }
+                        let f1 = edges[e_idx].incident_faces[0];
+                        let f2 = edges[e_idx].incident_faces[1];
+                        if f1 == f2 || !faces[f1].active || !faces[f2].active {
+                            return Err("JFKE: edge is not 2-manifold".into());
+                        }
+                        let v0 = edges[e_idx].v0;
+                        let v1 = edges[e_idx].v1;
+                        let joined =
+                            splice_face_cycles(&faces[f1].vertices, &faces[f2].vertices, v0, v1)?;
+                        faces[f1].vertices = joined;
+                        faces[f2].active = false;
+                        edges = rebuild_edges(&faces, crease_sharpness as f32);
                     }
                     _ => return Err(format!("Unknown Euler operator: {op}")),
                 }
@@ -228,7 +290,6 @@ impl AssetHost<'_> {
                 vertices: vec![v_mid, v1, v2],
                 active: true,
             });
-            edges = rebuild_edges(&faces, crease_sharpness as f32);
         }
 
         // Triangulate resulting B-Rep faces back into triangles
@@ -251,14 +312,30 @@ impl AssetHost<'_> {
             return Err("Radial-Edge Euler operation produced empty mesh".into());
         }
 
+        // Fan diagonals are not in the pre-triangulation radial table. Rebuild from
+        // the emitted triangles so shell edge_indices cannot collapse to 0.
+        let tri_faces: Vec<RadialFace> = out_triangles
+            .iter()
+            .map(|t| RadialFace {
+                vertices: vec![t[0] as usize, t[1] as usize, t[2] as usize],
+                active: true,
+            })
+            .collect();
+        edges = rebuild_edges(&tri_faces, crease_sharpness as f32);
+
         let non_manifold_count = edges.iter().filter(|e| e.incident_faces.len() >= 3).count();
 
-        // Edge lookup map for shell records
         let edge_lookup: BTreeMap<(usize, usize), usize> = edges
             .iter()
             .enumerate()
             .map(|(i, e)| ((e.v0.min(e.v1), e.v0.max(e.v1)), i))
             .collect();
+        let lookup_edge = |a: usize, b: usize| -> Result<usize, String> {
+            edge_lookup
+                .get(&(a.min(b), a.max(b)))
+                .copied()
+                .ok_or_else(|| format!("fan diagonal ({a},{b}) missing from edge table"))
+        };
 
         // Serialize .m64 Mode 0x04 Shell Records
         let record_count = out_triangles.len();
@@ -306,18 +383,9 @@ impl AssetHost<'_> {
                 (p0[2] + p1[2] + p2[2]) / 3.0,
             ];
 
-            let e0 = edge_lookup
-                .get(&(i0.min(i1), i0.max(i1)))
-                .copied()
-                .unwrap_or(0);
-            let e1 = edge_lookup
-                .get(&(i1.min(i2), i1.max(i2)))
-                .copied()
-                .unwrap_or(0);
-            let e2 = edge_lookup
-                .get(&(i2.min(i0), i2.max(i0)))
-                .copied()
-                .unwrap_or(0);
+            let e0 = lookup_edge(i0, i1)?;
+            let e1 = lookup_edge(i1, i2)?;
+            let e2 = lookup_edge(i2, i0)?;
 
             let is_nm = [e0, e1, e2].iter().any(|&idx| {
                 edges
@@ -598,5 +666,56 @@ impl AssetHost<'_> {
         }
 
         self.store_mesh_artifact(out_positions, out_triangles)
+    }
+}
+
+#[cfg(test)]
+mod splice_tests {
+    use super::splice_face_cycles;
+
+    fn cycle_eq_rotated(got: &[usize], expected: &[usize]) -> bool {
+        if got.len() != expected.len() || got.is_empty() {
+            return got == expected;
+        }
+        (0..got.len()).any(|k| {
+            got.iter()
+                .cycle()
+                .skip(k)
+                .take(got.len())
+                .eq(expected.iter())
+        })
+    }
+
+    #[test]
+    fn test_jfke_tetrahedron_splice_is_quad_not_set_union() {
+        // F0 [0,1,2] and F1 [0,2,3] along 0-2: splice, not retain+append set union.
+        let joined = splice_face_cycles(&[0, 1, 2], &[0, 2, 3], 0, 2).expect("2-manifold splice");
+        assert!(
+            cycle_eq_rotated(&joined, &[0, 1, 2, 3]),
+            "expected quad [0,1,2,3] (up to rotation), got {joined:?}"
+        );
+        assert!(
+            !cycle_eq_rotated(&joined, &[1, 0, 2, 3]),
+            "set-union bag [1,0,2,3] is not the join cycle, got {joined:?}"
+        );
+    }
+
+    #[test]
+    fn test_jfke_fails_closed_when_vertices_not_adjacent() {
+        let err = splice_face_cycles(&[0, 1, 2], &[0, 2, 3], 0, 3).expect_err("not adjacent");
+        assert!(
+            err.contains("not adjacent"),
+            "expected adjacency failure, got {err}"
+        );
+    }
+
+    #[test]
+    fn test_jfke_fails_closed_when_cycles_share_same_orientation() {
+        // Both faces traverse 2→0; no reverse edge on loop2.
+        let err = splice_face_cycles(&[0, 1, 2], &[0, 3, 2], 0, 2).expect_err("same orientation");
+        assert!(
+            err.contains("not adjacent"),
+            "expected reverse-edge failure, got {err}"
+        );
     }
 }

@@ -173,8 +173,8 @@ impl AssetHost<'_> {
 mod tests {
     use crate::*;
     use qualia_core_db::q42::m64_matter::{
-        has_m64_magic, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader, E64_MAGIC,
-        M64_MAGIC, M64_MODE_SHELL,
+        has_m64_magic, M64Header, M64PayloadInterval, M64ReadLimits, M64Reader, M64ShellRecord,
+        E64_MAGIC, M64_MAGIC, M64_MODE_SHELL,
     };
     use std::collections::BTreeMap;
     use std::sync::atomic::AtomicBool;
@@ -347,6 +347,178 @@ mod tests {
         let rec = record(&res).expect("record");
         let v_count = integer(required(rec, "vertex_count").unwrap(), "vertex_count").unwrap();
         assert_eq!(v_count, 5);
+    }
+
+    fn cycle_eq_rotated(got: &[u32], expected: &[u32]) -> bool {
+        if got.len() != expected.len() || got.is_empty() {
+            return got == expected;
+        }
+        (0..got.len()).any(|k| {
+            got.iter()
+                .cycle()
+                .skip(k)
+                .take(got.len())
+                .eq(expected.iter())
+        })
+    }
+
+    fn run_jfke_tet_edge02(host: &mut AssetHost<'_>) -> Value {
+        let mesh_h = store_tetrahedron(host);
+        let mut op = BTreeMap::new();
+        op.insert("op".into(), Value::String("JFKE".into()));
+        // F0 [0,1,2] emits (0,1),(1,2),(0,2); edge 2 is the 2-manifold 0-2 shared with F1 [0,2,3].
+        op.insert("edge_index".into(), Value::U64(2));
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), mesh_h);
+        args.insert("ops".into(), Value::List(vec![Value::Record(op)]));
+        host.manifold_topology_op("hypermedia.manifold.radial_euler", &args)
+            .expect("JFKE along 0-2")
+    }
+
+    #[test]
+    fn test_radial_euler_jfke_tetrahedron_quad_cycle_and_m64_shell() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let res = run_jfke_tet_edge02(&mut host);
+        let rec = record(&res).expect("record");
+        let v_count = integer(required(rec, "vertex_count").unwrap(), "vertex_count").unwrap();
+        let f_count = integer(required(rec, "face_count").unwrap(), "face_count").unwrap();
+        assert_eq!(v_count, 4);
+        assert_eq!(f_count, 3); // joined quad + two remaining triangles
+
+        let mesh_h = required(rec, "mesh").unwrap();
+        let out_mesh = host.mesh(mesh_h).expect("mesh handle");
+        assert_eq!(out_mesh.triangles.len(), 4);
+        // First two triangles are the fan of the joined n-gon.
+        let t0 = out_mesh.triangles[0];
+        let t1 = out_mesh.triangles[1];
+        assert_eq!(t0[0], t1[0], "fan hub");
+        assert_eq!(t0[2], t1[1], "shared fan diagonal");
+        let quad = [t0[0], t0[1], t0[2], t1[2]];
+        assert!(
+            cycle_eq_rotated(&quad, &[0, 1, 2, 3]),
+            "expected quad [0,1,2,3] (up to rotation), got {quad:?}"
+        );
+        assert!(
+            !cycle_eq_rotated(&quad, &[1, 0, 2, 3]),
+            "set-union bag [1,0,2,3] is not the join cycle, got {quad:?}"
+        );
+
+        let mut keys: Vec<[u32; 3]> = out_mesh
+            .triangles
+            .iter()
+            .copied()
+            .map(|mut t| {
+                t.sort();
+                t
+            })
+            .collect();
+        keys.sort();
+        let mut expected = vec![[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
+        expected.sort();
+        assert_eq!(keys, expected, "fan of the join must keep the tet faces");
+
+        let shell_val = required(rec, "shell_m64").unwrap();
+        let Artifact::Encoded(resource) = host.workspace.get(shell_val).expect("shell m64") else {
+            panic!("Expected encoded resource");
+        };
+        assert_eq!(&resource.bytes[..4], b"m64\0");
+        let read_limits = M64ReadLimits {
+            max_file_bytes: resource.bytes.len() + 1024,
+            max_chunks: 4,
+            max_records: 64,
+        };
+        let mut scratch = [M64PayloadInterval::default(); 4];
+        let reader = M64Reader::parse(&resource.bytes, read_limits, &mut scratch)
+            .expect("Mode 0x04 self-verify");
+        assert_eq!(reader.header().magic, M64_MAGIC);
+        assert_eq!(
+            reader.chunk(0).unwrap().directory_entry().chunk_record_mode,
+            M64_MODE_SHELL
+        );
+        assert_eq!(reader.verification().record_crc_checked, 4);
+    }
+
+    #[test]
+    fn test_radial_euler_jfke_fan_diagonals_not_edge_zero() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let res = run_jfke_tet_edge02(&mut host);
+        let rec = record(&res).expect("record");
+        let mesh_h = required(rec, "mesh").unwrap();
+        let out_mesh = host.mesh(mesh_h).expect("mesh handle");
+
+        let mut edge_of: BTreeMap<(u32, u32), usize> = BTreeMap::new();
+        let mut edges: Vec<(u32, u32)> = Vec::new();
+        for tri in &out_mesh.triangles {
+            for i in 0..3 {
+                let u = tri[i];
+                let v = tri[(i + 1) % 3];
+                let key = if u < v { (u, v) } else { (v, u) };
+                if !edge_of.contains_key(&key) {
+                    edge_of.insert(key, edges.len());
+                    edges.push(key);
+                }
+            }
+        }
+        assert!(!edges.is_empty());
+        let edge0 = edges[0];
+
+        let shell_val = required(rec, "shell_m64").unwrap();
+        let Artifact::Encoded(resource) = host.workspace.get(shell_val).expect("shell m64") else {
+            panic!("Expected encoded resource");
+        };
+        assert_eq!((resource.bytes.len() - 128) / 64, out_mesh.triangles.len());
+        for (i, tri) in out_mesh.triangles.iter().enumerate() {
+            let shell_rec: M64ShellRecord =
+                bytemuck::pod_read_unaligned(&resource.bytes[128 + i * 64..128 + (i + 1) * 64]);
+            shell_rec.validate().expect("shell record CRC");
+            assert_eq!(shell_rec.vertex_indices, *tri);
+            for k in 0..3 {
+                let u = shell_rec.vertex_indices[k];
+                let v = shell_rec.vertex_indices[(k + 1) % 3];
+                let key = if u < v { (u, v) } else { (v, u) };
+                let expected = *edge_of.get(&key).expect("triangle edge in table");
+                assert_eq!(
+                    shell_rec.edge_indices[k] as usize, expected,
+                    "triangle {i} edge {k} {key:?} mapped to {}, not {expected}",
+                    shell_rec.edge_indices[k]
+                );
+                if shell_rec.edge_indices[k] == 0 {
+                    assert_eq!(
+                        key, edge0,
+                        "shell record uses edge index 0 but triangle {i} does not use edge 0 {edge0:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_radial_euler_jfke_fails_closed_on_boundary_edge() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mesh_h = store_quad_sheet(&mut host);
+        let mut op = BTreeMap::new();
+        op.insert("op".into(), Value::String("JFKE".into()));
+        // Quad sheet F0 [0,1,2] emits (0,1) first; that edge has one incident face.
+        op.insert("edge_index".into(), Value::U64(0));
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), mesh_h);
+        args.insert("ops".into(), Value::List(vec![Value::Record(op)]));
+        let err = host
+            .manifold_topology_op("hypermedia.manifold.radial_euler", &args)
+            .expect_err("boundary edge is not 2-manifold");
+        assert!(
+            err.contains("2-manifold"),
+            "expected 2-manifold failure, got {err}"
+        );
     }
 
     #[test]
