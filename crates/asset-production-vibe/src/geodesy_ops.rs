@@ -202,6 +202,7 @@ fn fill_occupancy_brick(
                 let off = idx * 64;
                 match mode {
                     M64_MODE_HOLO => {
+                        // Occupied voxels keep Default holographic fields (tropism, scale, SPD).
                         let mut rec = M64HoloRecord::default();
                         rec.local_origin = [
                             f32_to_f16(lx as f32),
@@ -210,12 +211,15 @@ fn fill_occupancy_brick(
                         ];
                         rec.metric_variety = 0;
                         rec.semantic_node_idx = u8::from(occupied);
-                        rec.mass_amplitude = if occupied { 0x3c00 } else { 0 };
-                        rec.spectral_spd_base = if occupied {
-                            [200, 180, 160, 220, 240, 210]
+                        if occupied {
+                            rec.mass_amplitude = 0x3c00;
+                            rec.sdf_harmonics[0] = (t * 40.0).round().clamp(-127.0, 127.0) as i8;
                         } else {
-                            [0; 6]
-                        };
+                            rec.mass_amplitude = 0;
+                            rec.spectral_spd_base = [0; 6];
+                            rec.tropism_sensitivity = [0; 4];
+                            rec.sdf_harmonics = [0; 12];
+                        }
                         out[off..off + 64].copy_from_slice(bytemuck::bytes_of(&rec));
                     }
                     _ => {
@@ -232,6 +236,36 @@ fn fill_occupancy_brick(
             }
         }
     }
+}
+
+/// First-class 6-layer STRATA column: sculpted elevation plus slope hydrology
+/// (overland-flow velocity, sediment load) without replacing Default LUT/compaction.
+fn first_class_strata_column(heights: &[f32], side: usize, i: usize) -> M64StrataColumnRecord {
+    let gx = i % side;
+    let gy = i / side;
+    let elev = heights[i];
+    let xl = heights[gy * side + gx.saturating_sub(1)];
+    let xr = heights[gy * side + (gx + 1).min(side - 1)];
+    let yd = heights[gy.saturating_sub(1) * side + gx];
+    let yu = heights[(gy + 1).min(side - 1) * side + gx];
+    let dzdx = xr - xl;
+    let dzdy = yu - yd;
+    let slope = (dzdx * dzdx + dzdy * dzdy).sqrt();
+    let vx = (-dzdx * 50.0)
+        .round()
+        .clamp(i16::MIN as f32, i16::MAX as f32) as i16;
+    let vy = (-dzdy * 50.0)
+        .round()
+        .clamp(i16::MIN as f32, i16::MAX as f32) as i16;
+    let mut rec = M64StrataColumnRecord::default();
+    rec.surface_elevation_mm = (elev * 1000.0).round() as i32;
+    rec.surface_fluid_depth_mm = (slope * 20.0).round().clamp(0.0, 65535.0) as u16;
+    rec.fluid_velocity_xy = [vx, vy];
+    rec.fluid_sediment_load_ppm = (slope * 80.0).round().clamp(0.0, 65535.0) as u16;
+    rec.layer_thickness_mm[0] = rec.layer_thickness_mm[0]
+        .saturating_add(((elev.abs() * 0.1) as u16).min(200));
+    rec.update_crc();
+    rec
 }
 
 fn f32_to_f16(f: f32) -> u16 {
@@ -264,6 +298,18 @@ impl AssetHost<'_> {
             }
             "hypermedia.geodesy.compile_m64" | "geodesy.compile_m64" => self.compile_m64(a),
             "hypermedia.geodesy.verify_m64" | "geodesy.verify_m64" => self.verify_m64(a),
+            "hypermedia.geodesy.kriging_variogram_morphometry"
+            | "geodesy.kriging_variogram_morphometry"
+            | "synth.geodesy.kriging_variogram_morphometry"
+            | "kriging_variogram_morphometry" => self.kriging_variogram_morphometry(a),
+            "hypermedia.geodesy.advect_m64_grid"
+            | "geodesy.advect_m64_grid"
+            | "synth.geodesy.advect_m64_grid"
+            | "advect_m64_grid" => self.advect_m64_grid(a),
+            "hypermedia.geodesy.couple_continuum_xpbd"
+            | "geodesy.couple_continuum_xpbd"
+            | "synth.geodesy.couple_continuum_xpbd"
+            | "couple_continuum_xpbd" => self.couple_continuum_xpbd(a),
             _ => Err(format!("Unknown geodesy operation: {id}")),
         }
     }
@@ -454,10 +500,8 @@ impl AssetHost<'_> {
         let total_file_size = 128 + payload_bytes_len;
         let mut buffer = vec![0u8; total_file_size];
 
-        for (i, &elev_m) in heights.iter().enumerate() {
-            let mut rec = M64StrataColumnRecord::default();
-            rec.surface_elevation_mm = (elev_m * 1000.0).round() as i32;
-            rec.update_crc();
+        for (i, _) in heights.iter().enumerate() {
+            let rec = first_class_strata_column(&heights, side, i);
             let offset = 128 + i * 64;
             buffer[offset..offset + 64].copy_from_slice(bytemuck::bytes_of(&rec));
         }
@@ -751,6 +795,175 @@ mod tests {
                 .srid_geodetic_code,
             M64_SRID_LOCAL_MICROMETER
         );
+    }
+
+    #[test]
+    fn geodesy_strata_holo_kriging_e64_objects() {
+        use geodesy_spatial_analysis::{
+            Coord, SamplePoint, VariogramModel, VariogramParams, predict_kriging,
+        };
+        use qualia_core_db::q42::m64_matter::{M64HoloRecord, M64StrataColumnRecord};
+
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+
+        let mut stroke = BTreeMap::new();
+        stroke.insert("op".into(), Value::String("raise".into()));
+        stroke.insert("x".into(), Value::F64(0.0));
+        stroke.insert("y".into(), Value::F64(0.0));
+        stroke.insert("radius".into(), Value::F64(8.0));
+        stroke.insert("strength".into(), Value::F64(20.0));
+        stroke.insert("falloff".into(), Value::String("smoothstep".into()));
+        stroke.insert("target_height".into(), Value::F64(400.0));
+        stroke.insert("step_m".into(), Value::F64(5.0));
+
+        let mut strata_args = BTreeMap::new();
+        strata_args.insert("grid_side".into(), Value::U64(4));
+        strata_args.insert("base_elevation_m".into(), Value::F64(350.0));
+        strata_args.insert("record_mode".into(), Value::String("strata".into()));
+        strata_args.insert("strokes".into(), Value::List(vec![Value::Record(stroke)]));
+
+        let strata_handle = host
+            .geodesy_op("hypermedia.geodesy.compile_m64", &strata_args)
+            .expect("compile_m64 strata object");
+        let strata_bytes = encoded_bytes(&host, &strata_handle);
+        assert_eq!(&strata_bytes[..4], &M64_MAGIC);
+
+        let strata_reader = parse_m64(&strata_bytes);
+        assert_eq!(
+            strata_reader
+                .chunk(0)
+                .unwrap()
+                .directory_entry()
+                .chunk_record_mode,
+            M64_MODE_STRATA
+        );
+        assert_eq!(strata_reader.verification().record_crc_checked, 16);
+
+        let mut elev_mm = Vec::with_capacity(16);
+        let mut layer0 = 0u16;
+        for i in 0..16 {
+            let rec: M64StrataColumnRecord =
+                bytemuck::pod_read_unaligned(&strata_bytes[128 + i * 64..128 + (i + 1) * 64]);
+            rec.validate().expect("STRATA CRC");
+            assert!(
+                rec.layer_thickness_mm.iter().all(|&t| t > 0),
+                "6-layer STRATA stack must be first-class"
+            );
+            layer0 = rec.layer_thickness_mm[0];
+            elev_mm.push(rec.surface_elevation_mm);
+        }
+        assert!(layer0 >= 400, "topsoil thickness stays first-class");
+        assert!(
+            elev_mm.iter().any(|&z| z != elev_mm[0]),
+            "raise stroke must vary STRATA elevations"
+        );
+
+        let samples = vec![
+            SamplePoint::new(0.0, 0.0, elev_mm[0] as f64),
+            SamplePoint::new(3.0, 0.0, elev_mm[3] as f64),
+            SamplePoint::new(0.0, 3.0, elev_mm[12] as f64),
+            SamplePoint::new(3.0, 3.0, elev_mm[15] as f64),
+        ];
+        let vparams = VariogramParams::new(VariogramModel::Spherical, 0.0, 100.0, 4.0);
+        let kriged = predict_kriging(&samples, Coord::new(1.5, 1.5), &vparams)
+            .expect("ordinary kriging of STRATA corners");
+        assert!(kriged.estimate.is_finite());
+        assert!(kriged.variance >= 0.0);
+
+        let mut aliased = strata_bytes.clone();
+        let mut header: M64Header = bytemuck::pod_read_unaligned(&aliased[..64]);
+        header.magic = E64_MAGIC;
+        header.update_crc();
+        aliased[..64].copy_from_slice(bytemuck::bytes_of(&header));
+        assert_eq!(&aliased[..4], &E64_MAGIC);
+        assert!(has_m64_magic(&aliased));
+        let e64_reader = parse_m64(&aliased);
+        assert_eq!(e64_reader.header().magic, E64_MAGIC);
+        assert_eq!(
+            e64_reader
+                .chunk(0)
+                .unwrap()
+                .directory_entry()
+                .chunk_record_mode,
+            M64_MODE_STRATA
+        );
+
+        let mut holo_args = BTreeMap::new();
+        holo_args.insert("grid_side".into(), Value::U64(4));
+        holo_args.insert("record_mode".into(), Value::String("holo".into()));
+        let holo_handle = host
+            .geodesy_op("hypermedia.geodesy.compile_m64", &holo_args)
+            .expect("compile_m64 holo object");
+        let holo_bytes = encoded_bytes(&host, &holo_handle);
+        let holo_reader = parse_m64(&holo_bytes);
+        assert_eq!(
+            holo_reader
+                .chunk(0)
+                .unwrap()
+                .directory_entry()
+                .chunk_record_mode,
+            M64_MODE_HOLO
+        );
+        assert_eq!(holo_reader.verification().record_crc_checked, 0);
+        let payload_off = 64 + LRM3_BLOCK_BYTES + 64;
+        let holo_rec: M64HoloRecord = bytemuck::pod_read_unaligned(
+            &holo_bytes[payload_off..payload_off + 64],
+        );
+        assert_eq!(holo_rec.metric_variety, 0);
+        assert_eq!(holo_rec.semantic_node_idx, 1);
+        assert_eq!(holo_rec.mass_amplitude, 0x3c00);
+
+        let kriging = host
+            .geodesy_op(
+                "hypermedia.geodesy.kriging_variogram_morphometry",
+                &BTreeMap::new(),
+            )
+            .expect("kriging object");
+        let krec = record(&kriging).expect("kriging record");
+        let estimate = match krec.get("kriging_estimate") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("kriging_estimate object"),
+        };
+        let variance = match krec.get("kriging_variance") {
+            Some(Value::F64(v)) => *v,
+            _ => panic!("kriging_variance object"),
+        };
+        assert!(
+            (estimate - 120.0).abs() < 1.0,
+            "ordinary kriging center object: {estimate}"
+        );
+        assert!(variance >= 0.0);
+        assert!(krec.contains_key("kriging_image"));
+        assert!(krec.contains_key("contour_svg_resource"));
+
+        let mut advect_args = BTreeMap::new();
+        advect_args.insert("grid_side".into(), Value::U64(8));
+        advect_args.insert("steps".into(), Value::U64(1));
+        advect_args.insert("poisson_iterations".into(), Value::U64(4));
+        let advected = host
+            .geodesy_op("hypermedia.geodesy.advect_m64_grid", &advect_args)
+            .expect("advect object");
+        let arec = record(&advected).expect("advect record");
+        assert_eq!(arec.get("record_mode"), Some(&Value::String("strata".into())));
+        let adv_m64 = host
+            .workspace
+            .encoded(arec.get("m64").expect("advected m64"))
+            .expect("encoded advected m64");
+        assert_eq!(adv_m64.kind, "m64");
+        assert!(has_m64_magic(&adv_m64.bytes));
+
+        let eroded = host
+            .erode_geomorphic_heightfield(&BTreeMap::new())
+            .expect("erosion object");
+        let erec = record(&eroded).expect("erosion record");
+        assert!(erec.contains_key("heightfield_image"));
+        assert!(erec.contains_key("mesh"));
+        match erec.get("cell_count") {
+            Some(Value::I64(n)) => assert!(*n > 0, "eroded cell_count"),
+            _ => panic!("erosion cell_count object"),
+        }
     }
 
     #[test]
