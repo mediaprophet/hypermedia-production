@@ -23,7 +23,7 @@ pub struct GpuProfilerSettings {
     /// A profiler-frame is regarded as in-flight until its queries have been successfully
     /// resolved using [`GpuProfiler::process_finished_frame`](crate::GpuProfiler::process_finished_frame).
     /// How long this takes to happen, depends on how fast buffer mappings return successfully
-    /// which in turn primarily depends on how fast the device is able to finish work queued to the [`wgpu::Queue`].
+    /// which in turn primarily depends on how fast the device is able to finish work queued to the [`etalon::Queue`].
     ///
     /// If this threshold is exceeded, [`GpuProfiler::end_frame`](crate::GpuProfiler::end_frame) will silently drop frames.
     /// *Newer* frames will be dropped first in order to get results back eventually.

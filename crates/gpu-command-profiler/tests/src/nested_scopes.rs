@@ -1,15 +1,15 @@
-use wgpu_profiler::{GpuProfiler, GpuProfilerSettings};
+use etalon_profiler::{GpuProfiler, GpuProfilerSettings};
 
-use crate::src::{expected_scope, validate_results, Requires};
+use crate::src::{Requires, expected_scope, validate_results};
 
 use super::create_device;
 
-fn nested_scopes(device: &wgpu::Device, queue: &wgpu::Queue) {
+fn nested_scopes(device: &etalon::Device, queue: &etalon::Queue) {
     let mut profiler = GpuProfiler::new(device, GpuProfilerSettings::default()).unwrap();
 
-    let mut encoder0 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-    let mut encoder1 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-    let mut encoder2 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+    let mut encoder0 = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
+    let mut encoder1 = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
+    let mut encoder2 = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 
     {
         let mut outer_scope = profiler.scope("e0_s0", &mut encoder0);
@@ -60,7 +60,7 @@ fn nested_scopes(device: &wgpu::Device, queue: &wgpu::Queue) {
     queue.submit([encoder0.finish(), encoder1.finish(), encoder2.finish()]);
     profiler.end_frame().unwrap();
 
-    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+    device.poll(etalon::PollType::wait_indefinitely()).unwrap();
 
     // Single frame should now be available.
     let frame = profiler
@@ -134,14 +134,14 @@ fn nested_scopes(device: &wgpu::Device, queue: &wgpu::Queue) {
 }
 
 // Note that `TIMESTAMP_QUERY_INSIDE_PASSES` implies support for `TIMESTAMP_QUERY_INSIDE_ENCODERS`.
-// But as of writing wgpu allows enabling pass timestamps without encoder timestamps and we should handle this fine as well!
+// But as of writing etalon allows enabling pass timestamps without encoder timestamps and we should handle this fine as well!
 
 #[test]
 fn nested_scopes_timestamp_in_passes_and_encoder_enabled() {
     let Ok((_, device, queue)) = create_device(
-        wgpu::Features::TIMESTAMP_QUERY
-            | wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES
-            | wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS,
+        etalon::Features::TIMESTAMP_QUERY
+            | etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES
+            | etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS,
     ) else {
         println!("Skipping test because device doesn't support TIMESTAMP_QUERY_INSIDE_PASSES");
         return;
@@ -152,7 +152,7 @@ fn nested_scopes_timestamp_in_passes_and_encoder_enabled() {
 #[test]
 fn nested_scopes_timestamp_in_passes_enabled() {
     let Ok((_, device, queue)) = create_device(
-        wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES,
+        etalon::Features::TIMESTAMP_QUERY | etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES,
     ) else {
         println!("Skipping test because device doesn't support TIMESTAMP_QUERY_INSIDE_PASSES");
         return;
@@ -163,7 +163,7 @@ fn nested_scopes_timestamp_in_passes_enabled() {
 #[test]
 fn nested_scopes_timestamp_in_encoders_enabled() {
     let Ok((_, device, queue)) = create_device(
-        wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS,
+        etalon::Features::TIMESTAMP_QUERY | etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS,
     ) else {
         println!("Skipping test because device doesn't support TIMESTAMP_QUERY_INSIDE_ENCODERS");
         return;
@@ -173,7 +173,7 @@ fn nested_scopes_timestamp_in_encoders_enabled() {
 
 #[test]
 fn nested_scopes_timestamp_enabled() {
-    let Ok((_, device, queue)) = create_device(wgpu::Features::TIMESTAMP_QUERY) else {
+    let Ok((_, device, queue)) = create_device(etalon::Features::TIMESTAMP_QUERY) else {
         println!("Skipping test because device doesn't support TIMESTAMP_QUERY");
         return;
     };
@@ -182,6 +182,6 @@ fn nested_scopes_timestamp_enabled() {
 
 #[test]
 fn nested_scopes_no_features() {
-    let (_, device, queue) = create_device(wgpu::Features::empty()).unwrap();
+    let (_, device, queue) = create_device(etalon::Features::empty()).unwrap();
     nested_scopes(&device, &queue);
 }

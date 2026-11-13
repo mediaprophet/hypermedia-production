@@ -41,18 +41,18 @@ preprocessing and GPU rendering:
 
 ### Feature Flags
 
-- `wgpu` (enabled by default): Enables the GPU rendering backend via wgpu and
+- `etalon` (enabled by default): Enables the GPU rendering backend via etalon and
   includes the required Vello GPU shaders.
-- `wgpu_default` (enabled by default): Enables wgpu with its default hardware
+- `etalon-default` (enabled by default): Enables etalon with its default hardware
   backends (such as Vulkan, Metal, and DX12).
 - `text` (enabled by default): Enables glyph rendering ([`Scene::glyph_run`]).
 - `webgl`: Enables the WebGL rendering backend for browser support, using GLSL
   shaders for compatibility.
 
-If you need to customize the set of enabled wgpu features, disable this crate's
-default features then enable its `wgpu` feature. You can then depend on wgpu
+If you need to customize the set of enabled etalon features, disable this crate's
+default features then enable its `etalon` feature. You can then depend on etalon
 directly, setting the specific features you require. Don't forget to also
-disable wgpu's default features.
+disable etalon's default features.
 
 ### Architecture
 
@@ -85,7 +85,7 @@ Vello GPU remains under active development. Known limitations include:
   including glyph caching. Experimental APIs are identified in their method
   documentation.
 - Parts of the rendering pipeline are not yet fully optimized, particularly the
-  wgpu backend, but also other aspects.
+  etalon backend, but also other aspects.
 - Some failures panic instead of being reported through a user-facing error.
 
 With that said, we are continuously improving Vello GPU and will address these

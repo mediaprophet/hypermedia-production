@@ -264,7 +264,7 @@ fn decode_inner(bytes:&[u8],mdat:(u64,u64),start_tick:u64,end_tick:u64,cancelled
     let id=tracks[0]; let track=reader.tracks().get(&id).ok_or("Video track absent")?;
     if !matches!(track.media_type(),Ok(mp4::MediaType::H264))||track.trak.edts.is_some()||!track.trafs.is_empty()||track.trak.tkhd.matrix!=Default::default(){return Err("Unsupported video codec, edit list, fragmentation or track transform".into());}
     let count=track.sample_count();let scale=track.timescale();
-    if count==0||count>MAX_SAMPLES||scale==0||TICKS_PER_SECOND%u64::from(scale)!=0 {return Err("Unsupported sample count or inexact MP4 timebase".into());}
+    if count==0||count>MAX_SAMPLES||scale==0 {return Err("Unsupported sample count or zero MP4 timebase".into());}
     if let Some(ctts)=&track.trak.mdia.minf.stbl.ctts {
         let mut total=0u32;
         for entry in &ctts.entries {
@@ -293,7 +293,7 @@ fn decode_inner(bytes:&[u8],mdat:(u64,u64),start_tick:u64,end_tick:u64,cancelled
     let length_size=usize::from((cfg.length_size_minus_one&3)+1);
     let mut avcc=vec![1,cfg.avc_profile_indication,cfg.profile_compatibility,cfg.avc_level_indication,0xfc|((length_size-1) as u8),0xe1];
     for (tag,nal) in [(false,sps),(true,pps)] {if tag {avcc.push(1);}avcc.extend_from_slice(&(nal.len() as u16).to_be_bytes());avcc.extend_from_slice(nal);}
-    let unit=TICKS_PER_SECOND/u64::from(scale);let mut expected=0u64;
+    let mut expected=0u64;
     let mut timings=Vec::new();let mut gaps=GapBudget::default();
     for sample_id in 1..=count {
         live(cancelled)?;
@@ -306,7 +306,8 @@ fn decode_inner(bytes:&[u8],mdat:(u64,u64),start_tick:u64,end_tick:u64,cancelled
         if sample_id==1 && (!sample.is_sync||!is_idr){return Err("The first video sample must be an IDR sync sample".into());}
         let sample_end=sample.start_time.checked_add(u64::from(sample.duration)).ok_or("MP4 sample time overflow")?;
         let display=i64::try_from(sample.start_time).map_err(|_|"MP4 decode time overflow")?.checked_add(i64::from(sample.rendering_offset)).filter(|&v|v>=0).ok_or("Invalid MP4 presentation time")? as u64;
-        let begin=display.checked_mul(unit).ok_or("MP4 time conversion overflow")?;let end=display.checked_add(u64::from(sample.duration)).and_then(|x|x.checked_mul(unit)).ok_or("MP4 time conversion overflow")?;
+        let to_tick=|value:u64| u64::try_from((u128::from(value)*u128::from(TICKS_PER_SECOND)).div_ceil(u128::from(scale))).map_err(|_|"MP4 time conversion overflow");
+        let begin=to_tick(display)?;let end=to_tick(display.checked_add(u64::from(sample.duration)).ok_or("MP4 time conversion overflow")?)?;
         timings.push((begin,end,sample_id));
         expected=sample_end;
     }

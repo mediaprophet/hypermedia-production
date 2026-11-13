@@ -1,37 +1,37 @@
-//! Error type for WGPU Context
+//! Error type for Etalon Context
 
+use etalon::{PollError, RequestAdapterError, RequestDeviceError};
 use std::error::Error;
 use std::fmt::Display;
-use wgpu::{PollError, RequestAdapterError, RequestDeviceError};
 
-/// Errors that can occur in WgpuContext.
+/// Errors that can occur in EtalonContext.
 #[derive(Debug)]
-pub enum WgpuContextError {
+pub enum EtalonContextError {
     /// There is no available device with the features required by Vello.
     NoCompatibleDevice,
     /// Failed to create surface.
-    /// See [`wgpu::CreateSurfaceError`] for more information.
-    WgpuCreateSurfaceError(wgpu::CreateSurfaceError),
+    /// See [`etalon::CreateSurfaceError`] for more information.
+    EtalonCreateSurfaceError(etalon::CreateSurfaceError),
     /// Surface doesn't support the required texture formats.
     /// Make sure that you have a surface which provides one of
     /// `TextureFormat::Rgba8Unorm`
     /// or `TextureFormat::Bgra8Unorm` as texture formats.
     // TODO: Why does this restriction exist?
     UnsupportedSurfaceFormat,
-    /// Wgpu failed to request an adapter
+    /// Etalon failed to request an adapter
     RequestAdapterError(RequestAdapterError),
-    /// Wgpu failed to request a device
+    /// Etalon failed to request a device
     RequestDeviceError(RequestDeviceError),
-    /// Wgpu failed to poll a device
+    /// Etalon failed to poll a device
     PollError(PollError),
 }
 
-impl Display for WgpuContextError {
+impl Display for EtalonContextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NoCompatibleDevice => writeln!(f, "Couldn't find suitable device"),
-            Self::WgpuCreateSurfaceError(inner) => {
-                writeln!(f, "Couldn't create wgpu surface")?;
+            Self::EtalonCreateSurfaceError(inner) => {
+                writeln!(f, "Couldn't create etalon surface")?;
                 inner.fmt(f)
             }
             Self::UnsupportedSurfaceFormat => {
@@ -53,26 +53,26 @@ impl Display for WgpuContextError {
     }
 }
 
-impl Error for WgpuContextError {}
-impl From<wgpu::CreateSurfaceError> for WgpuContextError {
-    fn from(value: wgpu::CreateSurfaceError) -> Self {
-        Self::WgpuCreateSurfaceError(value)
+impl Error for EtalonContextError {}
+impl From<etalon::CreateSurfaceError> for EtalonContextError {
+    fn from(value: etalon::CreateSurfaceError) -> Self {
+        Self::EtalonCreateSurfaceError(value)
     }
 }
 
-impl From<RequestAdapterError> for WgpuContextError {
+impl From<RequestAdapterError> for EtalonContextError {
     fn from(value: RequestAdapterError) -> Self {
         Self::RequestAdapterError(value)
     }
 }
 
-impl From<RequestDeviceError> for WgpuContextError {
+impl From<RequestDeviceError> for EtalonContextError {
     fn from(value: RequestDeviceError) -> Self {
         Self::RequestDeviceError(value)
     }
 }
 
-impl From<PollError> for WgpuContextError {
+impl From<PollError> for EtalonContextError {
     fn from(value: PollError) -> Self {
         Self::PollError(value)
     }

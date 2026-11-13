@@ -1,38 +1,38 @@
 /*!
 
-Easy to use profiler scopes for [wgpu](https://github.com/gfx-rs/wgpu) using timer queries.
+Easy to use profiler scopes for [Etalon](https://github.com/mediaprophet/etalon) using timer queries.
 
-`wgpu_profiler` manages all the necessary [`wgpu::QuerySet`] and [`wgpu::Buffer`] behind the scenes
+`etalon_profiler` manages all the necessary [`etalon::QuerySet`] and [`etalon::Buffer`] behind the scenes
 and allows you to create to create timer scopes with minimal overhead!
 
 # How to use
 
 ```
-use wgpu_profiler::*;
+use etalon_profiler::*;
 
-# async fn wgpu_init() -> (wgpu::Instance, wgpu::Adapter, wgpu::Device, wgpu::Queue) {
-    # let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
-    # let adapter = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await.unwrap();
+# async fn etalon_init() -> (etalon::Instance, etalon::Adapter, etalon::Device, etalon::Queue) {
+    # let instance = etalon::Instance::new(etalon::InstanceDescriptor::new_without_display_handle());
+    # let adapter = instance.request_adapter(&etalon::RequestAdapterOptions::default()).await.unwrap();
     # let (device, queue) = adapter
-    #     .request_device(&wgpu::DeviceDescriptor {
-    #         required_features: wgpu::Features::TIMESTAMP_QUERY,
+    #     .request_device(&etalon::DeviceDescriptor {
+    #         required_features: etalon::Features::TIMESTAMP_QUERY,
     #         ..Default::default()
     #     })
     #     .await
     #     .unwrap();
     # (instance, adapter, device, queue)
 # }
-# let (instance, adapter, device, queue) = futures_lite::future::block_on(wgpu_init());
-# let cs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+# let (instance, adapter, device, queue) = futures_lite::future::block_on(etalon_init());
+# let cs_module = device.create_shader_module(etalon::ShaderModuleDescriptor {
 #     label: None,
-#     source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
+#     source: etalon::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
 # });
-# let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+# let pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
 #        label: None,
 #        layout: None,
 #        module: &cs_module,
 #        entry_point: Some("main"),
-#        compilation_options: wgpu::PipelineCompilationOptions::default(),
+#        compilation_options: etalon::PipelineCompilationOptions::default(),
 #        cache: None,
 #    });
 // ...
@@ -41,7 +41,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
 
 // ...
 
-# let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+# let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 {
     // You can now open profiling scopes on any encoder or pass:
     let mut scope = profiler.scope("name of your scope", &mut encoder);
@@ -60,7 +60,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
     // Scopes created this way are automatically closed when dropped.
 }
 
-// Wgpu-profiler needs to insert buffer copy commands.
+// Etalon-profiler needs to insert buffer copy commands.
 profiler.resolve_queries(&mut encoder);
 # drop(encoder);
 
@@ -75,18 +75,18 @@ if let Some(profiling_data) = profiler.process_finished_frame(queue.get_timestam
     # let button_pressed = false;
     // You usually want to write to disk only under some condition, e.g. press of a key.
     if button_pressed {
-        wgpu_profiler::chrometrace::write_chrometrace(
+        etalon_profiler::chrometrace::write_chrometrace(
             std::path::Path::new("mytrace.json"), &profiling_data);
     }
 }
 ```
-Check also the [Example](https://github.com/Wumpf/wgpu-profiler/blob/main/examples/demo.rs) where everything can be seen in action.
+See the maintained `examples/demo.rs` in this package for a complete example.
 
 ## Tracy integration
 
 If you want to use [tracy](https://github.com/wolfpld/tracy) for profiling, you can enable the `tracy` feature.
 
-This adds `wgpu_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
+This adds `etalon_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
 
 For details check the example code.
 
@@ -94,7 +94,7 @@ For details check the example code.
 
 If you want to use [puffin](https://github.com/EmbarkStudios/puffin) for profiling, you can enable the `puffin` feature.
 
-This adds `wgpu_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
+This adds `etalon_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
 
 You can run the demo example with puffin by running `cargo run --example demo --features puffin`.
 All CPU profiling goes to port `8585`, all GPU profiling goes to port `8586`. You can open puffin viewers for both.

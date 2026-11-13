@@ -61,7 +61,7 @@ version = "2"
 [dependencies.ultraviolet]
 version = "0.10"
 
-[dependencies.wgpu]
+[dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
@@ -73,7 +73,7 @@ version = "0.30"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.pollster]
 version = "0.4"
 
-[target.'cfg(target_arch = "wasm32")'.dependencies.wgpu]
+[target.'cfg(target_arch = "wasm32")'.dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"

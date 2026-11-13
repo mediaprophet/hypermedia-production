@@ -277,6 +277,12 @@ impl AssetHost<'_> {
         let preview_rgba_handle =
             self.store_rgba(preview_size as u32, preview_size as u32, pixels)?;
 
+        let preview_model = match closure {
+            "random_walk_sss" => "analytic diffuse and rim approximation; no spatial random walk",
+            "chiang_hair" => "analytic sphere preview; no groom transport",
+            "fournier_forand_water" => "analytic sphere preview; no participating medium",
+            _ => "principled sphere preview",
+        };
         let json_desc = serde_json::json!({
             "schema": "cycles.bsdf.closure/v2",
             "closure": closure,
@@ -286,7 +292,9 @@ impl AssetHost<'_> {
             "ior": ior,
             "coat_weight": coat_weight,
             "thin_film_nm": thin_film_nm,
-            "energy_conserving": true,
+            "energy_conserving": null,
+            "energy_conservation_status": "not measured",
+            "preview_model": preview_model,
             "albedo_luminance": albedo_luminance,
             "nodes": [
                 {
@@ -310,7 +318,9 @@ impl AssetHost<'_> {
             ("preview_rgba".into(), preview_rgba_handle),
             ("bsdf_json".into(), bsdf_json_handle),
             ("closure".into(), Value::String(closure.to_string())),
-            ("energy_conserving".into(), Value::Bool(true)),
+            ("energy_conserving".into(), Value::String("unverified".into())),
+            ("energy_conservation_status".into(), Value::String("not measured".into())),
+            ("preview_model".into(), Value::String(preview_model.into())),
             ("albedo_luminance".into(), Value::F64(albedo_luminance)),
         ])))
     }

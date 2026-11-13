@@ -1,7 +1,7 @@
 //! Cascaded SDFGI irradiance probes, 3D froxel atmospheric scattering, and
 //! hierarchical light tree bounding-cone clustering.
 //! Default `backend=cpu` uses Etalon CPU APIs. `backend=gpu` dispatches the
-//! Etalon/wgpu compute path in `gpu_gi` (fail-closed without an adapter).
+//! Etalon compute path in `gpu_gi` (fail-closed without an adapter).
 
 use crate::*;
 use qualia_core_db::etalon_render::frame_quality::{

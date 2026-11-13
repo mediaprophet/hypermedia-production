@@ -1,7 +1,7 @@
 use crate::{
-    AlphaConversion, AlphaConvertBlitter, DeviceHandle, WgpuContextError, util::create_texture,
+    AlphaConversion, AlphaConvertBlitter, DeviceHandle, EtalonContextError, util::create_texture,
 };
-use wgpu::{
+use etalon::{
     CommandEncoderDescriptor, CompositeAlphaMode, CurrentSurfaceTexture, Device, PresentMode,
     Queue, Surface, SurfaceConfiguration, SurfaceTexture, TextureFormat, TextureUsages,
     TextureView, TextureViewDescriptor, util::TextureBlitter,
@@ -41,7 +41,7 @@ impl IntermediateBlitter {
     fn copy(
         &self,
         device: &Device,
-        encoder: &mut wgpu::CommandEncoder,
+        encoder: &mut etalon::CommandEncoder,
         source: &TextureView,
         target: &TextureView,
     ) {
@@ -95,7 +95,7 @@ pub struct SurfaceRendererConfiguration {
     ///   ⚠️ If the backend does not support waiting on present, this will cause the CPU to wait for the GPU
     ///   to finish all work related to the previous frame when calling `Surface::get_current_texture`,
     ///   causing CPU-GPU serialization (i.e. when `Surface::get_current_texture` returns, the GPU might be idle).
-    ///   It is currently not possible to query this. See <https://github.com/gfx-rs/wgpu/issues/2869>.
+    ///   Historical surface-latency background: <https://github.com/gfx-rs/wgpu/issues/2869>.
     /// * A value of 0 is generally not supported and always clamped to a higher value.
     pub desired_maximum_frame_latency: u32,
     /// Specifies how the alpha channel of the textures should be handled during compositing.
@@ -111,7 +111,7 @@ pub struct SurfaceRendererConfiguration {
 struct IntermediateTextureStuff {
     pub config: TextureConfiguration,
     // TextureView for the intermediate Texture which we sometimes render to because compute shaders
-    // cannot always render directly to surfaces. Since WGPU 26, the underlying Texture can be accessed
+    // cannot always render directly to surfaces. The underlying Texture can be accessed
     // from the TextureView so we don't need to store both.
     pub texture_view: TextureView,
     // Blitter for blitting from the intermediate texture to the surface.
@@ -147,7 +147,7 @@ impl<'s> SurfaceRenderer<'s> {
         surface_renderer_config: SurfaceRendererConfiguration,
         intermediate_texture_config: Option<TextureConfiguration>,
         device_handle: DeviceHandle,
-    ) -> Result<SurfaceRenderer<'w>, WgpuContextError> {
+    ) -> Result<SurfaceRenderer<'w>, EtalonContextError> {
         // Convert SurfaceRendererConfiguration to SurfaceConfiguration.
         // The difference is that `format` is a Vec in SurfaceRendererConfiguration and a single value in SurfaceConfiguration
         let surface_config = SurfaceConfiguration {
@@ -157,14 +157,14 @@ impl<'s> SurfaceRenderer<'s> {
                 .formats
                 .into_iter()
                 .find(|it| surface_renderer_config.formats.contains(it))
-                .ok_or(WgpuContextError::UnsupportedSurfaceFormat)?,
+                .ok_or(EtalonContextError::UnsupportedSurfaceFormat)?,
             width: surface_renderer_config.width,
             height: surface_renderer_config.height,
             present_mode: surface_renderer_config.present_mode,
             desired_maximum_frame_latency: surface_renderer_config.desired_maximum_frame_latency,
             alpha_mode: surface_renderer_config.alpha_mode,
             view_formats: surface_renderer_config.view_formats,
-            color_space: wgpu::SurfaceColorSpace::Auto,
+            color_space: etalon::SurfaceColorSpace::Auto,
         };
 
         let intermediate_texture = intermediate_texture_config.map(|texture_config| {
@@ -231,7 +231,7 @@ impl<'s> SurfaceRenderer<'s> {
         self.configure();
     }
 
-    pub fn set_present_mode(&mut self, present_mode: wgpu::PresentMode) {
+    pub fn set_present_mode(&mut self, present_mode: etalon::PresentMode) {
         self.config.present_mode = present_mode;
         self.configure();
     }

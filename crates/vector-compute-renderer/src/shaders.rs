@@ -3,16 +3,16 @@
 
 //! Load rendering shaders.
 
-#[cfg(feature = "wgpu")]
-use wgpu::Device;
+#[cfg(feature = "etalon")]
+use etalon::Device;
 
 use crate::ShaderId;
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 use crate::{
     Error, RendererOptions,
+    etalon_engine::EtalonEngine,
     recording::{BindType, ImageFormat},
-    wgpu_engine::WgpuEngine,
 };
 
 // Shaders for the full pipeline
@@ -44,13 +44,13 @@ pub struct FullShaders {
     pub pathtag_is_cpu: bool,
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 pub(crate) fn full_shaders(
     device: &Device,
-    engine: &mut WgpuEngine,
+    engine: &mut EtalonEngine,
     options: &RendererOptions,
 ) -> Result<FullShaders, Error> {
-    use crate::wgpu_engine::CpuShaderType;
+    use crate::etalon_engine::CpuShaderType;
     use BindType::*;
 
     let mut force_gpu = false;

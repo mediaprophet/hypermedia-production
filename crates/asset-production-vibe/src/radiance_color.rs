@@ -266,6 +266,7 @@ impl AssetHost<'_> {
         )?;
 
         let image_val = required(a, "image")?;
+        if matches!(self.workspace.get(image_val)?, Artifact::Rgba16(_)) {return self.grade_rgba16(a);}
         let img = self.rgba(image_val)?;
         let (w, h, n) = (img.width, img.height, img.pixels.len());
 
@@ -385,6 +386,7 @@ impl AssetHost<'_> {
     fn radiance_convert_transfer(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["image", "source_transfer", "target_transfer"])?;
         let image_val = required(a, "image")?;
+        if matches!(self.workspace.get(image_val)?, Artifact::Rgba16(_)) {return self.transfer_rgba16(a);}
         let img = self.rgba(image_val)?;
         let (w, h, n) = (img.width, img.height, img.pixels.len());
 

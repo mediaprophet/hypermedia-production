@@ -5,18 +5,19 @@ mod multiple_resolves_per_frame;
 mod nested_scopes;
 
 pub fn create_device(
-    features: wgpu::Features,
-) -> Result<(wgpu::Backend, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
+    features: etalon::Features,
+) -> Result<(etalon::Backend, etalon::Device, etalon::Queue), etalon::RequestDeviceError> {
     async fn create_default_device_async(
-        features: wgpu::Features,
-    ) -> Result<(wgpu::Backend, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+        features: etalon::Features,
+    ) -> Result<(etalon::Backend, etalon::Device, etalon::Queue), etalon::RequestDeviceError> {
+        let instance =
+            etalon::Instance::new(etalon::InstanceDescriptor::new_without_display_handle());
         let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
+            .request_adapter(&etalon::RequestAdapterOptions::default())
             .await
             .unwrap();
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
+            .request_device(&etalon::DeviceDescriptor {
                 required_features: features,
                 ..Default::default()
             })
@@ -36,14 +37,14 @@ enum Requires {
 }
 
 impl Requires {
-    fn expect_time_result(self, features: wgpu::Features) -> bool {
+    fn expect_time_result(self, features: etalon::Features) -> bool {
         match self {
-            Requires::Timestamps => features.contains(wgpu::Features::TIMESTAMP_QUERY),
+            Requires::Timestamps => features.contains(etalon::Features::TIMESTAMP_QUERY),
             Requires::TimestampsInEncoders => {
-                features.contains(wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)
+                features.contains(etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)
             }
             Requires::TimestampsInPasses => {
-                features.contains(wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
+                features.contains(etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
             }
             Requires::Disabled => false,
         }
@@ -62,8 +63,8 @@ fn expected_scope(
 }
 
 fn validate_results(
-    features: wgpu::Features,
-    results: &[wgpu_profiler::GpuTimerQueryResult],
+    features: etalon::Features,
+    results: &[etalon_profiler::GpuTimerQueryResult],
     expected: &[ExpectedScope],
 ) {
     assert_eq!(
@@ -85,8 +86,8 @@ fn validate_results(
 }
 
 fn validate_results_unordered(
-    features: wgpu::Features,
-    results: &[wgpu_profiler::GpuTimerQueryResult],
+    features: etalon::Features,
+    results: &[etalon_profiler::GpuTimerQueryResult],
     expected: &[ExpectedScope],
 ) {
     assert_eq!(

@@ -22,18 +22,18 @@
 //!
 //! ## Feature Flags
 //!
-//! - `wgpu` (enabled by default): Enables the GPU rendering backend via wgpu and
+//! - `etalon` (enabled by default): Enables the GPU rendering backend via etalon and
 //!   includes the required Vello GPU shaders.
-//! - `wgpu_default` (enabled by default): Enables wgpu with its default hardware
+//! - `etalon_default` (enabled by default): Enables etalon with its default hardware
 //!   backends (such as Vulkan, Metal, and DX12).
 //! - `text` (enabled by default): Enables glyph rendering ([`Scene::glyph_run`]).
 //! - `webgl`: Enables the WebGL rendering backend for browser support, using GLSL
 //!   shaders for compatibility.
 //!
-//! If you need to customize the set of enabled wgpu features, disable this crate's
-//! default features then enable its `wgpu` feature. You can then depend on wgpu
+//! If you need to customize the set of enabled etalon features, disable this crate's
+//! default features then enable its `etalon` feature. You can then depend on etalon
 //! directly, setting the specific features you require. Don't forget to also
-//! disable wgpu's default features.
+//! disable etalon's default features.
 //!
 //! ## Architecture
 //!
@@ -66,7 +66,7 @@
 //!   including glyph caching. Experimental APIs are identified in their method
 //!   documentation.
 //! - Parts of the rendering pipeline are not yet fully optimized, particularly the
-//!   wgpu backend, but also other aspects.
+//!   etalon backend, but also other aspects.
 //! - Some failures panic instead of being reported through a user-facing error.
 //!
 //! With that said, we are continuously improving Vello GPU and will address these
@@ -82,7 +82,7 @@
 
 #![no_std]
 #![cfg_attr(
-    not(any(feature = "wgpu", feature = "webgl")),
+    not(any(feature = "etalon", feature = "webgl")),
     allow(
         dead_code,
         unused_imports,
@@ -117,7 +117,7 @@ pub use render::{
     WebGlShaderProgramOperation, WebGlShaderStage, WebGlTextureBindings,
     WebGlTextureWithDimensions,
 };
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 pub use render::{AtlasWriter, RenderTargetConfig, Renderer, TextureBindings};
 pub use render::{ClearSettings, Config, GpuStrip, RenderSize, TargetInit};
 #[cfg(all(feature = "webgl", feature = "probe"))]

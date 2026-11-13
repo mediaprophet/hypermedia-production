@@ -1,7 +1,8 @@
-# wgpu-profiler
-[![Crates.io](https://img.shields.io/crates/v/wgpu-profiler.svg)](https://crates.io/crates/wgpu-profiler)
+# Etalon GPU command profiler
 
-Simple profiler scopes for wgpu using timer queries
+This maintained package derives from [wgpu-profiler](https://github.com/Wumpf/wgpu-profiler); original attribution and licenses are retained. The Rust library is `etalon_profiler`.
+
+Simple profiler scopes for Etalon using timer queries
 
 ## Features
 
@@ -23,9 +24,9 @@ Simple profiler scopes for wgpu using timer queries
 
 Create a new profiler object:
 ```rust
-use wgpu_profiler::{wgpu_profiler, GpuProfiler, GpuProfilerSettings};
+use etalon_profiler::{GpuProfiler, GpuProfilerSettings};
 // ...
-let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default());
+let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default())?;
 ```
 
 Now you can start creating profiler scopes:
@@ -48,12 +49,12 @@ compute_pass.set_pipeline(&pipeline);
 
 `GpuProfiler` reads the device features on first use:
 
-* `wgpu::Features::TIMESTAMP_QUERY` is required to emit any timer queries.
+* `etalon::Features::TIMESTAMP_QUERY` is required to emit any timer queries.
   * Alone, this allows you to use timestamp writes on pass definition as done by `Scope::scoped_compute_pass`/`Scope::scoped_render_pass`
-* `wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS` is required to issue queries at any point within encoders.
-* `wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES` is required to issue queries at any point within passes.
+* `etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS` is required to issue queries at any point within encoders.
+* `etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES` is required to issue queries at any point within passes.
 
-Wgpu-profiler needs to insert buffer copy commands, so when you're done with an encoder and won't do any more profiling scopes on it, you need to resolve the queries:
+Etalon profiler needs to insert buffer copy commands, so when you're done with an encoder and won't do any more profiling scopes on it, you need to resolve the queries:
 ```rust
 profiler.resolve_queries(&mut encoder);
 ```
@@ -66,7 +67,7 @@ profiler.end_frame().unwrap();
 Retrieving the oldest available frame and writing it out to a chrome trace file.
 ```rust
 if let Some(profiling_data) = profiler.process_finished_frame(queue.get_timestamp_period()) {
-    wgpu_profiler::chrometrace::write_chrometrace(std::path::Path::new("mytrace.json"), &profiling_data);
+    etalon_profiler::chrometrace::write_chrometrace(std::path::Path::new("mytrace.json"), &profiling_data);
 }
 ```
 

@@ -5,13 +5,16 @@ mod image_renderer;
 mod scene;
 mod window_renderer;
 
+pub use etalon_context::DeviceHandle;
 #[cfg(not(target_arch = "wasm32"))]
 pub use image_renderer::VelloImageRenderer;
 pub use scene::VelloScenePainter;
-pub use wgpu_context::DeviceHandle;
 pub use window_renderer::{VelloRendererOptions, VelloWindowRenderer};
 
-pub use wgpu;
+pub use etalon;
+
+#[doc(hidden)]
+pub use etalon as wgpu;
 
 use std::num::NonZeroUsize;
 

@@ -550,6 +550,38 @@ mod tests {
     }
 
     #[test]
+    fn slim_preserves_imported_normals_and_material_and_rebuilds_tangents() {
+        use qualia_core_db::container_10d::{MaterialRecord, SubmeshRange, read_container_mesh_frames, read_material_section_into};
+        use qualia_core_db::render::assets::ImportedMesh;
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mesh = store_quad_mesh(&mut host);
+        let source_mesh = host.mesh(&mesh).unwrap().clone();
+        let index = integer(required(record(&mesh).unwrap(), "handle").unwrap(), "handle").unwrap();
+        let mut material = MaterialRecord::legacy_default();
+        material.base_color = [0.2, 0.4, 0.6, 1.0];
+        host.workspace.imported[index] = Some(std::sync::Arc::new(ImportedMesh {
+            mesh: source_mesh, normals: Some(vec![[0.0,0.0,1.0]; 4]),
+            tangents: Some(vec![[0.0,1.0,0.0,-1.0]; 4]), texture_coordinates_0: Some(vec![[0.0,0.0];4]),
+            materials: vec![material], submeshes: vec![SubmeshRange { first_index:0, index_count:6, material_id:material.id, semantic_id:0 }], texture_dependencies:vec![],
+        }));
+        let result = host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &BTreeMap::from([("mesh".into(),mesh)])).unwrap();
+        let rec = record(&result).unwrap();
+        let bytes = &host.workspace.encoded(required(rec,"container_10d").unwrap()).unwrap().bytes;
+        let frames = read_container_mesh_frames(bytes,4).unwrap().unwrap();
+        assert_eq!(frames.normals.unwrap(), vec![[0.0,0.0,1.0];4]);
+        assert!(frames.tangents.is_some());
+        let mut mats = [MaterialRecord::legacy_default()];
+        let mut ranges = [SubmeshRange { first_index:0,index_count:0,material_id:0,semantic_id:0 }];
+        read_material_section_into(bytes,6,&mut mats,&mut ranges).unwrap();
+        assert_eq!(mats[0].base_color, material.base_color);
+        let output = required(rec,"mesh").unwrap();
+        let output_index = integer(required(record(output).unwrap(),"handle").unwrap(),"handle").unwrap();
+        assert!(host.workspace.imported[output_index].as_ref().unwrap().tangents.is_some());
+    }
+
+    #[test]
     fn test_compute_mikktspace_tetrahedron() {
         let limits = ToolLimits::default();
         let cancel = AtomicBool::new(false);
@@ -584,6 +616,7 @@ mod tests {
         assert_eq!(rgba.height, 64);
 
         let sample_tangents = list(required(rec, "sample_tangents").unwrap()).unwrap();
+        assert_eq!(list(required(rec, "tangents").unwrap()).unwrap().len(), v_count);
         assert_eq!(sample_tangents.len(), 4);
         for item in sample_tangents {
             let t_vec = list(item).unwrap();
@@ -593,6 +626,63 @@ mod tests {
                 sign == 1.0 || sign == -1.0,
                 "Handedness sign must be +1.0 or -1.0"
             );
+        }
+    }
+
+    #[test]
+    fn atlas_returns_split_mesh_and_vertex_remap_for_seam() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let source = store_quad_mesh(&mut host);
+        let args = BTreeMap::from([
+            ("mesh".into(), source),
+            ("mode".into(), Value::String("atlas".into())),
+            ("seams".into(), Value::List(vec![Value::List(vec![Value::U64(0), Value::U64(2)])])),
+        ]);
+        let result = host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &args).unwrap();
+        let rec = record(&result).unwrap();
+        let split = host.mesh(required(rec, "mesh").unwrap()).unwrap();
+        let remap = list(required(rec, "source_vertices").unwrap()).unwrap();
+        let uvs = list(required(rec, "uvs").unwrap()).unwrap();
+        assert_eq!(split.positions.len(), remap.len());
+        assert_eq!(uvs.len(), remap.len());
+        assert_eq!(split.triangles.len(), 2);
+        assert!(remap.len() > 4, "seam must duplicate shared vertices");
+        let mut compile = BTreeMap::new();
+        compile.insert("mesh".into(), required(rec, "mesh").unwrap().clone());
+        compile.insert("source_10d".into(), required(rec, "container_10d").unwrap().clone());
+        host.manifold_ext("hypermedia.manifold.compile_10d_pbr", &compile).unwrap();
+    }
+
+    #[test]
+    fn atlas_preserves_imported_frames_material_ranges_and_tangent_basis() {
+        use qualia_core_db::render::assets::ImportedMesh;
+        use qualia_core_db::container_10d::{MaterialRecord, SubmeshRange};
+        let limits = ToolLimits::default(); let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let source = store_quad_mesh(&mut host);
+        let mesh = host.mesh(&source).unwrap().clone();
+        let index = integer(required(record(&source).unwrap(), "handle").unwrap(), "handle").unwrap();
+        let material = MaterialRecord::legacy_default();
+        host.workspace.imported[index] = Some(std::sync::Arc::new(ImportedMesh {
+            mesh, normals: Some(vec![[1.0, 0.0, 0.0];4]), tangents: None, texture_coordinates_0: None,
+            materials: vec![material], submeshes: vec![SubmeshRange { first_index:0, index_count:6, material_id:material.id, semantic_id:0 }], texture_dependencies: vec![],
+        }));
+        let args = BTreeMap::from([("mesh".into(), source), ("mode".into(), Value::String("atlas".into())), ("seams".into(), Value::List(vec![Value::List(vec![Value::U64(0),Value::U64(2)])]))]);
+        let result = host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &args).unwrap();
+        let rec = record(&result).unwrap();
+        let mesh_handle = required(rec, "mesh").unwrap().clone();
+        let split_idx = integer(required(record(&mesh_handle).unwrap(), "handle").unwrap(), "handle").unwrap();
+        let split = host.workspace.imported[split_idx].as_ref().unwrap();
+        assert!(split.normals.as_ref().unwrap().iter().all(|n| *n == [1.0,0.0,0.0]));
+        assert_eq!(split.submeshes[0].index_count, 6);
+        let bytes = &host.workspace.encoded(required(rec, "container_10d").unwrap()).unwrap().bytes;
+        let frames = qualia_core_db::container_10d::read_container_mesh_frames(bytes, split.mesh.positions.len()).unwrap().unwrap();
+        assert!(frames.normals.unwrap().iter().all(|n| *n == [1.0,0.0,0.0]));
+        let tangents = host.surface_bsdf_uv_op("hypermedia.surface.compute_mikktspace", &BTreeMap::from([("mesh".into(), mesh_handle)])).unwrap();
+        for row in list(required(record(&tangents).unwrap(), "tangents").unwrap()).unwrap() {
+            assert!(vector::<4>(row).unwrap()[0].abs() < 1e-5, "tangent must be orthogonal to authored X normal");
         }
     }
 
@@ -628,7 +718,7 @@ mod tests {
                 rec.get("closure"),
                 Some(&Value::String(closure_name.into()))
             );
-            assert_eq!(rec.get("energy_conserving"), Some(&Value::Bool(true)));
+            assert_eq!(rec.get("energy_conservation_status"), Some(&Value::String("not measured".into())));
 
             let lum = match rec.get("albedo_luminance") {
                 Some(Value::F64(l)) => *l,

@@ -5,9 +5,9 @@ use super::DebugLayers;
 use crate::{
     DebugDownloads, RenderParams,
     debug::validate::{LineEndpoint, validate_line_soup},
+    etalon_engine::EtalonEngine,
     recording::{BindType, DrawParams, ImageProxy, Recording, ResourceProxy, ShaderId},
     render::CapturedBuffers,
-    wgpu_engine::WgpuEngine,
 };
 
 use {
@@ -27,13 +27,13 @@ pub(crate) struct DebugRenderer {
 
 impl DebugRenderer {
     pub fn new(
-        device: &wgpu::Device,
-        target_format: wgpu::TextureFormat,
-        engine: &mut WgpuEngine,
+        device: &etalon::Device,
+        target_format: etalon::TextureFormat,
+        engine: &mut EtalonEngine,
     ) -> Self {
-        let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let module = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("debug layers"),
-            source: wgpu::ShaderSource::Wgsl(SHADERS.into()),
+            source: etalon::ShaderSource::Wgsl(SHADERS.into()),
         });
 
         let clear_tint = engine.add_render_shader(
@@ -42,18 +42,18 @@ impl DebugRenderer {
             &module,
             "full_screen_quad_vert",
             "solid_color_frag",
-            wgpu::PrimitiveTopology::TriangleStrip,
-            wgpu::ColorTargetState {
+            etalon::PrimitiveTopology::TriangleStrip,
+            etalon::ColorTargetState {
                 format: target_format,
-                blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
+                blend: Some(etalon::BlendState {
+                    color: etalon::BlendComponent {
+                        src_factor: etalon::BlendFactor::SrcAlpha,
+                        dst_factor: etalon::BlendFactor::OneMinusSrcAlpha,
+                        operation: etalon::BlendOperation::Add,
                     },
-                    alpha: wgpu::BlendComponent::OVER,
+                    alpha: etalon::BlendComponent::OVER,
                 }),
-                write_mask: wgpu::ColorWrites::ALL,
+                write_mask: etalon::ColorWrites::ALL,
             },
             None,
             &[],
@@ -64,30 +64,30 @@ impl DebugRenderer {
             &module,
             "bbox_vert",
             "solid_color_frag",
-            wgpu::PrimitiveTopology::LineStrip,
-            wgpu::ColorTargetState {
+            etalon::PrimitiveTopology::LineStrip,
+            etalon::ColorTargetState {
                 format: target_format,
                 blend: None,
-                write_mask: wgpu::ColorWrites::ALL,
+                write_mask: etalon::ColorWrites::ALL,
             },
             // This mirrors the layout of the PathBbox structure.
-            Some(wgpu::VertexBufferLayout {
+            Some(etalon::VertexBufferLayout {
                 array_stride: size_of::<PathBbox>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
+                step_mode: etalon::VertexStepMode::Instance,
                 attributes: &[
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Sint32x2,
+                    etalon::VertexAttribute {
+                        format: etalon::VertexFormat::Sint32x2,
                         offset: offset_of!(PathBbox, x0) as u64,
                         shader_location: 0,
                     },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Sint32x2,
+                    etalon::VertexAttribute {
+                        format: etalon::VertexFormat::Sint32x2,
                         offset: offset_of!(PathBbox, x1) as u64,
                         shader_location: 1,
                     },
                 ],
             }),
-            &[(BindType::Uniform, wgpu::ShaderStages::VERTEX)],
+            &[(BindType::Uniform, etalon::ShaderStages::VERTEX)],
         );
         let linesoup = engine.add_render_shader(
             device,
@@ -95,30 +95,30 @@ impl DebugRenderer {
             &module,
             "linesoup_vert",
             "solid_color_frag",
-            wgpu::PrimitiveTopology::TriangleStrip,
-            wgpu::ColorTargetState {
+            etalon::PrimitiveTopology::TriangleStrip,
+            etalon::ColorTargetState {
                 format: target_format,
                 blend: None,
-                write_mask: wgpu::ColorWrites::ALL,
+                write_mask: etalon::ColorWrites::ALL,
             },
             // This mirrors the layout of the LineSoup structure.
-            Some(wgpu::VertexBufferLayout {
+            Some(etalon::VertexBufferLayout {
                 array_stride: size_of::<LineSoup>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
+                step_mode: etalon::VertexStepMode::Instance,
                 attributes: &[
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x2,
+                    etalon::VertexAttribute {
+                        format: etalon::VertexFormat::Float32x2,
                         offset: offset_of!(LineSoup, p0) as u64,
                         shader_location: 0,
                     },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Float32x2,
+                    etalon::VertexAttribute {
+                        format: etalon::VertexFormat::Float32x2,
                         offset: offset_of!(LineSoup, p1) as u64,
                         shader_location: 1,
                     },
                 ],
             }),
-            &[(BindType::Uniform, wgpu::ShaderStages::VERTEX)],
+            &[(BindType::Uniform, etalon::ShaderStages::VERTEX)],
         );
         let linesoup_points = engine.add_render_shader(
             device,
@@ -126,37 +126,37 @@ impl DebugRenderer {
             &module,
             "linepoints_vert",
             "sdf_circle_frag",
-            wgpu::PrimitiveTopology::TriangleStrip,
-            wgpu::ColorTargetState {
+            etalon::PrimitiveTopology::TriangleStrip,
+            etalon::ColorTargetState {
                 format: target_format,
-                blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
+                blend: Some(etalon::BlendState {
+                    color: etalon::BlendComponent {
+                        src_factor: etalon::BlendFactor::SrcAlpha,
+                        dst_factor: etalon::BlendFactor::OneMinusSrcAlpha,
+                        operation: etalon::BlendOperation::Add,
                     },
-                    alpha: wgpu::BlendComponent::OVER,
+                    alpha: etalon::BlendComponent::OVER,
                 }),
-                write_mask: wgpu::ColorWrites::ALL,
+                write_mask: etalon::ColorWrites::ALL,
             },
             // This mirrors the layout of the LineSoup structure. The pipeline only processes the
             // first point of each line. Since all points should be paired, this is enough to
             // render all points. All unpaired points alone get drawn by the `unpaired_points`
             // pipeline, so no point should get missed.
-            Some(wgpu::VertexBufferLayout {
+            Some(etalon::VertexBufferLayout {
                 array_stride: size_of::<LineSoup>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
-                attributes: &[wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x2,
+                step_mode: etalon::VertexStepMode::Instance,
+                attributes: &[etalon::VertexAttribute {
+                    format: etalon::VertexFormat::Float32x2,
                     offset: offset_of!(LineSoup, p0) as u64,
                     shader_location: 0,
                 }],
             }),
             &[
-                (BindType::Uniform, wgpu::ShaderStages::VERTEX),
+                (BindType::Uniform, etalon::ShaderStages::VERTEX),
                 (
                     BindType::Uniform,
-                    wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                    etalon::ShaderStages::VERTEX | etalon::ShaderStages::FRAGMENT,
                 ),
             ],
         );
@@ -166,34 +166,34 @@ impl DebugRenderer {
             &module,
             "linepoints_vert",
             "sdf_circle_frag",
-            wgpu::PrimitiveTopology::TriangleStrip,
-            wgpu::ColorTargetState {
+            etalon::PrimitiveTopology::TriangleStrip,
+            etalon::ColorTargetState {
                 format: target_format,
-                blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
+                blend: Some(etalon::BlendState {
+                    color: etalon::BlendComponent {
+                        src_factor: etalon::BlendFactor::SrcAlpha,
+                        dst_factor: etalon::BlendFactor::OneMinusSrcAlpha,
+                        operation: etalon::BlendOperation::Add,
                     },
-                    alpha: wgpu::BlendComponent::OVER,
+                    alpha: etalon::BlendComponent::OVER,
                 }),
-                write_mask: wgpu::ColorWrites::ALL,
+                write_mask: etalon::ColorWrites::ALL,
             },
             // This mirrors the layout of the LineSoup structure.
-            Some(wgpu::VertexBufferLayout {
+            Some(etalon::VertexBufferLayout {
                 array_stride: size_of::<LineEndpoint>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
-                attributes: &[wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x2,
+                step_mode: etalon::VertexStepMode::Instance,
+                attributes: &[etalon::VertexAttribute {
+                    format: etalon::VertexFormat::Float32x2,
                     offset: offset_of!(LineEndpoint, x) as u64,
                     shader_location: 0,
                 }],
             }),
             &[
-                (BindType::Uniform, wgpu::ShaderStages::VERTEX),
+                (BindType::Uniform, etalon::ShaderStages::VERTEX),
                 (
                     BindType::Uniform,
-                    wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                    etalon::ShaderStages::VERTEX | etalon::ShaderStages::FRAGMENT,
                 ),
             ],
         );

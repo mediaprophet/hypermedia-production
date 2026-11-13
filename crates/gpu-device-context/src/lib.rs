@@ -1,9 +1,9 @@
 // Copyright 2022 the Vello Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Simple helpers for managing wgpu state and surfaces.
+//! Simple helpers for managing etalon state and surfaces.
 
-use wgpu::{
+use etalon::{
     Adapter, Device, Features, Instance, Limits, MemoryHints, Queue, Surface, SurfaceTarget,
 };
 
@@ -15,11 +15,19 @@ mod util;
 
 pub use alpha_blitter::{AlphaConversion, AlphaConvertBlitter};
 pub use buffer_renderer::{BufferRenderer, BufferRendererConfig};
-pub use error::WgpuContextError;
-pub use surface_renderer::{SurfaceRenderer, SurfaceRendererConfiguration, TextureConfiguration};
+pub use error::EtalonContextError;
+#[doc(hidden)]
 pub use util::block_on_wgpu;
 
-/// A wgpu `Device`, it's associated `Queue`, and the `Adapter` and `Instance` used to create them
+// Compatibility names for external consumers of the earlier context API.
+#[doc(hidden)]
+pub type WGPUContext = EtalonContext;
+#[doc(hidden)]
+pub type WgpuContextError = EtalonContextError;
+pub use surface_renderer::{SurfaceRenderer, SurfaceRendererConfiguration, TextureConfiguration};
+pub use util::block_on_etalon;
+
+/// An Etalon `Device`, its associated `Queue`, and the `Adapter` and `Instance` used to create them
 #[derive(Clone, Debug)]
 pub struct DeviceHandle {
     pub instance: Instance,
@@ -35,9 +43,9 @@ impl DeviceHandle {
         compatible_surface: Option<&Surface<'_>>,
         extra_features: Option<Features>,
         override_limits: Option<Limits>,
-    ) -> Result<Self, WgpuContextError> {
+    ) -> Result<Self, EtalonContextError> {
         let adapter =
-            wgpu::util::initialize_adapter_from_env_or_default(&instance, compatible_surface)
+            etalon::util::initialize_adapter_from_env_or_default(&instance, compatible_surface)
                 .await?;
 
         // Determine features to request
@@ -55,14 +63,14 @@ impl DeviceHandle {
         });
 
         // Create the device and the queue
-        let descripter = wgpu::DeviceDescriptor {
+        let descripter = etalon::DeviceDescriptor {
             label: None,
             required_features,
             required_limits,
             default_queue: Default::default(),
             memory_hints: MemoryHints::MemoryUsage,
-            trace: wgpu::Trace::default(),
-            experimental_features: wgpu::ExperimentalFeatures::default(),
+            trace: etalon::Trace::default(),
+            experimental_features: etalon::ExperimentalFeatures::default(),
         };
         let (device, queue) = adapter.request_device(&descripter).await?;
 
@@ -81,7 +89,7 @@ impl DeviceHandle {
         window: impl Into<SurfaceTarget<'w>>,
         surface_config: SurfaceRendererConfiguration,
         intermediate_texture_config: Option<TextureConfiguration>,
-    ) -> Result<SurfaceRenderer<'w>, WgpuContextError> {
+    ) -> Result<SurfaceRenderer<'w>, EtalonContextError> {
         // Create a surface from the window handle
         let surface = self.instance.create_surface(window.into())?;
         SurfaceRenderer::new(
@@ -93,9 +101,9 @@ impl DeviceHandle {
     }
 }
 
-/// Simple render context that maintains wgpu state for rendering the pipeline.
-pub struct WGPUContext {
-    /// A WGPU `Instance`. This only needs to be created once per application.
+/// Simple render context that maintains etalon state for rendering the pipeline.
+pub struct EtalonContext {
+    /// A Etalon `Instance`. This only needs to be created once per application.
     pub instance: Instance,
     /// A pool of already-created devices so that we can avoid recreating devices
     /// when we already have a suitable one available
@@ -106,13 +114,13 @@ pub struct WGPUContext {
     override_limits: Option<Limits>,
 }
 
-impl Default for WGPUContext {
+impl Default for EtalonContext {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl WGPUContext {
+impl EtalonContext {
     pub fn new() -> Self {
         Self::with_features_and_limits(None, None)
     }
@@ -122,11 +130,11 @@ impl WGPUContext {
         override_limits: Option<Limits>,
     ) -> Self {
         Self {
-            instance: Instance::new(wgpu::InstanceDescriptor {
-                backends: wgpu::Backends::from_env().unwrap_or_default(),
-                flags: wgpu::InstanceFlags::from_build_config().with_env(),
-                backend_options: wgpu::BackendOptions::from_env_or_default(),
-                memory_budget_thresholds: wgpu::MemoryBudgetThresholds::default(),
+            instance: Instance::new(etalon::InstanceDescriptor {
+                backends: etalon::Backends::from_env().unwrap_or_default(),
+                flags: etalon::InstanceFlags::from_build_config().with_env(),
+                backend_options: etalon::BackendOptions::from_env_or_default(),
+                memory_budget_thresholds: etalon::MemoryBudgetThresholds::default(),
 
                 // TODO: support passing display handle
                 // Needed for opengl/webgl
@@ -150,7 +158,7 @@ impl WGPUContext {
     pub fn create_surface<'w>(
         &self,
         window: impl Into<SurfaceTarget<'w>>,
-    ) -> Result<Surface<'w>, WgpuContextError> {
+    ) -> Result<Surface<'w>, EtalonContextError> {
         Ok(self.instance.create_surface(window.into())?)
     }
 
@@ -160,7 +168,7 @@ impl WGPUContext {
         window: impl Into<SurfaceTarget<'w>>,
         surface_config: SurfaceRendererConfiguration,
         intermediate_texture_config: Option<TextureConfiguration>,
-    ) -> Result<SurfaceRenderer<'w>, WgpuContextError> {
+    ) -> Result<SurfaceRenderer<'w>, EtalonContextError> {
         // Create a surface from the window handle
         let surface = self.create_surface(window.into())?;
 
@@ -168,7 +176,7 @@ impl WGPUContext {
         let dev_id = self
             .find_or_create_device(Some(&surface))
             .await
-            .or(Err(WgpuContextError::NoCompatibleDevice))?;
+            .or(Err(EtalonContextError::NoCompatibleDevice))?;
         let device_handle = self.device_pool[dev_id].clone();
 
         SurfaceRenderer::new(
@@ -183,12 +191,12 @@ impl WGPUContext {
     pub async fn create_buffer_renderer(
         &mut self,
         config: BufferRendererConfig,
-    ) -> Result<BufferRenderer, WgpuContextError> {
+    ) -> Result<BufferRenderer, EtalonContextError> {
         // Find or create a suitable device for rendering to the surface
         let dev_id = self
             .find_or_create_device(None)
             .await
-            .or(Err(WgpuContextError::NoCompatibleDevice))?;
+            .or(Err(EtalonContextError::NoCompatibleDevice))?;
         let device_handle = self.device_pool[dev_id].clone();
 
         Ok(BufferRenderer::new(config, device_handle, dev_id))
@@ -198,7 +206,7 @@ impl WGPUContext {
     pub async fn find_or_create_device(
         &mut self,
         compatible_surface: Option<&Surface<'_>>,
-    ) -> Result<usize, WgpuContextError> {
+    ) -> Result<usize, EtalonContextError> {
         match self.find_existing_device_idx(compatible_surface) {
             Some(device_id) => Ok(device_id),
             None => self.create_device(compatible_surface).await,
@@ -230,7 +238,7 @@ impl WGPUContext {
     pub fn create_device_handle(
         &self,
         compatible_surface: Option<&Surface<'_>>,
-    ) -> impl Future<Output = Result<DeviceHandle, WgpuContextError>> {
+    ) -> impl Future<Output = Result<DeviceHandle, EtalonContextError>> {
         DeviceHandle::new_from_compatible_surface(
             self.instance.clone(),
             compatible_surface,
@@ -243,7 +251,7 @@ impl WGPUContext {
     async fn create_device(
         &mut self,
         compatible_surface: Option<&Surface<'_>>,
-    ) -> Result<usize, WgpuContextError> {
+    ) -> Result<usize, EtalonContextError> {
         let device_handle = self.create_device_handle(compatible_surface).await?;
         self.device_pool.push(device_handle);
         Ok(self.device_pool.len() - 1)

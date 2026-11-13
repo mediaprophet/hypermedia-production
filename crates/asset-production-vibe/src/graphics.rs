@@ -1,5 +1,5 @@
 //! Bounded adapters: rendering, filters, compositing and material generation stay
-//! with their library owners. Pixels are straight-alpha RGBA8 between operations.
+//! with their library owners. Pixels are straight-alpha RGBA8 or retained RGBA16; unsupported cross-precision edits refuse.
 //! 16-bit / 2k lattices are available; ruled / 8-bit / 1024 remain named profiles.
 use super::geometry::color;
 use super::*;
@@ -84,6 +84,7 @@ impl AssetHost<'_> {
     pub(crate) fn rgba(&self, value: &Value) -> Result<&Rgba, String> {
         match self.workspace.get(value)? {
             Artifact::Rgba(r) => Ok(r),
+            Artifact::Rgba16(_) => Err("This operation requires RGBA8; RGBA16 is retained only by encode_rgba_png, grade_color and convert_transfer; no implicit quantization".into()),
             _ => Err("Expected rgba handle".into()),
         }
     }
@@ -127,6 +128,7 @@ impl AssetHost<'_> {
             "hypermedia.radiance.filter_rgba" | "hypermedia.rgba.filter" => self.filter(a),
             "hypermedia.radiance.encode_rgba_png" | "hypermedia.rgba.png" => {
                 fields(a, &["image", "profile"])?;
+                if matches!(self.workspace.get(required(a,"image")?)?, Artifact::Rgba16(_)) {return self.encode_rgba16_png(a);}
                 let r = self.rgba(required(a, "image")?)?;
                 let n = r.pixels.len();
                 let profile = lattice_profile(a)?;
@@ -225,22 +227,25 @@ impl AssetHost<'_> {
         let channels = info.color_type.samples();
         let pixels = match info.bit_depth {
             png::BitDepth::Sixteen => {
-                let stride = channels * 2;
-                bytes[..info.buffer_size()]
-                    .chunks_exact(stride)
-                    .map(|p| {
-                        let sample = |i: usize| {
-                            // IDENTITY leaves file-order BE bytes; high byte is the 8-bit lattice.
-                            u16_to_u8_lattice(u16::from_be_bytes([p[i * 2], p[i * 2 + 1]]))
-                        };
-                        match channels {
-                            1 => [sample(0), sample(0), sample(0), 255],
-                            2 => [sample(0), sample(0), sample(0), sample(1)],
-                            3 => [sample(0), sample(1), sample(2), 255],
-                            _ => [sample(0), sample(1), sample(2), sample(3)],
-                        }
-                    })
-                    .collect::<Vec<_>>()
+                let metadata = reader.info();
+                // png 0.18 decodes gAMA/cHRM into raw chunk fields. Encoder-facing
+                // source_* aliases can be absent even when those chunks are declared.
+                let gamma = metadata.gama_chunk.or(metadata.source_gamma);
+                let chromaticities = metadata.chrm_chunk.is_some() || metadata.source_chromaticities.is_some();
+                if metadata.icc_profile.is_some() || metadata.coding_independent_code_points.is_some()
+                    || metadata.mastering_display_color_volume.is_some() || metadata.content_light_level.is_some()
+                    || (metadata.srgb.is_none() && (chromaticities
+                        || gamma.is_some_and(|gamma| gamma.into_value() != 1.0))) {
+                    return Err("RGBA16 PNG declares an unsupported colour profile; ICC/custom gamma/chromaticities/HDR metadata must be converted explicitly by its owner, not discarded".into());
+                }
+                let transfer = if reader.info().srgb.is_some() { Some(color_transforms::Transfer::Srgb) }
+                    else if gamma.is_some_and(|gamma| gamma.into_value() == 1.0) { Some(color_transforms::Transfer::Linear) }
+                    else { None };
+                let pixels = bytes[..info.buffer_size()].chunks_exact(channels * 2).map(|p| {
+                    let sample = |i:usize| u16::from_be_bytes([p[i*2],p[i*2+1]]);
+                    match channels {1=>[sample(0),sample(0),sample(0),65535],2=>[sample(0),sample(0),sample(0),sample(1)],3=>[sample(0),sample(1),sample(2),65535],_=>[sample(0),sample(1),sample(2),sample(3)]}
+                }).collect();
+                return self.store_rgba16(w,h,pixels,transfer);
             }
             png::BitDepth::Eight => bytes[..info.buffer_size()]
                 .chunks_exact(channels)
@@ -729,9 +734,9 @@ mod tests {
                 &BTreeMap::from([("input".into(), png)]),
             )
             .expect("import 16-bit png");
-        let got = h.rgba(&imported).expect("rgba");
-        assert_eq!(got.pixels[0], pixel);
-        assert_eq!(got.pixels[2], pixel);
+        let got = h.rgba16(&imported).expect("rgba16");
+        assert_eq!(got.pixels[0], pixel.map(|v| v as u16 * 257));
+        assert_eq!(got.pixels[2], pixel.map(|v| v as u16 * 257));
 
         let psd = h
             .radiance_photo_op(
@@ -841,8 +846,7 @@ mod tests {
                 &BTreeMap::from([("input".into(), png)]),
             )
             .expect("import 16-bit be png");
-        let got = h.rgba(&imported).expect("rgba");
-        assert_eq!(got.pixels[0][0], 0x12, "BE sample 0x12FF must keep high byte 0x12");
-        assert_eq!(got.pixels[0], [0x12, 0x34, 0x56, 0xab]);
+        let got = h.rgba16(&imported).expect("rgba16");
+        assert_eq!(got.pixels[0], [0x12ff, 0x34aa, 0x56bb, 0xabcd], "Every BE sample bit survives import");
     }
 }

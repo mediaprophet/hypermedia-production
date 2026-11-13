@@ -101,6 +101,26 @@ impl AssetHost<'_> {
 
         out_v.truncate(nv);
         out_t.truncate(nt);
+        // Qualify union topology before publishing it. The legacy fragment
+        // classifier can leave open cut boundaries on curved intersections.
+        if op == Boolean3Op::Union {
+            self.charge(nt.saturating_mul(16), nt.saturating_mul(36))?;
+            if crate::boolean_conforming::closed_oriented(&out_t, out_v.len()).is_err() {
+                drop(out_v);
+                drop(out_t);
+                let inputs = (va.len() + vb.len()).saturating_mul(std::mem::size_of::<Point3>())
+                    .saturating_add((ta.len() + tb.len()).saturating_mul(std::mem::size_of::<[u32; 3]>()));
+                let bytes = self.limits.total_resource_bytes.saturating_sub(self.workspace.bytes).saturating_sub(inputs);
+                let work = usize::try_from(self.limits.asset_work_units.saturating_sub(self.work)).unwrap_or(usize::MAX);
+                let cancel = self.cancel;
+                let (vertices, triangles, consumed) = crate::boolean_conforming::conforming_union(
+                    &va, &ta, &vb, &tb, bytes, work,
+                    &|| cancel.load(std::sync::atomic::Ordering::Acquire),
+                ).map_err(|e| format!("legacy union produced an open/nonmanifold surface; conforming fallback: {e}"))?;
+                self.charge(consumed, 0)?;
+                return self.store_mesh(vertices, triangles);
+            }
+        }
         self.store_mesh(out_v, out_t)
     }
 
@@ -294,13 +314,42 @@ impl AssetHost<'_> {
         self.charge(n * 4, n * 8)?;
 
         let hint = explicit_format.as_deref().or(key_ext.as_deref());
-        let imported = qualia_core_db::render::assets::import_asset_with_normals(&bytes, hint)
-            .map_err(|e| format!("Import mesh failed: {e}"))?;
-        let mesh = imported.mesh;
-
-        self.mesh_budget(mesh.positions.len(), mesh.triangles.len())?;
-        self.workspace
-            .insert(Artifact::Mesh(mesh), self.limits)
+        if hint == Some("glb") || (hint.is_none() && bytes.starts_with(b"glTF")) {
+            validate_imported_glb_features(&bytes)?;
+        }
+        if hint == Some("obj") {
+            let source = std::str::from_utf8(&bytes).map_err(|_| "OBJ is not UTF-8")?;
+            for line in source.lines() {
+                let keyword = line.split_whitespace().next().unwrap_or("");
+                if ["vt", "vn", "mtllib", "usemtl"].contains(&keyword) {
+                    return Err(format!("OBJ {keyword} attributes cannot be preserved by this import route; use an attributed GLB"));
+                }
+            }
+        }
+        let imported = if hint == Some("glb") || (hint.is_none() && bytes.starts_with(b"glTF")) {
+            qualia_core_db::render::assets::import_glb_static_scene(&bytes, 200_000, 400_000)
+        } else {
+            qualia_core_db::render::assets::import_asset_with_normals(&bytes, hint)
+        }.map_err(|e| format!("Import mesh failed: {e}"))?;
+        self.mesh_budget(imported.mesh.positions.len(), imported.mesh.triangles.len())?;
+        // Keep the original streams associated with this immutable handle. Geometry-only
+        // operations create new handles and cannot accidentally inherit stale attributes.
+        let extra = imported.mesh.positions.len() * 12 + imported.mesh.triangles.len() * 12
+            + imported.normals.as_ref().map_or(0, |v| v.len() * 12)
+            + imported.tangents.as_ref().map_or(0, |v| v.len() * 16)
+            + imported.texture_coordinates_0.as_ref().map_or(0, |v| v.len() * 8)
+            + imported.texture_dependencies.iter().map(|d| d.bytes.len() + d.mime_type.len()).sum::<usize>()
+            + imported.materials.len() * std::mem::size_of::<qualia_core_db::container_10d::MaterialRecord>()
+            + imported.submeshes.len() * std::mem::size_of::<qualia_core_db::container_10d::SubmeshRange>();
+        let mesh_handle = self.workspace.insert(Artifact::Mesh(imported.mesh.clone()), self.limits)?;
+        let total = self.workspace.bytes.checked_add(extra).ok_or("Workspace size overflow")?;
+        if extra > self.limits.resource_bytes || total > self.limits.total_resource_bytes {
+            return Err("Imported attributes exceed workspace byte budget".into());
+        }
+        let index = integer(required(record(&mesh_handle)?, "handle")?, "handle")?;
+        self.workspace.imported[index] = Some(Arc::new(imported));
+        self.workspace.bytes = total;
+        Ok(mesh_handle)
     }
 
     fn manifold_project_dxf(&mut self, a: &Args) -> Result<Value, String> {
@@ -533,9 +582,9 @@ impl AssetHost<'_> {
                 for i in 0..ring_len {
                     let next_i = (i + 1) % ring_len;
                     if flip {
-                        triangles.push([c_idx, base + next_i as u32, base + i as u32]);
-                    } else {
                         triangles.push([c_idx, base + i as u32, base + next_i as u32]);
+                    } else {
+                        triangles.push([c_idx, base + next_i as u32, base + i as u32]);
                     }
                 }
             }
@@ -550,6 +599,11 @@ impl AssetHost<'_> {
                 "mesh",
                 "albedo",
                 "source_10d",
+                "tangents",
+                "bsdf_graph",
+                "colour_map",
+                "normal_map",
+                "orm_map",
                 "topology",
                 "spatial_index",
                 "camera_position",
@@ -568,6 +622,63 @@ impl AssetHost<'_> {
             };
             m.clone()
         };
+        let mesh_index = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
+        let imported = self.workspace.imported.get(mesh_index).and_then(|v| v.clone());
+        let binding_requested = ["bsdf_graph", "colour_map", "normal_map", "orm_map"].iter().any(|key| a.contains_key(*key));
+        if binding_requested && imported.as_ref().is_some_and(|v| !v.materials.is_empty()) {
+            return Err("Explicit material binding cannot replace imported material assignments".into());
+        }
+        let mut authored_material = if binding_requested {
+            Some(qualia_core_db::container_10d::MaterialRecord::legacy_default())
+        } else { None };
+        if let Some(graph) = a.get("bsdf_graph") {
+            let resource = self.workspace.encoded(graph)?;
+            if resource.kind != "json" { return Err("bsdf_graph must be the encoded JSON graph handle".into()); }
+            let graph: serde_json::Value = serde_json::from_slice(&resource.bytes).map_err(|e| format!("Invalid BSDF graph: {e}"))?;
+            if graph["schema"] != "cycles.bsdf.closure/v2" || graph["closure"] != "principled_v2" {
+                return Err("Only principled_v2 graphs can bind to MAT1".into());
+            }
+            if graph["coat_weight"].as_f64() != Some(0.0) || graph["thin_film_nm"].as_f64() != Some(0.0) || graph["ior"].as_f64() != Some(1.5) {
+                return Err("MAT1 binding requires coat_weight=0, thin_film_nm=0 and ior=1.5".into());
+            }
+            let color = graph["base_color"].as_array().filter(|v| v.len() == 3).ok_or("Invalid BSDF base_color")?;
+            let mat = authored_material.as_mut().unwrap();
+            for (i, c) in color.iter().enumerate() {
+                let value = c.as_f64().filter(|v| (0.0..=1.0).contains(v)).ok_or("Invalid BSDF base_color")?;
+                mat.base_color[i] = value as f32;
+            }
+            mat.roughness = graph["roughness"].as_f64().filter(|v| (0.0..=1.0).contains(v)).ok_or("Invalid BSDF roughness")? as f32;
+            mat.metallic = graph["metallic"].as_f64().filter(|v| (0.0..=1.0).contains(v)).ok_or("Invalid BSDF metallic")? as f32;
+        }
+        let mut authored_textures = Vec::new();
+        for key in ["colour_map", "normal_map", "orm_map"] {
+            if let Some(handle) = a.get(key) {
+                use sha2::{Digest, Sha256};
+                let resource = self.workspace.encoded(handle)?;
+                if resource.kind != "png" || !resource.bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+                    return Err(format!("{key} requires an encoded PNG handle"));
+                }
+                let decoder = png::Decoder::new_with_limits(std::io::Cursor::new(&resource.bytes), png::Limits { bytes: self.limits.total_resource_bytes });
+                let mut reader = decoder.read_info().map_err(|e| format!("Invalid {key} PNG: {e}"))?;
+                if reader.info().animation_control.is_some() { return Err(format!("{key} cannot be animated")); }
+                let size = reader.output_buffer_size().ok_or("Texture PNG size overflow")?;
+                if size > self.limits.resource_bytes { return Err(format!("{key} decoded PNG exceeds resource budget")); }
+                let mut pixels = vec![0; size];
+                reader.next_frame(&mut pixels).map_err(|e| format!("Invalid {key} PNG: {e}"))?;
+                let digest: [u8; 32] = Sha256::digest(&resource.bytes).into();
+                let mat = authored_material.as_mut().unwrap();
+                match key {
+                    "colour_map" => mat.base_color_texture = digest,
+                    "normal_map" => mat.normal_texture = digest,
+                    _ => { mat.metallic_roughness_texture = digest; mat.occlusion_texture = digest; }
+                }
+                authored_textures.push(Value::Record(BTreeMap::from([
+                    ("digest".into(), Value::String(digest.iter().map(|b| format!("{b:02x}")).collect())),
+                    ("mime_type".into(), Value::String("image/png".into())),
+                    ("resource".into(), handle.clone()),
+                ])));
+            }
+        }
 
         let albedo = if let Some(av) = a.get("albedo") {
             let Artifact::Rgba(rgba) = self.workspace.get(av)? else {
@@ -590,7 +701,8 @@ impl AssetHost<'_> {
         let nv = mesh.positions.len();
         let mut atlas_uvs = source_10d_bytes
             .as_deref()
-            .and_then(|b| read_uv01_atlas(b, nv));
+            .and_then(|b| read_uv01_atlas(b, nv))
+            .or_else(|| imported.as_ref().and_then(|v| v.texture_coordinates_0.clone()));
         // Auto-unwrap only when the author did not pass source_10d. A present
         // source_10d UV01 count must match the mesh (fail-closed in consume).
         if atlas_uvs.is_none()
@@ -663,6 +775,27 @@ impl AssetHost<'_> {
             } else {
                 *n = [0.0, 1.0, 0.0];
             }
+        }
+        if let Some(authored) = imported.as_ref().and_then(|v| v.normals.as_ref()) {
+            if authored.len() != nv { return Err("Imported normal count does not match mesh".into()); }
+            normals.clone_from(authored);
+        }
+        let supplied_tangents = a.get("tangents").map(|value| -> Result<Vec<[f32; 4]>, String> {
+            list(value)?.iter().map(|item| {
+                let t = vector::<4>(item)?;
+                if !t.iter().all(|v| v.is_finite()) || (t[3] != 1.0 && t[3] != -1.0) {
+                    return Err("tangent must be finite with handedness +1 or -1".into());
+                }
+                Ok([t[0] as f32, t[1] as f32, t[2] as f32, t[3] as f32])
+            }).collect()
+        }).transpose()?;
+        let tangents = supplied_tangents.as_deref().or_else(|| imported.as_ref().and_then(|v| v.tangents.as_deref()));
+        if tangents.is_some_and(|v| v.len() != nv) { return Err("Imported tangent count does not match mesh".into()); }
+        if !authored_textures.is_empty() && atlas_uvs.is_none() {
+            return Err("Texture binding requires vertex-aligned UV01 via source_10d".into());
+        }
+        if a.contains_key("normal_map") && tangents.is_none() {
+            return Err("Normal map binding requires vertex-aligned tangents".into());
         }
 
         // Sample albedo: SLIM UV01 atlas, then camera look-at projection, then
@@ -801,7 +934,7 @@ impl AssetHost<'_> {
             },
             surface_reading.as_deref(),
             Some(&normals),
-            None,
+            tangents,
         ) {
             Ok(b) => b,
             Err(_) if topology => compile_mesh_to_10d_with_extras_and_frames(
@@ -814,7 +947,7 @@ impl AssetHost<'_> {
                 },
                 surface_reading.as_deref(),
                 Some(&normals),
-                None,
+                tangents,
             )
             .map_err(|e| format!("10D PBR compile failed: {e:?}"))?,
             Err(e) => return Err(format!("10D PBR compile failed: {e:?}")),
@@ -826,8 +959,125 @@ impl AssetHost<'_> {
         } else {
             bytes
         };
-        self.encode("10d", sealed)
+        let sealed = if let Some(mat) = authored_material {
+            let range = qualia_core_db::container_10d::SubmeshRange { first_index: 0, index_count: (mesh.triangles.len() * 3) as u32, material_id: mat.id, semantic_id: 0 };
+            qualia_core_db::container_10d::attach_material_section(&sealed, &[mat], &[range], (mesh.triangles.len() * 3) as u32)
+                .map_err(|e| format!("Material attachment failed: {e:?}"))?
+        } else if let Some(data) = imported.as_ref().filter(|v| !v.materials.is_empty()) {
+            qualia_core_db::container_10d::attach_material_section(&sealed, &data.materials, &data.submeshes, (mesh.triangles.len() * 3) as u32)
+                .map_err(|e| format!("Imported material attachment failed: {e:?}"))?
+        } else { sealed };
+        let mut result = self.encode("10d", sealed)?;
+        let mut textures = authored_textures;
+        if let Some(data) = imported {
+            for dependency in &data.texture_dependencies {
+                let kind = match dependency.mime_type.as_str() {
+                    "image/png" => "png", "image/jpeg" => "jpeg", "image/webp" => "webp", "image/ktx2" => "ktx2",
+                    other => return Err(format!("Unsupported imported texture MIME type: {other}")),
+                };
+                let resource = self.encode(kind, dependency.bytes.clone())?;
+                let digest = dependency.digest.iter().map(|b| format!("{b:02x}")).collect::<String>();
+                textures.push(Value::Record(BTreeMap::from([
+                    ("digest".into(), Value::String(digest)),
+                    ("mime_type".into(), Value::String(dependency.mime_type.clone())),
+                    ("resource".into(), resource),
+                ])));
+            }
+        }
+        if !textures.is_empty() {
+            if let Value::Record(ref mut handle) = result { handle.insert("textures".into(), Value::List(textures)); }
+        }
+        Ok(result)
     }
+}
+
+// The underlying importer deliberately exposes a static triangle subset. Reject source
+// features outside that subset instead of presenting a lossy import as faithful.
+fn validate_imported_glb_features(bytes: &[u8]) -> Result<(), String> {
+    if bytes.len() < 20 || &bytes[..4] != b"glTF" { return Err("Invalid GLB header".into()); }
+    if u32::from_le_bytes(bytes[4..8].try_into().unwrap()) != 2
+        || u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize != bytes.len() {
+        return Err("GLB requires version 2 and an exact declared length".into());
+    }
+    let len = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize;
+    let end = 20usize.checked_add(len).ok_or("GLB JSON length overflow")?;
+    if end > bytes.len() || &bytes[16..20] != b"JSON" { return Err("Invalid GLB JSON chunk".into()); }
+    // The native importer selects the last JSON chunk. Refuse duplicates so its
+    // interpreted document is exactly the document whose capabilities we validate.
+    let mut offset = end;
+    while offset < bytes.len() {
+        if bytes.len() - offset < 8 { return Err("Truncated GLB chunk".into()); }
+        let size = u32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
+        if &bytes[offset + 4..offset + 8] == b"JSON" { return Err("GLB must contain exactly one JSON chunk".into()); }
+        offset = offset.checked_add(8).and_then(|v| v.checked_add(size)).ok_or("GLB chunk length overflow")?;
+        if offset > bytes.len() { return Err("Truncated GLB chunk".into()); }
+    }
+    let json: serde_json::Value = serde_json::from_slice(&bytes[20..end]).map_err(|e| format!("GLB JSON: {e}"))?;
+    let supported = ["KHR_texture_transform", "KHR_texture_basisu", "EXT_texture_webp"];
+    for declaration in ["extensionsUsed", "extensionsRequired"] {
+        if let Some(value) = json.get(declaration) {
+            for entry in value.as_array().ok_or_else(|| format!("GLB {declaration} must be an array"))? {
+                let name = entry.as_str().ok_or("GLB extension names must be strings")?;
+                if !supported.contains(&name) {
+                    return Err(format!("GLB extension {name} cannot be preserved by static mesh import"));
+                }
+            }
+        }
+    }
+    validate_imported_glb_extensions(&json, "$")?;
+    for key in ["skins", "animations"] {
+        if json[key].as_array().is_some_and(|v| !v.is_empty()) {
+            return Err(format!("GLB {key} cannot be preserved by static mesh import"));
+        }
+    }
+    for mesh in json["meshes"].as_array().into_iter().flatten() {
+        for prim in mesh["primitives"].as_array().into_iter().flatten() {
+            if prim["mode"].as_u64().unwrap_or(4) != 4 || prim.get("targets").is_some() {
+                return Err("GLB non-triangle primitives or morph targets cannot be preserved by static mesh import".into());
+            }
+            if let Some(attributes) = prim["attributes"].as_object() {
+                for key in attributes.keys() {
+                    if !["POSITION", "NORMAL", "TANGENT", "TEXCOORD_0"].contains(&key.as_str()) {
+                        return Err(format!("GLB attribute {key} cannot be preserved by static mesh import"));
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_imported_glb_extensions(value: &serde_json::Value, path: &str) -> Result<(), String> {
+    match value {
+        serde_json::Value::Object(object) => {
+            if let Some(extensions) = object.get("extensions") {
+                for (name, data) in extensions.as_object().ok_or("GLB extensions must be an object")? {
+                    let allowed = match name.as_str() {
+                        "KHR_texture_basisu" | "EXT_texture_webp" => path == "$.textures[]",
+                        "KHR_texture_transform" => [
+                            "$.materials[].pbrMetallicRoughness.baseColorTexture",
+                            "$.materials[].pbrMetallicRoughness.metallicRoughnessTexture",
+                            "$.materials[].normalTexture", "$.materials[].occlusionTexture",
+                            "$.materials[].emissiveTexture",
+                        ].contains(&path),
+                        _ => false,
+                    };
+                    if !allowed || !data.is_object() {
+                        return Err(format!("GLB extension {name} at {path} cannot be preserved by static mesh import"));
+                    }
+                }
+            }
+            for (key, child) in object {
+                // extras is application metadata, not part of glTF capability dispatch.
+                if key != "extras" { validate_imported_glb_extensions(child, &format!("{path}.{key}"))?; }
+            }
+        }
+        serde_json::Value::Array(array) => {
+            for child in array { validate_imported_glb_extensions(child, &format!("{path}[]"))?; }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 fn read_uv01_atlas(bytes: &[u8], nv: usize) -> Option<Vec<[f32; 2]>> {
@@ -1260,6 +1510,124 @@ mod tests {
         Value::List(vec![Value::F64(x), Value::F64(y), Value::F64(z)])
     }
 
+    #[test]
+    fn loft_caps_close_with_opposite_edge_winding_for_linear_and_cubic() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let ring = |y: f64, scale: f64| Value::List(vec![
+            vec3(scale, y, 0.0), vec3(0.0, y, scale),
+            vec3(-scale, y, 0.0), vec3(0.0, y, -scale),
+        ]);
+        for interpolation in ["linear", "cubic"] {
+            let args = BTreeMap::from([
+                ("sections".into(), Value::List(vec![ring(0.0,1.0),ring(1.0,1.2),ring(2.0,0.8)])),
+                ("caps".into(), Value::Bool(true)),
+                ("interpolation".into(), Value::String(interpolation.into())),
+            ]);
+            let handle = host.manifold_ext("hypermedia.manifold.loft", &args).unwrap();
+            let mesh = host.mesh(&handle).unwrap();
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len()).unwrap();
+            // The bottom cap points down and top cap points up for these rings.
+            for tri in &mesh.triangles[mesh.triangles.len()-8..] {
+                let [a,b,c] = tri.map(|i| mesh.positions[i as usize]);
+                let normal_y = (b[2]-a[2])*(c[0]-a[0]) - (b[0]-a[0])*(c[2]-a[2]);
+                if a[1] == 0.0 { assert!(normal_y < 0.0); }
+                else if a[1] == 2.0 { assert!(normal_y > 0.0); }
+                else { panic!("cap centroid is not at either end"); }
+            }
+        }
+    }
+
+    #[test]
+    fn imported_frames_and_uv_survive_pbr_compile() {
+        use qualia_core_db::render::assets::ImportedMesh;
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let handle = host.store_mesh(vec![Point3::new(0.0, 0.0, 0.0), Point3::new(1.0, 0.0, 0.0), Point3::new(0.0, 1.0, 0.0)], vec![[0, 1, 2]]).unwrap();
+        let mesh = host.mesh(&handle).unwrap().clone();
+        let index = integer(required(record(&handle).unwrap(), "handle").unwrap(), "handle").unwrap();
+        let uv = vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
+        host.workspace.imported[index] = Some(Arc::new(ImportedMesh {
+            mesh, normals: Some(vec![[0.0, 0.0, -1.0]; 3]),
+            tangents: Some(vec![[1.0, 0.0, 0.0, -1.0]; 3]),
+            texture_coordinates_0: Some(uv.clone()), materials: vec![],
+            texture_dependencies: vec![], submeshes: vec![],
+        }));
+        let output = host.manifold_ext("hypermedia.manifold.compile_10d_pbr", &BTreeMap::from([("mesh".into(), handle)])).unwrap();
+        let bytes = &host.workspace.encoded(&output).unwrap().bytes;
+        let frames = qualia_core_db::container_10d::read_container_mesh_frames(bytes, 3).unwrap().unwrap();
+        assert_eq!(frames.normals.unwrap(), vec![[0.0, 0.0, -1.0]; 3]);
+        assert_eq!(frames.tangents.unwrap(), vec![[1.0, 0.0, 0.0, -1.0]; 3]);
+        let mut actual = vec![[0.0, 0.0]; 3];
+        qualia_core_db::container_10d::read_texture_coordinate_section_into(bytes, 3, &mut actual).unwrap();
+        assert_eq!(actual, uv);
+    }
+
+    #[test]
+    fn static_import_refuses_unpreserved_extensions_and_duplicate_documents() {
+        fn glb(value: serde_json::Value) -> Vec<u8> {
+            let mut json = serde_json::to_vec(&value).unwrap();
+            while json.len() % 4 != 0 { json.push(b' '); }
+            let mut bytes = b"glTF".to_vec();
+            bytes.extend_from_slice(&2u32.to_le_bytes());
+            bytes.extend_from_slice(&((20 + json.len()) as u32).to_le_bytes());
+            bytes.extend_from_slice(&(json.len() as u32).to_le_bytes());
+            bytes.extend_from_slice(b"JSON");
+            bytes.extend_from_slice(&json);
+            bytes
+        }
+        for name in ["KHR_materials_transmission", "KHR_materials_unlit", "KHR_draco_mesh_compression"] {
+            let declared = glb(serde_json::json!({"extensionsRequired":[name]}));
+            assert!(validate_imported_glb_features(&declared).unwrap_err().contains(name));
+            let mut extensions = serde_json::Map::new();
+            extensions.insert(name.into(), serde_json::json!({}));
+            let undeclared = glb(serde_json::json!({"materials":[{"extensions":extensions}]}));
+            assert!(validate_imported_glb_features(&undeclared).unwrap_err().contains(name));
+        }
+        let supported = glb(serde_json::json!({
+            "extensionsUsed":["KHR_texture_transform", "KHR_texture_basisu", "EXT_texture_webp"],
+            "textures":[{"extensions":{"KHR_texture_basisu":{"source":0}}}, {"extensions":{"EXT_texture_webp":{"source":1}}}],
+            "materials":[{"pbrMetallicRoughness":{"baseColorTexture":{"index":0,"extensions":{"KHR_texture_transform":{"offset":[0.25,0.0]}}}}}]
+        }));
+        validate_imported_glb_features(&supported).unwrap();
+        let misplaced = glb(serde_json::json!({"nodes":[{"extensions":{"KHR_texture_transform":{}}}]}));
+        assert!(validate_imported_glb_features(&misplaced).is_err());
+        let mut duplicate = supported;
+        let second = glb(serde_json::json!({"extensionsRequired":["KHR_materials_transmission"]}));
+        duplicate.extend_from_slice(&second[12..]);
+        let size = duplicate.len() as u32;
+        duplicate[8..12].copy_from_slice(&size.to_le_bytes());
+        assert!(validate_imported_glb_features(&duplicate).unwrap_err().contains("exactly one JSON"));
+    }
+
+    #[test]
+    fn authored_graph_and_maps_bind_to_material_and_dependencies() {
+        use qualia_core_db::container_10d::{MaterialRecord, SubmeshRange, read_material_section_into};
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mesh = host.store_mesh(vec![Point3::new(0.0,0.0,0.0), Point3::new(1.0,0.0,0.0), Point3::new(0.0,1.0,0.0)], vec![[0,1,2]]).unwrap();
+        let uv = host.surface_bsdf_uv_op("hypermedia.surface.unwrap_slim", &BTreeMap::from([("mesh".into(), mesh.clone())])).unwrap();
+        let source = required(record(&uv).unwrap(), "container_10d").unwrap().clone();
+        let graph = host.encode("json", br#"{"schema":"cycles.bsdf.closure/v2","closure":"principled_v2","coat_weight":0,"thin_film_nm":0,"ior":1.5,"base_color":[0.2,0.4,0.6],"roughness":0.7,"metallic":0.3}"#.to_vec()).unwrap();
+        let mut png_bytes = Vec::new();
+        { let mut e = png::Encoder::new(&mut png_bytes, 1, 1); e.set_color(png::ColorType::Rgba); e.set_depth(png::BitDepth::Eight); let mut w = e.write_header().unwrap(); w.write_image_data(&[128,128,255,255]).unwrap(); }
+        let png = host.encode("png", png_bytes).unwrap();
+        let tangents = Value::List(vec![Value::List(vec![Value::F64(1.0),Value::F64(0.0),Value::F64(0.0),Value::F64(1.0)]); 3]);
+        let args = BTreeMap::from([("mesh".into(), mesh), ("source_10d".into(), source), ("bsdf_graph".into(), graph), ("normal_map".into(), png), ("tangents".into(), tangents)]);
+        let result = host.manifold_ext("hypermedia.manifold.compile_10d_pbr", &args).unwrap();
+        let textures = list(required(record(&result).unwrap(), "textures").unwrap()).unwrap();
+        assert_eq!(textures.len(), 1);
+        let mut material = [MaterialRecord::legacy_default()];
+        let mut ranges = [SubmeshRange { first_index: 0, index_count: 0, material_id: 0, semantic_id: 0 }];
+        read_material_section_into(&host.workspace.encoded(&result).unwrap().bytes, 3, &mut material, &mut ranges).unwrap();
+        assert_eq!(material[0].base_color, [0.2,0.4,0.6,1.0]);
+        assert_eq!(material[0].roughness, 0.7);
+        assert_ne!(material[0].normal_texture, [0; 32]);
+    }
+
     fn unit_cube_mesh(host: &mut AssetHost<'_>) -> Value {
         let positions = vec![
             [-1.0, -1.0, -1.0],
@@ -1410,7 +1778,9 @@ mod tests {
 
     #[test]
     fn test_manifold_boolean_3d_production_union_difference() {
-        let limits = ToolLimits::default();
+        // The bounded conforming provider explicitly reserves 64 MiB of scratch;
+        // exercise it under the existing production-sized caller envelope.
+        let limits = ToolLimits { total_resource_bytes: 256 * 1024 * 1024, ..ToolLimits::default() };
         let cancel = AtomicBool::new(false);
         let mut host = make_test_host(&limits, &cancel, &[]);
 
@@ -1434,6 +1804,8 @@ mod tests {
                 "union must keep a solid, got {} tris",
                 union_mesh.triangles.len()
             );
+            crate::boolean_conforming::closed_oriented(&union_mesh.triangles, union_mesh.positions.len())
+                .expect("union must be a closed, consistently oriented solid");
             for p in &union_mesh.positions {
                 assert!(p[0].is_finite() && p[1].is_finite() && p[2].is_finite());
             }
@@ -1727,8 +2099,8 @@ mod tests {
     }
 
     #[test]
-    fn test_manifold_boolean_3d_golden_checksum() {
-        let limits = ToolLimits::default();
+    fn test_manifold_boolean_3d_union_volume_and_independent_replay() {
+        let limits = ToolLimits { total_resource_bytes: 256 * 1024 * 1024, ..ToolLimits::default() };
         let cancel = AtomicBool::new(false);
         let mut host = make_test_host(&limits, &cancel, &[]);
         let a = unit_cube_mesh(&mut host);
@@ -1741,18 +2113,32 @@ mod tests {
         let union_h = host
             .invoke("hypermedia.manifold.boolean_3d", &Value::Record(union_args))
             .expect("boolean union");
-        let union_hash = {
+        let (union_hash, union_positions, union_triangles) = {
             let Artifact::Mesh(union_mesh) = host.workspace.get(&union_h).expect("union mesh")
             else {
                 panic!("expected mesh");
             };
-            mesh_golden_checksum(&union_mesh.positions, &union_mesh.triangles)
+            crate::boolean_conforming::closed_oriented(&union_mesh.triangles, union_mesh.positions.len()).unwrap();
+            let volume = union_mesh.triangles.iter().map(|&[i,j,k]| {
+                let a = union_mesh.positions[i as usize].map(f64::from);
+                let b = union_mesh.positions[j as usize].map(f64::from);
+                let c = union_mesh.positions[k as usize].map(f64::from);
+                (a[0]*(b[1]*c[2]-b[2]*c[1]) + a[1]*(b[2]*c[0]-b[0]*c[2]) + a[2]*(b[0]*c[1]-b[1]*c[0])) / 6.0
+            }).sum::<f64>();
+            // Two 2x2x2 cubes, overlap (2-.6)*(2-.4)*(2-.5).
+            assert!((volume - 12.64).abs() < 1e-4, "analytic union volume, got {volume}");
+            (mesh_golden_checksum(&union_mesh.positions, &union_mesh.triangles), union_mesh.positions.clone(), union_mesh.triangles.clone())
         };
-        assert_eq!(
-            union_hash,
-            "1588a8ccb80d7ba41a163e13e8b02bf4ff9a9f07aef7bf1b72c2cfa4e6f6ae00",
-            "union golden checksum (counts + quantized positions)"
-        );
+        // The old golden locked in an open surface. Compare independent complete
+        // operations, including topology, after checking the analytic solid.
+        let mut replay = make_test_host(&limits, &cancel, &[]);
+        let replay_a = unit_cube_mesh(&mut replay);
+        let replay_b = translated_cube(&mut replay, 0.6, 0.4, 0.5);
+        let replay_args = BTreeMap::from([("a".into(), replay_a), ("b".into(), replay_b), ("op".into(), Value::String("union".into()))]);
+        let replay_h = replay.invoke("hypermedia.manifold.boolean_3d", &Value::Record(replay_args)).unwrap();
+        let Artifact::Mesh(replayed) = replay.workspace.get(&replay_h).unwrap() else { panic!("expected mesh") };
+        assert_eq!(union_positions, replayed.positions);
+        assert_eq!(union_triangles, replayed.triangles);
 
         let mut diff_args = BTreeMap::new();
         diff_args.insert("a".into(), a);

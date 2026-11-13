@@ -20,22 +20,21 @@ autobins = false
 autoexamples = false
 autotests = false
 autobenches = false
-description = "Context for managing WGPU surfaces"
+description = "Context for managing Etalon surfaces"
 homepage = "https://github.com/dioxuslabs/anyrender"
-documentation = "https://docs.rs/wgpu_context"
 readme = false
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dioxuslabs/anyrender"
 resolver = "2"
 
 [lib]
-name = "wgpu_context"
+name = "etalon_context"
 path = "src/lib.rs"
 
 [dependencies.futures-intrusive]
 version = "0.5.0"
 
-[dependencies.wgpu]
+[dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"

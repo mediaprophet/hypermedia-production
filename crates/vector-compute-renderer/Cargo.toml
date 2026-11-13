@@ -41,22 +41,26 @@ default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
 [features]
+# Legacy feature spellings forward to the Etalon implementation.
+wgpu = ["etalon"]
+wgpu_default = ["etalon-default"]
+wgpu-profiler = ["etalon-profiler"]
 bump_estimate = ["vello_encoding/bump_estimate"]
 debug_layers = []
 default = [
-    "wgpu",
-    "wgpu_default",
+    "etalon",
+    "etalon-default",
 ]
 hot_reload = ["vello_shaders/compile"]
-wgpu = [
-    "dep:wgpu",
+etalon = [
+    "dep:etalon",
     "dep:vello_shaders",
     "dep:futures-intrusive",
 ]
-wgpu-profiler = ["dep:wgpu-profiler"]
-wgpu_default = [
-    "wgpu",
-    "wgpu/default",
+etalon-profiler = ["dep:etalon-profiler"]
+etalon-default = [
+    "etalon",
+    "etalon/default",
 ]
 
 [lib]
@@ -105,7 +109,7 @@ version = "=0.11.0"
 path = "../vector-compute-shaders"
 optional = true
 
-[dependencies.wgpu]
+[dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
@@ -117,7 +121,7 @@ features = [
 optional = true
 default-features = false
 
-[dependencies.wgpu-profiler]
+[dependencies.etalon-profiler]
 package = "gpu-command-profiler"
 version = "=0.28.0"
 path = "../gpu-command-profiler"

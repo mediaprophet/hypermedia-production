@@ -14,7 +14,10 @@ pub(crate) fn unit(value: [f64; 3]) -> Result<[f32; 3], AuthoringError> {
             "degenerate/nonfinite authored normal or triangle",
         ));
     }
-    let n = v.normalized();
+    // The geometric Vec3 helper uses a 1e-9 modeling epsilon. Face areas in
+    // metre-scale assets can be smaller while still finite and non-degenerate;
+    // use the length admitted above rather than silently producing ZERO.
+    let n = v * (1.0 / length);
     let out = [n.x as f32, n.y as f32, n.z as f32];
     if out.iter().any(|v| !v.is_finite()) {
         return Err(AuthoringError::Invalid("normal exceeds f32 domain"));
@@ -58,4 +61,16 @@ pub(crate) fn face(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> Result<[f32; 3], Au
     let v = |p: [f32; 3]| Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64);
     let n = (v(b) - v(a)).cross(v(c) - v(a));
     unit([n.x, n.y, n.z])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finite_small_triangle_has_unit_normal_and_degenerate_fails() {
+        let normal = face([0.0, 0.0, 0.0], [0.00002, 0.0, 0.0], [0.0, 0.00003, 0.0]).unwrap();
+        assert_eq!(normal, [0.0, 0.0, 1.0]);
+        assert!(face([0.0; 3], [0.0; 3], [0.0; 3]).is_err());
+    }
 }

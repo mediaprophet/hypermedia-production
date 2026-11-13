@@ -2,6 +2,11 @@ use anyrender::{
     PaintScene, RegisterResourceErrorKind, RenderContext, ResourceId, WindowHandle, WindowRenderer,
 };
 use debug_timer::debug_timer;
+use etalon::{
+    CommandEncoderDescriptor, CompositeAlphaMode, Features, Limits, PresentMode, Texture,
+    TextureFormat, TextureView, TextureViewDescriptor,
+};
+use etalon_context::{DeviceHandle, EtalonContext, SurfaceRenderer, SurfaceRendererConfiguration};
 use futures_channel::oneshot;
 use peniko::Color;
 use rustc_hash::FxHashMap;
@@ -12,15 +17,10 @@ use vello_gpu::{
     ClearSettings, RenderSettings, RenderSize, RenderTargetConfig, Renderer as VelloHybridRenderer,
     Resources, Scene as VelloHybridScene, TargetInit, TextureBindings,
 };
-use wgpu::{
-    CommandEncoderDescriptor, CompositeAlphaMode, Features, Limits, PresentMode, Texture,
-    TextureFormat, TextureView, TextureViewDescriptor,
-};
-use wgpu_context::{DeviceHandle, SurfaceRenderer, SurfaceRendererConfiguration, WGPUContext};
 
 use crate::{VelloHybridScenePainter, scene::ImageManager};
 
-/// Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask
+/// Drive the etalon init future. On wasm32 we spawn it onto the JS microtask
 /// queue (blocking is not allowed). On native we drive it inline with
 /// `pollster::block_on` — there's no ambient async runtime to spawn onto, and
 /// `on_ready` then fires before `resume` returns.
@@ -43,7 +43,7 @@ struct ActiveRenderState {
 }
 
 /// Result of a successful asynchronous resume; both the active state and the
-/// `WGPUContext` are returned so the renderer can reclaim the context.
+/// `EtalonContext` are returned so the renderer can reclaim the context.
 struct InitOutput {
     active: ActiveRenderState,
 }
@@ -151,7 +151,7 @@ pub struct VelloHybridWindowRenderer {
     render_state: RenderState,
     window_handle: Option<Arc<dyn WindowHandle>>,
 
-    wgpu_context: WGPUContext,
+    etalon_context: EtalonContext,
     scene: VelloHybridScene,
     config: VelloHybridRendererOptions,
     cached_images: FxHashMap<u64, ImageId>,
@@ -165,11 +165,11 @@ impl VelloHybridWindowRenderer {
     pub fn with_options(config: impl Into<VelloHybridRendererOptions>) -> Self {
         let config = config.into();
         let render_settings = config.render_settings;
-        let wgpu_context = build_wgpu_context(&config);
+        let etalon_context = build_etalon_context(&config);
         Self {
             render_state: RenderState::Suspended,
             config,
-            wgpu_context,
+            etalon_context,
             window_handle: None,
             scene: VelloHybridScene::new_with(0, 0, render_settings.level),
             cached_images: FxHashMap::default(),
@@ -184,10 +184,10 @@ impl VelloHybridWindowRenderer {
     }
 }
 
-fn build_wgpu_context(config: &VelloHybridRendererOptions) -> WGPUContext {
+fn build_etalon_context(config: &VelloHybridRendererOptions) -> EtalonContext {
     let features =
         config.features.unwrap_or_default() | Features::CLEAR_TEXTURE | Features::PIPELINE_CACHE;
-    WGPUContext::with_features_and_limits(Some(features), config.limits.clone())
+    EtalonContext::with_features_and_limits(Some(features), config.limits.clone())
 }
 
 // TODO: Make configurable?
@@ -269,7 +269,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
     ) {
         // Each `resume` must be preceded by `suspend` (or be the first call after
         // construction). Calling while `Pending` or `Active` is a state-machine bug
-        // in the embedder: it would orphan the in-flight init's `WGPUContext` and
+        // in the embedder: it would orphan the in-flight init's `EtalonContext` and
         // pay for a fresh adapter+device init on the fallback path below.
         if !matches!(self.render_state, RenderState::Suspended) {
             // #[cfg(feature = "tracing")]
@@ -287,19 +287,19 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         self.scene = VelloHybridScene::new_with(width as u16, height as u16, render_settings.level);
 
         let surface = self
-            .wgpu_context
+            .etalon_context
             .create_surface(window_handle)
             .expect("Error creating surface");
-        let instance = self.wgpu_context.instance.clone();
-        let extra_features = self.wgpu_context.extra_features();
-        let override_limits = self.wgpu_context.override_limits();
+        let instance = self.etalon_context.instance.clone();
+        let extra_features = self.etalon_context.extra_features();
+        let override_limits = self.etalon_context.override_limits();
         let mut composite_alpha_mode = match self.config.composite_alpha_mode {
             anyrender::CompositeAlphaMode::Auto => CompositeAlphaMode::Auto,
             anyrender::CompositeAlphaMode::Opaque => CompositeAlphaMode::Opaque,
             anyrender::CompositeAlphaMode::Transparent => {
                 #[cfg(target_vendor = "apple")]
                 {
-                    // wgpu is lying in apple's case it uses PreMultiplied in reality
+                    // etalon is lying in apple's case it uses PreMultiplied in reality
                     // (do not modify shaders for PostMultiplied)
                     CompositeAlphaMode::PostMultiplied
                 }
@@ -311,7 +311,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         };
         let desired_maximum_frame_latency = self.config.desired_maximum_frame_latency;
         let existing_device_handle = self
-            .wgpu_context
+            .etalon_context
             .find_compatible_device_handle(Some(&surface));
 
         spawn_init(async move {
@@ -366,8 +366,8 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             #[cfg(not(target_vendor = "apple"))]
             let intermediate_texture = (composite_alpha_mode == CompositeAlphaMode::PostMultiplied)
                 .then(|| {
-                    use wgpu::TextureUsages;
-                    use wgpu_context::{AlphaConversion, TextureConfiguration};
+                    use etalon::TextureUsages;
+                    use etalon_context::{AlphaConversion, TextureConfiguration};
                     TextureConfiguration {
                         usage: TextureUsages::RENDER_ATTACHMENT | TextureUsages::TEXTURE_BINDING,
                         format: DEFAULT_TEXTURE_FORMAT,
@@ -376,14 +376,14 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 });
 
             // Apple is almost guaranteed to be premultiplied
-            // TODO: Remove below once gfx-rs/wgpu#9896 gets fixed
+            // TODO: Remove below once gfx-rs/etalon#9896 gets fixed
             #[cfg(target_vendor = "apple")]
             let intermediate_texture = None;
 
             let render_surface = SurfaceRenderer::new(
                 surface,
                 SurfaceRendererConfiguration {
-                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    usage: etalon::TextureUsages::RENDER_ATTACHMENT,
                     formats: vec![DEFAULT_TEXTURE_FORMAT],
                     width,
                     height,
@@ -434,7 +434,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             RenderState::Pending { receiver } => match receiver.try_recv() {
                 Ok(Some(InitOutput { active })) => {
                     let device_handle = active.render_surface.device_handle.clone();
-                    self.wgpu_context.device_pool.push(device_handle);
+                    self.etalon_context.device_pool.push(device_handle);
                     self.render_state = RenderState::Active(active);
                     true
                 }
@@ -561,7 +561,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
 
         render_surface
             .device()
-            .poll(wgpu::PollType::wait_indefinitely())
+            .poll(etalon::PollType::wait_indefinitely())
             .unwrap();
 
         timer.record_time("wait");

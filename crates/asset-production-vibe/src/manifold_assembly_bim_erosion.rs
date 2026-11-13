@@ -85,6 +85,7 @@ impl AssetHost<'_> {
                         "color",
                         "roughness",
                         "metallic",
+                        "shading",
                     ],
                 )?;
                 let key = opt_str(pr, "key", &format!("part_{idx}"))?;
@@ -178,6 +179,11 @@ impl AssetHost<'_> {
                 mat.roughness = number(pr, "roughness", 0.45)? as f32;
                 mat.metallic = number(pr, "metallic", 0.05)? as f32;
 
+                let normals = match opt_str(pr, "shading", "flat")?.as_str() {
+                    "flat" => None,
+                    "smooth" => Some(crate::surface_bsdf_uv::compute_smooth_vertex_normals(&part_mesh)),
+                    _ => return Err("assembly shading must be flat or smooth".into()),
+                };
                 authored.push(AuthoringPart {
                     key,
                     parent,
@@ -189,7 +195,7 @@ impl AssetHost<'_> {
                         rotation,
                         scale,
                     },
-                    normals: None,
+                    normals,
                     uv0: None,
                 });
             }
@@ -328,14 +334,12 @@ impl AssetHost<'_> {
         let mut sorted_mats = compiled.materials.clone();
         sorted_mats.sort_by_key(|m| m.id);
         sorted_mats.dedup_by_key(|m| m.id);
-        if let Ok(with_mats) = attach_material_section(
+        bytes_10d = attach_material_section(
             &bytes_10d,
             &sorted_mats,
             &compiled.ranges,
             (triangle_count * 3) as u32,
-        ) {
-            bytes_10d = with_mats;
-        }
+        ).map_err(|e| format!("Assembly material sealing failed: {e:?}"))?;
         let container_10d = self.encode("10d", bytes_10d)?;
         let turntable_png = self.encode("png", turntable_bytes)?;
         let blueprint_svg = self.encode("svg", blueprint_bytes)?;
@@ -478,6 +482,7 @@ impl AssetHost<'_> {
             a,
             &[
                 "image",
+                "heightfield",
                 "grid_size",
                 "crater_radius",
                 "terrace_spacing",
@@ -485,13 +490,22 @@ impl AssetHost<'_> {
                 "elevation_scale",
             ],
         )?;
-        let size = count(a, "grid_size", 16, 128)?;
+        if a.contains_key("heightfield") && (a.contains_key("image") || a.contains_key("grid_size") || a.contains_key("elevation_scale")) {
+            return Err("heightfield cannot be combined with image, grid_size or elevation_scale".into());
+        }
+        let supplied = a.get("heightfield").map(super::geodesy_ops::parse_heightfield).transpose()?;
+        let size = match supplied.as_ref() { Some(v) => v.0, None => count(a, "grid_size", 16, 128)? };
+        if size > 128 { return Err("erosion heightfield side exceeds 128".into()); }
+        let (spacing, origin) = supplied.as_ref().map(|v| (v.1, v.2)).unwrap_or((10.0 / (size.saturating_sub(1).max(1) as f64), [-5.0, -5.0, 0.0]));
         let crater_radius = number(a, "crater_radius", 4.0)? as f32;
+        if !crater_radius.is_finite() || crater_radius < 0.0 || crater_radius > 1000.0 { return Err("crater_radius outside 0..=1000 grid cells".into()); }
         let terrace_spacing = number(a, "terrace_spacing", 0.15)? as f32;
         let thermal_strength = number(a, "thermal_strength", 0.25)?;
         let elevation_scale = number(a, "elevation_scale", 4.0)?.clamp(0.1, 1000.0);
 
-        let mut heights = if let Some(img_val) = a.get("image") {
+        let mut heights = if let Some((_, _, _, heights)) = supplied {
+            heights
+        } else if let Some(img_val) = a.get("image") {
             let rgba = self.rgba(img_val)?;
             let mut h = Vec::with_capacity(size * size);
             let w = rgba.width.max(1) as usize;
@@ -524,7 +538,7 @@ impl AssetHost<'_> {
             radius: crater_radius,
             depth: 0.3,
         };
-        apply_crater(&mut heights, size, size, &crater, 0.25, 0.1);
+        if crater_radius > 0.0 { apply_crater(&mut heights, size, size, &crater, 0.25, 0.1); }
         apply_terraces(
             &mut heights,
             size,
@@ -569,9 +583,9 @@ impl AssetHost<'_> {
                 let b = ((norm_h * 0.50 + norm_flow * 0.45) * 255.0).round().clamp(0.0, 255.0) as u8;
                 pixels.push([r, g, b, 255]);
 
-                let vx = (x as f64 / (size.saturating_sub(1).max(1) as f64) - 0.5) * 10.0;
-                let vy = (y as f64 / (size.saturating_sub(1).max(1) as f64) - 0.5) * 10.0;
-                let vz = (h_val as f64) * elevation_scale;
+                let vx = origin[0] + x as f64 * spacing;
+                let vy = origin[1] + y as f64 * spacing;
+                let vz = origin[2] + (h_val as f64) * if a.contains_key("heightfield") { 1.0 } else { elevation_scale };
                 vertices.push(Point3::new(vx, vy, vz));
             }
         }
@@ -592,7 +606,12 @@ impl AssetHost<'_> {
         let mut out = BTreeMap::new();
         out.insert("image".into(), image_handle.clone());
         out.insert("heightfield_image".into(), image_handle);
+        let output_heights = if a.contains_key("heightfield") { hydro.height.clone() } else {
+            hydro.height.iter().map(|h| *h * elevation_scale as f32).collect()
+        };
+        out.insert("heightfield".into(), super::geodesy_ops::heightfield_record(size, spacing, origin, &output_heights));
         out.insert("mesh".into(), mesh_handle);
+        out.insert("mesh_frame".into(), Value::String("local-east-north-up (x=east,y=north,z=up), metres".into()));
         out.insert("grid_size".into(), Value::I64(size as i64));
         out.insert("cell_count".into(), Value::I64((size * size) as i64));
         out.insert("min_elevation".into(), Value::F64(min_h as f64));
@@ -713,6 +732,27 @@ mod tests {
 
     fn vec3(x: f64, y: f64, z: f64) -> Value {
         Value::List(vec![Value::F64(x), Value::F64(y), Value::F64(z)])
+    }
+
+    #[test]
+    fn assembly_smooth_shading_retains_shared_vertex_normals() {
+        let limits = ToolLimits::default(); let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel);
+        let make_args = |shading: &str| BTreeMap::from([("parts".into(), Value::List(vec![Value::Record(BTreeMap::from([
+            ("key".into(), Value::String("ball".into())), ("shape".into(), Value::String("sphere".into())),
+            ("shading".into(), Value::String(shading.into()))
+        ]))]))]);
+        let flat = host.sweep_assembly_profile(&make_args("flat")).unwrap();
+        let smooth = host.sweep_assembly_profile(&make_args("smooth")).unwrap();
+        let fm = host.mesh(required(record(&flat).unwrap(), "mesh").unwrap()).unwrap();
+        let sm = host.mesh(required(record(&smooth).unwrap(), "mesh").unwrap()).unwrap();
+        assert!(sm.positions.len() < fm.positions.len());
+        let bytes = &host.workspace.encoded(required(record(&smooth).unwrap(), "container_10d").unwrap()).unwrap().bytes;
+        let normals = qualia_core_db::container_10d::read_container_mesh_frames(bytes, sm.positions.len()).unwrap().unwrap().normals.unwrap();
+        for tri in &sm.triangles {
+            for &v in tri { assert!((normals[v as usize].iter().map(|x| x*x).sum::<f32>() - 1.0).abs() < 1e-4); }
+        }
+        assert!(sm.triangles.iter().any(|t| normals[t[0] as usize] != normals[t[1] as usize]));
     }
 
     #[test]

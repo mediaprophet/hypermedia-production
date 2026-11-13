@@ -32,10 +32,8 @@ impl AssetHost<'_> {
         if frame_items.is_empty() || frame_items.len() > 64 {
             return Err("mux_mp4 requires 1..=64 RGBA frame handles".into());
         }
-        let fps = count(a, "fps", 10, 60)? as u32;
-        if fps == 0 {
-            return Err("fps must be in 1..=60".into());
-        }
+        let rate = crate::chronicle_sequence::frame_rate(a,10,60)?;
+        if frame_items.len() as i64 * rate.den > rate.num * 15 {return Err("MP4 preview duration exceeds the decoder's 15 second profile; use capture profile=png-sequence for final sequences".into());}
 
         let mut frames = Vec::with_capacity(frame_items.len());
         let mut expected_dims: Option<(u32, u32)> = None;
@@ -83,9 +81,9 @@ impl AssetHost<'_> {
             encoded_samples.push(encode_idr_ipcm_frame(frame, w_mb, h_mb, idx as u32));
         }
 
-        // Movie & track timescale = 1000 (divides TICKS_PER_SECOND = 254_016_000_000 evenly)
-        let timescale = 1000u32;
-        let sample_duration = (timescale / fps).max(1);
+        // Container timing is the exact normalized rational rate, never 1000/fps truncation.
+        let timescale = rate.num as u32;
+        let sample_duration = rate.den as u32;
         let mp4_bytes = build_avc_mp4(
             coded_w as u16,
             coded_h as u16,
@@ -98,7 +96,7 @@ impl AssetHost<'_> {
 
         // Self-verify via video_h264_preview::decode_mp4 for the first frame duration
         let first_frame_ticks =
-            (video_h264_preview::TICKS_PER_SECOND / u64::from(timescale)) * u64::from(sample_duration);
+            u64::try_from((u128::from(video_h264_preview::TICKS_PER_SECOND)*u128::from(sample_duration)).div_ceil(u128::from(timescale))).map_err(|_|"Frame duration overflow")?;
         let verified = video_h264_preview::decode_mp4(
             &mp4_bytes,
             0,
@@ -154,12 +152,9 @@ impl AssetHost<'_> {
                 vtrack.samples.len()
             ));
         }
-        if vtrack.timescale == 0 || video_h264_preview::TICKS_PER_SECOND % u64::from(vtrack.timescale) != 0 {
-            return Err("Unsupported video track timescale".into());
-        }
-        let unit = video_h264_preview::TICKS_PER_SECOND / u64::from(vtrack.timescale);
+        if vtrack.timescale == 0 {return Err("Unsupported zero video track timescale".into());}
         let total_media_duration: u64 = vtrack.samples.iter().map(|s| u64::from(s.duration)).sum();
-        let total_ticks = total_media_duration.saturating_mul(unit);
+        let total_ticks = u64::try_from((u128::from(total_media_duration)*u128::from(video_h264_preview::TICKS_PER_SECOND)).div_ceil(u128::from(vtrack.timescale))).map_err(|_|"Video duration overflow")?;
 
         let frames = video_h264_preview::decode_mp4(
             &mp4_bytes,
@@ -870,6 +865,28 @@ mod tests {
         let mp4 = encoded(&host, &res);
         assert_eq!(mp4.kind, "mp4");
         assert!(mp4.bytes.len() > 100);
+    }
+
+    #[test]
+    fn muxed_media_timing_is_exact_at_integer_and_ntsc_rates() {
+        let limits=ToolLimits::default();let cancel=AtomicBool::new(false);
+        for (num,den) in [(24u64,1u64),(29,1),(24000,1001),(30000,1001)] {
+            let mut host=host(&limits,&cancel,&[]);
+            let frame=solid_frame(&mut host,[80,120,160]);
+            let args=Args::from([("frames".into(),Value::List(vec![frame.clone(),frame])),
+                ("fps".into(),Value::Record(Args::from([("numerator".into(),Value::U64(num)),("denominator".into(),Value::U64(den))])))]);
+            let output=host.chronicle_op("hypermedia.chronicle.mux_mp4",&args).unwrap();
+            let bytes=&encoded(&host,&output).bytes;
+            let media=media_isobmff::open(bytes).unwrap();let track=&media.tracks[0];
+            assert_eq!(u64::from(track.timescale),num);
+            assert_eq!(track.samples.len(),2);
+            assert_eq!(u64::from(track.samples[0].duration),den);
+            assert_eq!(track.samples[1].dts,den as i64);
+            let ticks=((u128::from(video_h264_preview::TICKS_PER_SECOND)*2*den as u128).div_ceil(num as u128)) as u64;
+            let decoded=video_h264_preview::decode_mp4(bytes,0,ticks,&cancel).unwrap();
+            assert_eq!(decoded.len(),2);
+            assert_eq!(decoded.iter().map(|f|f.duration_ticks).sum::<u64>(),ticks);
+        }
     }
 
     #[test]

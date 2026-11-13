@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use anyrender::{Filter, NormalizedCoord, Paint, PaintRef, PaintScene, RenderContext, ResourceId};
+use etalon::Texture;
+use etalon_context::DeviceHandle;
 use kurbo::{Affine, Rect, Shape, Stroke};
 use peniko::{BlendMode, BrushRef, Color, Fill, FontData, ImageBrush, ImageData, StyleRef};
 use rustc_hash::FxHashMap;
 use vello::Renderer as VelloRenderer;
-use wgpu::Texture;
-use wgpu_context::DeviceHandle;
 
 pub struct VelloScenePainter<'r, 's> {
     pub(crate) renderer: Option<&'r mut VelloRenderer>,

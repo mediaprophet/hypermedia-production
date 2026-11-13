@@ -1,8 +1,8 @@
 use std::{
     collections::HashMap,
     sync::{
-        atomic::{AtomicU32, Ordering},
         Arc,
+        atomic::{AtomicU32, Ordering},
     },
 };
 
@@ -16,14 +16,14 @@ use crate::{
 /// Profiler instance.
 ///
 /// You can have an arbitrary number of independent profiler instances per application/adapter.
-/// Manages all the necessary [`wgpu::QuerySet`] and [`wgpu::Buffer`] behind the scenes.
+/// Manages all the necessary [`etalon::QuerySet`] and [`etalon::Buffer`] behind the scenes.
 ///
-/// Any query creation method may allocate a new [`wgpu::QuerySet`] and [`wgpu::Buffer`] internally if necessary.
+/// Any query creation method may allocate a new [`etalon::QuerySet`] and [`etalon::Buffer`] internally if necessary.
 ///
-/// [`GpuProfiler`] is associated with a single [`wgpu::Device`] upon creation.
-/// All references wgpu objects passed in subsequent calls must originate from that device.
+/// [`GpuProfiler`] is associated with a single [`etalon::Device`] upon creation.
+/// All references etalon objects passed in subsequent calls must originate from that device.
 pub struct GpuProfiler {
-    device: wgpu::Device,
+    device: etalon::Device,
 
     unused_pools: Vec<QueryPool>,
 
@@ -44,19 +44,19 @@ pub struct GpuProfiler {
 // Public interface
 impl GpuProfiler {
     /// Combination of all timer query features [`GpuProfiler`] can leverage.
-    pub const ALL_WGPU_TIMER_FEATURES: wgpu::Features = wgpu::Features::TIMESTAMP_QUERY
-        .union(wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)
-        .union(wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES);
+    pub const ALL_ETALON_TIMER_FEATURES: etalon::Features = etalon::Features::TIMESTAMP_QUERY
+        .union(etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS)
+        .union(etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES);
 
     /// Combination of all timer query features [`GpuProfiler`] can leverage.
-    #[deprecated(since = "0.9.0", note = "Use ALL_WGPU_TIMER_FEATURES instead")]
-    pub const REQUIRED_WGPU_FEATURES: wgpu::Features = GpuProfiler::ALL_WGPU_TIMER_FEATURES;
+    #[deprecated(since = "0.9.0", note = "Use ALL_ETALON_TIMER_FEATURES instead")]
+    pub const REQUIRED_ETALON_FEATURES: etalon::Features = GpuProfiler::ALL_ETALON_TIMER_FEATURES;
 
     /// Creates a new Profiler object.
     ///
     /// There is nothing preventing the use of several independent profiler objects.
     pub fn new(
-        device: &wgpu::Device,
+        device: &etalon::Device,
         settings: GpuProfilerSettings,
     ) -> Result<Self, CreationError> {
         settings.validate()?;
@@ -91,9 +91,9 @@ impl GpuProfiler {
     #[cfg(feature = "tracy")]
     pub fn new_with_tracy_client(
         settings: GpuProfilerSettings,
-        backend: wgpu::Backend,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
+        backend: etalon::Backend,
+        device: &etalon::Device,
+        queue: &etalon::Queue,
     ) -> Result<Self, CreationError> {
         let mut profiler = Self::new(device, settings)?;
         profiler.tracy_context = Some(crate::tracy::create_tracy_gpu_client(
@@ -128,11 +128,11 @@ impl GpuProfiler {
     ///
     /// To nest scopes inside this scope, call [`Scope::scope`] on the returned scope.
     ///
-    /// If an [`wgpu::CommandEncoder`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will
+    /// If an [`etalon::CommandEncoder`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will
     /// be queried and the scope will not show up in the final results.
-    /// If an [`wgpu::ComputePass`] or [`wgpu::RenderPass`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
+    /// If an [`etalon::ComputePass`] or [`etalon::RenderPass`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
     ///
     /// If [`GpuProfilerSettings::enable_debug_groups`] is true, a debug group will be pushed on the encoder or pass.
     ///
@@ -157,11 +157,11 @@ impl GpuProfiler {
     ///
     /// To nest scopes inside this scope, call [`OwningScope::scope`] on the returned scope.
     ///
-    /// If an [`wgpu::CommandEncoder`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried
+    /// If an [`etalon::CommandEncoder`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried
     /// and the scope will not show up in the final results.
-    /// If an [`wgpu::ComputePass`] or [`wgpu::RenderPass`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
+    /// If an [`etalon::ComputePass`] or [`etalon::RenderPass`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
     ///
     /// If [`GpuProfilerSettings::enable_debug_groups`] is true, a debug group will be pushed on the encoder or pass.
     ///
@@ -187,15 +187,15 @@ impl GpuProfiler {
     /// Does NOT call [`GpuProfiler::end_query()`] on drop.
     /// This construct is just for completeness in cases where working with scopes is preferred but one can't rely on the Drop call in the right place.
     /// This is useful when the owned value needs to be recovered after the end of the scope.
-    /// In particular, to submit a [`wgpu::CommandEncoder`] to a queue, ownership of the encoder is necessary.
+    /// In particular, to submit a [`etalon::CommandEncoder`] to a queue, ownership of the encoder is necessary.
     ///
     /// To nest scopes inside this scope, call [`ManualOwningScope::scope`] on the returned scope.
     ///
-    /// If an [`wgpu::CommandEncoder`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried and the scope will
+    /// If an [`etalon::CommandEncoder`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried and the scope will
     /// not show up in the final results.
-    /// If an [`wgpu::ComputePass`] or [`wgpu::RenderPass`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
+    /// If an [`etalon::ComputePass`] or [`etalon::RenderPass`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no scope will be opened.
     ///
     /// If [`GpuProfilerSettings::enable_debug_groups`] is true, a debug group will be pushed on the encoder or pass.
     #[must_use]
@@ -220,11 +220,11 @@ impl GpuProfiler {
     /// even if timer queries are disabled.
     /// To do this automatically, use [`GpuProfiler::scope`]/[`GpuProfiler::owning_scope`] instead.
     ///
-    /// If an [`wgpu::CommandEncoder`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried and the scope will
+    /// If an [`etalon::CommandEncoder`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS`], no gpu timer will be queried and the scope will
     /// not show up in the final results.
-    /// If an [`wgpu::ComputePass`] or [`wgpu::RenderPass`] is passed but the [`wgpu::Device`]
-    /// does not support [`wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no timer queries will be allocated.
+    /// If an [`etalon::ComputePass`] or [`etalon::RenderPass`] is passed but the [`etalon::Device`]
+    /// does not support [`etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES`], no timer queries will be allocated.
     ///
     /// If [`GpuProfilerSettings::enable_debug_groups`] is true, a debug group will be pushed on the encoder or pass.
     #[track_caller]
@@ -256,9 +256,9 @@ impl GpuProfiler {
     /// To do this automatically, use [`Scope::scoped_render_pass`]/[`Scope::scoped_compute_pass`] instead.
     ///
     /// Call [`GpuProfilerQuery::render_pass_timestamp_writes`] or [`GpuProfilerQuery::compute_pass_timestamp_writes`]
-    /// to acquire the corresponding [`wgpu::RenderPassTimestampWrites`]/[`wgpu::ComputePassTimestampWrites`] object.
+    /// to acquire the corresponding [`etalon::RenderPassTimestampWrites`]/[`etalon::ComputePassTimestampWrites`] object.
     ///
-    /// If the [`wgpu::Device`] does not support [`wgpu::Features::TIMESTAMP_QUERY`], no gpu timer will be reserved.
+    /// If the [`etalon::Device`] does not support [`etalon::Features::TIMESTAMP_QUERY`], no gpu timer will be reserved.
     ///
     /// Unlike [`GpuProfiler::begin_query`] this will not create a debug scope,
     /// in order to not force passing of the same encoder/pass to [`GpuProfiler::end_query`].
@@ -266,7 +266,7 @@ impl GpuProfiler {
     pub fn begin_pass_query(
         &self,
         label: impl Into<String>,
-        encoder: &mut wgpu::CommandEncoder,
+        encoder: &mut etalon::CommandEncoder,
     ) -> GpuProfilerQuery {
         let is_for_pass_timestamp_writes = true;
         let mut query =
@@ -292,7 +292,7 @@ impl GpuProfiler {
                     unreachable!("Query pair has been reserved but isn't used for anything!")
                 }
                 QueryPairUsageState::ReservedForPassTimestampWrites => {
-                    // No need to do a timestamp write, this is handled by wgpu.
+                    // No need to do a timestamp write, this is handled by etalon.
                 }
                 QueryPairUsageState::OnlyStartWritten => {
                     encoder_or_pass.write_timestamp(
@@ -342,7 +342,7 @@ impl GpuProfiler {
     /// This method could be made `&self`, taking the internal lock on the query pools.
     /// However, the intended use is to call this once at the end of a frame, so we instead
     /// encourage this explicit sync point and avoid the lock.
-    pub fn resolve_queries(&mut self, encoder: &mut wgpu::CommandEncoder) {
+    pub fn resolve_queries(&mut self, encoder: &mut etalon::CommandEncoder) {
         let query_pools = self.active_frame.query_pools.get_mut();
 
         for query_pool in query_pools.used_pools.iter_mut() {
@@ -360,7 +360,7 @@ impl GpuProfiler {
             debug_assert!(num_resolved_queries < num_used_queries);
 
             // Resolve into offset 0 of the resolve buffer - this way we don't have to worry about
-            // the offset restrictions on resolve buffers (`wgpu::QUERY_RESOLVE_BUFFER_ALIGNMENT`)
+            // the offset restrictions on resolve buffers (`etalon::QUERY_RESOLVE_BUFFER_ALIGNMENT`)
             // and we copy it anyways.
             encoder.resolve_query_set(
                 &query_pool.query_set,
@@ -370,8 +370,8 @@ impl GpuProfiler {
             );
             // Copy the newly resolved queries into the read buffer, making sure
             // that we don't override any of the results that are already there.
-            let destination_offset = (num_resolved_queries * wgpu::QUERY_SIZE) as u64;
-            let copy_size = ((num_used_queries - num_resolved_queries) * wgpu::QUERY_SIZE) as u64;
+            let destination_offset = (num_resolved_queries * etalon::QUERY_SIZE) as u64;
+            let copy_size = ((num_used_queries - num_resolved_queries) * etalon::QUERY_SIZE) as u64;
             encoder.copy_buffer_to_buffer(
                 &query_pool.resolve_buffer,
                 0,
@@ -460,15 +460,17 @@ impl GpuProfiler {
         for pool in new_pending_frame.query_pools.iter_mut() {
             let mapped_buffers = new_pending_frame.mapped_buffers.clone();
             pool.read_buffer
-                .slice(0..(pool.num_used_queries.load(Ordering::Relaxed) * wgpu::QUERY_SIZE) as u64)
-                .map_async(wgpu::MapMode::Read, move |mapping_result| {
+                .slice(
+                    0..(pool.num_used_queries.load(Ordering::Relaxed) * etalon::QUERY_SIZE) as u64,
+                )
+                .map_async(etalon::MapMode::Read, move |mapping_result| {
                     // Mapping should not fail unless it was cancelled due to the frame being dropped.
                     match mapping_result {
                         Err(_) => {
                             // We only want to ignore the error iff the mapping has been aborted by us (due to a dropped frame, see above).
                             // In any other case, we need should panic as this would imply something went seriously sideways.
                             //
-                            // As of writing, this is not yet possible in wgpu, see https://github.com/gfx-rs/wgpu/pull/2939
+                            // Historical background for this implementation: https://github.com/gfx-rs/wgpu/pull/2939
                         }
                         Ok(()) => {
                             mapped_buffers.fetch_add(1, std::sync::atomic::Ordering::Release);
@@ -487,7 +489,7 @@ impl GpuProfiler {
     /// Checks if all timer queries for the oldest pending finished frame are done and returns that snapshot if any.
     ///
     /// `timestamp_period`:
-    ///    The timestamp period of the device. Pass the result of [`wgpu::Queue::get_timestamp_period()`].
+    ///    The timestamp period of the device. Pass the result of [`etalon::Queue::get_timestamp_period()`].
     ///    Note that some implementations (Chrome as of writing) may converge to a timestamp period while the application is running,
     ///    so caching this value is usually not recommended.
     pub fn process_finished_frame(
@@ -536,20 +538,20 @@ impl GpuProfiler {
 // Internals
 // --------------------------------------------------------------------------------
 
-const QUERY_SET_MAX_QUERIES: u32 = wgpu::QUERY_SET_MAX_QUERIES;
+const QUERY_SET_MAX_QUERIES: u32 = etalon::QUERY_SET_MAX_QUERIES;
 
 /// Returns true if a timestamp query is supported.
 fn timestamp_query_support<Recorder: ProfilerCommandRecorder>(
     is_for_pass_timestamp_writes: bool,
     encoder_or_pass: &mut Recorder,
-    features: wgpu::Features,
+    features: etalon::Features,
 ) -> bool {
     let required_feature = if is_for_pass_timestamp_writes {
-        wgpu::Features::TIMESTAMP_QUERY
+        etalon::Features::TIMESTAMP_QUERY
     } else if encoder_or_pass.is_pass() {
-        wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES
+        etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES
     } else {
-        wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS
+        etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS
     };
     features.contains(required_feature)
 }
@@ -751,26 +753,26 @@ impl GpuProfiler {
             .into_iter()
             .map(|mut scope| {
                 // Note that inactive queries may still have nested queries, it's therefore important we process all of them.
-                // In particular, this happens if only `wgpu::Features::TIMESTAMP_QUERY`` is enabled and `timestamp_writes`
+                // In particular, this happens if only `etalon::Features::TIMESTAMP_QUERY`` is enabled and `timestamp_writes`
                 // on passes are nested inside inactive encoder timer queries.
                 let time_raw = scope.timer_query_pair.take().map(|query| {
                     // Read timestamp from buffer.
                     // By design timestamps for start/end are consecutive.
-                    let offset = (query.start_query_idx * wgpu::QUERY_SIZE) as u64;
+                    let offset = (query.start_query_idx * etalon::QUERY_SIZE) as u64;
                     let buffer_slice = &query
                         .pool
                         .read_buffer
-                        .slice(offset..(offset + (wgpu::QUERY_SIZE * 2) as u64))
+                        .slice(offset..(offset + (etalon::QUERY_SIZE * 2) as u64))
                         .get_mapped_range()
                         .expect("Failed to get mapped range of a query buffer. \
                                  Should be impossible since we only process finished frames with mapped buffers!");
                     let start_raw = u64::from_le_bytes(
-                        buffer_slice[0..wgpu::QUERY_SIZE as usize]
+                        buffer_slice[0..etalon::QUERY_SIZE as usize]
                             .try_into()
                             .unwrap(),
                     );
                     let end_raw = u64::from_le_bytes(
-                        buffer_slice[wgpu::QUERY_SIZE as usize..(wgpu::QUERY_SIZE as usize) * 2]
+                        buffer_slice[etalon::QUERY_SIZE as usize..(etalon::QUERY_SIZE as usize) * 2]
                             .try_into()
                             .unwrap(),
                     );
@@ -816,7 +818,7 @@ pub enum QueryPairUsageState {
     /// Transitional state used upon creation.
     Reserved,
 
-    /// Don't do manual timestamp writes, wgpu is expected to do them for us.
+    /// Don't do manual timestamp writes, etalon is expected to do them for us.
     ReservedForPassTimestampWrites,
 
     /// Start query has been used, end query is still available.
@@ -844,10 +846,10 @@ pub struct ReservedTimerQueryPair {
 /// A pool of queries, consisting of a single queryset & buffer for query results.
 #[derive(Debug)]
 pub struct QueryPool {
-    pub query_set: wgpu::QuerySet,
+    pub query_set: etalon::QuerySet,
 
-    resolve_buffer: wgpu::Buffer,
-    read_buffer: wgpu::Buffer,
+    resolve_buffer: etalon::Buffer,
+    read_buffer: etalon::Buffer,
 
     capacity: u32,
     num_used_queries: AtomicU32,
@@ -857,25 +859,25 @@ pub struct QueryPool {
 impl QueryPool {
     const MIN_CAPACITY: u32 = 32;
 
-    fn new(capacity: u32, device: &wgpu::Device) -> Self {
+    fn new(capacity: u32, device: &etalon::Device) -> Self {
         QueryPool {
-            query_set: device.create_query_set(&wgpu::QuerySetDescriptor {
+            query_set: device.create_query_set(&etalon::QuerySetDescriptor {
                 label: Some("GpuProfiler - Query Set"),
-                ty: wgpu::QueryType::Timestamp,
+                ty: etalon::QueryType::Timestamp,
                 count: capacity,
             }),
 
-            resolve_buffer: device.create_buffer(&wgpu::BufferDescriptor {
+            resolve_buffer: device.create_buffer(&etalon::BufferDescriptor {
                 label: Some("GpuProfiler - Query Resolve Buffer"),
-                size: (wgpu::QUERY_SIZE * capacity) as u64,
-                usage: wgpu::BufferUsages::QUERY_RESOLVE | wgpu::BufferUsages::COPY_SRC,
+                size: (etalon::QUERY_SIZE * capacity) as u64,
+                usage: etalon::BufferUsages::QUERY_RESOLVE | etalon::BufferUsages::COPY_SRC,
                 mapped_at_creation: false,
             }),
 
-            read_buffer: device.create_buffer(&wgpu::BufferDescriptor {
+            read_buffer: device.create_buffer(&etalon::BufferDescriptor {
                 label: Some("GpuProfiler - Query Read Buffer"),
-                size: (wgpu::QUERY_SIZE * capacity) as u64,
-                usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+                size: (etalon::QUERY_SIZE * capacity) as u64,
+                usage: etalon::BufferUsages::COPY_DST | etalon::BufferUsages::MAP_READ,
                 mapped_at_creation: false,
             }),
 

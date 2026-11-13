@@ -6,6 +6,7 @@ license = "Apache-2.0"
 description = "Application-independent bounded Vibe adapters for shared asset production"
 
 [dependencies]
+qualia-geospatial = { path = "../../../qualiaDB/crates/qualia-geospatial" }
 qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "ce88c2adc5f7411561f5670f0cc42452a7f39263", default-features = false }
 vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "ce88c2adc5f7411561f5670f0cc42452a7f39263" }
 vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "ce88c2adc5f7411561f5670f0cc42452a7f39263" }
@@ -64,11 +65,14 @@ vector-render = { package = "vector-cpu-render-adapter", path = "../vector-cpu-r
 anyrender = "0.14.0"
 kurbo = "0.13.1"
 peniko = "0.6"
+parley = { version = "0.12.0", default-features = false, features = ["std", "complex-scripts"] }
+ttf-parser = "0.25.1"
 qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "ce88c2adc5f7411561f5670f0cc42452a7f39263" }
 png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"
 blake3 = { version = "1.8", default-features = false }
+sha2 = "0.10"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-wgpu = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952" }
+etalon = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "8e8ab6c8349bcc6ab1d81138f2c9f2a0c90f0952" }

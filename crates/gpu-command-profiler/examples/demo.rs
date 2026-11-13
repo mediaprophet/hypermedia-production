@@ -1,6 +1,6 @@
+use etalon::CurrentSurfaceTexture;
+use etalon_profiler::{GpuProfiler, GpuProfilerSettings, GpuTimerQueryResult};
 use std::{borrow::Cow, sync::Arc};
-use wgpu::CurrentSurfaceTexture;
-use wgpu_profiler::{GpuProfiler, GpuProfilerSettings, GpuTimerQueryResult};
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
@@ -9,7 +9,7 @@ use winit::{
 };
 
 #[cfg(feature = "puffin")]
-// Since the timing information we get from WGPU may be several frames behind the CPU, we can't report these frames to
+// Since the timing information we get from Etalon may be several frames behind the CPU, we can't report these frames to
 // the singleton returned by `puffin::GlobalProfiler::lock`. Instead, we need our own `puffin::GlobalProfiler` that we
 // can be several frames behind puffin's main global profiler singleton.
 static PUFFIN_GPU_PROFILER: std::sync::LazyLock<std::sync::Mutex<puffin::GlobalProfiler>> =
@@ -37,10 +37,10 @@ fn scopes_to_console_recursive(results: &[GpuTimerQueryResult], indentation: u32
     }
 }
 
-fn console_output(results: &Option<Vec<GpuTimerQueryResult>>, enabled_features: wgpu::Features) {
+fn console_output(results: &Option<Vec<GpuTimerQueryResult>>, enabled_features: etalon::Features) {
     profiling::scope!("console_output");
     print!("\x1B[2J\x1B[1;1H"); // Clear terminal and put cursor to first row first column
-    println!("Welcome to wgpu_profiler demo!");
+    println!("Welcome to etalon_profiler demo!");
     println!();
     println!("Enabled device features: {enabled_features:?}");
     println!();
@@ -64,24 +64,25 @@ struct State {
 }
 
 struct GfxState {
-    surface: wgpu::Surface<'static>,
-    surface_desc: wgpu::SurfaceConfiguration,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    render_pipeline: wgpu::RenderPipeline,
+    surface: etalon::Surface<'static>,
+    surface_desc: etalon::SurfaceConfiguration,
+    device: etalon::Device,
+    queue: etalon::Queue,
+    render_pipeline: etalon::RenderPipeline,
     profiler: GpuProfiler,
 }
 
 impl GfxState {
     async fn new(window: &Arc<winit::window::Window>) -> Self {
         let size = window.inner_size();
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+        let instance =
+            etalon::Instance::new(etalon::InstanceDescriptor::new_without_display_handle());
         let surface = instance
             .create_surface(window.clone())
             .expect("Failed to create surface.");
         let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::default(),
+            .request_adapter(&etalon::RequestAdapterOptions {
+                power_preference: etalon::PowerPreference::default(),
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
                 apply_limit_buckets: false,
@@ -92,26 +93,26 @@ impl GfxState {
         dbg!(adapter.features());
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
-                required_features: adapter.features() & GpuProfiler::ALL_WGPU_TIMER_FEATURES,
+            .request_device(&etalon::DeviceDescriptor {
+                required_features: adapter.features() & GpuProfiler::ALL_ETALON_TIMER_FEATURES,
                 ..Default::default()
             })
             .await
             .expect("Failed to create device");
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: None,
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
+            source: etalon::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
         });
 
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        let pipeline_layout = device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[],
             immediate_size: 0,
         });
 
-        let surface_desc = wgpu::SurfaceConfiguration {
-            present_mode: wgpu::PresentMode::AutoVsync,
+        let surface_desc = etalon::SurfaceConfiguration {
+            present_mode: etalon::PresentMode::AutoVsync,
             ..surface
                 .get_default_config(&adapter, size.width, size.height)
                 .unwrap()
@@ -120,24 +121,24 @@ impl GfxState {
 
         let swapchain_format = surface_desc.format;
 
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let render_pipeline = device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
             label: None,
             layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
+            vertex: etalon::VertexState {
                 module: &shader,
                 entry_point: Some("vs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                compilation_options: etalon::PipelineCompilationOptions::default(),
                 buffers: &[],
             },
-            fragment: Some(wgpu::FragmentState {
+            fragment: Some(etalon::FragmentState {
                 module: &shader,
                 entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                compilation_options: etalon::PipelineCompilationOptions::default(),
                 targets: &[Some(swapchain_format.into())],
             }),
-            primitive: wgpu::PrimitiveState::default(),
+            primitive: etalon::PrimitiveState::default(),
             depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
+            multisample: etalon::MultisampleState::default(),
             multiview_mask: None,
             cache: None,
         });
@@ -151,8 +152,8 @@ impl GfxState {
             &queue,
         )
         .unwrap_or_else(|err| match err {
-            wgpu_profiler::CreationError::TracyClientNotRunning
-            | wgpu_profiler::CreationError::TracyGpuContextCreationError(_) => {
+            etalon_profiler::CreationError::TracyClientNotRunning
+            | etalon_profiler::CreationError::TracyGpuContextCreationError(_) => {
                 println!("Failed to connect to Tracy. Continuing without Tracy integration.");
                 GpuProfiler::new(&device, GpuProfilerSettings::default())
                     .expect("Failed to create profiler")
@@ -183,7 +184,8 @@ impl ApplicationHandler<()> for State {
             let window = Arc::new(
                 event_loop
                     .create_window(
-                        winit::window::WindowAttributes::default().with_title("wgpu_profiler demo"),
+                        winit::window::WindowAttributes::default()
+                            .with_title("etalon_profiler demo"),
                     )
                     .expect("Failed to create window"),
             );
@@ -252,9 +254,9 @@ impl ApplicationHandler<()> for State {
                 };
                 let frame_view = frame
                     .texture
-                    .create_view(&wgpu::TextureViewDescriptor::default());
-                let mut encoder =
-                    device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+                    .create_view(&etalon::TextureViewDescriptor::default());
+                let mut encoder = device
+                    .create_command_encoder(&etalon::CommandEncoderDescriptor { label: None });
 
                 draw(profiler, &mut encoder, &frame_view, render_pipeline);
 
@@ -281,7 +283,7 @@ impl ApplicationHandler<()> for State {
                 #[cfg(feature = "puffin")]
                 {
                     let mut gpu_profiler = PUFFIN_GPU_PROFILER.lock().unwrap();
-                    wgpu_profiler::puffin::output_frame_to_puffin(
+                    etalon_profiler::puffin::output_frame_to_puffin(
                         &mut gpu_profiler,
                         self.latest_profiler_results.as_deref().unwrap_or_default(),
                     );
@@ -302,7 +304,7 @@ impl ApplicationHandler<()> for State {
                 }
                 KeyCode::Space => {
                     if let Some(profile_data) = &self.latest_profiler_results {
-                        wgpu_profiler::chrometrace::write_chrometrace(
+                        etalon_profiler::chrometrace::write_chrometrace(
                             std::path::Path::new("trace.json"),
                             profile_data,
                         )
@@ -325,9 +327,9 @@ impl ApplicationHandler<()> for State {
 
 fn draw(
     profiler: &GpuProfiler,
-    encoder: &mut wgpu::CommandEncoder,
-    view: &wgpu::TextureView,
-    render_pipeline: &wgpu::RenderPipeline,
+    encoder: &mut etalon::CommandEncoder,
+    view: &etalon::TextureView,
+    render_pipeline: &etalon::RenderPipeline,
 ) {
     // Create a new profiling scope that we nest the other scopes in.
     let mut scope = profiler.scope("rendering", encoder);
@@ -338,15 +340,15 @@ fn draw(
         // But just as before, it behaves like a transparent wrapper, so you can use it just like a normal render pass.
         let mut rpass = scope.scoped_render_pass(
             "render pass top",
-            wgpu::RenderPassDescriptor {
+            etalon::RenderPassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(etalon::RenderPassColorAttachment {
                     view,
                     depth_slice: None,
                     resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: wgpu::StoreOp::Store,
+                    ops: etalon::Operations {
+                        load: etalon::LoadOp::Clear(etalon::Color::BLACK),
+                        store: etalon::StoreOp::Store,
                     },
                 })],
                 ..Default::default()
@@ -355,7 +357,7 @@ fn draw(
 
         rpass.set_pipeline(render_pipeline);
 
-        // Sub-scopes within the pass only work if wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES is enabled.
+        // Sub-scopes within the pass only work if etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES is enabled.
         // If this feature is lacking, no timings will be taken.
         {
             let mut rpass = rpass.scope("fractal 0");
@@ -374,15 +376,15 @@ fn draw(
             .with_parent(scope.scope.as_ref());
         let mut rpass = scope
             .recorder
-            .begin_render_pass(&wgpu::RenderPassDescriptor {
+            .begin_render_pass(&etalon::RenderPassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(etalon::RenderPassColorAttachment {
                     view,
                     depth_slice: None,
                     resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Load,
-                        store: wgpu::StoreOp::Store,
+                    ops: etalon::Operations {
+                        load: etalon::LoadOp::Load,
+                        store: etalon::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
@@ -394,7 +396,7 @@ fn draw(
         rpass.set_pipeline(render_pipeline);
 
         // Similarly, you can manually manage nested scopes within a render pass.
-        // Again, to do any actual timing, you need to enable wgpu::Features::TIMESTAMP_QUERY_INSIDE_PASSES.
+        // Again, to do any actual timing, you need to enable etalon::Features::TIMESTAMP_QUERY_INSIDE_PASSES.
         {
             let query = profiler
                 .begin_query("fractal 2", &mut rpass)

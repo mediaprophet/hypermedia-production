@@ -1,7 +1,7 @@
 use std::{ops::Range, thread::ThreadId};
 
 use crate::profiler::{
-    GpuTimerQueryTreeHandle, QueryPairUsageState, ReservedTimerQueryPair, ROOT_QUERY_HANDLE,
+    GpuTimerQueryTreeHandle, QueryPairUsageState, ROOT_QUERY_HANDLE, ReservedTimerQueryPair,
 };
 
 /// The result of a gpu timer scope.
@@ -71,10 +71,10 @@ impl GpuProfilerQuery {
     /// Only ever returns `Some` for queries that were created using [`GpuProfiler::begin_pass_query`].
     ///
     /// [`GpuProfiler::begin_pass_query`]: crate::GpuProfiler::begin_pass_query
-    pub fn render_pass_timestamp_writes(&self) -> Option<wgpu::RenderPassTimestampWrites<'_>> {
+    pub fn render_pass_timestamp_writes(&self) -> Option<etalon::RenderPassTimestampWrites<'_>> {
         self.timer_query_pair.as_ref().and_then(|query| {
             (query.usage_state == QueryPairUsageState::ReservedForPassTimestampWrites).then(|| {
-                wgpu::RenderPassTimestampWrites {
+                etalon::RenderPassTimestampWrites {
                     query_set: &query.pool.query_set,
                     beginning_of_pass_write_index: Some(query.start_query_idx),
                     end_of_pass_write_index: Some(query.start_query_idx + 1),
@@ -89,10 +89,10 @@ impl GpuProfilerQuery {
     /// Only ever returns `Some` for queries that were created using [`GpuProfiler::begin_pass_query`].
     ///
     /// [`GpuProfiler::begin_pass_query`]: crate::GpuProfiler::begin_pass_query
-    pub fn compute_pass_timestamp_writes(&self) -> Option<wgpu::ComputePassTimestampWrites<'_>> {
+    pub fn compute_pass_timestamp_writes(&self) -> Option<etalon::ComputePassTimestampWrites<'_>> {
         self.timer_query_pair.as_ref().and_then(|query| {
             (query.usage_state == QueryPairUsageState::ReservedForPassTimestampWrites).then(|| {
-                wgpu::ComputePassTimestampWrites {
+                etalon::ComputePassTimestampWrites {
                     query_set: &query.pool.query_set,
                     beginning_of_pass_write_index: Some(query.start_query_idx),
                     end_of_pass_write_index: Some(query.start_query_idx + 1),

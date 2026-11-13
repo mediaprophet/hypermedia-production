@@ -13,4 +13,7 @@ pub use scene::VelloHybridScenePainter;
 pub use webgl_scene::*;
 pub use window_renderer::*;
 
-pub use wgpu;
+pub use etalon;
+
+#[doc(hidden)]
+pub use etalon as wgpu;

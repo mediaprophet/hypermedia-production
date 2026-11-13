@@ -21,6 +21,9 @@ use qualia_core_db::render::compile_10d::{
 };
 use std::f32::consts::PI;
 
+#[path = "whitegum_foliage.rs"]
+mod foliage;
+
 struct WhitegumMeshBuilder {
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
@@ -201,71 +204,7 @@ impl WhitegumMeshBuilder {
         }
     }
 
-    /// Add an ellipsoid or sculpted foliage cluster lobe with organic surface modulation.
-    fn add_foliage_lobe(
-        &mut self,
-        center: [f32; 3],
-        radii: [f32; 3],
-        lat_segs: usize,
-        lon_segs: usize,
-        col_top: [u8; 4],
-        col_bottom: [u8; 4],
-        droop_factor: f32,
-    ) {
-        let base_idx = self.positions.len() as u32;
-        let lat_n = lat_segs.max(4);
-        let lon_n = lon_segs.max(6);
 
-        for i in 0..=lat_n {
-            let v_frac = (i as f32) / (lat_n as f32);
-            let theta = v_frac * PI;
-            let (sin_t, cos_t) = theta.sin_cos();
-
-            // Blend color from sunlit glaucous top to shaded deep eucalyptus green underneath
-            let mix = (0.5 * (1.0 - cos_t)).clamp(0.0, 1.0);
-            let col = [
-                ((col_top[0] as f32) * (1.0 - mix) + (col_bottom[0] as f32) * mix) as u8,
-                ((col_top[1] as f32) * (1.0 - mix) + (col_bottom[1] as f32) * mix) as u8,
-                ((col_top[2] as f32) * (1.0 - mix) + (col_bottom[2] as f32) * mix) as u8,
-                255,
-            ];
-
-            for j in 0..=lon_n {
-                let u_frac = (j as f32) / (lon_n as f32);
-                let phi = u_frac * 2.0 * PI;
-                let (sin_p, cos_p) = phi.sin_cos();
-
-                // Organic phyllotacticscalloping so foliage clusters look like dense leaf clumps
-                let ripple = 1.0
-                    + 0.14 * (phi * 5.0 + theta * 3.0).sin()
-                    + 0.08 * (phi * 9.0 - theta * 4.0).cos();
-                let nx = sin_t * cos_p;
-                let ny = cos_t;
-                let nz = sin_t * sin_p;
-
-                let r_horiz = (nx * nx + nz * nz).sqrt();
-                let droop = -droop_factor * r_horiz * r_horiz * radii[1];
-
-                let pos = [
-                    center[0] + nx * radii[0] * ripple,
-                    center[1] + ny * radii[1] * ripple + droop,
-                    center[2] + nz * radii[2] * ripple,
-                ];
-                self.add_vertex(pos, [nx, ny, nz], [u_frac, v_frac], col);
-            }
-        }
-
-        let stride = (lon_n + 1) as u32;
-        for i in 0..(lat_n as u32) {
-            for j in 0..(lon_n as u32) {
-                let i0 = base_idx + i * stride + j;
-                let i1 = i0 + 1;
-                let i2 = i0 + stride + 1;
-                let i3 = i0 + stride;
-                self.add_quad(i0, i3, i2, i1);
-            }
-        }
-    }
 }
 
 /// Evaluates a 4-point cubic Bezier curve at parameter `t` in `[0, 1]`.
@@ -964,7 +903,8 @@ fn seal_whitegum_organ_10d(
         mat.multiply_vertex_color = true;
         mat.wind_animated = matches!(slice.layer, HistologicalTissueLayer::WaxyCuticle);
         mat.base_color = base_col;
-        mat.roughness = roughness;
+        // A crown volume averages many leaf orientations; it is not a waxy solid.
+        mat.roughness = if slice.layer == HistologicalTissueLayer::WaxyCuticle { 0.68 } else { roughness };
         mat.metallic = metallic;
         mat.specular = 0.5;
         materials.push(mat);

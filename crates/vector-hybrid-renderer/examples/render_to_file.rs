@@ -42,38 +42,38 @@ async fn run() {
     let mut scene = Scene::new(width, height);
     render_svg(&mut scene, &parsed.items, Affine::scale(render_scale));
 
-    // Initialize wgpu device and queue for GPU rendering
-    let instance = wgpu::Instance::default();
-    let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-        power_preference: wgpu::PowerPreference::default(),
+    // Initialize etalon device and queue for GPU rendering
+    let instance = etalon::Instance::default();
+    let adapter = pollster::block_on(instance.request_adapter(&etalon::RequestAdapterOptions {
+        power_preference: etalon::PowerPreference::default(),
         force_fallback_adapter: false,
         compatible_surface: None,
         ..Default::default()
     }))
     .expect("Failed to find an appropriate adapter");
-    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+    let (device, queue) = pollster::block_on(adapter.request_device(&etalon::DeviceDescriptor {
         label: Some("Device"),
-        required_features: wgpu::Features::empty(),
+        required_features: etalon::Features::empty(),
         ..Default::default()
     }))
     .expect("Failed to create device");
 
     // Create a render target texture
-    let texture = device.create_texture(&wgpu::TextureDescriptor {
+    let texture = device.create_texture(&etalon::TextureDescriptor {
         label: Some("Render Target"),
-        size: wgpu::Extent3d {
+        size: etalon::Extent3d {
             width: width.into(),
             height: height.into(),
             depth_or_array_layers: 1,
         },
         mip_level_count: 1,
         sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+        dimension: etalon::TextureDimension::D2,
+        format: etalon::TextureFormat::Rgba8Unorm,
+        usage: etalon::TextureUsages::RENDER_ATTACHMENT | etalon::TextureUsages::COPY_SRC,
         view_formats: &[],
     });
-    let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+    let texture_view = texture.create_view(&etalon::TextureViewDescriptor::default());
 
     // Create renderer and render the scene to the texture
     let (mut renderer, mut resources) = vello_gpu::Renderer::new(
@@ -87,7 +87,7 @@ async fn run() {
     let render_size = vello_gpu::RenderSize { width, height };
     let depth_texture_view = vello_gpu::Renderer::create_depth_texture_view(&device, &render_size);
     // Copy texture to buffer
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+    let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor {
         label: Some("Vello Render To Buffer"),
     });
     renderer
@@ -107,29 +107,29 @@ async fn run() {
 
     // Create a buffer to copy the texture data
     let bytes_per_row = (u32::from(width) * 4).next_multiple_of(256);
-    let texture_copy_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+    let texture_copy_buffer = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("Output Buffer"),
         size: u64::from(bytes_per_row) * u64::from(height),
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+        usage: etalon::BufferUsages::COPY_DST | etalon::BufferUsages::MAP_READ,
         mapped_at_creation: false,
     });
 
     encoder.copy_texture_to_buffer(
-        wgpu::TexelCopyTextureInfo {
+        etalon::TexelCopyTextureInfo {
             texture: &texture,
             mip_level: 0,
-            origin: wgpu::Origin3d::ZERO,
-            aspect: wgpu::TextureAspect::All,
+            origin: etalon::Origin3d::ZERO,
+            aspect: etalon::TextureAspect::All,
         },
-        wgpu::TexelCopyBufferInfo {
+        etalon::TexelCopyBufferInfo {
             buffer: &texture_copy_buffer,
-            layout: wgpu::TexelCopyBufferLayout {
+            layout: etalon::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(bytes_per_row),
                 rows_per_image: None,
             },
         },
-        wgpu::Extent3d {
+        etalon::Extent3d {
             width: width.into(),
             height: height.into(),
             depth_or_array_layers: 1,
@@ -140,12 +140,12 @@ async fn run() {
     // Map the buffer for reading
     texture_copy_buffer
         .slice(..)
-        .map_async(wgpu::MapMode::Read, move |result| {
+        .map_async(etalon::MapMode::Read, move |result| {
             if result.is_err() {
                 panic!("Failed to map texture for reading");
             }
         });
-    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+    device.poll(etalon::PollType::wait_indefinitely()).unwrap();
 
     // Read back the pixel data
     let mut img_data = Vec::with_capacity(usize::from(width) * usize::from(height) * 4);

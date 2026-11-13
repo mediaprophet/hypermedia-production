@@ -6,7 +6,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
-use wgpu::{
+use etalon::{
     BindGroup, BindGroupLayout, Buffer, BufferUsages, CommandEncoder, CommandEncoderDescriptor,
     ComputePassDescriptor, ComputePipeline, Device, PipelineCache, PipelineCompilationOptions,
     Queue, Texture, TextureAspect, TextureUsages, TextureView, TextureViewDimension,
@@ -23,12 +23,12 @@ use vello_shaders::cpu::CpuBinding;
 struct UninitialisedShader {
     wgsl: Cow<'static, str>,
     label: &'static str,
-    entries: Vec<wgpu::BindGroupLayoutEntry>,
+    entries: Vec<etalon::BindGroupLayoutEntry>,
     shader_id: ShaderId,
 }
 
 #[derive(Default)]
-pub(crate) struct WgpuEngine {
+pub(crate) struct EtalonEngine {
     shaders: Vec<Shader>,
     pool: ResourcePool,
     bind_map: BindMap,
@@ -36,20 +36,20 @@ pub(crate) struct WgpuEngine {
     #[cfg(not(target_arch = "wasm32"))]
     shaders_to_initialise: Option<Vec<UninitialisedShader>>,
     pub(crate) use_cpu: bool,
-    /// Overrides from a specific `Image::data`'s [`id`](peniko::Blob::id) to a wgpu `Texture`.
+    /// Overrides from a specific `Image::data`'s [`id`](peniko::Blob::id) to a etalon `Texture`.
     ///
     /// The `Texture` should have the same size as the `Image`.
-    pub(crate) image_overrides: HashMap<u64, wgpu::TexelCopyTextureInfoBase<Texture>>,
+    pub(crate) image_overrides: HashMap<u64, etalon::TexelCopyTextureInfoBase<Texture>>,
     pipeline_cache: Option<PipelineCache>,
 }
 
 enum PipelineState {
     Compute(ComputePipeline),
     #[cfg(feature = "debug_layers")]
-    Render(wgpu::RenderPipeline),
+    Render(etalon::RenderPipeline),
 }
 
-struct WgpuShader {
+struct EtalonShader {
     pipeline: PipelineState,
     bind_group_layout: BindGroupLayout,
 }
@@ -65,13 +65,13 @@ struct CpuShader {
 }
 
 enum ShaderKind<'a> {
-    Wgpu(&'a WgpuShader),
+    Etalon(&'a EtalonShader),
     Cpu(&'a CpuShader),
 }
 
 struct Shader {
     label: &'static str,
-    wgpu: Option<WgpuShader>,
+    etalon: Option<EtalonShader>,
     cpu: Option<CpuShader>,
 }
 
@@ -79,8 +79,8 @@ impl Shader {
     fn select(&self) -> ShaderKind<'_> {
         if let Some(cpu) = self.cpu.as_ref() {
             ShaderKind::Cpu(cpu)
-        } else if let Some(wgpu) = self.wgpu.as_ref() {
-            ShaderKind::Wgpu(wgpu)
+        } else if let Some(etalon) = self.etalon.as_ref() {
+            ShaderKind::Etalon(etalon)
         } else {
             panic!("no available shader for {}", self.label)
         }
@@ -140,7 +140,7 @@ enum TransientBuf<'a> {
     Gpu(&'a Buffer),
 }
 
-impl WgpuEngine {
+impl EtalonEngine {
     pub fn new(use_cpu: bool, pipeline_cache: Option<PipelineCache>) -> Self {
         Self {
             use_cpu,
@@ -181,7 +181,7 @@ impl WgpuEngine {
                 .min(new_shaders.len());
             log::info!("Initialising shader modules in parallel using {num_threads} threads");
             let remainder = new_shaders.split_off(num_threads);
-            let (tx, rx) = std::sync::mpsc::channel::<(ShaderId, WgpuShader)>();
+            let (tx, rx) = std::sync::mpsc::channel::<(ShaderId, EtalonShader)>();
 
             // We expect each initialisation to take much longer than acquiring a lock, so we just
             // use a mutex for our work queue
@@ -232,7 +232,7 @@ impl WgpuEngine {
                 drop(tx);
 
                 while let Ok((id, value)) = rx.recv() {
-                    self.shaders[id.0].wgpu = Some(value);
+                    self.shaders[id.0].etalon = Some(value);
                 }
             });
         }
@@ -263,7 +263,7 @@ impl WgpuEngine {
             match cpu_shader {
                 CpuShaderType::Present(shader) => {
                     return add(Shader {
-                        wgpu: None,
+                        etalon: None,
                         cpu: Some(CpuShader { shader }),
                         label,
                     });
@@ -271,7 +271,7 @@ impl WgpuEngine {
                 // This shader is unused in CPU mode, create a dummy shader
                 CpuShaderType::Skipped => {
                     return add(Shader {
-                        wgpu: None,
+                        etalon: None,
                         cpu: None,
                         label,
                     });
@@ -282,13 +282,13 @@ impl WgpuEngine {
         }
 
         let entries = Self::create_bind_group_layout_entries(
-            layout.iter().map(|b| (*b, wgpu::ShaderStages::COMPUTE)),
+            layout.iter().map(|b| (*b, etalon::ShaderStages::COMPUTE)),
         );
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(uninit) = self.shaders_to_initialise.as_mut() {
             let id = add(Shader {
                 label,
-                wgpu: None,
+                etalon: None,
                 cpu: None,
             });
             uninit.push(UninitialisedShader {
@@ -299,7 +299,7 @@ impl WgpuEngine {
             });
             return id;
         }
-        let wgpu = Self::create_compute_pipeline(
+        let etalon = Self::create_compute_pipeline(
             device,
             label,
             wgsl,
@@ -307,7 +307,7 @@ impl WgpuEngine {
             self.pipeline_cache.as_ref(),
         );
         add(Shader {
-            wgpu: Some(wgpu),
+            etalon: Some(etalon),
             cpu: None,
             label,
         })
@@ -318,56 +318,57 @@ impl WgpuEngine {
         &mut self,
         device: &Device,
         label: &'static str,
-        module: &wgpu::ShaderModule,
+        module: &etalon::ShaderModule,
         vertex_main: &'static str,
         fragment_main: &'static str,
-        topology: wgpu::PrimitiveTopology,
-        color_attachment: wgpu::ColorTargetState,
-        vertex_buffer: Option<wgpu::VertexBufferLayout<'_>>,
-        bind_layout: &[(BindType, wgpu::ShaderStages)],
+        topology: etalon::PrimitiveTopology,
+        color_attachment: etalon::ColorTargetState,
+        vertex_buffer: Option<etalon::VertexBufferLayout<'_>>,
+        bind_layout: &[(BindType, etalon::ShaderStages)],
     ) -> ShaderId {
         let entries = Self::create_bind_group_layout_entries(bind_layout.iter().copied());
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: None,
-            entries: &entries,
-        });
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        let bind_group_layout =
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
+                label: None,
+                entries: &entries,
+            });
+        let pipeline_layout = device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[Some(&bind_group_layout)],
             immediate_size: 0,
         });
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let pipeline = device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
             label: Some(label),
             layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
+            vertex: etalon::VertexState {
                 module,
                 entry_point: Some(vertex_main),
                 buffers: &[vertex_buffer],
                 compilation_options: PipelineCompilationOptions::default(),
             },
-            fragment: Some(wgpu::FragmentState {
+            fragment: Some(etalon::FragmentState {
                 module,
                 entry_point: Some(fragment_main),
                 targets: &[Some(color_attachment)],
                 compilation_options: PipelineCompilationOptions::default(),
             }),
-            primitive: wgpu::PrimitiveState {
+            primitive: etalon::PrimitiveState {
                 topology,
                 strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Fill,
+                front_face: etalon::FrontFace::Ccw,
+                cull_mode: Some(etalon::Face::Back),
+                polygon_mode: etalon::PolygonMode::Fill,
                 unclipped_depth: false,
                 conservative: false,
             },
             depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
+            multisample: etalon::MultisampleState::default(),
             multiview_mask: None,
             cache: self.pipeline_cache.as_ref(),
         });
         let id = self.shaders.len();
         self.shaders.push(Shader {
-            wgpu: Some(WgpuShader {
+            etalon: Some(EtalonShader {
                 pipeline: PipelineState::Render(pipeline),
                 bind_group_layout,
             }),
@@ -384,7 +385,7 @@ impl WgpuEngine {
         recording: &Recording,
         external_resources: &[ExternalResource<'_>],
         label: &'static str,
-        #[cfg(feature = "wgpu-profiler")] profiler: &mut wgpu_profiler::GpuProfiler,
+        #[cfg(feature = "etalon-profiler")] profiler: &mut etalon_profiler::GpuProfiler,
     ) -> Result<()> {
         let mut free_bufs: HashSet<ResourceId> = HashSet::default();
         let mut free_images: HashSet<ResourceId> = HashSet::default();
@@ -392,7 +393,7 @@ impl WgpuEngine {
 
         let mut encoder =
             device.create_command_encoder(&CommandEncoderDescriptor { label: Some(label) });
-        #[cfg(feature = "wgpu-profiler")]
+        #[cfg(feature = "etalon-profiler")]
         let query = profiler.begin_query(label, &mut encoder);
         for command in &recording.commands {
             match command {
@@ -426,26 +427,27 @@ impl WgpuEngine {
                     self.bind_map.insert_buf(buf_proxy, buf);
                 }
                 Command::UploadImage(image_proxy, bytes) => {
-                    let format = image_proxy.format.to_wgpu();
+                    let format = image_proxy.format.to_etalon();
                     let block_size = format
                         .block_copy_size(None)
                         .expect("ImageFormat must have a valid block size");
-                    let texture = device.create_texture(&wgpu::TextureDescriptor {
+                    let texture = device.create_texture(&etalon::TextureDescriptor {
                         label: None,
-                        size: wgpu::Extent3d {
+                        size: etalon::Extent3d {
                             width: image_proxy.width,
                             height: image_proxy.height,
                             depth_or_array_layers: 1,
                         },
                         mip_level_count: 1,
                         sample_count: 1,
-                        dimension: wgpu::TextureDimension::D2,
+                        dimension: etalon::TextureDimension::D2,
                         usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
                         format,
                         view_formats: &[],
                     });
-                    let texture_view = texture.create_view(&wgpu::TextureViewDescriptor {
+                    let texture_view = texture.create_view(&etalon::TextureViewDescriptor {
                         label: None,
+                        swizzle: Default::default(),
                         dimension: Some(TextureViewDimension::D2),
                         usage: None,
                         aspect: TextureAspect::All,
@@ -456,19 +458,19 @@ impl WgpuEngine {
                         format: Some(format),
                     });
                     queue.write_texture(
-                        wgpu::TexelCopyTextureInfo {
+                        etalon::TexelCopyTextureInfo {
                             texture: &texture,
                             mip_level: 0,
-                            origin: wgpu::Origin3d { x: 0, y: 0, z: 0 },
+                            origin: etalon::Origin3d { x: 0, y: 0, z: 0 },
                             aspect: TextureAspect::All,
                         },
                         bytes,
-                        wgpu::TexelCopyBufferLayout {
+                        etalon::TexelCopyBufferLayout {
                             offset: 0,
                             bytes_per_row: Some(image_proxy.width * block_size),
                             rows_per_image: None,
                         },
-                        wgpu::Extent3d {
+                        etalon::Extent3d {
                             width: image_proxy.width,
                             height: image_proxy.height,
                             depth_or_array_layers: 1,
@@ -479,25 +481,25 @@ impl WgpuEngine {
                 }
                 Command::WriteImage(proxy, [x, y], image) => {
                     let (texture, _) = self.bind_map.get_or_create_image(*proxy, device);
-                    let format = proxy.format.to_wgpu();
+                    let format = proxy.format.to_etalon();
                     let block_size = format
                         .block_copy_size(None)
                         .expect("ImageFormat must have a valid block size");
                     if let Some(overrider) = self.image_overrides.get(&image.data.id()) {
                         encoder.copy_texture_to_texture(
-                            wgpu::TexelCopyTextureInfo {
+                            etalon::TexelCopyTextureInfo {
                                 texture: &overrider.texture,
                                 mip_level: overrider.mip_level,
                                 origin: overrider.origin,
                                 aspect: overrider.aspect,
                             },
-                            wgpu::TexelCopyTextureInfo {
+                            etalon::TexelCopyTextureInfo {
                                 texture,
                                 mip_level: 0,
-                                origin: wgpu::Origin3d { x: *x, y: *y, z: 0 },
+                                origin: etalon::Origin3d { x: *x, y: *y, z: 0 },
                                 aspect: TextureAspect::All,
                             },
-                            wgpu::Extent3d {
+                            etalon::Extent3d {
                                 width: image.width,
                                 height: image.height,
                                 depth_or_array_layers: 1,
@@ -513,19 +515,19 @@ impl WgpuEngine {
                             );
                         }
                         queue.write_texture(
-                            wgpu::TexelCopyTextureInfo {
+                            etalon::TexelCopyTextureInfo {
                                 texture,
                                 mip_level: 0,
-                                origin: wgpu::Origin3d { x: *x, y: *y, z: 0 },
+                                origin: etalon::Origin3d { x: *x, y: *y, z: 0 },
                                 aspect: TextureAspect::All,
                             },
                             image.data.data(),
-                            wgpu::TexelCopyBufferLayout {
+                            etalon::TexelCopyBufferLayout {
                                 offset: 0,
                                 bytes_per_row: Some(image.width * block_size),
                                 rows_per_image: None,
                             },
-                            wgpu::Extent3d {
+                            etalon::Extent3d {
                                 width: image.width,
                                 height: image.height,
                                 depth_or_array_layers: 1,
@@ -551,7 +553,7 @@ impl WgpuEngine {
                                 transient_map.create_cpu_resources(&mut self.bind_map, bindings);
                             (cpu_shader.shader)(x, &resources);
                         }
-                        ShaderKind::Wgpu(wgpu_shader) => {
+                        ShaderKind::Etalon(etalon_shader) => {
                             // Workaround for https://github.com/linebender/vello/issues/637
                             if x == 0 || y == 0 || z == 0 {
                                 continue;
@@ -562,12 +564,12 @@ impl WgpuEngine {
                                 device,
                                 queue,
                                 &mut encoder,
-                                &wgpu_shader.bind_group_layout,
+                                &etalon_shader.bind_group_layout,
                                 bindings,
                             );
                             let mut cpass =
                                 encoder.begin_compute_pass(&ComputePassDescriptor::default());
-                            #[cfg(feature = "wgpu-profiler")]
+                            #[cfg(feature = "etalon-profiler")]
                             let query = profiler
                                 .begin_query(shader.label, &mut cpass)
                                 .with_parent(Some(&query));
@@ -578,13 +580,13 @@ impl WgpuEngine {
                                     reason = "Render shaders are only enabled if we have the debug pipeline"
                                 )
                             )]
-                            let PipelineState::Compute(pipeline) = &wgpu_shader.pipeline else {
+                            let PipelineState::Compute(pipeline) = &etalon_shader.pipeline else {
                                 panic!("cannot issue a dispatch with a render pipeline");
                             };
                             cpass.set_pipeline(pipeline);
                             cpass.set_bind_group(0, &bind_group, &[]);
                             cpass.dispatch_workgroups(x, y, z);
-                            #[cfg(feature = "wgpu-profiler")]
+                            #[cfg(feature = "etalon-profiler")]
                             profiler.end_query(&mut cpass, query);
                         }
                     }
@@ -606,14 +608,14 @@ impl WgpuEngine {
                                 transient_map.create_cpu_resources(&mut self.bind_map, bindings);
                             (cpu_shader.shader)(n_wg, &resources);
                         }
-                        ShaderKind::Wgpu(wgpu_shader) => {
+                        ShaderKind::Etalon(etalon_shader) => {
                             let bind_group = transient_map.create_bind_group(
                                 &mut self.bind_map,
                                 &mut self.pool,
                                 device,
                                 queue,
                                 &mut encoder,
-                                &wgpu_shader.bind_group_layout,
+                                &etalon_shader.bind_group_layout,
                                 bindings,
                             );
                             transient_map.materialize_gpu_buf_for_indirect(
@@ -625,7 +627,7 @@ impl WgpuEngine {
                             );
                             let mut cpass =
                                 encoder.begin_compute_pass(&ComputePassDescriptor::default());
-                            #[cfg(feature = "wgpu-profiler")]
+                            #[cfg(feature = "etalon-profiler")]
                             let query = profiler
                                 .begin_query(shader.label, &mut cpass)
                                 .with_parent(Some(&query));
@@ -636,7 +638,7 @@ impl WgpuEngine {
                                     reason = "Render shaders are only enabled if we have the debug pipeline"
                                 )
                             )]
-                            let PipelineState::Compute(pipeline) = &wgpu_shader.pipeline else {
+                            let PipelineState::Compute(pipeline) = &etalon_shader.pipeline else {
                                 panic!("cannot issue a dispatch with a render pipeline");
                             };
                             cpass.set_pipeline(pipeline);
@@ -645,7 +647,7 @@ impl WgpuEngine {
                                 Error::UnavailableBufferUsed(proxy.name, "indirect dispatch"),
                             )?;
                             cpass.dispatch_workgroups_indirect(buf, *offset);
-                            #[cfg(feature = "wgpu-profiler")]
+                            #[cfg(feature = "etalon-profiler")]
                             profiler.end_query(&mut cpass, query);
                         }
                     }
@@ -653,9 +655,9 @@ impl WgpuEngine {
                 #[cfg(feature = "debug_layers")]
                 Command::Draw(draw_params) => {
                     let shader = &self.shaders[draw_params.shader_id.0];
-                    #[cfg(feature = "wgpu-profiler")]
+                    #[cfg(feature = "etalon-profiler")]
                     let label = shader.label;
-                    let ShaderKind::Wgpu(shader) = shader.select() else {
+                    let ShaderKind::Etalon(shader) = shader.select() else {
                         panic!("a render pass does not have a CPU equivalent");
                     };
                     let bind_group = transient_map.create_bind_group(
@@ -669,23 +671,23 @@ impl WgpuEngine {
                     );
                     let render_target = transient_map
                         .materialize_external_image_for_render_pass(&draw_params.target);
-                    let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    let mut rpass = encoder.begin_render_pass(&etalon::RenderPassDescriptor {
                         label: None,
-                        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        color_attachments: &[Some(etalon::RenderPassColorAttachment {
                             view: render_target,
                             depth_slice: None,
                             resolve_target: None,
-                            ops: wgpu::Operations {
+                            ops: etalon::Operations {
                                 load: match draw_params.clear_color {
-                                    Some(c) => wgpu::LoadOp::Clear(wgpu::Color {
+                                    Some(c) => etalon::LoadOp::Clear(etalon::Color {
                                         r: c[0] as f64,
                                         g: c[1] as f64,
                                         b: c[2] as f64,
                                         a: c[3] as f64,
                                     }),
-                                    None => wgpu::LoadOp::Load,
+                                    None => etalon::LoadOp::Load,
                                 },
-                                store: wgpu::StoreOp::Store,
+                                store: etalon::StoreOp::Store,
                             },
                         })],
                         depth_stencil_attachment: None,
@@ -693,7 +695,7 @@ impl WgpuEngine {
                         timestamp_writes: None,
                         multiview_mask: None,
                     });
-                    #[cfg(feature = "wgpu-profiler")]
+                    #[cfg(feature = "etalon-profiler")]
                     let query = profiler
                         .begin_query(label, &mut rpass)
                         .with_parent(Some(&query));
@@ -712,7 +714,7 @@ impl WgpuEngine {
                     }
                     rpass.set_bind_group(0, &bind_group, &[]);
                     rpass.draw(0..draw_params.vertex_count, 0..draw_params.instance_count);
-                    #[cfg(feature = "wgpu-profiler")]
+                    #[cfg(feature = "etalon-profiler")]
                     profiler.end_query(&mut rpass, query);
                 }
                 Command::Download(proxy) => {
@@ -749,10 +751,10 @@ impl WgpuEngine {
                 }
             }
         }
-        #[cfg(feature = "wgpu-profiler")]
+        #[cfg(feature = "etalon-profiler")]
         profiler.end_query(&mut encoder, query);
         // TODO: This only actually needs to happen once per frame, but run_recording happens two or three times
-        #[cfg(feature = "wgpu-profiler")]
+        #[cfg(feature = "etalon-profiler")]
         profiler.resolve_queries(&mut encoder);
         queue.submit(Some(encoder.finish()));
         for id in free_bufs {
@@ -785,16 +787,16 @@ impl WgpuEngine {
     }
 
     fn create_bind_group_layout_entries(
-        layout: impl Iterator<Item = (BindType, wgpu::ShaderStages)>,
-    ) -> Vec<wgpu::BindGroupLayoutEntry> {
+        layout: impl Iterator<Item = (BindType, etalon::ShaderStages)>,
+    ) -> Vec<etalon::BindGroupLayoutEntry> {
         layout
             .enumerate()
             .map(|(i, (bind_type, visibility))| match bind_type {
-                BindType::Buffer | BindType::BufReadOnly => wgpu::BindGroupLayoutEntry {
+                BindType::Buffer | BindType::BufReadOnly => etalon::BindGroupLayoutEntry {
                     binding: i as u32,
                     visibility,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage {
+                    ty: etalon::BindingType::Buffer {
+                        ty: etalon::BufferBindingType::Storage {
                             read_only: bind_type == BindType::BufReadOnly,
                         },
                         has_dynamic_offset: false,
@@ -802,30 +804,30 @@ impl WgpuEngine {
                     },
                     count: None,
                 },
-                BindType::Uniform => wgpu::BindGroupLayoutEntry {
+                BindType::Uniform => etalon::BindGroupLayoutEntry {
                     binding: i as u32,
                     visibility,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
+                    ty: etalon::BindingType::Buffer {
+                        ty: etalon::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
                         min_binding_size: None,
                     },
                     count: None,
                 },
                 BindType::Image(format) | BindType::ImageRead(format) => {
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: i as u32,
                         visibility,
                         ty: if bind_type == BindType::ImageRead(format) {
-                            wgpu::BindingType::Texture {
-                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            etalon::BindingType::Texture {
+                                sample_type: etalon::TextureSampleType::Float { filterable: true },
                                 view_dimension: TextureViewDimension::D2,
                                 multisampled: false,
                             }
                         } else {
-                            wgpu::BindingType::StorageTexture {
-                                access: wgpu::StorageTextureAccess::WriteOnly,
-                                format: format.to_wgpu(),
+                            etalon::BindingType::StorageTexture {
+                                access: etalon::StorageTextureAccess::WriteOnly,
+                                format: format.to_etalon(),
                                 view_dimension: TextureViewDimension::D2,
                             }
                         },
@@ -840,30 +842,31 @@ impl WgpuEngine {
         device: &Device,
         label: &str,
         wgsl: Cow<'_, str>,
-        entries: Vec<wgpu::BindGroupLayoutEntry>,
+        entries: Vec<etalon::BindGroupLayoutEntry>,
         cache: Option<&PipelineCache>,
-    ) -> WgpuShader {
+    ) -> EtalonShader {
         // SAFETY: We only call this with trusted shaders (written by Vello developers)
         let shader_module = unsafe {
             device.create_shader_module_trusted(
-                wgpu::ShaderModuleDescriptor {
+                etalon::ShaderModuleDescriptor {
                     label: Some(label),
-                    source: wgpu::ShaderSource::Wgsl(wgsl),
+                    source: etalon::ShaderSource::Wgsl(wgsl),
                 },
-                wgpu::ShaderRuntimeChecks::unchecked(),
+                etalon::ShaderRuntimeChecks::unchecked(),
             )
         };
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: None,
-            entries: &entries,
-        });
+        let bind_group_layout =
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
+                label: None,
+                entries: &entries,
+            });
         let compute_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: None,
                 bind_group_layouts: &[Some(&bind_group_layout)],
                 immediate_size: 0,
             });
-        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        let pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
             label: Some(label),
             layout: Some(&compute_pipeline_layout),
             module: &shader_module,
@@ -874,7 +877,7 @@ impl WgpuEngine {
             },
             cache,
         });
-        WgpuShader {
+        EtalonShader {
             pipeline: PipelineState::Compute(pipeline),
             bind_group_layout,
         }
@@ -937,23 +940,24 @@ impl BindMap {
         match self.image_map.entry(proxy.id) {
             Entry::Occupied(occupied) => occupied.into_mut(),
             Entry::Vacant(vacant) => {
-                let format = proxy.format.to_wgpu();
-                let texture = device.create_texture(&wgpu::TextureDescriptor {
+                let format = proxy.format.to_etalon();
+                let texture = device.create_texture(&etalon::TextureDescriptor {
                     label: None,
-                    size: wgpu::Extent3d {
+                    size: etalon::Extent3d {
                         width: proxy.width,
                         height: proxy.height,
                         depth_or_array_layers: 1,
                     },
                     mip_level_count: 1,
                     sample_count: 1,
-                    dimension: wgpu::TextureDimension::D2,
+                    dimension: etalon::TextureDimension::D2,
                     usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
                     format,
                     view_formats: &[],
                 });
-                let texture_view = texture.create_view(&wgpu::TextureViewDescriptor {
+                let texture_view = texture.create_view(&etalon::TextureViewDescriptor {
                     label: None,
+                    swizzle: Default::default(),
                     usage: None,
                     dimension: Some(TextureViewDimension::D2),
                     aspect: TextureAspect::All,
@@ -961,7 +965,7 @@ impl BindMap {
                     base_mip_level: 0,
                     base_array_layer: 0,
                     array_layer_count: None,
-                    format: Some(proxy.format.to_wgpu()),
+                    format: Some(proxy.format.to_etalon()),
                 });
                 vacant.insert((texture, texture_view))
             }
@@ -991,7 +995,7 @@ impl ResourcePool {
         {
             return buf;
         }
-        device.create_buffer(&wgpu::BufferDescriptor {
+        device.create_buffer(&etalon::BufferDescriptor {
             label: Some(name),
             size: rounded_size,
             usage,
@@ -1126,23 +1130,24 @@ impl<'a> TransientBindMap<'a> {
                         continue;
                     }
                     if let Entry::Vacant(v) = bind_map.image_map.entry(proxy.id) {
-                        let format = proxy.format.to_wgpu();
-                        let texture = device.create_texture(&wgpu::TextureDescriptor {
+                        let format = proxy.format.to_etalon();
+                        let texture = device.create_texture(&etalon::TextureDescriptor {
                             label: None,
-                            size: wgpu::Extent3d {
+                            size: etalon::Extent3d {
                                 width: proxy.width,
                                 height: proxy.height,
                                 depth_or_array_layers: 1,
                             },
                             mip_level_count: 1,
                             sample_count: 1,
-                            dimension: wgpu::TextureDimension::D2,
+                            dimension: etalon::TextureDimension::D2,
                             usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
                             format,
                             view_formats: &[],
                         });
-                        let texture_view = texture.create_view(&wgpu::TextureViewDescriptor {
+                        let texture_view = texture.create_view(&etalon::TextureViewDescriptor {
                             label: None,
+                            swizzle: Default::default(),
                             usage: None,
                             dimension: Some(TextureViewDimension::D2),
                             aspect: TextureAspect::All,
@@ -1150,7 +1155,7 @@ impl<'a> TransientBindMap<'a> {
                             base_mip_level: 0,
                             base_array_layer: 0,
                             array_layer_count: None,
-                            format: Some(proxy.format.to_wgpu()),
+                            format: Some(proxy.format.to_etalon()),
                         });
                         v.insert((texture, texture_view));
                     }
@@ -1166,7 +1171,7 @@ impl<'a> TransientBindMap<'a> {
                         Some(TransientBuf::Gpu(b)) => b,
                         _ => bind_map.get_gpu_buf(proxy.id).unwrap(),
                     };
-                    wgpu::BindGroupEntry {
+                    etalon::BindGroupEntry {
                         binding: i as u32,
                         resource: buf.as_entire_binding(),
                     }
@@ -1180,9 +1185,9 @@ impl<'a> TransientBindMap<'a> {
                         Some(TransientBuf::Gpu(b)) => b,
                         _ => bind_map.get_gpu_buf(proxy.id).unwrap(),
                     };
-                    wgpu::BindGroupEntry {
+                    etalon::BindGroupEntry {
                         binding: i as u32,
-                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                        resource: etalon::BindingResource::Buffer(etalon::BufferBinding {
                             buffer: buf,
                             offset: *offset,
                             size: core::num::NonZeroU64::new(*size),
@@ -1196,14 +1201,14 @@ impl<'a> TransientBindMap<'a> {
                         .copied()
                         .or_else(|| bind_map.image_map.get(&proxy.id).map(|v| &v.1))
                         .unwrap();
-                    wgpu::BindGroupEntry {
+                    etalon::BindGroupEntry {
                         binding: i as u32,
-                        resource: wgpu::BindingResource::TextureView(view),
+                        resource: etalon::BindingResource::TextureView(view),
                     }
                 }
             })
             .collect::<Vec<_>>();
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: None,
             layout,
             entries: &entries,

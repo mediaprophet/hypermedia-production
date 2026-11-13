@@ -19,12 +19,13 @@ impl AssetHost<'_> {
     // ── 1. Flip-avoiding Symmetric Dirichlet SLIM UV Parameterization ────────
 
     pub(super) fn unwrap_slim(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "iterations", "chart_padding", "mode"])?;
+        fields(a, &["mesh", "iterations", "chart_padding", "mode", "seams"])?;
         let mode = match a.get("mode") {
             Some(v) => text(v)?,
             None => "slim",
         };
         match mode {
+            "slim" if a.contains_key("seams") => Err("seams require mode=atlas".into()),
             "slim" => self.unwrap_slim_parameterize(a),
             "atlas" => self.unwrap_atlas_parameterize(a),
             _ => Err("Unknown unwrap_slim mode: expected 'slim' or 'atlas'".into()),
@@ -297,9 +298,41 @@ impl AssetHost<'_> {
         let svg_handle = self.encode("svg", svg.into_bytes())?;
 
         let uv_f32: Vec<[f32; 2]> = uv.iter().map(|c| [c[0] as f32, c[1] as f32]).collect();
-        let normals = compute_smooth_vertex_normals(&mesh);
-        let container_10d =
-            self.encode("10d", seal_mesh_10d_with_slim_uvs(&mesh, &uv_f32, &normals)?)?;
+        let source_index = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
+        let imported = self.workspace.imported.get(source_index).and_then(|v| v.clone());
+        let normals = match imported.as_ref().and_then(|v| v.normals.as_ref()) {
+            Some(values) if values.len() == nv => values.clone(),
+            Some(_) => return Err("imported normal count does not match mesh".into()),
+            None => compute_smooth_vertex_normals(&mesh),
+        };
+        let uv_container = self.encode("10d", seal_mesh_10d_with_slim_uvs(&mesh, &uv_f32, &normals)?)?;
+        let (output_mesh, container_10d) = if let Some(source) = imported {
+            let extra = nv * (12 + 12 + 8 + 16) + nt * 12
+                + source.texture_dependencies.iter().map(|d| d.bytes.len() + d.mime_type.len()).sum::<usize>()
+                + source.materials.len() * std::mem::size_of::<qualia_core_db::container_10d::MaterialRecord>()
+                + source.submeshes.len() * std::mem::size_of::<qualia_core_db::container_10d::SubmeshRange>();
+            let mesh_bytes = (nv + nt) * 12;
+            let total = self.workspace.bytes.checked_add(mesh_bytes).and_then(|v| v.checked_add(extra)).ok_or("SLIM attribute budget overflow")?;
+            if extra > self.limits.resource_bytes || total > self.limits.total_resource_bytes { return Err("SLIM attributes exceed workspace byte budget".into()); }
+            let indices: Vec<u32> = mesh.triangles.iter().flatten().copied().collect();
+            let mut tangents = vec![[0.0f32; 4]; nv];
+            let mut scratch = vec![[0.0f32; 6]; nv];
+            qualia_core_db::etalon_render::surface_frames::tangents_from_uvs_into(&mesh.positions, &uv_f32, &normals, &indices, &mut tangents, &mut scratch)
+                .map_err(|e| format!("SLIM tangent frames: {e:?}"))?;
+            let output_mesh = self.workspace.insert(Artifact::Mesh(mesh.clone()), self.limits)?;
+            let index = integer(required(record(&output_mesh)?, "handle")?, "handle")?;
+            let mut attributed = (*source).clone();
+            attributed.mesh = mesh.clone();
+            attributed.normals = Some(normals);
+            attributed.tangents = Some(tangents);
+            attributed.texture_coordinates_0 = Some(uv_f32);
+            self.workspace.imported[index] = Some(std::sync::Arc::new(attributed));
+            self.workspace.bytes = total;
+            let sealed = self.manifold_ext("hypermedia.manifold.compile_10d_pbr", &BTreeMap::from([
+                ("mesh".into(), output_mesh.clone()), ("source_10d".into(), uv_container),
+            ]))?;
+            (output_mesh, sealed)
+        } else { (required(a, "mesh")?.clone(), uv_container) };
 
         let island_pts = uv_island_hull(&uv);
         let uv_island_profile = match self.store_profile(island_pts) {
@@ -323,6 +356,7 @@ impl AssetHost<'_> {
             .collect();
 
         Ok(Value::Record(BTreeMap::from([
+            ("mesh".into(), output_mesh),
             ("uv_count".into(), Value::U64(uv.len() as u64)),
             (
                 "symmetric_dirichlet_energy".into(),
@@ -362,8 +396,19 @@ impl AssetHost<'_> {
             texels_per_metre: 16.0,
             iterations,
         };
+        let mut seams = Vec::new();
+        if let Some(value) = a.get("seams") {
+            for edge in list(value)? {
+                let pair = list(edge)?;
+                if pair.len() != 2 { return Err("each seam must contain two vertex indices".into()); }
+                let x = integer(&pair[0], "seam index")?;
+                let y = integer(&pair[1], "seam index")?;
+                if x >= nv || y >= nv || x == y { return Err("invalid seam vertex indices".into()); }
+                seams.push([x as u32, y as u32]);
+            }
+        }
         let limits = AtlasLimits::default();
-        let max_verts = preflight_counts(nv, nt, 0, options, limits)
+        let max_verts = preflight_counts(nv, nt, seams.len(), options, limits)
             .map_err(|e| format!("atlas preflight: {e:?}"))?;
         self.charge(
             nv * 12 + nt * 20 + iterations * (nv + nt) * 4 + 4096,
@@ -379,7 +424,7 @@ impl AssetHost<'_> {
         let counts = unwrap_atlas_into(
             &positions,
             &mesh.triangles,
-            &[],
+            &seams,
             options,
             limits,
             &|| cancel.load(Ordering::Acquire),
@@ -391,16 +436,14 @@ impl AssetHost<'_> {
                 charts: &mut charts,
             },
         )
-        .map_err(|e| format!("atlas unwrap failed (fail-closed 1:1 UV01): {e:?}"))?;
+        .map_err(|e| format!("atlas unwrap failed: {e:?}"))?;
 
         source_vertices.truncate(counts.vertices);
         uv0.truncate(counts.vertices);
         out_tris.truncate(counts.triangles);
         triangle_charts.truncate(counts.triangles);
 
-        let atlas_mesh = if counts.vertices != nv {
-            // Atlas may duplicate verts at seams. UV01 is 1:1 with the split mesh,
-            // never silently attached to the original vertex buffer.
+        let atlas_handle = {
             let mut split_positions = Vec::with_capacity(counts.vertices);
             for &src in &source_vertices {
                 let i = src as usize;
@@ -409,11 +452,37 @@ impl AssetHost<'_> {
                 }
                 split_positions.push(positions[i]);
             }
-            let handle = self.store_mesh(split_positions, out_tris.clone())?;
-            self.mesh(&handle)?.clone()
-        } else {
-            mesh
+            self.store_mesh(split_positions, out_tris.clone())?
         };
+        let atlas_mesh = self.mesh(&atlas_handle)?.clone();
+        // Atlas triangles must retain source face order for material draw ranges.
+        if out_tris.len() != mesh.triangles.len() { return Err("atlas face count changed".into()); }
+        for (i, tri) in out_tris.iter().enumerate() {
+            if tri.iter().any(|&v| v as usize >= source_vertices.len()) { return Err("atlas returned an invalid vertex index".into()); }
+            let mapped = tri.map(|v| source_vertices[v as usize]);
+            if mapped != mesh.triangles[i] { return Err("atlas changed source face order; material ranges cannot be preserved".into()); }
+        }
+        let source_handle = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
+        let imported = self.workspace.imported.get(source_handle).and_then(|v| v.clone());
+        if let Some(source) = imported.as_ref() {
+            if source.normals.as_ref().is_some_and(|v| v.len() != nv) { return Err("source normal count mismatch".into()); }
+            let extra = atlas_mesh.positions.len() * 12 + atlas_mesh.triangles.len() * 12
+                + source.normals.as_ref().map_or(0, |_| source_vertices.len() * 12)
+                + uv0.len() * 8 + source.texture_dependencies.iter().map(|d| d.bytes.len() + d.mime_type.len()).sum::<usize>()
+                + source.materials.len() * std::mem::size_of::<qualia_core_db::container_10d::MaterialRecord>()
+                + source.submeshes.len() * std::mem::size_of::<qualia_core_db::container_10d::SubmeshRange>();
+            let total = self.workspace.bytes.checked_add(extra).ok_or("atlas attribute budget overflow")?;
+            if extra > self.limits.resource_bytes || total > self.limits.total_resource_bytes { return Err("atlas attributes exceed workspace byte budget".into()); }
+            let normals = source.normals.as_ref().map(|values| source_vertices.iter().map(|&i| values[i as usize]).collect());
+            let remapped = qualia_core_db::render::assets::ImportedMesh {
+                mesh: atlas_mesh.clone(), normals, tangents: None,
+                texture_coordinates_0: Some(uv0.clone()), materials: source.materials.clone(),
+                texture_dependencies: source.texture_dependencies.clone(), submeshes: source.submeshes.clone(),
+            };
+            let index = integer(required(record(&atlas_handle)?, "handle")?, "handle")?;
+            self.workspace.imported[index] = Some(std::sync::Arc::new(remapped));
+            self.workspace.bytes = total;
+        }
 
         let uv: Vec<[f64; 2]> = uv0.iter().map(|c| [c[0] as f64, c[1] as f64]).collect();
         let uv_f32: Vec<[f32; 2]> = uv0.clone();
@@ -450,9 +519,15 @@ impl AssetHost<'_> {
         svg.push_str("</svg>");
         let svg_handle = self.encode("svg", svg.into_bytes())?;
 
-        let normals = compute_smooth_vertex_normals(&atlas_mesh);
-        let container_10d =
-            self.encode("10d", seal_mesh_10d_with_slim_uvs(&atlas_mesh, &uv_f32, &normals)?)?;
+        let normals = imported.as_ref().and_then(|v| v.normals.as_ref())
+            .map(|values| source_vertices.iter().map(|&i| values[i as usize]).collect())
+            .unwrap_or_else(|| compute_smooth_vertex_normals(&atlas_mesh));
+        let uv_container = self.encode("10d", seal_mesh_10d_with_slim_uvs(&atlas_mesh, &uv_f32, &normals)?)?;
+        let container_10d = if imported.is_some() {
+            self.manifold_ext("hypermedia.manifold.compile_10d_pbr", &BTreeMap::from([
+                ("mesh".into(), atlas_handle.clone()), ("source_10d".into(), uv_container),
+            ]))?
+        } else { uv_container };
 
         let island_pts = uv_island_hull(&uv);
         let uv_island_profile = match self.store_profile(island_pts) {
@@ -475,6 +550,8 @@ impl AssetHost<'_> {
             .collect();
 
         Ok(Value::Record(BTreeMap::from([
+            ("mesh".into(), atlas_handle),
+            ("source_vertices".into(), Value::List(source_vertices.iter().map(|&i| Value::U64(i as u64)).collect())),
             ("uv_count".into(), Value::U64(uv.len() as u64)),
             (
                 "symmetric_dirichlet_energy".into(),
@@ -503,11 +580,20 @@ impl AssetHost<'_> {
 
         self.charge(nv * 12 + nt * 18, (nv + nt) * 32 + 65536)?;
 
-        let normals = compute_smooth_vertex_normals(&mesh);
+        let index = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
+        let imported = self.workspace.imported.get(index).and_then(|v| v.as_ref());
+        let normals = match imported.and_then(|v| v.normals.as_ref()) {
+            Some(values) if values.len() == nv => values.clone(),
+            Some(_) => return Err("authored normal count does not match mesh".into()),
+            None => compute_smooth_vertex_normals(&mesh),
+        };
 
-        // SLIM UVs when unwrap was invoked; spherical TEXCOORD_0 otherwise.
+        // Explicit or retained UVs take priority over spherical fallback.
         let uvs = if let Some(v) = a.get("uvs") {
             parse_vertex_uvs(self, v, nv)?
+        } else if let Some(uvs) = imported.and_then(|v| v.texture_coordinates_0.as_ref()) {
+            if uvs.len() != nv { return Err("authored UV count does not match mesh".into()); }
+            uvs.iter().map(|p| [p[0] as f64, p[1] as f64]).collect()
         } else {
             let c = mesh.centroid();
             let mut generated = Vec::with_capacity(nv);
@@ -592,6 +678,7 @@ impl AssetHost<'_> {
                 ])
             })
             .collect();
+        let all_tangents = tangents.iter().map(|t| Value::List(t.iter().map(|&v| Value::F64(v as f64)).collect())).collect();
 
         Ok(Value::Record(BTreeMap::from([
             ("vertex_count".into(), Value::U64(nv as u64)),
@@ -602,6 +689,7 @@ impl AssetHost<'_> {
             ),
             ("tangent_preview_rgba".into(), preview_handle),
             ("sample_tangents".into(), Value::List(sample_tangents)),
+            ("tangents".into(), Value::List(all_tangents)),
         ])))
     }
 }

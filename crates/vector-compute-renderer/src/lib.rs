@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 //! Vello is a compute-centric 2D graphics rendering engine written in Rust,
-//! using [`wgpu`].
+//! using [`etalon`].
 //! It efficiently draws large 2D scenes with interactive or near-interactive
 //! performance.
 //!
@@ -24,15 +24,15 @@
 //! ## Getting started
 //!
 //! Vello is meant to be integrated deep in UI render stacks.
-//! While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a wgpu context, which is a non-trivial task.
+//! While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a etalon context, which is a non-trivial task.
 //!
 //! To use Vello as the renderer for your PDF reader / GUI toolkit / etc, your code will have to look roughly like this:
 //!
 //! ```ignore
-//! // Initialize wgpu and get handles
+//! // Initialize etalon and get handles
 //! let (width, height) = ...;
-//! let device: wgpu::Device = ...;
-//! let queue: wgpu::Queue = ...;
+//! let device: etalon::Device = ...;
+//! let queue: etalon::Queue = ...;
 //! let mut renderer = Renderer::new(
 //!    &device,
 //!    RendererOptions {
@@ -59,7 +59,7 @@
 //! scene.pop_layer(...);
 //!
 //! let texture = device.create_texture(&...);
-//! // Render to a wgpu Texture
+//! // Render to a etalon Texture
 //! renderer
 //!    .render_to_texture(
 //!       &device,
@@ -75,7 +75,7 @@
 //!    )
 //!    .expect("Failed to render to a texture");
 //! // Do things with surface texture, such as blitting it to the Surface using
-//! // wgpu::util::TextureBlitter.
+//! // etalon::util::TextureBlitter.
 //! ```
 //!
 //! See the [`research/examples/`](https://github.com/linebender/vello/tree/main/research/examples) folder to see how that code integrates with frameworks like winit.
@@ -114,10 +114,10 @@ mod render;
 mod scene;
 mod shaders;
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
+mod etalon_engine;
+#[cfg(feature = "etalon")]
 pub mod util;
-#[cfg(feature = "wgpu")]
-mod wgpu_engine;
 
 pub mod low_level {
     //! Utilities which can be used to create an alternative Vello renderer to [`Renderer`][crate::Renderer].
@@ -139,32 +139,37 @@ pub use peniko;
 /// 2D geometry, with a focus on curves.
 pub use peniko::kurbo;
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
+pub use etalon;
+#[cfg(feature = "etalon")]
 use peniko::ImageData;
-#[cfg(feature = "wgpu")]
-pub use wgpu;
+
+// Retained for immutable external adapters; owned integrations use `etalon`.
+#[cfg(feature = "etalon")]
+#[doc(hidden)]
+pub use etalon as wgpu;
 
 pub use scene::{DrawGlyphs, Scene};
 pub use vello_encoding::{FontEmbolden, Glyph, NormalizedCoord};
 
 use low_level::ShaderId;
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 use low_level::{FullShaders, Recording, Render};
 use thiserror::Error;
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 use debug::DebugLayers;
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
+use etalon_engine::{EtalonEngine, ExternalResource};
+#[cfg(feature = "etalon")]
 use vello_encoding::{BumpAllocators, Resolver};
-#[cfg(feature = "wgpu")]
-use wgpu_engine::{ExternalResource, WgpuEngine};
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
+use etalon::{Device, Queue, TextureView};
+#[cfg(all(feature = "etalon", feature = "etalon-profiler"))]
+use etalon_profiler::{GpuProfiler, GpuProfilerSettings};
+#[cfg(feature = "etalon")]
 use std::{num::NonZeroUsize, sync::atomic::AtomicBool};
-#[cfg(feature = "wgpu")]
-use wgpu::{Device, Queue, TextureView};
-#[cfg(all(feature = "wgpu", feature = "wgpu-profiler"))]
-use wgpu_profiler::{GpuProfiler, GpuProfilerSettings};
 
 /// Represents the anti-aliasing method to use during a render pass.
 ///
@@ -258,49 +263,49 @@ impl FromIterator<AaConfig> for AaSupport {
 #[non_exhaustive]
 pub enum Error {
     /// There is no available device with the features required by Vello.
-    #[cfg(feature = "wgpu")]
+    #[cfg(feature = "etalon")]
     #[error("Couldn't find suitable device")]
     NoCompatibleDevice,
     /// Failed to create surface.
-    /// See [`wgpu::CreateSurfaceError`] for more information.
-    #[cfg(feature = "wgpu")]
-    #[error("Couldn't create wgpu surface")]
-    WgpuCreateSurfaceError(#[from] wgpu::CreateSurfaceError),
+    /// See [`etalon::CreateSurfaceError`] for more information.
+    #[cfg(feature = "etalon")]
+    #[error("Couldn't create etalon surface")]
+    EtalonCreateSurfaceError(#[from] etalon::CreateSurfaceError),
     /// Surface doesn't support the required texture formats.
     /// Make sure that you have a surface which provides one of
-    /// [`TextureFormat::Rgba8Unorm`][wgpu::TextureFormat::Rgba8Unorm]
-    /// or [`TextureFormat::Bgra8Unorm`][wgpu::TextureFormat::Bgra8Unorm] as texture formats.
+    /// [`TextureFormat::Rgba8Unorm`][etalon::TextureFormat::Rgba8Unorm]
+    /// or [`TextureFormat::Bgra8Unorm`][etalon::TextureFormat::Bgra8Unorm] as texture formats.
     // TODO: Why does this restriction exist?
-    #[cfg(feature = "wgpu")]
+    #[cfg(feature = "etalon")]
     #[error("Couldn't find `Rgba8Unorm` or `Bgra8Unorm` texture formats for surface")]
     UnsupportedSurfaceFormat,
 
     /// Used a buffer inside a recording while it was not available.
     /// Check if you have created it and not freed before its last usage.
-    #[cfg(feature = "wgpu")]
+    #[cfg(feature = "etalon")]
     #[error("Buffer '{0}' is not available but used for {1}")]
     UnavailableBufferUsed(&'static str, &'static str),
     /// Failed to async map a buffer.
-    /// See [`wgpu::BufferAsyncError`] for more information.
-    #[cfg(feature = "wgpu")]
+    /// See [`etalon::BufferAsyncError`] for more information.
+    #[cfg(feature = "etalon")]
     #[error("Failed to async map a buffer")]
-    BufferAsyncError(#[from] wgpu::BufferAsyncError),
+    BufferAsyncError(#[from] etalon::BufferAsyncError),
     /// Failed to download an internal buffer for debug visualization.
-    #[cfg(feature = "wgpu")]
+    #[cfg(feature = "etalon")]
     #[cfg(feature = "debug_layers")]
     #[error("Failed to download internal buffer '{0}' for visualization")]
     DownloadError(&'static str),
 
-    #[cfg(feature = "wgpu")]
-    #[error("wgpu Error from scope")]
-    WgpuErrorFromScope(#[from] wgpu::Error),
+    #[cfg(feature = "etalon")]
+    #[error("etalon Error from scope")]
+    EtalonErrorFromScope(#[from] etalon::Error),
 
     /// Failed to create [`GpuProfiler`].
-    /// See [`wgpu_profiler::CreationError`] for more information.
-    #[cfg(feature = "wgpu-profiler")]
-    #[error("Couldn't create wgpu profiler")]
-    #[doc(hidden)] // End-users of Vello should not have `wgpu-profiler` enabled.
-    ProfilerCreationError(#[from] wgpu_profiler::CreationError),
+    /// See [`etalon_profiler::CreationError`] for more information.
+    #[cfg(feature = "etalon-profiler")]
+    #[error("Couldn't create etalon profiler")]
+    #[doc(hidden)] // End-users of Vello should not have `etalon-profiler` enabled.
+    ProfilerCreationError(#[from] etalon_profiler::CreationError),
 
     /// Failed to compile the shaders.
     #[cfg(feature = "hot_reload")]
@@ -310,8 +315,11 @@ pub enum Error {
 }
 
 #[cfg_attr(
-    not(feature = "wgpu"),
-    expect(dead_code, reason = "this can be unused when wgpu feature is not used")
+    not(feature = "etalon"),
+    expect(
+        dead_code,
+        reason = "this can be unused when etalon feature is not used"
+    )
 )]
 pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
 
@@ -320,7 +328,7 @@ pub(crate) type Result<T, E = Error> = std::result::Result<T, E>;
 /// Currently, each renderer only supports a single surface format, if it
 /// supports drawing to surfaces at all.
 /// This is an assumption which is known to be limiting, and is planned to change.
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 pub struct Renderer {
     #[cfg_attr(
         not(feature = "hot_reload"),
@@ -330,27 +338,27 @@ pub struct Renderer {
         )
     )]
     options: RendererOptions,
-    engine: WgpuEngine,
+    engine: EtalonEngine,
     resolver: Resolver,
     image_atlas: Option<recording::ImageProxy>,
     shaders: FullShaders,
     #[cfg(feature = "debug_layers")]
     debug: debug::DebugRenderer,
-    #[cfg(feature = "wgpu-profiler")]
-    #[doc(hidden)] // End-users of Vello should not have `wgpu-profiler` enabled.
+    #[cfg(feature = "etalon-profiler")]
+    #[doc(hidden)] // End-users of Vello should not have `etalon-profiler` enabled.
     /// The profiler used with events for this renderer. This is *not* treated as public API.
     pub profiler: GpuProfiler,
-    #[cfg(feature = "wgpu-profiler")]
-    #[doc(hidden)] // End-users of Vello should not have `wgpu-profiler` enabled.
+    #[cfg(feature = "etalon-profiler")]
+    #[doc(hidden)] // End-users of Vello should not have `etalon-profiler` enabled.
     /// The results from profiling. This is *not* treated as public API.
-    pub profile_result: Option<Vec<wgpu_profiler::GpuTimerQueryResult>>,
+    pub profile_result: Option<Vec<etalon_profiler::GpuTimerQueryResult>>,
 }
 // This is not `Send` (or `Sync`) on WebAssembly as the
-// underlying wgpu types are not. This can be enabled with the
-// `fragile-send-sync-non-atomic-wasm` feature in wgpu.
+// underlying etalon types are not. This can be enabled with the
+// `fragile-send-sync-non-atomic-wasm` feature in etalon.
 // See https://github.com/gfx-rs/wgpu/discussions/4127 for
 // further discussion of this topic.
-#[cfg(all(feature = "wgpu", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "etalon", not(target_arch = "wasm32")))]
 static_assertions::assert_impl_all!(Renderer: Send);
 
 /// Parameters used in a single render that are configurable by the client.
@@ -370,7 +378,7 @@ pub struct RenderParams {
     pub antialiasing_method: AaConfig,
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 /// Options which are set at renderer creation time, used in [`Renderer::new`].
 pub struct RendererOptions {
     /// If true, run all stages up to fine rasterization on the CPU.
@@ -403,10 +411,10 @@ pub struct RendererOptions {
     /// The pipeline cache to use when creating the shaders.
     ///
     /// For much more discussion of expected usage patterns, see the documentation on that type.
-    pub pipeline_cache: Option<wgpu::PipelineCache>,
+    pub pipeline_cache: Option<etalon::PipelineCache>,
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 impl Default for RendererOptions {
     fn default() -> Self {
         Self {
@@ -421,18 +429,18 @@ impl Default for RendererOptions {
     }
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 struct RenderResult {
     bump: Option<BumpAllocators>,
     #[cfg(feature = "debug_layers")]
     captured: Option<render::CapturedBuffers>,
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 impl Renderer {
     /// Creates a new renderer for the specified device.
     pub fn new(device: &Device, options: RendererOptions) -> Result<Self> {
-        let mut engine = WgpuEngine::new(options.use_cpu, options.pipeline_cache.clone());
+        let mut engine = EtalonEngine::new(options.use_cpu, options.pipeline_cache.clone());
         // If we are running in parallel (i.e. the number of threads is not 1)
         if options.num_init_threads != NonZeroUsize::new(1) {
             #[cfg(not(target_arch = "wasm32"))]
@@ -442,7 +450,8 @@ impl Renderer {
         #[cfg(not(target_arch = "wasm32"))]
         engine.build_shaders_if_needed(device, options.num_init_threads);
         #[cfg(feature = "debug_layers")]
-        let debug = debug::DebugRenderer::new(device, wgpu::TextureFormat::Rgba8Unorm, &mut engine);
+        let debug =
+            debug::DebugRenderer::new(device, etalon::TextureFormat::Rgba8Unorm, &mut engine);
 
         Ok(Self {
             options,
@@ -452,9 +461,9 @@ impl Renderer {
             shaders,
             #[cfg(feature = "debug_layers")]
             debug,
-            #[cfg(feature = "wgpu-profiler")]
+            #[cfg(feature = "etalon-profiler")]
             profiler: GpuProfiler::new(device, GpuProfilerSettings::default())?,
-            #[cfg(feature = "wgpu-profiler")]
+            #[cfg(feature = "etalon-profiler")]
             profile_result: None,
         })
     }
@@ -462,15 +471,15 @@ impl Renderer {
     /// Renders a scene to the target texture.
     ///
     /// The texture is assumed to be of the specified dimensions and have been created with
-    /// the [`wgpu::TextureFormat::Rgba8Unorm`] format and the [`wgpu::TextureUsages::STORAGE_BINDING`]
+    /// the [`etalon::TextureFormat::Rgba8Unorm`] format and the [`etalon::TextureUsages::STORAGE_BINDING`]
     /// flag set.
     ///
     /// If you want to render Vello content to a surface (such as in a UI toolkit), you have two options:
     /// 1) Render to an intermediate texture, which is the same size as the surface.
-    ///    You would then use [`TextureBlitter`][wgpu::util::TextureBlitter] to blit the rendered result from
+    ///    You would then use [`TextureBlitter`][etalon::util::TextureBlitter] to blit the rendered result from
     ///    that texture to the surface.
     ///    This pattern is supported by the [`util`] module.
-    /// 2) Call `render_to_texture` directly on the [`SurfaceTexture`][wgpu::SurfaceTexture]'s texture, if
+    /// 2) Call `render_to_texture` directly on the [`SurfaceTexture`][etalon::SurfaceTexture]'s texture, if
     ///    it has the right usages. This should generally be avoided, as some GPUs assume that you will not
     ///    be rendering to the surface using a compute pipeline, and optimise accordingly.
     pub fn render_to_texture(
@@ -498,11 +507,11 @@ impl Renderer {
             &recording,
             &external_resources,
             "render_to_texture",
-            #[cfg(feature = "wgpu-profiler")]
+            #[cfg(feature = "etalon-profiler")]
             &mut self.profiler,
         )?;
-        // N.B. This is horrible; this integration of wgpu-profiler really needs some work...
-        #[cfg(feature = "wgpu-profiler")]
+        // N.B. This is horrible; this integration of etalon-profiler really needs some work...
+        #[cfg(feature = "etalon-profiler")]
         {
             self.profiler.end_frame().unwrap();
             if let Some(result) = self
@@ -521,8 +530,8 @@ impl Renderer {
     /// Most users should prefer [`register_texture`](Self::register_texture), which
     /// ergonomically encapulates these requirements.
     ///
-    /// `texture` must have the [`wgpu::TextureFormat::Rgba8Unorm`] format and
-    /// the [`wgpu::TextureUsages::COPY_SRC`] flag set. The `Rgba8UnormSrgb` format
+    /// `texture` must have the [`etalon::TextureFormat::Rgba8Unorm`] format and
+    /// the [`etalon::TextureUsages::COPY_SRC`] flag set. The `Rgba8UnormSrgb` format
     /// might also be supported, but this is not tested.
     ///
     /// The given `Texture`'s data will be copied into the slot in Vello's image
@@ -538,8 +547,8 @@ impl Renderer {
     pub fn override_image(
         &mut self,
         image: &ImageData,
-        texture: Option<wgpu::TexelCopyTextureInfoBase<wgpu::Texture>>,
-    ) -> Option<wgpu::TexelCopyTextureInfoBase<wgpu::Texture>> {
+        texture: Option<etalon::TexelCopyTextureInfoBase<etalon::Texture>>,
+    ) -> Option<etalon::TexelCopyTextureInfoBase<etalon::Texture>> {
         self.resolver.mark_image_dirty(image);
         match texture {
             Some(texture) => self.engine.image_overrides.insert(image.data.id(), texture),
@@ -556,13 +565,13 @@ impl Renderer {
         self.resolver.mark_image_dirty(image);
     }
 
-    /// Register a [`wgpu::Texture`] with Vello, to allow drawing GPU-resident data.
+    /// Register a [`etalon::Texture`] with Vello, to allow drawing GPU-resident data.
     ///
     /// The returned `Image` can be used in [`Scene`]s (only those rendered with this `Renderer`)
     /// Rendering Scenes which use this `Image` with other `Renderer`s will panic.
     ///  
-    /// `texture` must have the [`wgpu::TextureFormat::Rgba8Unorm`] format and
-    /// the [`wgpu::TextureUsages::COPY_SRC`] flag set. This is because the data will
+    /// `texture` must have the [`etalon::TextureFormat::Rgba8Unorm`] format and
+    /// the [`etalon::TextureUsages::COPY_SRC`] flag set. This is because the data will
     /// be copied into Vello's image atlas at the start of each frame.
     /// The `Rgba8UnormSrgb` format might also be supported, but this is not tested.
     /// The texture is assumed to have unpremultiplied alpha.
@@ -571,7 +580,7 @@ impl Renderer {
     /// For greater control, use that method.
     ///
     /// If the texture is no longer active then it should be unregistered using [`unregister_texture`](Self::unregister_texture)
-    pub fn register_texture(&mut self, texture: wgpu::Texture) -> ImageData {
+    pub fn register_texture(&mut self, texture: etalon::Texture) -> ImageData {
         // Create a fake, empty blob which will be used to back the returned image
         // This image data will never be read by Vello, due to being added to
         // image_overrides, below.
@@ -586,11 +595,11 @@ impl Renderer {
         };
 
         // For this utility API, we take the full texture and use the base layer and mip level
-        let texture_base = wgpu::TexelCopyTextureInfoBase {
+        let texture_base = etalon::TexelCopyTextureInfoBase {
             texture,
             mip_level: 0,
-            origin: wgpu::Origin3d::ZERO,
-            aspect: wgpu::TextureAspect::All,
+            origin: etalon::Origin3d::ZERO,
+            aspect: etalon::TextureAspect::All,
         };
 
         // We overwrite any attempt to use the fake blob, instead reading from the texture.
@@ -599,7 +608,7 @@ impl Renderer {
         image
     }
 
-    /// Unregister a [`wgpu::Texture`] that was registered with [`register_texture`](Self::register_texture).
+    /// Unregister a [`etalon::Texture`] that was registered with [`register_texture`](Self::register_texture).
     pub fn unregister_texture(&mut self, handle: ImageData) {
         self.override_image(&handle, None);
     }
@@ -608,12 +617,14 @@ impl Renderer {
     #[cfg(feature = "hot_reload")]
     #[doc(hidden)] // End-users of Vello should not have `hot_reload` enabled.
     pub async fn reload_shaders(&mut self, device: &Device) -> Result<(), Error> {
-        let scope = device.push_error_scope(wgpu::ErrorFilter::Validation);
-        let mut engine = WgpuEngine::new(self.options.use_cpu, self.options.pipeline_cache.clone());
+        let scope = device.push_error_scope(etalon::ErrorFilter::Validation);
+        let mut engine =
+            EtalonEngine::new(self.options.use_cpu, self.options.pipeline_cache.clone());
         // We choose not to initialise these shaders in parallel, to ensure the error scope works correctly
         let shaders = shaders::full_shaders(device, &mut engine, &self.options)?;
         #[cfg(feature = "debug_layers")]
-        let debug = debug::DebugRenderer::new(device, wgpu::TextureFormat::Rgba8Unorm, &mut engine);
+        let debug =
+            debug::DebugRenderer::new(device, etalon::TextureFormat::Rgba8Unorm, &mut engine);
         let error = scope.pop().await;
         if let Some(error) = error {
             return Err(error.into());
@@ -697,12 +708,12 @@ impl Renderer {
                 &recording,
                 &external_resources,
                 "render_to_texture_async debug layers",
-                #[cfg(feature = "wgpu-profiler")]
+                #[cfg(feature = "etalon-profiler")]
                 &mut self.profiler,
             )?;
         }
 
-        #[cfg(feature = "wgpu-profiler")]
+        #[cfg(feature = "etalon-profiler")]
         {
             self.profiler.end_frame().unwrap();
             if let Some(result) = self
@@ -748,7 +759,7 @@ impl Renderer {
             &recording,
             &[],
             "t_async_coarse",
-            #[cfg(feature = "wgpu-profiler")]
+            #[cfg(feature = "etalon-profiler")]
             &mut self.profiler,
         )?;
 
@@ -756,7 +767,7 @@ impl Renderer {
         if let Some(bump_buf) = self.engine.get_download(bump_buf) {
             let buf_slice = bump_buf.slice(..);
             let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
-            buf_slice.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
+            buf_slice.map_async(etalon::MapMode::Read, move |v| sender.send(v).unwrap());
             receiver.receive().await.expect("channel was closed")?;
             let mapped = buf_slice.get_mapped_range().unwrap();
             bump = Some(bytemuck::pod_read_unaligned(&mapped));
@@ -774,7 +785,7 @@ impl Renderer {
             &recording,
             &external_resources,
             "t_async_fine",
-            #[cfg(feature = "wgpu-profiler")]
+            #[cfg(feature = "etalon-profiler")]
             &mut self.profiler,
         )?;
         Ok(RenderResult {
@@ -784,15 +795,15 @@ impl Renderer {
         })
     }
 }
-#[cfg(all(feature = "debug_layers", feature = "wgpu"))]
+#[cfg(all(feature = "debug_layers", feature = "etalon"))]
 pub(crate) struct DebugDownloads<'a> {
-    pub lines: wgpu::BufferSlice<'a>,
+    pub lines: etalon::BufferSlice<'a>,
 }
 
-#[cfg(all(feature = "debug_layers", feature = "wgpu"))]
+#[cfg(all(feature = "debug_layers", feature = "etalon"))]
 impl<'a> DebugDownloads<'a> {
     pub async fn map(
-        engine: &'a WgpuEngine,
+        engine: &'a EtalonEngine,
         captured: &render::CapturedBuffers,
         bump: &BumpAllocators,
     ) -> Result<DebugDownloads<'a>> {
@@ -804,7 +815,7 @@ impl<'a> DebugDownloads<'a> {
 
         let lines = lines_buf.slice(..bump.lines as u64 * size_of::<LineSoup>() as u64);
         let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
-        lines.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
+        lines.map_async(etalon::MapMode::Read, move |v| sender.send(v).unwrap());
         receiver.receive().await.expect("channel was closed")?;
         Ok(Self { lines })
     }

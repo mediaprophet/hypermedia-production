@@ -40,6 +40,8 @@ pub mod rule_pack;
 pub mod species_spec;
 #[cfg(test)]
 mod species_spec_tests;
+#[cfg(test)]
+mod botanical_visual_tests;
 pub mod turntable_render;
 
 pub(super) fn opt_string(a: &Args, k: &str, default: &str) -> Result<String, String> {
@@ -361,6 +363,102 @@ pub(super) fn parse_fauna_archetype(s: &str) -> Result<FaunaBiomechanicalArchety
 mod tests {
     use super::*;
     use std::sync::atomic::AtomicBool;
+
+    #[test]
+    fn authored_mesh_skin_is_sealed_and_checked() {
+        use qualia_core_db::render::assets::Mesh;
+        use qualia_core_db::render::compile_10d::compile_mesh_to_10d;
+        use qualia_core_db::container_10d::skeletal_container::read_skeletal_section;
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = AssetHost { workspace: AssetWorkspace::default(), inputs: &[], limits: &limits, cancel: &cancel, work: 0 };
+        let mesh = Mesh { positions: vec![[0.,0.,0.], [1.,0.,0.], [0.,1.,0.]], triangles: vec![[0,1,2]], min: [0.,0.,0.], max: [1.,1.,0.] };
+        let source = host.encode("10d", compile_mesh_to_10d(&mesh).unwrap()).unwrap();
+        let influence = Value::Record(BTreeMap::from([
+            ("joints".into(), Value::List(vec![Value::U64(0), Value::U64(1), Value::U64(2), Value::U64(3)])),
+            ("weights".into(), Value::List(vec![Value::F64(0.25), Value::F64(0.25), Value::F64(0.25), Value::F64(0.25)])),
+        ]));
+        let mut args = Args::new();
+        args.insert("source_10d".into(), source.clone());
+        args.insert("skin".into(), Value::List(vec![influence.clone(); 3]));
+        let result = host.rig_biomechanical_archetype(&args).unwrap();
+        let bytes = &host.workspace.encoded(record(&result).unwrap().get("container_10d").unwrap()).unwrap().bytes;
+        let section = read_skeletal_section(bytes).unwrap();
+        assert_eq!(section.counts().vertices, 3);
+        assert_eq!(section.skin(2).unwrap().weights, [0.25; 4]);
+        use qualia_core_db::render::skeletal::{Clip, Motor, sample_pose_into, compose_palette_into, skin_vertices_into};
+        let c = section.counts();
+        let joints: Vec<_> = (0..c.joints).map(|i| section.joint(i).unwrap()).collect();
+        let tracks: Vec<_> = (0..c.tracks).map(|i| section.track(i).unwrap()).collect();
+        let keys: Vec<_> = (0..c.keys).map(|i| section.key(i).unwrap()).collect();
+        let skin: Vec<_> = (0..c.vertices).map(|i| section.skin(i).unwrap()).collect();
+        let clip = Clip { duration: 1.0, looping: true, tracks: &tracks, keys: &keys };
+        let mut local = vec![Motor::identity(); c.joints];
+        let mut global = local.clone();
+        let mut palette = local.clone();
+        let mut frames = Vec::new();
+        for time in [0.0, 0.25, 0.5] {
+            sample_pose_into(&joints, clip, time, None, 1.0, &mut local).unwrap();
+            compose_palette_into(&joints, &local, Motor::identity(), &mut global, &mut palette).unwrap();
+            let mut positions = vec![[0.0; 3]; 3];
+            let mut normals = positions.clone();
+            skin_vertices_into(&mesh.positions, &[[0.0, 0.0, 1.0]; 3], &skin, &palette, &mut positions, &mut normals).unwrap();
+            frames.push(positions);
+        }
+        for (actual, expected) in frames[0].iter().zip(&mesh.positions) {
+            for (a, b) in actual.iter().zip(expected) { assert!((a-b).abs() < 1e-4); }
+        }
+        assert_ne!(frames[0], frames[1]);
+        assert_ne!(frames[1], frames[2]);
+        args.insert("skin".into(), Value::List(vec![influence]));
+        assert!(host.rig_biomechanical_archetype(&args).is_err());
+
+        // Transfer a distinct two-joint authored rig, inverse binds and clip.
+        use qualia_core_db::container_10d::skeletal_section::{Counts, SkeletalData, ClipRecord, encode_skeletal_section_into};
+        use qualia_core_db::render::skeletal::{Joint, Key, Track, SkinWeight};
+        let id = Motor::identity();
+        let up = Motor::from_translation(0.0, 1.0, 0.0);
+        let joints = [Joint { parent: None, rest_local: id, inverse_bind: id }, Joint { parent: Some(0), rest_local: up, inverse_bind: Motor::from_translation(0.0, -1.0, 0.0) }];
+        let ids = [17, 18];
+        let skin = [SkinWeight { joints: [0,1,0,0], weights: [0.5,0.5,0.0,0.0] }; 3];
+        let clips = [ClipRecord { id: 22, duration: 1.0, first_track: 0, track_count: 2, looping: false }];
+        let tracks = [Track { joint: 0, first_key: 0, key_count: 1 }, Track { joint: 1, first_key: 1, key_count: 3 }];
+        let keys = [Key { time: 0.0, local: id }, Key { time: 0.0, local: up }, Key { time: 0.5, local: Motor::from_rotation_translation([0.9238795325,0.0,0.0,0.3826834324],[0.0,1.0,0.0]) }, Key { time: 1.0, local: Motor::from_rotation_translation([0.7071067812,0.0,0.0,0.7071067812],[0.0,1.0,0.0]) }];
+        let counts = Counts { joints: 2, vertices: 3, clips: 1, tracks: 2, keys: 4 };
+        let mut payload = vec![0; counts.encoded_len().unwrap()];
+        encode_skeletal_section_into(&SkeletalData { joints: &joints, joint_ids: &ids, skin: &skin, clips: &clips, tracks: &tracks, keys: &keys }, &mut payload).unwrap();
+        let base = host.workspace.encoded(&source).unwrap().bytes.clone();
+        let mut carrier = vec![0; base.len()+payload.len()+4096];
+        let len = qualia_core_db::container_10d::skeletal_container::attach_skeletal_section_into(&base, &payload, &mut carrier).unwrap();
+        carrier.truncate(len);
+        let carrier = host.encode("10d", carrier).unwrap();
+        let retained = [Resource { key:"mesh.10d".into(), kind:"file".into(), bytes: base.clone() }, Resource { key:"skeleton.10d".into(), kind:"file".into(), bytes: host.workspace.encoded(&carrier).unwrap().bytes.clone() }];
+        let mut retained_host = AssetHost { workspace: AssetWorkspace::default(), inputs: &retained, limits: &limits, cancel: &cancel, work: 0 };
+        let retained_result = retained_host.rig_biomechanical_archetype(&BTreeMap::from([("source_10d".into(), Value::String("mesh.10d".into())), ("skeleton_10d".into(), Value::String("skeleton.10d".into()))])).unwrap();
+        assert!(retained_host.workspace.encoded(record(&retained_result).unwrap().get("container_10d").unwrap()).is_ok());
+        let transferred = host.rig_biomechanical_archetype(&BTreeMap::from([("source_10d".into(), source), ("skeleton_10d".into(), carrier)])).unwrap();
+        let transferred = host.workspace.encoded(record(&transferred).unwrap().get("container_10d").unwrap()).unwrap();
+        let section = read_skeletal_section(&transferred.bytes).unwrap();
+        assert_eq!(section.counts().joints, 2);
+        assert_eq!(section.joint_id(1), Some(18));
+        assert_eq!(section.skin(0).unwrap().weights, [0.5,0.5,0.0,0.0]);
+        assert_eq!(section.clip(0).unwrap().id, 22);
+        let joints: Vec<_> = (0..2).map(|i| section.joint(i).unwrap()).collect();
+        let tracks: Vec<_> = (0..2).map(|i| section.track(i).unwrap()).collect();
+        let keys: Vec<_> = (0..4).map(|i| section.key(i).unwrap()).collect();
+        let weights: Vec<_> = (0..3).map(|i| section.skin(i).unwrap()).collect();
+        let clip = Clip { duration: 1.0, looping: false, tracks: &tracks, keys: &keys };
+        let mut local = vec![id; 2]; let mut global = local.clone(); let mut palette = local.clone();
+        let mut samples = Vec::new();
+        for time in [0.0, 0.5, 1.0] {
+            sample_pose_into(&joints, clip, time, None, 1.0, &mut local).unwrap();
+            compose_palette_into(&joints, &local, id, &mut global, &mut palette).unwrap();
+            let mut p = vec![[0.0;3];3]; let mut n = p.clone();
+            skin_vertices_into(&mesh.positions, &[[0.0,0.0,1.0];3], &weights, &palette, &mut p, &mut n).unwrap();
+            samples.push(p);
+        }
+        assert_ne!(samples[0], samples[1]); assert_ne!(samples[1], samples[2]);
+    }
 
     #[test]
     fn wave12_living_world_morphisms_roundtrip() {

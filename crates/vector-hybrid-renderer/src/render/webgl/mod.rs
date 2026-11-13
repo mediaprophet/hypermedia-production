@@ -3,11 +3,11 @@
 
 //! Native WebGL2 backend for Vello GPU's Sparse Strips renderer.
 //!
-//! This module provides identical functionality as the [`wgpu`] module, however the graphics
+//! This module provides identical functionality as the [`etalon`] module, however the graphics
 //! context is the browser's native [`WebGl2RenderingContext`]. Hence, this module is only available
 //! when targeting `wasm32` with the "webgl" feature flag active.
 //!
-//! The main benefit of this module, is binary size. Omitting `wgpu` saves approximately 3mb of
+//! The main benefit of this module, is binary size. Omitting `etalon` saves approximately 3mb of
 //! binary size (when targeting WebGL2).
 //!
 //! Maintaining this backend should be continually re-evaluated, as once the majority of users can
@@ -348,7 +348,7 @@ impl WebGlRenderer {
         }
 
         // Note: It is not entirely clear whether we really _have_ to ensure anti-aliasing is disabled.
-        // This code is inherited from a similar snippet in wgpu
+        // This code is inherited from a similar upstream snippet
         // (https://github.com/gfx-rs/wgpu/blob/56e4a389ddd02403e232beef3d3ff305625e6485/wgpu-hal/src/gles/web.rs#L101-L106),
         // which itself seems to have been copied from the older `gfx` crate, where it was first introduced
         // in https://github.com/gfx-rs/gfx/pull/2554/changes#diff-a47711d61df7a43fe6dd99c39b936d17ff817cbc2238d7e3ae6698ffde9b88f7R79,
@@ -715,7 +715,7 @@ impl WebGlRenderer {
 
     /// Upload image to cache and atlas in one step. Returns the `ImageId`.
     ///
-    /// This is the WebGL analogue of the wgpu Renderer's `upload_image` method.
+    /// This is the WebGL analogue of the etalon Renderer's `upload_image` method.
     /// It allocates space in the image cache and uploads the image data to the atlas texture.
     pub fn upload_image<T: WebGlAtlasWriter>(
         &mut self,
@@ -1100,7 +1100,7 @@ fn clear_atlas_region(
     renderer: &mut WebGlRenderer,
     rect: &PendingClearRect,
 ) -> Result<(), WebGlError> {
-    // TODO: Similarly to wgpu, maybe this can be done in a more effective
+    // TODO: Similarly to etalon, maybe this can be done in a more effective
     // way?
     renderer.clear_atlas_region(
         AtlasId::new(rect.page_index),

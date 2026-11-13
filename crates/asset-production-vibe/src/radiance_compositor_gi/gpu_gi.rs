@@ -1,4 +1,4 @@
-//! Etalon/wgpu GPU GI beyond the CPU SDFGI/froxel preview.
+//! Etalon GPU GI beyond the CPU SDFGI/froxel preview.
 //!
 //! Cascaded irradiance probes + GGX fragment shading + Henyey-Greenstein
 //! froxel fog run as compute passes. Deterministic: no time-based noise.
@@ -277,7 +277,7 @@ pub fn dispatch_gpu_sdfgi(
     {
         let _ = (pixels, params);
         Err(
-            "gpu backend requires a native wgpu/etalon adapter (QualiaDB PortalGpu is WASM; produce path is native)"
+            "gpu backend requires a native Etalon adapter (QualiaDB PortalGpu is WASM; produce path is native)"
                 .into(),
         )
     }
@@ -296,7 +296,7 @@ fn dispatch_gpu_sdfgi_native(
     use std::sync::Arc;
     use std::task::{Context, Poll, Wake, Waker};
     use std::time::Duration;
-    use wgpu::util::DeviceExt;
+    use etalon::util::DeviceExt;
 
     let n = (params.width as usize)
         .checked_mul(params.height as usize)
@@ -326,34 +326,34 @@ fn dispatch_gpu_sdfgi_native(
         }
     }
 
-    let mut desc = wgpu::InstanceDescriptor::new_without_display_handle();
+    let mut desc = etalon::InstanceDescriptor::new_without_display_handle();
     if cfg!(target_os = "windows") {
-        desc.backends = wgpu::Backends::DX12 | wgpu::Backends::VULKAN | wgpu::Backends::GL;
+        desc.backends = etalon::Backends::DX12 | etalon::Backends::VULKAN | etalon::Backends::GL;
     }
-    let instance = wgpu::Instance::new(desc);
+    let instance = etalon::Instance::new(desc);
 
-    let adapter = match block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-        power_preference: wgpu::PowerPreference::HighPerformance,
+    let adapter = match block_on(instance.request_adapter(&etalon::RequestAdapterOptions {
+        power_preference: etalon::PowerPreference::HighPerformance,
         force_fallback_adapter: false,
         compatible_surface: None,
         ..Default::default()
     })) {
         Ok(adapter) => adapter,
-        Err(_) => match block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::LowPower,
+        Err(_) => match block_on(instance.request_adapter(&etalon::RequestAdapterOptions {
+            power_preference: etalon::PowerPreference::LowPower,
             force_fallback_adapter: false,
             compatible_surface: None,
             ..Default::default()
         })) {
             Ok(adapter) => adapter,
-            Err(_) => block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::LowPower,
+            Err(_) => block_on(instance.request_adapter(&etalon::RequestAdapterOptions {
+                power_preference: etalon::PowerPreference::LowPower,
                 force_fallback_adapter: true,
                 compatible_surface: None,
                 ..Default::default()
             }))
             .map_err(|e| {
-                format!("gpu backend requires wgpu/etalon adapter (none available): {e}")
+                format!("gpu backend requires Etalon adapter (none available): {e}")
             })?,
         },
     };
@@ -365,13 +365,13 @@ fn dispatch_gpu_sdfgi_native(
         info.name.clone()
     };
 
-    let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+    let (device, queue) = block_on(adapter.request_device(&etalon::DeviceDescriptor {
         label: Some("hypermedia.radiance.solve_sdfgi_froxel gpu"),
-        required_features: wgpu::Features::empty(),
+        required_features: etalon::Features::empty(),
         required_limits: adapter.limits(),
         ..Default::default()
     }))
-    .map_err(|e| format!("gpu backend requires wgpu/etalon device: {e}"))?;
+    .map_err(|e| format!("gpu backend requires Etalon device: {e}"))?;
 
     let uniforms = GiUniforms {
         width: params.width,
@@ -398,103 +398,103 @@ fn dispatch_gpu_sdfgi_native(
         *dst = u32::from_le_bytes(*px);
     }
 
-    let uniform_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let uniform_buf = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
         label: Some("sdfgi_gi_uniforms"),
         contents: bytemuck::bytes_of(&uniforms),
-        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::UNIFORM | etalon::BufferUsages::COPY_DST,
     });
-    let input_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let input_buf = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
         label: Some("sdfgi_input_rgba"),
         contents: bytemuck::cast_slice(&packed),
-        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::STORAGE | etalon::BufferUsages::COPY_DST,
     });
     let probe_bytes = (params.cascades as usize).max(1) * std::mem::size_of::<[f32; 4]>();
-    let probe_buf = device.create_buffer(&wgpu::BufferDescriptor {
+    let probe_buf = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("sdfgi_cascade_probes"),
         size: probe_bytes as u64,
-        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::STORAGE | etalon::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
     let output_bytes = (n * 4) as u64;
-    let output_buf = device.create_buffer(&wgpu::BufferDescriptor {
+    let output_buf = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("sdfgi_output_rgba"),
         size: output_bytes,
-        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        usage: etalon::BufferUsages::STORAGE | etalon::BufferUsages::COPY_SRC,
         mapped_at_creation: false,
     });
     let stats_bytes = (n * 8) as u64;
-    let stats_buf = device.create_buffer(&wgpu::BufferDescriptor {
+    let stats_buf = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("sdfgi_stats"),
         size: stats_bytes,
-        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        usage: etalon::BufferUsages::STORAGE | etalon::BufferUsages::COPY_SRC,
         mapped_at_creation: false,
     });
-    let staging_out = device.create_buffer(&wgpu::BufferDescriptor {
+    let staging_out = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("sdfgi_staging_rgba"),
         size: output_bytes,
-        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::MAP_READ | etalon::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
-    let staging_stats = device.create_buffer(&wgpu::BufferDescriptor {
+    let staging_stats = device.create_buffer(&etalon::BufferDescriptor {
         label: Some("sdfgi_staging_stats"),
         size: stats_bytes,
-        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::MAP_READ | etalon::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
 
-    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+    let shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
         label: Some("sdfgi_gpu_gi_wgsl"),
-        source: wgpu::ShaderSource::Wgsl(SDFGI_GPU_WGSL.into()),
+        source: etalon::ShaderSource::Wgsl(SDFGI_GPU_WGSL.into()),
     });
 
-    let bgl = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+    let bgl = device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
         label: Some("sdfgi_gpu_bgl"),
         entries: &[
-            wgpu::BindGroupLayoutEntry {
+            etalon::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
+                visibility: etalon::ShaderStages::COMPUTE,
+                ty: etalon::BindingType::Buffer {
+                    ty: etalon::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
                 count: None,
             },
-            wgpu::BindGroupLayoutEntry {
+            etalon::BindGroupLayoutEntry {
                 binding: 1,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                visibility: etalon::ShaderStages::COMPUTE,
+                ty: etalon::BindingType::Buffer {
+                    ty: etalon::BufferBindingType::Storage { read_only: true },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
                 count: None,
             },
-            wgpu::BindGroupLayoutEntry {
+            etalon::BindGroupLayoutEntry {
                 binding: 2,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                visibility: etalon::ShaderStages::COMPUTE,
+                ty: etalon::BindingType::Buffer {
+                    ty: etalon::BufferBindingType::Storage { read_only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
                 count: None,
             },
-            wgpu::BindGroupLayoutEntry {
+            etalon::BindGroupLayoutEntry {
                 binding: 3,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                visibility: etalon::ShaderStages::COMPUTE,
+                ty: etalon::BindingType::Buffer {
+                    ty: etalon::BufferBindingType::Storage { read_only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
                 count: None,
             },
-            wgpu::BindGroupLayoutEntry {
+            etalon::BindGroupLayoutEntry {
                 binding: 4,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                visibility: etalon::ShaderStages::COMPUTE,
+                ty: etalon::BindingType::Buffer {
+                    ty: etalon::BufferBindingType::Storage { read_only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -503,13 +503,13 @@ fn dispatch_gpu_sdfgi_native(
         ],
     });
 
-    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+    let pipeline_layout = device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
         label: Some("sdfgi_gpu_pl"),
         bind_group_layouts: &[Some(&bgl)],
         immediate_size: 0,
     });
 
-    let probe_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+    let probe_pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
         label: Some("sdfgi_cascade_probes"),
         layout: Some(&pipeline_layout),
         module: &shader,
@@ -517,7 +517,7 @@ fn dispatch_gpu_sdfgi_native(
         compilation_options: Default::default(),
         cache: None,
     });
-    let shade_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+    let shade_pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
         label: Some("sdfgi_shade_froxel"),
         layout: Some(&pipeline_layout),
         module: &shader,
@@ -526,38 +526,38 @@ fn dispatch_gpu_sdfgi_native(
         cache: None,
     });
 
-    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+    let bind_group = device.create_bind_group(&etalon::BindGroupDescriptor {
         label: Some("sdfgi_gpu_bg"),
         layout: &bgl,
         entries: &[
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 0,
                 resource: uniform_buf.as_entire_binding(),
             },
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 1,
                 resource: input_buf.as_entire_binding(),
             },
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 2,
                 resource: probe_buf.as_entire_binding(),
             },
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 3,
                 resource: output_buf.as_entire_binding(),
             },
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 4,
                 resource: stats_buf.as_entire_binding(),
             },
         ],
     });
 
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+    let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor {
         label: Some("sdfgi_gpu_encoder"),
     });
     {
-        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+        let mut pass = encoder.begin_compute_pass(&etalon::ComputePassDescriptor {
             label: Some("sdfgi_cascade_probes_pass"),
             timestamp_writes: None,
         });
@@ -566,7 +566,7 @@ fn dispatch_gpu_sdfgi_native(
         pass.dispatch_workgroups(params.cascades, 1, 1);
     }
     {
-        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+        let mut pass = encoder.begin_compute_pass(&etalon::ComputePassDescriptor {
             label: Some("sdfgi_shade_froxel_pass"),
             timestamp_writes: None,
         });
@@ -578,14 +578,14 @@ fn dispatch_gpu_sdfgi_native(
     encoder.copy_buffer_to_buffer(&stats_buf, 0, &staging_stats, 0, stats_bytes);
     queue.submit(Some(encoder.finish()));
 
-    let map_buf = |device: &wgpu::Device, buf: &wgpu::Buffer| -> Result<Vec<u8>, String> {
+    let map_buf = |device: &etalon::Device, buf: &etalon::Buffer| -> Result<Vec<u8>, String> {
         let slice = buf.slice(..);
         let (send, recv) = std::sync::mpsc::sync_channel(1);
-        slice.map_async(wgpu::MapMode::Read, move |result| {
+        slice.map_async(etalon::MapMode::Read, move |result| {
             let _ = send.send(result);
         });
         device
-            .poll(wgpu::PollType::wait_indefinitely())
+            .poll(etalon::PollType::wait_indefinitely())
             .map_err(|e| format!("gpu backend requires device poll: {e}"))?;
         recv.recv_timeout(Duration::from_secs(30))
             .map_err(|_| "gpu backend requires mapped readback".to_string())?

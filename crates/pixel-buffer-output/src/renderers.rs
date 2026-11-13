@@ -1,17 +1,17 @@
 use crate::{ScalingMode, SurfaceSize};
+use etalon::util::DeviceExt;
 use ultraviolet::Mat4;
-use wgpu::util::DeviceExt;
 
 /// The default renderer that scales your frame to the screen size.
 #[derive(Debug)]
 pub struct ScalingRenderer {
-    vertex_buffer: wgpu::Buffer,
-    uniform_buffer: wgpu::Buffer,
-    bind_group_nearest: wgpu::BindGroup,
-    bind_group_linear: wgpu::BindGroup,
-    render_pipeline: wgpu::RenderPipeline,
-    render_pipeline_fill: wgpu::RenderPipeline,
-    pub(crate) clear_color: wgpu::Color,
+    vertex_buffer: etalon::Buffer,
+    uniform_buffer: etalon::Buffer,
+    bind_group_nearest: etalon::BindGroup,
+    bind_group_linear: etalon::BindGroup,
+    render_pipeline: etalon::RenderPipeline,
+    render_pipeline_fill: etalon::RenderPipeline,
+    pub(crate) clear_color: etalon::Color,
     width: f32,
     height: f32,
     clip_rect: (u32, u32, u32, u32),
@@ -21,30 +21,30 @@ pub struct ScalingRenderer {
 impl ScalingRenderer {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        device: &wgpu::Device,
-        texture_view: &wgpu::TextureView,
-        texture_size: &wgpu::Extent3d,
+        device: &etalon::Device,
+        texture_view: &etalon::TextureView,
+        texture_size: &etalon::Extent3d,
         surface_size: &SurfaceSize,
-        render_texture_format: wgpu::TextureFormat,
-        clear_color: wgpu::Color,
-        blend_state: wgpu::BlendState,
+        render_texture_format: etalon::TextureFormat,
+        clear_color: etalon::Color,
+        blend_state: etalon::BlendState,
         scaling_mode: ScalingMode,
     ) -> Self {
-        let shader = wgpu::include_wgsl!("../shaders/scale.wgsl");
+        let shader = etalon::include_wgsl!("../shaders/scale.wgsl");
         let module = device.create_shader_module(shader);
 
-        let shader_fill = wgpu::include_wgsl!("../shaders/scale_fill.wgsl");
+        let shader_fill = etalon::include_wgsl!("../shaders/scale_fill.wgsl");
         let module_fill = device.create_shader_module(shader_fill);
 
         // Create a texture sampler with nearest neighbor
-        let sampler_nearest = device.create_sampler(&wgpu::SamplerDescriptor {
+        let sampler_nearest = device.create_sampler(&etalon::SamplerDescriptor {
             label: Some("pixels_scaling_renderer_sampler_nearest"),
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::MipmapFilterMode::Nearest,
+            address_mode_u: etalon::AddressMode::ClampToEdge,
+            address_mode_v: etalon::AddressMode::ClampToEdge,
+            address_mode_w: etalon::AddressMode::ClampToEdge,
+            mag_filter: etalon::FilterMode::Nearest,
+            min_filter: etalon::FilterMode::Nearest,
+            mipmap_filter: etalon::MipmapFilterMode::Nearest,
             lod_min_clamp: 0.0,
             lod_max_clamp: 1.0,
             compare: None,
@@ -52,14 +52,14 @@ impl ScalingRenderer {
             border_color: None,
         });
 
-        let sampler_linear = device.create_sampler(&wgpu::SamplerDescriptor {
+        let sampler_linear = device.create_sampler(&etalon::SamplerDescriptor {
             label: Some("pixels_scaling_renderer_sampler_linear"),
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::MipmapFilterMode::Linear,
+            address_mode_u: etalon::AddressMode::ClampToEdge,
+            address_mode_v: etalon::AddressMode::ClampToEdge,
+            address_mode_w: etalon::AddressMode::ClampToEdge,
+            mag_filter: etalon::FilterMode::Linear,
+            min_filter: etalon::FilterMode::Linear,
+            mipmap_filter: etalon::MipmapFilterMode::Linear,
             lod_min_clamp: 0.0,
             lod_max_clamp: 1.0,
             compare: None,
@@ -76,16 +76,16 @@ impl ScalingRenderer {
             [-1.0, 3.0],
         ];
         let vertex_data_slice = bytemuck::cast_slice(&vertex_data);
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let vertex_buffer = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
             label: Some("pixels_scaling_renderer_vertex_buffer"),
             contents: vertex_data_slice,
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: etalon::BufferUsages::VERTEX,
         });
-        let vertex_buffer_layout = Some(wgpu::VertexBufferLayout {
-            array_stride: (vertex_data_slice.len() / vertex_data.len()) as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[wgpu::VertexAttribute {
-                format: wgpu::VertexFormat::Float32x2,
+        let vertex_buffer_layout = Some(etalon::VertexBufferLayout {
+            array_stride: (vertex_data_slice.len() / vertex_data.len()) as etalon::BufferAddress,
+            step_mode: etalon::VertexStepMode::Vertex,
+            attributes: &[etalon::VertexAttribute {
+                format: etalon::VertexFormat::Float32x2,
                 offset: 0,
                 shader_location: 0,
             }],
@@ -97,75 +97,78 @@ impl ScalingRenderer {
             (surface_size.width as f32, surface_size.height as f32),
             scaling_mode,
         );
-        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let uniform_buffer = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
             label: Some("pixels_scaling_renderer_matrix_uniform_buffer"),
             contents: matrix.uniform_buffer.as_slice(),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            usage: etalon::BufferUsages::UNIFORM | etalon::BufferUsages::COPY_DST,
         });
 
         // Create bind group
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("pixels_scaling_renderer_bind_group_layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        multisampled: false,
-                        view_dimension: wgpu::TextureViewDimension::D2,
+        let bind_group_layout =
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
+                label: Some("pixels_scaling_renderer_bind_group_layout"),
+                entries: &[
+                    etalon::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Float { filterable: true },
+                            multisampled: false,
+                            view_dimension: etalon::TextureViewDimension::D2,
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(matrix.uniform_buffer.len() as u64),
+                    etalon::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Sampler(etalon::SamplerBindingType::Filtering),
+                        count: None,
                     },
-                    count: None,
-                },
-            ],
-        });
-        let bind_group_nearest = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                    etalon::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: etalon::ShaderStages::VERTEX_FRAGMENT,
+                        ty: etalon::BindingType::Buffer {
+                            ty: etalon::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: etalon::BufferSize::new(
+                                matrix.uniform_buffer.len() as u64
+                            ),
+                        },
+                        count: None,
+                    },
+                ],
+            });
+        let bind_group_nearest = device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("pixels_scaling_renderer_bind_group_nearest"),
             layout: &bind_group_layout,
             entries: &[
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(texture_view),
+                    resource: etalon::BindingResource::TextureView(texture_view),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&sampler_nearest),
+                    resource: etalon::BindingResource::Sampler(&sampler_nearest),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 2,
                     resource: uniform_buffer.as_entire_binding(),
                 },
             ],
         });
-        let bind_group_linear = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        let bind_group_linear = device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("pixels_scaling_renderer_bind_group_linear"),
             layout: &bind_group_layout,
             entries: &[
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(texture_view),
+                    resource: etalon::BindingResource::TextureView(texture_view),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&sampler_linear),
+                    resource: etalon::BindingResource::Sampler(&sampler_linear),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 2,
                     resource: uniform_buffer.as_entire_binding(),
                 },
@@ -173,61 +176,62 @@ impl ScalingRenderer {
         });
 
         // Create pipeline
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        let pipeline_layout = device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
             label: Some("pixels_scaling_renderer_pipeline_layout"),
             bind_group_layouts: &[Some(&bind_group_layout)],
             immediate_size: 0,
         });
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let render_pipeline = device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
             label: Some("pixels_scaling_renderer_pipeline"),
             layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
+            vertex: etalon::VertexState {
                 module: &module,
                 entry_point: Some("vs_main"),
                 buffers: std::slice::from_ref(&vertex_buffer_layout),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                compilation_options: etalon::PipelineCompilationOptions::default(),
             },
-            primitive: wgpu::PrimitiveState::default(),
+            primitive: etalon::PrimitiveState::default(),
             depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            fragment: Some(wgpu::FragmentState {
+            multisample: etalon::MultisampleState::default(),
+            fragment: Some(etalon::FragmentState {
                 module: &module,
                 entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
+                compilation_options: etalon::PipelineCompilationOptions::default(),
+                targets: &[Some(etalon::ColorTargetState {
                     format: render_texture_format,
                     blend: Some(blend_state),
-                    write_mask: wgpu::ColorWrites::ALL,
+                    write_mask: etalon::ColorWrites::ALL,
                 })],
             }),
             multiview_mask: None,
             cache: None,
         });
-        let render_pipeline_fill = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("pixels_scaling_renderer_pipeline_fill"),
-            layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &module_fill,
-                entry_point: Some("vs_main"),
-                buffers: std::slice::from_ref(&vertex_buffer_layout),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-            },
-            primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            fragment: Some(wgpu::FragmentState {
-                module: &module_fill,
-                entry_point: Some("fs_main"),
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: render_texture_format,
-                    blend: Some(blend_state),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            multiview_mask: None,
-            cache: None,
-        });
+        let render_pipeline_fill =
+            device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
+                label: Some("pixels_scaling_renderer_pipeline_fill"),
+                layout: Some(&pipeline_layout),
+                vertex: etalon::VertexState {
+                    module: &module_fill,
+                    entry_point: Some("vs_main"),
+                    buffers: std::slice::from_ref(&vertex_buffer_layout),
+                    compilation_options: etalon::PipelineCompilationOptions::default(),
+                },
+                primitive: etalon::PrimitiveState::default(),
+                depth_stencil: None,
+                multisample: etalon::MultisampleState::default(),
+                fragment: Some(etalon::FragmentState {
+                    module: &module_fill,
+                    entry_point: Some("fs_main"),
+                    compilation_options: etalon::PipelineCompilationOptions::default(),
+                    targets: &[Some(etalon::ColorTargetState {
+                        format: render_texture_format,
+                        blend: Some(blend_state),
+                        write_mask: etalon::ColorWrites::ALL,
+                    })],
+                }),
+                multiview_mask: None,
+                cache: None,
+            });
 
         // Create clipping rectangle
         let clip_rect = matrix.clip_rect();
@@ -248,15 +252,19 @@ impl ScalingRenderer {
     }
 
     /// Draw the pixel buffer to the render target.
-    pub fn render(&self, encoder: &mut wgpu::CommandEncoder, render_target: &wgpu::TextureView) {
-        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+    pub fn render(
+        &self,
+        encoder: &mut etalon::CommandEncoder,
+        render_target: &etalon::TextureView,
+    ) {
+        let mut rpass = encoder.begin_render_pass(&etalon::RenderPassDescriptor {
             label: Some("pixels_scaling_renderer_render_pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(etalon::RenderPassColorAttachment {
                 view: render_target,
                 resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(self.clear_color),
-                    store: wgpu::StoreOp::Store,
+                ops: etalon::Operations {
+                    load: etalon::LoadOp::Clear(self.clear_color),
+                    store: etalon::StoreOp::Store,
                 },
                 depth_slice: None,
             })],
@@ -292,7 +300,7 @@ impl ScalingRenderer {
         self.clip_rect
     }
 
-    pub(crate) fn resize(&mut self, queue: &wgpu::Queue, width: u32, height: u32) {
+    pub(crate) fn resize(&mut self, queue: &etalon::Queue, width: u32, height: u32) {
         let matrix = ScalingMatrix::new(
             (self.width, self.height),
             (width as f32, height as f32),

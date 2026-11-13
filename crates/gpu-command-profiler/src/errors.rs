@@ -15,7 +15,7 @@ pub enum CreationError {
 
     #[cfg(feature = "tracy")]
     #[error("Failed to read back initial GPU timestamp for Tracy: {0}")]
-    TracyGpuTimestampReadback(#[from] wgpu::MapRangeError),
+    TracyGpuTimestampReadback(#[from] etalon::MapRangeError),
 }
 
 #[cfg(feature = "tracy")]
@@ -59,7 +59,9 @@ pub enum SettingsError {
 /// Errors that can occur during [`crate::GpuProfiler::end_frame`].
 #[derive(thiserror::Error, Debug, PartialEq, Eq)]
 pub enum EndFrameError {
-    #[error("All profiling queries need to be closed before ending a frame. There were still {0} open queries.")]
+    #[error(
+        "All profiling queries need to be closed before ending a frame. There were still {0} open queries."
+    )]
     UnclosedQueries(u32),
 
     #[error(

@@ -1,5 +1,4 @@
 use super::*;
-use crate::electromagnetics_ops::parse_sealed_emf;
 use qualia_core_db::etalon_render::spectral::kernel::{
     linear_rgb_to_display, spd_to_xyz, xyz_to_linear_srgb, Spd, SPD_SAMPLES,
 };
@@ -26,6 +25,7 @@ impl AssetHost<'_> {
             a,
             &[
                 "emf",
+                "time_slice",
                 "width",
                 "height",
                 "deflection_mass",
@@ -34,6 +34,9 @@ impl AssetHost<'_> {
             ],
         )?;
 
+        let time_slice=crate::electromagnetics_v3::selected_time_slice(a)?;
+        if a.contains_key("time_slice")&&!a.contains_key("emf"){return Err("time_slice requires a stored EMF volume".into());}
+        let mut source_emf_version=None;
         let width = count(a, "width", 64, 512)?;
         let height = count(a, "height", 64, 512)?;
         let deflection_mass = number(a, "deflection_mass", 0.05)?;
@@ -41,16 +44,38 @@ impl AssetHost<'_> {
             return Err("deflection_mass outside 0.0..=1.0".into());
         }
         let step_limit = count(a, "step_limit", 48, 256)?;
+        let pixel_bytes=width.checked_mul(height).and_then(|n|n.checked_mul(4)).ok_or("EMF raymarch pixel size overflow")?;
+        if pixel_bytes>self.limits.resource_bytes{return Err("EMF raymarch exceeds selected resource bytes".into());}
 
         let (dims, voxels) = if let Some(emf_val) = a.get("emf") {
-            let bytes = self.resolve_emf_bytes(emf_val)?;
-            let reader = parse_sealed_emf(&bytes)?;
+            // Use borrowed header dimensions solely to admit bounded grid memory;
+            // the current reader below still verifies CRCs, hashes and semantics.
+            let source=self.emf_source_bytes(emf_val)?;
+            if source.len()<64{return Err("EMF source is shorter than its header".into());}
+            let mut preview_dims=[0usize;3];
+            for axis in 0..3 {
+                let at=32+axis*4;let dimension=u32::from_le_bytes(source[at..at+4].try_into().unwrap());
+                preview_dims[axis]=dimension.saturating_mul(8).clamp(4,32) as usize;
+            }
+            let grid_bytes=preview_dims.iter().try_fold(std::mem::size_of::<VoxelCell>(),|n,d|n.checked_mul(*d)).ok_or("EMF grid size overflow")?;
+            // Preflight the later rendering phase now as well, before any copy
+            // or grid work, without pretending pixels coexist with the clone.
+            self.emf_peak_admit(grid_bytes.checked_add(pixel_bytes).ok_or("EMF render peak overflow")?)?;
+            let bytes = self.resolve_emf_bytes_for(emf_val,grid_bytes)?;
+            let reader = self.parse_emf_current(&bytes)?;
+            source_emf_version=Some(reader.header().version);
+            self.charge(reader.chunk_count(),0)?;
+            if !(0..reader.chunk_count()).any(|i|reader.chunk_entry(i).is_some_and(|e|e.time_slice_index==time_slice)){return Err("Requested EMF time_slice has no stored chunks".into());}
+            crate::electromagnetics_v3::require_legacy_visible_projection(&reader)?;
+            let hilbert_order=reader.extension().map(|e|u32::from(e.metadata().field.hilbert_order)).unwrap_or(2);
 
             let dims_bricks = reader.header().grid_dims_bricks;
-            let gx = (dims_bricks[0] * 8).clamp(4, 32) as usize;
-            let gy = (dims_bricks[1] * 8).clamp(4, 32) as usize;
-            let gz = (dims_bricks[2] * 8).clamp(4, 32) as usize;
+            if reader.extension().is_some()&&dims_bricks.iter().any(|dimension|*dimension>4){return Err("V3 raymarch preview supports at most 32 voxels per axis; field data remains intact".into());}
+            let gx = dims_bricks[0].saturating_mul(8).clamp(4, 32) as usize;
+            let gy = dims_bricks[1].saturating_mul(8).clamp(4, 32) as usize;
+            let gz = dims_bricks[2].saturating_mul(8).clamp(4, 32) as usize;
             let total = gx * gy * gz;
+            self.charge(total.checked_mul(reader.lookup_work_bound()).ok_or("EMF voxel lookup work overflow")?,0)?;
 
             let mut grid = vec![
                 VoxelCell {
@@ -71,7 +96,7 @@ impl AssetHost<'_> {
                         let lx = (vx % 8) as u8;
                         let ly = (vy % 8) as u8;
                         let lz = (vz % 8) as u8;
-                        if let Some(cell) = reader.lookup_brick_cell(bx, by, bz, lx, ly, lz, 2) {
+                        if let Some(cell) = reader.lookup_brick_cell_at_time(bx, by, bz, lx, ly, lz, hilbert_order, time_slice) {
                             let idx = vz * gx * gy + vy * gx + vx;
                             let wl = if cell.wavelength_nm > 0.0 {
                                 cell.wavelength_nm as f64
@@ -97,6 +122,7 @@ impl AssetHost<'_> {
             // Procedural 16^3 Vox0 harmonic density & wavelength lattice
             let dim = 16usize;
             let total = dim * dim * dim;
+            self.emf_peak_admit(total.checked_mul(std::mem::size_of::<VoxelCell>()).and_then(|n|n.checked_add(pixel_bytes)).ok_or("EMF procedural grid size overflow")?)?;
             let mut grid = Vec::with_capacity(total);
             let center = (dim as f64 - 1.0) * 0.5;
 
@@ -144,6 +170,10 @@ impl AssetHost<'_> {
         let aspect = width as f64 / height as f64;
         let fov_scale = 0.55;
 
+        // The source clone and parsed reader dropped with the tuple's branch.
+        // Here only the grid and final pixels coexist with fixed source/workspace.
+        let render_peak=voxels.len().checked_mul(std::mem::size_of::<VoxelCell>()).and_then(|n|n.checked_add(pixel_bytes)).ok_or("EMF raymarch peak overflow")?;
+        self.emf_peak_admit(render_peak)?;
         let mut pixels = Vec::with_capacity(width * height);
         let mut dda_steps_total = 0usize;
         let mut brick_hits = 0usize;
@@ -355,6 +385,11 @@ impl AssetHost<'_> {
         let image_handle = self.store_rgba(width as u32, height as u32, pixels)?;
         let mut rec = BTreeMap::new();
         rec.insert("image".into(), image_handle);
+        if let Some(version)=source_emf_version {
+            rec.insert("source_emf_version".into(),Value::U64(u64::from(version)));
+            rec.insert("source_time_slice".into(),Value::U64(u64::from(time_slice)));
+            rec.insert("projection_scope".into(),Value::String("legacy human-viewable spectral derivative; includes out-of-band false colour/clamping; not stored RGB".into()));
+        }
         rec.insert(
             "dda_steps_total".into(),
             Value::U64(dda_steps_total as u64),

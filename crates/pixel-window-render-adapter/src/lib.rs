@@ -6,7 +6,7 @@ use anyrender::{ImageRenderer, RenderContext, WindowHandle, WindowRenderer};
 use debug_timer::debug_timer;
 use pixels::{
     Pixels, PixelsBuilder, SurfaceTexture,
-    wgpu::{Color, CompositeAlphaMode},
+    etalon::{Color, CompositeAlphaMode},
 };
 use std::sync::Arc;
 
@@ -66,7 +66,7 @@ impl From<anyrender::RendererConfig> for PixelsRendererOptions {
         let mut options = Self::default();
         if let Some(color) = config.base_color {
             let rgba8 = color.to_rgba8();
-            options.base_color = pixels::wgpu::Color {
+            options.base_color = pixels::etalon::Color {
                 r: rgba8.r as f64 / 255.0,
                 g: rgba8.g as f64 / 255.0,
                 b: rgba8.b as f64 / 255.0,
@@ -160,7 +160,7 @@ impl<Renderer: ImageRenderer> WindowRenderer for PixelsWindowRenderer<Renderer> 
             anyrender::CompositeAlphaMode::Transparent => {
                 #[cfg(target_vendor = "apple")]
                 {
-                    // wgpu is lying in apple's case it uses PreMultiplied in reality
+                    // etalon is lying in apple's case it uses PreMultiplied in reality
                     // (do not modify shaders for PostMultiplied)
                     CompositeAlphaMode::PostMultiplied
                 }

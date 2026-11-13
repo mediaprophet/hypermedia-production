@@ -241,19 +241,19 @@ impl BufferProxy {
 }
 
 impl ImageFormat {
-    #[cfg(feature = "wgpu")]
-    pub fn to_wgpu(self) -> wgpu::TextureFormat {
+    #[cfg(feature = "etalon")]
+    pub fn to_etalon(self) -> etalon::TextureFormat {
         match self {
-            Self::Rgba8 => wgpu::TextureFormat::Rgba8Unorm,
-            Self::Bgra8 => wgpu::TextureFormat::Bgra8Unorm,
+            Self::Rgba8 => etalon::TextureFormat::Rgba8Unorm,
+            Self::Bgra8 => etalon::TextureFormat::Bgra8Unorm,
         }
     }
 
-    #[cfg(feature = "wgpu")]
-    pub fn from_wgpu(format: wgpu::TextureFormat) -> Option<Self> {
+    #[cfg(feature = "etalon")]
+    pub fn from_etalon(format: etalon::TextureFormat) -> Option<Self> {
         match format {
-            wgpu::TextureFormat::Rgba8Unorm => Some(Self::Rgba8),
-            wgpu::TextureFormat::Bgra8Unorm => Some(Self::Bgra8),
+            etalon::TextureFormat::Rgba8Unorm => Some(Self::Rgba8),
+            etalon::TextureFormat::Bgra8Unorm => Some(Self::Bgra8),
             _ => None,
         }
     }

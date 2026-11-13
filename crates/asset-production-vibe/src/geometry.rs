@@ -171,8 +171,8 @@ impl AssetHost<'_> {
                     None
                 };
                 let m = section.len();
-                let nv = n * m + if caps { 2 } else { 0 };
-                let nt = (n - 1) * m * 2 + if caps { 2 * m } else { 0 };
+                let nv = n * m;
+                let nt = (n - 1) * m * 2 + if caps { 2 * (m - 2) } else { 0 };
                 self.mesh_budget(nv, nt)?;
                 let section: Vec<_> = self
                     .profile(required(a, "profile")?)?
@@ -195,7 +195,7 @@ impl AssetHost<'_> {
                     &section,
                     stations_opt.as_deref(),
                     true,
-                    caps,
+                    false,
                     &mut frames,
                     &mut vertices,
                     &mut triangles,
@@ -203,6 +203,9 @@ impl AssetHost<'_> {
                 .map_err(|e| format!("Extrusion: {e:?}"))?;
                 vertices.truncate(nv);
                 triangles.truncate(nt);
+                if caps {
+                    append_extrusion_caps(&section, n, &mut triangles)?;
+                }
                 self.store_mesh(vertices, triangles)
             }
             "hypermedia.manifold.revolve" | "hypermedia.mesh.revolve" => {
@@ -270,6 +273,10 @@ impl AssetHost<'_> {
             }
             "hypermedia.manifold.compile_10d" | "hypermedia.mesh.encode" => {
                 fields(a, &["mesh"])?;
+                let index = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
+                if self.workspace.imported.get(index).is_some_and(Option::is_some) {
+                    return self.manifold_ext("hypermedia.manifold.compile_10d_pbr", a);
+                }
                 let Artifact::Mesh(mesh) = self.workspace.get(required(a, "mesh")?)? else {
                     return Err("Expected mesh handle".into());
                 };
@@ -351,6 +358,30 @@ impl AssetHost<'_> {
         )
     }
 }
+// Reuse Core's validated polygon triangulation for the same planar cap; this
+// avoids inventing an interior centroid whose rounding can create sliver cuts.
+fn append_extrusion_caps(section: &[Point2], rings: usize, triangles: &mut Vec<[u32; 3]>) -> Result<(), String> {
+    let cap = cg::triangulation_2::triangulate_polygon(section);
+    if cap.len() != section.len() - 2 || !cg::triangulation_2::verify_triangulation(section, &cap) {
+        return Err("Extrusion end-cap triangulation incomplete".into());
+    }
+    let area: f64 = section.iter().zip(section.iter().cycle().skip(1)).take(section.len())
+        .map(|(a,b)| a.x*b.y - b.x*a.y).sum();
+    let top = ((rings - 1) * section.len()) as u32;
+    for tri in cap {
+        let mut index = [0u32; 3];
+        for (i, p) in [tri.a, tri.b, tri.c].iter().enumerate() {
+            index[i] = section.iter().position(|v| v.x == p.x && v.y == p.y)
+                .ok_or("Extrusion cap changed a section vertex")? as u32;
+        }
+        // Match the side winding even when the source profile is clockwise.
+        if area < 0.0 { index.swap(1, 2); }
+        triangles.push([index[0], index[2], index[1]]);
+        triangles.push([top + index[0], top + index[1], top + index[2]]);
+    }
+    Ok(())
+}
+
 fn points2(v: &Value, min: usize) -> Result<Vec<[f64; 2]>, String> {
     let values = list(v)?;
     if values.len() < min || values.len() > 4096 {
@@ -418,4 +449,40 @@ pub(crate) fn color(v: &Value) -> Result<[u8; 4], String> {
         c[i] = u8::try_from(integer(v, "color")?).map_err(|_| "Color outside 0..255")?;
     }
     Ok(c)
+}
+
+#[cfg(test)]
+mod extrusion_cap_tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn convex_caps_use_only_boundary_vertices_and_close_both_windings() {
+        for reverse in [false, true] {
+            let mut section: Vec<_> = (0..16).map(|i| {
+                let t = std::f64::consts::TAU * i as f64 / 16.0;
+                Point2::new(1.5 * t.cos(), 1.5 * t.sin())
+            }).collect();
+            if reverse { section.reverse(); }
+            let n = section.len() as u32;
+            let mut tris = Vec::new();
+            for j in 0..n {
+                let next = (j+1)%n;
+                tris.push([j,next,n+next]);
+                tris.push([j,n+next,n+j]);
+            }
+            append_extrusion_caps(&section, 2, &mut tris).unwrap();
+            assert_eq!(tris.len(), 4 * section.len() - 4);
+            let mut edges = BTreeMap::<(u32,u32), (usize,i32)>::new();
+            for tri in tris {
+                assert!(tri.iter().all(|i| *i < 2*n));
+                for (a,b) in [(tri[0],tri[1]),(tri[1],tri[2]),(tri[2],tri[0])] {
+                    let key = (a.min(b),a.max(b));
+                    let e = edges.entry(key).or_default();
+                    e.0 += 1; e.1 += if a < b {1} else {-1};
+                }
+            }
+            assert!(edges.values().all(|&(count,direction)| count == 2 && direction == 0));
+        }
+    }
 }

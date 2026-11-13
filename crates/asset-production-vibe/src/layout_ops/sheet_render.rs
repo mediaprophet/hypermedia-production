@@ -11,10 +11,11 @@ use kurbo::Shape;
 impl AssetHost<'_> {
     /// Renders the resolved layout into a straight-alpha RGBA8 raster artifact.
     pub(super) fn render_ui_sheet(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["layout", "theme", "scale"])?;
+        fields(a, &["layout", "theme", "scale", "font"])?;
 
         let (viewport_width, viewport_height, boxes, theme, scale) =
             self.parse_render_inputs(a, true)?;
+        let labels = self.ui_label_outlines(a, &boxes, &theme)?;
 
         let rw = (viewport_width * scale).round() as u32;
         let rh = (viewport_height * scale).round() as u32;
@@ -48,7 +49,7 @@ impl AssetHost<'_> {
                     &kurbo::Rect::new(0.0, 0.0, rw as f64, rh as f64),
                 );
 
-                for b in &boxes {
+                for (label_index, b) in boxes.iter().enumerate() {
                     let bx = b.x * scale;
                     let by = b.y * scale;
                     let bw = b.width * scale;
@@ -58,7 +59,7 @@ impl AssetHost<'_> {
                         continue;
                     }
 
-                    let cr = compute_box_corner_radius(&b.role, bh, theme.corner_radius) * scale;
+                    let cr = compute_box_corner_radius(&b.role, b.height, theme.corner_radius) * scale;
                     let (fill_c, border_c, border_w) = compute_box_colors(b, &theme);
 
                     let rect = kurbo::Rect::new(bx, by, bx + bw, by + bh);
@@ -70,10 +71,10 @@ impl AssetHost<'_> {
 
                     if b.state == "focus" {
                         let pad = 2.5 * scale;
-                        let rx0 = (bx - pad).max(0.0);
-                        let ry0 = (by - pad).max(0.0);
-                        let rx1 = (bx + bw + pad).max(rx0 + 1.0);
-                        let ry1 = (by + bh + pad).max(ry0 + 1.0);
+                        let rx0 = (b.x - 2.5).max(0.0) * scale;
+                        let ry0 = (b.y - 2.5).max(0.0) * scale;
+                        let rx1 = (b.x + b.width + 2.5).max((b.x - 2.5).max(0.0) + 1.0) * scale;
+                        let ry1 = (b.y + b.height + 2.5).max((b.y - 2.5).max(0.0) + 1.0) * scale;
                         let ring_shape = kurbo::RoundedRect::new(rx0, ry0, rx1, ry1, cr + pad);
                         let ring_color = peniko::Color::from_rgba8(
                             theme.focus_ring[0],
@@ -170,55 +171,19 @@ impl AssetHost<'_> {
                         );
                     }
 
-                    if !b.label.is_empty() {
-                        let label_h = (7.0 * scale).clamp(2.0, (bh * 0.35).max(2.0));
-                        let label_w = ((b.label.len() as f64 * 6.5) * scale)
-                            .clamp(8.0, (bw - 16.0 * scale).max(8.0));
-                        let (lx, ly) = match b.role.as_str() {
-                            "button" | "badge" => {
-                                (bx + (bw - label_w) / 2.0, by + (bh - label_h) / 2.0)
-                            }
-                            "input" => (bx + 12.0 * scale, by + (bh - label_h) / 2.0),
-                            "header" => (bx + 16.0 * scale, by + (bh - label_h) / 2.0),
-                            _ => (bx + 16.0 * scale, by + 16.0 * scale),
-                        };
-
-                        let label_pill = kurbo::RoundedRect::new(
-                            lx,
-                            ly,
-                            lx + label_w,
-                            ly + label_h,
-                            label_h / 2.0,
-                        );
-
-                        let label_c = if b.state == "disabled" {
-                            [
-                                theme.text_muted[0],
-                                theme.text_muted[1],
-                                theme.text_muted[2],
-                                80,
-                            ]
-                        } else if b.role == "badge" {
-                            [theme.accent[0], theme.accent[1], theme.accent[2], 220]
+                    if let Some(label) = &labels[label_index] {
+                        let transform = kurbo::Affine::scale(scale);
+                        let c = label.color;
+                        let brush = peniko::Color::from_rgba8(c[0], c[1], c[2], c[3]);
+                        scene.push_clip_layer(peniko::Fill::NonZero, transform, &label.clip);
+                        if label.stroke_width > 0.0 {
+                            let stroke = kurbo::Stroke::new(label.stroke_width)
+                                .with_caps(kurbo::Cap::Round).with_join(kurbo::Join::Round);
+                            scene.stroke(&stroke, transform, brush, None, &label.path);
                         } else {
-                            [
-                                theme.text_primary[0],
-                                theme.text_primary[1],
-                                theme.text_primary[2],
-                                180,
-                            ]
-                        };
-
-                        let label_brush = peniko::Color::from_rgba8(
-                            label_c[0], label_c[1], label_c[2], label_c[3],
-                        );
-                        scene.fill(
-                            peniko::Fill::NonZero,
-                            kurbo::Affine::IDENTITY,
-                            label_brush,
-                            None,
-                            &label_pill,
-                        );
+                            scene.fill(peniko::Fill::NonZero, transform, brush, None, &label.path);
+                        }
+                        scene.pop_layer();
                     }
                 }
             },
@@ -256,10 +221,11 @@ impl AssetHost<'_> {
 
     /// Projects the resolved layout into a standalone SVG vector resource with scoped CSS tokens.
     pub(super) fn project_ui_svg(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["layout", "theme", "scale"])?;
+        fields(a, &["layout", "theme", "scale", "font"])?;
 
         let (viewport_width, viewport_height, boxes, theme, scale) =
             self.parse_render_inputs(a, false)?;
+        let labels = self.ui_label_outlines(a, &boxes, &theme)?;
 
         let svg_w = viewport_width * scale;
         let svg_h = viewport_height * scale;
@@ -280,9 +246,7 @@ impl AssetHost<'_> {
                  .webizen-box { transition: all 0.15s ease-in-out; }\n\
                  .role-button { cursor: pointer; user-select: none; }\n\
                  .role-header { font-weight: 700; }\n\
-                 .state-hover { filter: brightness(1.12); }\n\
-                 .state-focus { filter: drop-shadow(0 0 6px var(--webizen-focus-ring)); }\n\
-                 .state-disabled { opacity: 0.45; pointer-events: none; }\n\
+                 .state-disabled { pointer-events: none; }\n\
              </style>\n",
         );
 
@@ -291,7 +255,8 @@ impl AssetHost<'_> {
             "  <rect class=\"webizen-viewport\" width=\"100%\" height=\"100%\" fill=\"{surface_css}\" />\n"
         ));
 
-        for b in &boxes {
+        for (label_index, b) in boxes.iter().enumerate() {
+            if b.width <= 0.0 || b.height <= 0.0 { continue; }
             let cr = compute_box_corner_radius(&b.role, b.height, theme.corner_radius);
             let (fill_c, border_c, border_w) = compute_box_colors(b, &theme);
 
@@ -306,20 +271,26 @@ impl AssetHost<'_> {
             ));
 
             if b.state == "focus" {
-                let pad = 3.0;
+                let pad = 2.5;
                 let focus_css = rgba_css(theme.focus_ring);
                 svg.push_str(&format!(
-                    "    <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" rx=\"{:.1}\" ry=\"{:.1}\" fill=\"none\" stroke=\"{}\" stroke-width=\"2.5\" />\n",
-                    b.x - pad,
-                    b.y - pad,
-                    b.width + 2.0 * pad,
-                    b.height + 2.0 * pad,
+                    "    <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" rx=\"{:.1}\" ry=\"{:.1}\" fill=\"none\" stroke=\"{}\" stroke-width=\"2.0\" />\n",
+                    (b.x - pad).max(0.0),
+                    (b.y - pad).max(0.0),
+                    (b.x + b.width + pad).max((b.x - pad).max(0.0) + 1.0) - (b.x - pad).max(0.0),
+                    (b.y + b.height + pad).max((b.y - pad).max(0.0) + 1.0) - (b.y - pad).max(0.0),
                     cr + pad,
                     cr + pad,
                     focus_css
                 ));
             }
 
+            if b.state == "hover" {
+                let glow_css = rgba_css([theme.accent[0], theme.accent[1], theme.accent[2], 110]);
+                svg.push_str(&format!(
+                    "    <rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"{}\" ry=\"{}\" fill=\"none\" stroke=\"{}\" stroke-width=\"1.5\" />\n",
+                    b.x, b.y, b.width, b.height, cr, cr, glow_css));
+            }
             svg.push_str(&format!(
                 "    <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" rx=\"{:.1}\" ry=\"{:.1}\" fill=\"{}\" stroke=\"{}\" stroke-width=\"{:.1}\" />\n",
                 b.x, b.y, b.width, b.height, cr, cr, fill_css, border_css, border_w
@@ -339,60 +310,19 @@ impl AssetHost<'_> {
                 ));
             }
 
-            if !b.label.is_empty() {
-                let escaped = xml_escape(&b.label);
-                let (tx, ty, anchor, font_size, weight, tc) = match b.role.as_str() {
-                    "button" => (
-                        b.x + b.width / 2.0,
-                        b.y + b.height / 2.0,
-                        "middle",
-                        13.0_f64,
-                        "600",
-                        theme.text_primary,
-                    ),
-                    "badge" => (
-                        b.x + b.width / 2.0,
-                        b.y + b.height / 2.0,
-                        "middle",
-                        11.0_f64,
-                        "700",
-                        theme.accent,
-                    ),
-                    "header" => (
-                        b.x + 16.0,
-                        b.y + b.height / 2.0,
-                        "start",
-                        16.0_f64,
-                        "700",
-                        theme.text_primary,
-                    ),
-                    "input" => (
-                        b.x + 12.0,
-                        b.y + b.height / 2.0,
-                        "start",
-                        13.0_f64,
-                        "400",
-                        theme.text_muted,
-                    ),
-                    _ => (
-                        b.x + 16.0,
-                        b.y + 20.0,
-                        "start",
-                        14.0_f64,
-                        "600",
-                        theme.text_primary,
-                    ),
-                };
-
-                let text_css = rgba_css(if b.state == "disabled" {
-                    [tc[0], tc[1], tc[2], 100]
-                } else {
-                    tc
-                });
-
+            if let Some(label) = &labels[label_index] {
+                let clip_id = format!("synth-label-clip-{label_index}");
+                let c = label.clip;
+                let css = rgba_css(label.color);
+                let (fill, stroke) = if label.stroke_width > 0.0 {
+                    ("none", css.as_str())
+                } else { (css.as_str(), "none") };
                 svg.push_str(&format!(
-                    "    <text x=\"{tx:.1}\" y=\"{ty:.1}\" font-family=\"system-ui, -apple-system, sans-serif\" font-size=\"{font_size:.1}\" font-weight=\"{weight}\" fill=\"{text_css}\" text-anchor=\"{anchor}\" dominant-baseline=\"central\">{escaped}</text>\n"
-                ));
+                    "    <defs><clipPath id=\"{clip_id}\"><rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\"/></clipPath></defs>\n",
+                    c.x0, c.y0, c.width(), c.height()));
+                svg.push_str(&format!(
+                    "    <path role=\"img\" aria-label=\"{}\" d=\"{}\" fill=\"{fill}\" stroke=\"{stroke}\" stroke-width=\"{}\" stroke-linecap=\"round\" stroke-linejoin=\"round\" clip-path=\"url(#{clip_id})\"><title>{}</title></path>\n",
+                    xml_escape(&b.label), label.path.to_svg(), label.stroke_width, xml_escape(&b.label)));
             }
 
             svg.push_str("  </g>\n");
@@ -405,6 +335,26 @@ impl AssetHost<'_> {
         self.charge(bytes_len + boxes.len() * 64 + 512, bytes_len * 2 + 2048)?;
 
         self.encode("svg", svg_bytes)
+    }
+
+    fn ui_label_outlines(
+        &mut self, a: &Args, boxes: &[LayoutBox], theme: &ThemeTokens,
+    ) -> Result<Vec<Option<super::label_outline::LabelOutline>>, String> {
+        let text_bytes: usize = boxes.iter().map(|b| b.label.len()).sum();
+        if boxes.len() > 1024 || text_bytes > 16384 {
+            return Err("UI labels exceed 1024 boxes or 16384 UTF-8 bytes".into());
+        }
+        self.charge(text_bytes * 256 + 1024, text_bytes * 2048 + 4096)?;
+        let font = match a.get("font") {
+            Some(value) => {
+                let key = text(value)?;
+                let input = self.inputs.iter().find(|r| r.key == key)
+                    .ok_or_else(|| format!("Missing retained UI font input: {key}"))?;
+                Some(input.bytes.as_slice())
+            }
+            None => None,
+        };
+        super::label_outline::shape_labels(boxes, theme, font)
     }
 
     fn parse_render_inputs(
@@ -497,5 +447,40 @@ impl AssetHost<'_> {
             }),
             self.limits,
         )
+    }
+}
+
+#[cfg(test)]
+mod state_parity_tests {
+    use super::*;
+
+    #[test]
+    fn exported_state_artwork_does_not_apply_a_second_visual_effect() {
+        let limits = ToolLimits::default();
+        let cancel = std::sync::atomic::AtomicBool::new(false);
+        let mut host = AssetHost { workspace: AssetWorkspace::default(), inputs: &[], limits: &limits, cancel: &cancel, work: 0 };
+        let boxes = ["disabled", "focus", "hover"].iter().enumerate().map(|(i, state)| Value::Record(BTreeMap::from([
+            ("id".into(), Value::String(format!("state-{i}"))),
+            ("role".into(), Value::String("button".into())),
+            ("label".into(), Value::String("SAVE".into())),
+            ("state".into(), Value::String((*state).into())),
+            ("x".into(), Value::F64(0.0)), ("y".into(), Value::F64(i as f64 * 42.0)),
+            ("width".into(), Value::F64(120.0)), ("height".into(), Value::F64(36.0)),
+        ]))).collect();
+        let args = BTreeMap::from([("layout".into(), Value::Record(BTreeMap::from([
+            ("viewport_width".into(), Value::F64(160.0)), ("viewport_height".into(), Value::F64(140.0)),
+            ("boxes".into(), Value::List(boxes)),
+        ]))), ("scale".into(), Value::F64(0.5))]);
+        let svg = host.project_ui_svg(&args).unwrap();
+        let text = std::str::from_utf8(&host.workspace.encoded(&svg).unwrap().bytes).unwrap();
+        assert!(text.contains("pointer-events: none"));
+        assert!(!text.contains("opacity: 0.45"));
+        assert!(!text.contains("filter:"));
+        assert!(text.contains("stroke-width=\"2.0\""));
+        assert!(text.contains("stroke-width=\"1.5\""));
+        assert!(text.contains("aria-label=\"SAVE\""));
+        let image = host.render_ui_sheet(&args).unwrap();
+        let Artifact::Rgba(rgba) = host.workspace.get(&image).unwrap() else { panic!("expected raster"); };
+        assert_eq!((rgba.width, rgba.height), (80, 70));
     }
 }

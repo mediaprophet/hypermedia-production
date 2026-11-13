@@ -1,17 +1,17 @@
-use wgpu_profiler::{GpuProfiler, GpuProfilerSettings};
+use etalon_profiler::{GpuProfiler, GpuProfilerSettings};
 
-use crate::src::{expected_scope, validate_results, validate_results_unordered, Requires};
+use crate::src::{Requires, expected_scope, validate_results, validate_results_unordered};
 
 use super::create_device;
 
 #[test]
 fn interleaved_scopes() {
-    let (_, device, queue) = create_device(wgpu::Features::TIMESTAMP_QUERY).unwrap();
+    let (_, device, queue) = create_device(etalon::Features::TIMESTAMP_QUERY).unwrap();
 
     let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unwrap();
 
-    let mut encoder0 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-    let mut encoder1 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+    let mut encoder0 = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
+    let mut encoder1 = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 
     {
         let mut e0_s0 = profiler.scope("e0_s0", &mut encoder0);
@@ -26,7 +26,7 @@ fn interleaved_scopes() {
     queue.submit([encoder1.finish(), encoder0.finish()]);
     profiler.end_frame().unwrap();
 
-    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+    device.poll(etalon::PollType::wait_indefinitely()).unwrap();
 
     // Single frame should now be available.
     let frame = profiler
@@ -64,7 +64,7 @@ fn interleaved_scopes() {
 
 #[test]
 fn multithreaded_scopes() {
-    let (_, device, queue) = create_device(wgpu::Features::TIMESTAMP_QUERY).unwrap();
+    let (_, device, queue) = create_device(etalon::Features::TIMESTAMP_QUERY).unwrap();
 
     let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unwrap();
 
@@ -74,7 +74,7 @@ fn multithreaded_scopes() {
     let (command_buffer0, command_buffer1) = std::thread::scope(|thread_scope| {
         let join_handle0 = thread_scope.spawn(|| {
             let mut encoder =
-                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+                device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
             barrier.wait();
 
             for i in 0..NUM_SCOPES_PER_THREAD {
@@ -84,7 +84,7 @@ fn multithreaded_scopes() {
         });
         let join_handle1 = thread_scope.spawn(|| {
             let mut encoder =
-                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+                device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
             barrier.wait();
 
             for i in 0..NUM_SCOPES_PER_THREAD {
@@ -97,12 +97,12 @@ fn multithreaded_scopes() {
     });
 
     let mut resolve_encoder =
-        device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+        device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
     profiler.resolve_queries(&mut resolve_encoder);
     queue.submit([command_buffer0, command_buffer1, resolve_encoder.finish()]);
     profiler.end_frame().unwrap();
 
-    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+    device.poll(etalon::PollType::wait_indefinitely()).unwrap();
 
     // Single frame should now be available.
     let frame = profiler

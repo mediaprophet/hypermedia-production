@@ -409,7 +409,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
             "assemble_corpus",
             "https://qualiadb.org/ext/qualia/species#assemble_corpus",
             2,
-            24,
+            27, // 1..26 are existing manifold ABI slots; 24 belongs to sweep.
             "(SpeciesCorpusDocument) -> SealedSpeciesCorpus",
             144
         ),

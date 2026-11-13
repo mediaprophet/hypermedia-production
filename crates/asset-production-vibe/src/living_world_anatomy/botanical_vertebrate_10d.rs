@@ -374,6 +374,11 @@ impl AssetHost<'_> {
             "triangle_count".into(),
             Value::I64(compiled.triangle_count as i64),
         );
+        out.insert("skeletal_joint_count".into(), Value::I64(compiled.authored_skin.as_ref()
+            .map_or(compiled.rig.joint_count, |binding| binding.joints.len()) as i64));
+        out.insert("skin_bind_source".into(), Value::String(if compiled.authored_skin.is_some() {
+            "authored-world-landmarks"
+        } else { "archetype-default" }.into()));
         out.insert(
             "submesh_count".into(),
             Value::I64(compiled.submesh_ranges.len() as i64),

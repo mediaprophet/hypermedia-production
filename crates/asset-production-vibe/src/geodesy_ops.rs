@@ -13,6 +13,42 @@ use qualia_core_db::q42::m64_matter::{
 use std::collections::BTreeMap;
 use terrain_brushes::{CowTerrainTileGrid, StrokeSample};
 
+/// A square, metre-based heightfield record shared by sculpt, erosion and M64.
+/// `no_data` is explicitly "none": the current solvers require every cell.
+pub(crate) fn heightfield_record(side: usize, spacing: f64, origin: [f64; 3], heights: &[f32]) -> Value {
+    Value::Record(BTreeMap::from([
+        ("side".into(), Value::U64(side as u64)),
+        ("cell_spacing_m".into(), Value::F64(spacing)),
+        ("origin_m".into(), Value::List(origin.into_iter().map(Value::F64).collect())),
+        ("height_units".into(), Value::String("m".into())),
+        ("frame".into(), Value::String("local-east-north-up".into())),
+        ("no_data".into(), Value::String("none".into())),
+        ("samples".into(), Value::List(heights.iter().map(|&h| Value::F64(h as f64)).collect())),
+    ]))
+}
+
+pub(crate) fn parse_heightfield(v: &Value) -> Result<(usize, f64, [f64; 3], Vec<f32>), String> {
+    let r = record(v)?;
+    fields(r, &["side", "cell_spacing_m", "origin_m", "height_units", "frame", "no_data", "samples"])?;
+    let side = count(r, "side", 0, 256)?;
+    if side < 2 { return Err("heightfield side must be at least 2".into()); }
+    let spacing = num(required(r, "cell_spacing_m")?)?;
+    if spacing <= 0.0 || spacing > 1000.0 { return Err("invalid heightfield spacing".into()); }
+    let origin = vector::<3>(required(r, "origin_m")?)?;
+    if text(required(r, "height_units")?)? != "m" || text(required(r, "no_data")?)? != "none" || r.get("frame").map(text).transpose()?.unwrap_or("local-east-north-up") != "local-east-north-up" {
+        return Err("heightfield requires local-east-north-up frame, metre units and no_data=none; masked cells are unsupported".into());
+    }
+    let samples = list(required(r, "samples")?)?;
+    if samples.len() != side * side { return Err("heightfield sample count does not match side".into()); }
+    let mut heights = Vec::with_capacity(samples.len());
+    for sample in samples {
+        let h = num(sample)? as f32;
+        if !h.is_finite() || h.abs() > 2_000_000.0 { return Err("heightfield sample outside supported metre range".into()); }
+        heights.push(h);
+    }
+    Ok((side, spacing, origin, heights))
+}
+
 struct ParsedBrushStroke {
     op_code: u8,
     falloff_code: u8,
@@ -174,12 +210,9 @@ fn self_verify_m64(buffer: &[u8], record_count: u64, expected_mode: u8) -> Resul
                         .into(),
                 );
             }
-            let prefix = reader
-                .chunk(0)
-                .map(|c| c.directory_entry().bao_root_hash_prefix);
-            if prefix == Some([0u8; 12]) {
+            if v.full_hash_chunks != 1 || v.legacy_prefix_chunks != 0 {
                 return Err(
-                    "M64 self-verification failed: occupancy Bao prefix is unsigned".into(),
+                    "M64 self-verification failed: occupancy requires a full BLAKE3 seal".into(),
                 );
             }
         }
@@ -329,6 +362,7 @@ impl AssetHost<'_> {
                 "tile_resolution",
                 "cell_spacing_m",
                 "base_height_m",
+                "origin_m",
                 "strokes",
                 "width",
                 "height",
@@ -427,9 +461,12 @@ impl AssetHost<'_> {
             }
         }
 
+        let origin = a.get("origin_m").map(vector::<3>).transpose()?.unwrap_or([0.0; 3]);
+        let field = heightfield_record(tile_res, cell_spacing_m as f64, origin, &heights);
         let rgba_handle = self.store_rgba(w, h, pixels)?;
         Ok(Value::Record(BTreeMap::from([
             ("relief_rgba".into(), rgba_handle),
+            ("heightfield".into(), field),
             ("min_elevation_m".into(), Value::F64(min_h as f64)),
             ("max_elevation_m".into(), Value::F64(max_h as f64)),
             ("mean_elevation_m".into(), Value::F64(mean_h)),
@@ -445,6 +482,7 @@ impl AssetHost<'_> {
                 "grid_side",
                 "strokes",
                 "record_mode",
+                "heightfield",
             ],
         )?;
         let origin = match a.get("origin_lat_lon") {
@@ -471,8 +509,18 @@ impl AssetHost<'_> {
             .map(text)
             .transpose()?
             .unwrap_or("strata");
+        let supplied = a.get("heightfield").map(parse_heightfield).transpose()?;
+        if supplied.is_some() && (!strokes.is_empty() || a.contains_key("grid_side") || a.contains_key("base_elevation_m")) {
+            return Err("heightfield cannot be combined with strokes, grid_side or base_elevation_m".into());
+        }
+        if supplied.is_some() && record_mode != "strata" {
+            return Err("heightfield input currently requires strata mode".into());
+        }
+        if let Some((side, spacing, local_origin, heights)) = supplied {
+            return self.compile_heightfield_m64(origin, side, spacing, local_origin, &heights);
+        }
         match record_mode {
-            "strata" => self.compile_m64_strata(origin, base_elev, side, &strokes),
+            "strata" => self.compile_m64_strata(origin, base_elev, side, &strokes, None),
             "holo" => self.compile_m64_occupancy(origin, base_elev, side, &strokes, M64_MODE_HOLO),
             "point" => {
                 self.compile_m64_occupancy(origin, base_elev, side, &strokes, M64_MODE_POINT)
@@ -483,26 +531,53 @@ impl AssetHost<'_> {
         }
     }
 
+    /// Seal the retained field via QualiaDB's checked georaster profile. Samples
+    /// are quantized to millimetres; the retained f32 field remains authoritative.
+    fn compile_heightfield_m64(&mut self, origin: [f64; 2], side: usize, spacing: f64, local: [f64; 3], heights: &[f32]) -> Result<Value, String> {
+        use qualia_geospatial::{ElevationRaster, GeodeticFrame, SRID_WGS84, VERTICAL_DATUM_ELLIPSOIDAL};
+        use qualia_geospatial::raster_m64::{compile_raster_to_m64_v3, RasterM64Limits, RasterM64Policy};
+        use qualia_core_db::q42::m64_matter::{M64RasterEdges, M64RasterRows};
+        let mm = |v: f64| -> Result<i32, String> {
+            let v = (v * 1000.0).round();
+            if !v.is_finite() || v < i32::MIN as f64 || v > i32::MAX as f64 { return Err("heightfield coordinate exceeds millimetre range".into()); }
+            Ok(v as i32)
+        };
+        let cell_mm = mm(spacing)?;
+        if cell_mm <= 0 || (cell_mm as f64 / 1000.0 - spacing).abs() > 1e-6 { return Err("M64 cell spacing must be an exact positive millimetre".into()); }
+        let mut frame = GeodeticFrame { srid: SRID_WGS84, vertical_datum: VERTICAL_DATUM_ELLIPSOIDAL, origin_lat_deg: origin[0], origin_lon_deg: origin[1], origin_elevation_mm: mm(local[2])?, ..Default::default() };
+        let (lat, lon) = frame.unproject_from_local_mm(mm(local[0])? as i64, mm(local[1])? as i64);
+        frame.origin_lat_deg = lat;
+        frame.origin_lon_deg = lon;
+        let elevations: Vec<i32> = heights.iter().map(|h| mm(*h as f64 + local[2])).collect::<Result<_, _>>()?;
+        let raster = ElevationRaster { width: side, height: side, cell_size_mm: cell_mm as u32, elevations_mm: &elevations };
+        let policy = RasterM64Policy { rows: M64RasterRows::North, edges: M64RasterEdges::RepeatNearest, nodata_sentinel_mm: None };
+        let shape = policy.metadata(&raster, &frame).shape().map_err(|e| format!("invalid georaster: {e:?}"))?;
+        self.charge(shape.records, shape.file_bytes)?;
+        if shape.file_bytes > self.limits.resource_bytes { return Err("georaster exceeds resource budget".into()); }
+        let mut output = vec![0; shape.file_bytes];
+        let len = compile_raster_to_m64_v3(&raster, &frame, 1, policy, RasterM64Limits { max_output_bytes: self.limits.resource_bytes, max_chunks: shape.chunks, max_records: shape.records }, self.cancel, &mut output).map_err(|e| format!("georaster compile: {e:?}"))?;
+        output.truncate(len);
+        self.encode("m64", output)
+    }
+
     fn compile_m64_strata(
         &mut self,
         origin: [f64; 2],
         base_elev: f32,
         side: usize,
         strokes: &[ParsedBrushStroke],
+        supplied: Option<(usize, f64, [f64; 3], Vec<f32>)>,
     ) -> Result<Value, String> {
+        let side = supplied.as_ref().map(|v| v.0).unwrap_or(side);
         let record_count = side * side;
         self.charge(
             record_count * (strokes.len() + 8),
             record_count * 128 + 16384,
         )?;
 
-        let heights = sculpt_tile(
-            side,
-            1.0,
-            base_elev,
-            strokes,
-            self.limits.total_resource_bytes,
-        )?;
+        let heights = if let Some((_, _, _, heights)) = supplied { heights } else {
+            sculpt_tile(side, 1.0, base_elev, strokes, self.limits.total_resource_bytes)?
+        };
 
         let payload_bytes_len = record_count * 64;
         let total_file_size = 128 + payload_bytes_len;
@@ -577,7 +652,7 @@ impl AssetHost<'_> {
         // header (64) + LRM3 (128) + directory (64) + one 16³ brick
         let dir_off = 64 + LRM3_BLOCK_BYTES;
         let payload_off = dir_off + 64;
-        let total_file_size = payload_off + M64_BRICK3D_BYTES;
+        let total_file_size = payload_off + M64_BRICK3D_BYTES + 64;
         let mut buffer = vec![0u8; total_file_size];
 
         let mut lrm3 = M64LocalMetricHeader::default();
@@ -594,13 +669,13 @@ impl AssetHost<'_> {
             side,
             min_h,
             span,
-            &mut buffer[payload_off..],
+            &mut buffer[payload_off..payload_off + M64_BRICK3D_BYTES],
         );
 
-        // Occupancy omits per-record CRC; a non-zero prefix makes M64Reader hash the brick.
-        let digest = blake3::hash(&buffer[payload_off..]);
-        let mut bao_root_hash_prefix = [0u8; 12];
-        bao_root_hash_prefix.copy_from_slice(&digest.as_bytes()[..12]);
+        // Occupancy records have no CRC: seal every byte with the full BLAKE3 digest.
+        let trailer = qualia_core_db::q42::chunk_integrity::blake3_trailer(
+            &buffer[payload_off..payload_off + M64_BRICK3D_BYTES]);
+        buffer[payload_off + M64_BRICK3D_BYTES..].copy_from_slice(&trailer);
 
         let mut header = M64Header::default();
         header.total_file_size = total_file_size as u64;
@@ -616,13 +691,13 @@ impl AssetHost<'_> {
             chunk_uuid: [0x64; 16],
             spatial_hilbert_index: encode_hilbert3d_u64(0, 0, 0, 4),
             byte_offset: payload_off as u64,
-            byte_length: M64_BRICK3D_BYTES as u32,
+            byte_length: (M64_BRICK3D_BYTES + 64) as u32,
             record_count: record_count as u32,
             srid_geodetic_code: M64_SRID_LOCAL_MICROMETER,
             lut_bank_epoch_id: 1,
             chunk_record_mode: mode,
-            compression_flags: 0,
-            bao_root_hash_prefix,
+            compression_flags: qualia_core_db::q42::m64_matter::M64_CODEC_BLAKE3_FULL,
+            bao_root_hash_prefix: [0; 12],
             entry_crc32c: 0,
         };
         entry.update_crc();
@@ -663,7 +738,7 @@ impl AssetHost<'_> {
         let mut scratch = vec![M64PayloadInterval::default(); 1024];
         let reader = M64Reader::parse(&bytes, limits, &mut scratch)
             .map_err(|e| format!("M64 verification failed: {e}"))?;
-        // QualiaDB parse admits HOLO/POINT with a zero prefix; untrusted occupancy needs a Bao seal.
+        // Structural raw admission is separate; untrusted occupancy requires a full BLAKE3 seal.
         for i in 0..reader.verification().chunks {
             let chunk = reader
                 .chunk(i)
@@ -672,10 +747,9 @@ impl AssetHost<'_> {
             if matches!(
                 entry.chunk_record_mode,
                 M64_MODE_HOLO | M64_MODE_POINT
-            ) && entry.bao_root_hash_prefix == [0u8; 12]
-                && entry.compression_flags != 2
+            ) && entry.compression_flags != qualia_core_db::q42::m64_matter::M64_CODEC_BLAKE3_FULL
             {
-                return Err("M64 occupancy omitted BLAKE3-Bao seal".into());
+                return Err("M64 occupancy omitted full BLAKE3 seal".into());
             }
         }
         let v = reader.verification();
@@ -686,6 +760,18 @@ impl AssetHost<'_> {
             ("chunks".into(), Value::U64(v.chunks as u64)),
             ("total_records".into(), Value::U64(v.total_records)),
             ("crc_checked".into(), Value::U64(v.record_crc_checked)),
+            ("full_hash_chunks".into(), Value::U64(v.full_hash_chunks as u64)),
+            ("legacy_prefix_chunks".into(), Value::U64(v.legacy_prefix_chunks as u64)),
+            ("records_without_checksum".into(), Value::U64(v.records_without_checksum)),
+            ("version".into(), Value::U64(h.version as u64)),
+            ("legacy_magic".into(), Value::Bool(bytes.starts_with(b"e64\0"))),
+            ("profile".into(), Value::String(if reader.georaster().is_some() {
+                "GRM3 georaster"
+            } else if reader.lrm3().is_some() {
+                "LRM3 local metric"
+            } else {
+                "M64 directory indexed"
+            }.into())),
             ("origin_lat".into(), Value::F64(h.spatial_origin[0] as f64)),
             ("origin_lon".into(), Value::F64(h.spatial_origin[1] as f64)),
         ])))
@@ -733,6 +819,45 @@ mod tests {
         };
         let mut scratch = [M64PayloadInterval::default(); 4];
         M64Reader::parse(bytes, limits, &mut scratch).expect("M64Reader::parse")
+    }
+
+    #[test]
+    fn sculpt_erosion_and_m64_share_physical_samples() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let args = BTreeMap::from([
+            ("tile_resolution".into(), Value::U64(16)),
+            ("base_height_m".into(), Value::F64(123.125)),
+        ]);
+        let sculpt = host.sculpt_terrain(&args).unwrap();
+        let field = record(&sculpt).unwrap().get("heightfield").unwrap().clone();
+        let (_, spacing, origin, samples) = parse_heightfield(&field).unwrap();
+        assert_eq!(spacing, 1.0);
+        assert_eq!(origin, [0.0; 3]);
+        assert!(samples.iter().all(|h| *h == 123.125));
+        let erosion = host.erode_geomorphic_heightfield(&BTreeMap::from([("heightfield".into(), field)])).unwrap();
+        let eroded = record(&erosion).unwrap().get("heightfield").unwrap().clone();
+        let (_, spacing, origin, samples) = parse_heightfield(&eroded).unwrap();
+        assert_eq!((spacing, origin), (1.0, [0.0; 3]));
+        let m64 = host.compile_m64(&BTreeMap::from([("heightfield".into(), eroded)])).unwrap();
+        let bytes = encoded_bytes(&host, &m64);
+        let reader = parse_m64(&bytes);
+        assert_eq!(reader.georaster().unwrap().cell_size_mm, 1000);
+        assert_eq!(reader.raster_sample(0, 0), Some(qualia_core_db::q42::m64_matter::M64RasterSample::ElevationMm((samples[0] * 1000.0).round() as i32)));
+        let translated = heightfield_record(16, 2.5, [100.0, 200.0, 3.0], &samples);
+        let translated_handle = host.compile_m64(&BTreeMap::from([("heightfield".into(), translated)])).unwrap();
+        let translated_bytes = encoded_bytes(&host, &translated_handle);
+        let translated_reader = parse_m64(&translated_bytes);
+        let meta = translated_reader.georaster().unwrap();
+        assert_eq!(meta.cell_size_mm, 2500);
+        assert_eq!(meta.origin_elevation_mm, 3000);
+        assert_ne!(meta.origin_lat_deg, -35.78);
+        assert_ne!(meta.origin_lon_deg, 148.29);
+        assert_eq!(translated_reader.raster_sample(0, 0), Some(qualia_core_db::q42::m64_matter::M64RasterSample::ElevationMm(((samples[0] as f64 + 3.0) * 1000.0).round() as i32)));
+        let mut bad = record(&heightfield_record(16, 1.0, [0.0; 3], &samples)).unwrap().clone();
+        bad.insert("no_data".into(), Value::String("masked".into()));
+        assert!(parse_heightfield(&Value::Record(bad)).is_err());
     }
 
     #[test]
@@ -814,11 +939,9 @@ mod tests {
             reader.verification().records_without_checksum,
             M64_BRICK3D_RECORDS as u64
         );
-        assert_ne!(
-            entry.bao_root_hash_prefix,
-            [0u8; 12],
-            "occupancy Bao prefix must be non-zero"
-        );
+        assert_eq!(entry.bao_root_hash_prefix, [0; 12]);
+        assert_eq!(entry.compression_flags, qualia_core_db::q42::m64_matter::M64_CODEC_BLAKE3_FULL);
+        assert_eq!(reader.verification().full_hash_chunks, 1);
         assert_eq!(entry.srid_geodetic_code, M64_SRID_LOCAL_MICROMETER);
 
         let mut verify_args = BTreeMap::new();
@@ -1063,11 +1186,9 @@ mod tests {
             reader.verification().records_without_checksum,
             M64_BRICK3D_RECORDS as u64
         );
-        assert_ne!(
-            entry.bao_root_hash_prefix,
-            [0u8; 12],
-            "occupancy Bao prefix must be non-zero"
-        );
+        assert_eq!(entry.bao_root_hash_prefix, [0; 12]);
+        assert_eq!(entry.compression_flags, qualia_core_db::q42::m64_matter::M64_CODEC_BLAKE3_FULL);
+        assert_eq!(reader.verification().full_hash_chunks, 1);
 
         let mut verify_args = BTreeMap::new();
         verify_args.insert("m64".into(), handle);
@@ -1098,6 +1219,7 @@ mod tests {
             bytemuck::pod_read_unaligned(&bytes[dir_off..dir_off + 64]);
         entry.bao_root_hash_prefix = [0u8; 12];
         entry.compression_flags = 0;
+        entry.byte_length = entry.record_count * 64;
         entry.update_crc();
         bytes[dir_off..dir_off + 64].copy_from_slice(bytemuck::bytes_of(&entry));
     }

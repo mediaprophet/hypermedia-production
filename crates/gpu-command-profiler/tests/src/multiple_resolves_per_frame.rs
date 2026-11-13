@@ -6,16 +6,17 @@ fn multiple_resolves_per_frame() {
     const NUM_SCOPES: usize = 1000;
 
     let (_, device, queue) = super::create_device(
-        wgpu::Features::TIMESTAMP_QUERY.union(wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS),
+        etalon::Features::TIMESTAMP_QUERY.union(etalon::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS),
     )
     .unwrap();
 
     let mut profiler =
-        wgpu_profiler::GpuProfiler::new(&device, wgpu_profiler::GpuProfilerSettings::default())
+        etalon_profiler::GpuProfiler::new(&device, etalon_profiler::GpuProfilerSettings::default())
             .unwrap();
 
     {
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+        let mut encoder =
+            device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 
         // Resolve call per scope.
         // Do this many times to check for potential buffer overflows as found in
@@ -34,7 +35,7 @@ fn multiple_resolves_per_frame() {
     }
 
     // Poll to explicitly trigger mapping callbacks.
-    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
+    device.poll(etalon::PollType::wait_indefinitely()).unwrap();
 
     // Frame should now be available and contain all the scopes.
     let scopes = profiler

@@ -29,6 +29,9 @@ impl AssetHost<'_> {
         fields(
             a,
             &[
+                "source_10d",
+                "skeleton_10d",
+                "skin",
                 "archetype",
                 "speed_m_s",
                 "turn_rate_rad_s",
@@ -50,6 +53,32 @@ impl AssetHost<'_> {
             ],
         )?;
 
+        if let Some(skeleton) = a.get("skeleton_10d") {
+            if a.contains_key("skin") || a.keys().any(|k| !["source_10d", "skeleton_10d"].contains(&k.as_str())) {
+                return Err("skeleton_10d transfer accepts only source_10d and skeleton_10d".into());
+            }
+            let source = required(a, "source_10d")?;
+            let source_resource = self.resolve_bound_10d(source)?;
+            let skeleton_resource = self.resolve_bound_10d(skeleton)?;
+            let rig_bytes = &skeleton_resource.bytes;
+            qualia_core_db::container_10d::skeletal_container::read_skeletal_section(rig_bytes).map_err(|e| format!("skeleton source: {e:?}"))?;
+            let header = qualia_core_db::container_10d::header::Container10dHeader::parse(rig_bytes).map_err(|e| format!("skeleton header: {e:?}"))?;
+            let sections = qualia_core_db::container_10d::parse_section_table(rig_bytes, &header).map_err(|e| format!("skeleton sections: {e:?}"))?;
+            let desc = sections.iter().find(|s| s.typ() == Some(qualia_core_db::container_10d::SectionType::SkeletalAnimation)).ok_or("skeleton section missing")?;
+            let start = desc.byte_offset as usize;
+            let end = start.checked_add(desc.byte_length as usize).filter(|n| *n <= rig_bytes.len()).ok_or("invalid skeleton section extent")?;
+            let payload = &rig_bytes[start..end];
+            let capacity = source_resource.bytes.len().checked_add(payload.len()).and_then(|n| n.checked_add(4096)).ok_or("container size overflow")?;
+            if capacity > self.limits.resource_bytes { return Err("bound container exceeds resource budget".into()); }
+            let mut bytes = vec![0; capacity];
+            let len = qualia_core_db::container_10d::skeletal_container::attach_skeletal_section_into(&source_resource.bytes, payload, &mut bytes).map_err(|e| format!("skeleton transfer: {e:?}"))?;
+            bytes.truncate(len);
+            let mut result = self.encode("10d", bytes)?;
+            if let Value::Record(source_record) = source { if let Some(textures) = source_record.get("textures") {
+                if let Value::Record(ref mut output) = result { output.insert("textures".into(), textures.clone()); }
+            }}
+            return Ok(Value::Record(BTreeMap::from([("container_10d".into(), result)])));
+        }
         let archetype_str = opt_string(a, "archetype", "macropod_saltatorial")?;
         let archetype = parse_fauna_archetype(&archetype_str)?;
         let macro_str = opt_string(a, "macro_state", "grazing")?;
@@ -106,10 +135,29 @@ impl AssetHost<'_> {
         // Encode into a verified `.10d` `SKL1` binary section
         let joints = &rig.joints[..FAUNA_MAX_JOINTS];
         let joint_ids: [u64; FAUNA_MAX_JOINTS] = std::array::from_fn(|i| (i as u64) + 1);
-        let skin = [SkinWeight {
-            joints: [0, 1, 2, 3],
-            weights: [1.0, 0.0, 0.0, 0.0],
-        }];
+        if a.contains_key("source_10d") != a.contains_key("skin") {
+            return Err("source_10d and skin must be supplied together".into());
+        }
+        let skin = if let Some(value) = a.get("skin") {
+            let rows = list(value)?;
+            if rows.is_empty() || rows.len() > 200_000 { return Err("invalid skin vertex count".into()); }
+            let mut skin = Vec::with_capacity(rows.len());
+            for row in rows {
+                let r = record(row)?;
+                fields(r, &["joints", "weights"])?;
+                let joints = list(required(r, "joints")?)?;
+                let weights = list(required(r, "weights")?)?;
+                if joints.len() != 4 || weights.len() != 4 { return Err("skin influences require four joints and weights".into()); }
+                let mut j = [0u16; 4];
+                let mut w = [0f32; 4];
+                for i in 0..4 {
+                    j[i] = u16::try_from(integer(&joints[i], "joint")?).map_err(|_| "invalid joint index")?;
+                    w[i] = num(&weights[i])? as f32;
+                }
+                skin.push(SkinWeight { joints: j, weights: w });
+            }
+            skin
+        } else { vec![SkinWeight { joints: [0, 1, 2, 3], weights: [1.0, 0.0, 0.0, 0.0] }] };
         let duration = 1.0f64;
         let clips = [ClipRecord {
             id: 1,
@@ -169,11 +217,26 @@ impl AssetHost<'_> {
             .map_err(|e| format!("Failed to verify SKL1 section: {e:?}"))?;
         debug_assert_eq!(parsed.counts().joints, FAUNA_MAX_JOINTS);
 
+        let bound_container = if let Some(source) = a.get("source_10d") {
+            let resource = self.resolve_bound_10d(source)?;
+            let capacity = resource.bytes.len().checked_add(written).and_then(|n| n.checked_add(4096)).ok_or("container size overflow")?;
+            if capacity > self.limits.resource_bytes { return Err("bound container exceeds resource budget".into()); }
+            let mut bytes = vec![0; capacity];
+            let len = qualia_core_db::container_10d::skeletal_container::attach_skeletal_section_into(&resource.bytes, &skl1_bytes[..written], &mut bytes)
+                .map_err(|e| format!("invalid skeletal binding: {e:?}"))?;
+            bytes.truncate(len);
+            let mut result = self.encode("10d", bytes)?;
+            if let Value::Record(source_record) = source { if let Some(textures) = source_record.get("textures") {
+                if let Value::Record(ref mut output) = result { output.insert("textures".into(), textures.clone()); }
+            }}
+            Some(result)
+        } else { None };
         let active_state_index = rig.absm.layers[0].current_state;
         let llm_json = hooks.to_small_llm_json(macro_mode);
         let llm_packet_resource = self.encode("json", llm_json.clone().into_bytes())?;
 
         let mut out = BTreeMap::new();
+        if let Some(container) = bound_container { out.insert("container_10d".into(), container); }
         out.insert("archetype".into(), Value::String(archetype_str));
         out.insert("macro_state".into(), Value::String(macro_mode.as_str().into()));
         out.insert("joint_count".into(), Value::I64(FAUNA_MAX_JOINTS as i64));
@@ -187,6 +250,20 @@ impl AssetHost<'_> {
         out.insert("small_llm_packet_resource".into(), llm_packet_resource);
 
         Ok(Value::Record(out))
+    }
+
+    fn resolve_bound_10d(&self, value: &Value) -> Result<&Resource, String> {
+        let resource = if let Value::String(key) = value {
+            self.inputs.iter().find(|r| r.key == *key).ok_or_else(|| format!("Missing retained input: {key}"))?
+        } else {
+            let r = self.workspace.encoded(value)?;
+            if r.kind != "10d" { return Err("binding requires an encoded 10d handle".into()); }
+            r
+        };
+        if resource.bytes.is_empty() || resource.bytes.len() > self.limits.resource_bytes {
+            return Err("binding requires a bounded 10d resource".into());
+        }
+        Ok(resource)
     }
 
     /// Queries the closest canonical anatomical ontology pin (`CANONICAL_ANATOMICAL_PINS`, `32` pins)

@@ -93,7 +93,7 @@ impl ShaderInfo {
         let module = wgsl::parse_str(&source).map_err(|error| Error::new(&source, name, error))?;
         let module_info = naga::valid::Validator::new(ValidationFlags::all(), Capabilities::all())
             .validate(&module)
-            .map_err(|error| Error::new(&source, name, error))?;
+            .map_err(|error| Error::new(&source, name, *error))?;
         let (entry_index, entry) = module
             .entry_points
             .iter()
@@ -249,7 +249,7 @@ impl ShaderInfo {
     }
 }
 
-// TODO: This is a workaround for gfx-rs/wgpu#5476. Since naga can't handle the `enable` directive,
+// TODO: This is a workaround for gfx-rs/etalon#5476. Since naga can't handle the `enable` directive,
 // we allow its use in other WGSL compilers using our own "#enable" post-process directive. Remove
 // this mechanism once naga supports the directive.
 fn postprocess(wgsl: &str) -> String {

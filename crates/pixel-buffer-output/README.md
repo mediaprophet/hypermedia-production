@@ -21,7 +21,7 @@ The Minimum Supported Rust Version for `pixels` will always be made available in
 
 ## Features
 
-- Built on modern graphics APIs powered by [`wgpu`](https://crates.io/crates/wgpu): Vulkan, Metal, DirectX 12, OpenGL ES3.
+- Built on modern graphics APIs powered by [Etalon](https://github.com/mediaprophet/etalon): Vulkan, Metal, DirectX 12, OpenGL ES3.
     - DirectX 11, WebGL2, and WebGPU support are a work in progress.
 - Use your own custom shaders for special effects.
 - Hardware accelerated scaling on perfect pixel boundaries.
@@ -51,7 +51,7 @@ The Minimum Supported Rust Version for `pixels` will always be made available in
 ### Driver issues
 
 The most common issue is having an outdated graphics driver installed on the host machine. `pixels`
-requests a low power (aka integrated) GPU by default. If the examples are not working for any reason, you may try setting the `WGPU_POWER_PREF=high` environment variable to see if that addresses the issue on your host machine.
+requests a low power (aka integrated) GPU by default. If the examples are not working for any reason, you may try setting the `ETALON_POWER_PREF=high` environment variable to see if that addresses the issue on your host machine.
 
 You should also try to keep your graphics drivers up-to-date, especially if you have an old Intel integrated GPU. Keep in mind that some drivers and GPUs are EOL and will not be supported.
 

@@ -4,28 +4,15 @@
 //!
 //! Synthesizes 5D electromagnetic lattices into QualiaDB's native Q42EMF64 (`.emf`)
 //! binary container format with 3D Hilbert volumetric brick clustering,
-//! verifies CRC-32C and BLAKE3-Bao chunk digest trees, and renders 2D spectral
+//! verifies CRC-32C and complete BLAKE3 digests (not Bao trees), and renders 2D spectral
 //! preview slices to straight-alpha RGBA8.
 
 use super::*;
 use qualia_core_db::etalon_render::spectral::colour_kernel::cpu_batch_emf_to_display_gamut_mapped;
 use qualia_core_db::q42::emf_container::{
-    emf_brick_voxel_linear_index, EmfCellRecord64, EmfContainerReader, EmfContainerWriter,
-    EMF_BRICK_CELLS, MU_0, SPEED_OF_LIGHT,
+    EmfCellRecord64, EmfContainerReader, MU_0, SPEED_OF_LIGHT,
 };
-use qualia_core_db::q42::m64_matter::brick3d::encode_hilbert3d_u64;
 use std::collections::BTreeMap;
-use std::f64::consts::PI;
-
-/// A wave/dipole emitter in 3D space with polarization and coherence parameters.
-#[derive(Clone, Debug)]
-struct WaveEmitter {
-    position: [f64; 3],
-    e_amplitude: [f64; 3],
-    wavelength_nm: f64,
-    phase: f64,
-    stokes: [f64; 3],
-}
 
 impl AssetHost<'_> {
     /// Categorical operations dispatch for the `electromagnetics` category.
@@ -52,226 +39,6 @@ impl AssetHost<'_> {
         }
     }
 
-    /// Synthesizes a 3D wave-optical & electromagnetic field volume and seals it
-    /// into QualiaDB's native `Q42EMF64` (`.emf`) binary container.
-    fn compile_emf(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["origin", "voxel_size", "grid_dims", "epoch_s", "sources"])?;
-
-        let origin = match a.get("origin") {
-            Some(v) => {
-                let o = vector::<3>(v)?;
-                [o[0] as f32, o[1] as f32, o[2] as f32]
-            }
-            None => [0.0f32, 0.0f32, 0.0f32],
-        };
-
-        let voxel_size = number(a, "voxel_size", 0.5)? as f32;
-        if !(0.001..=1000.0).contains(&voxel_size) {
-            return Err("voxel_size outside 0.001..=1000.0".into());
-        }
-
-        let grid_dims = match a.get("grid_dims") {
-            Some(v) => {
-                let l = list(v)?;
-                if l.len() != 3 {
-                    return Err("grid_dims must be a list of 3 integers".into());
-                }
-                let bx = integer(&l[0], "grid_dims[0]")?;
-                let by = integer(&l[1], "grid_dims[1]")?;
-                let bz = integer(&l[2], "grid_dims[2]")?;
-                if !(1..=4).contains(&bx) || !(1..=4).contains(&by) || !(1..=4).contains(&bz) {
-                    return Err("grid_dims components must be in 1..=4".into());
-                }
-                [bx as u32, by as u32, bz as u32]
-            }
-            None => [1u32, 1u32, 1u32],
-        };
-
-        let epoch_s = number(a, "epoch_s", 1_700_000_000.0)?;
-
-        let sources_val = required(a, "sources")?;
-        let sources_list = list(sources_val)?;
-        if sources_list.is_empty() || sources_list.len() > 16 {
-            return Err("sources must contain 1..=16 emitters".into());
-        }
-
-        let mut emitters = Vec::with_capacity(sources_list.len());
-        for s_val in sources_list {
-            let s_rec = record(s_val)?;
-            fields(
-                s_rec,
-                &["position", "e_amplitude", "wavelength_nm", "phase", "stokes"],
-            )?;
-            let pos = vector::<3>(required(s_rec, "position")?)?;
-            let e_amp = vector::<3>(required(s_rec, "e_amplitude")?)?;
-            let wavelength_nm = number(s_rec, "wavelength_nm", 550.0)?;
-            if !(1.0..=1e9).contains(&wavelength_nm) {
-                return Err("wavelength_nm outside 1.0..=1e9".into());
-            }
-            let phase = number(s_rec, "phase", 0.0)?;
-            let stokes = match s_rec.get("stokes") {
-                Some(v) => vector::<3>(v)?,
-                None => [0.0, 0.0, 0.0],
-            };
-            emitters.push(WaveEmitter {
-                position: pos,
-                e_amplitude: e_amp,
-                wavelength_nm,
-                phase,
-                stokes,
-            });
-        }
-
-        let total_voxels =
-            (grid_dims[0] as usize) * (grid_dims[1] as usize) * (grid_dims[2] as usize) * EMF_BRICK_CELLS;
-        let work = total_voxels * emitters.len();
-        let scratch = total_voxels * 64;
-        self.charge(work, scratch)?;
-
-        let mut writer = EmfContainerWriter::new(origin, voxel_size, grid_dims, epoch_s);
-
-        let c_light = SPEED_OF_LIGHT as f64;
-        let order = 2u32;
-        let num_bricks = (grid_dims[0] * grid_dims[1] * grid_dims[2]) as usize;
-        let mut bricks = Vec::with_capacity(num_bricks);
-
-        for bz in 0..grid_dims[2] {
-            for by in 0..grid_dims[1] {
-                for bx in 0..grid_dims[0] {
-                    let hilbert_key = encode_hilbert3d_u64(bx, by, bz, order);
-                    let mut brick_cells = [EmfCellRecord64::default(); EMF_BRICK_CELLS];
-
-                    for lz in 0..8u8 {
-                        for ly in 0..8u8 {
-                            for lx in 0..8u8 {
-                                let gx = (bx * 8 + lx as u32) as f64;
-                                let gy = (by * 8 + ly as u32) as f64;
-                                let gz = (bz * 8 + lz as u32) as f64;
-
-                                let px = origin[0] as f64 + gx * (voxel_size as f64);
-                                let py = origin[1] as f64 + gy * (voxel_size as f64);
-                                let pz = origin[2] as f64 + gz * (voxel_size as f64);
-
-                                let mut total_e = [0.0f64; 3];
-                                let mut total_b = [0.0f64; 3];
-                                let mut sum_weight = 0.0f64;
-                                let mut sum_wavelength = 0.0f64;
-                                let mut sum_q = 0.0f64;
-                                let mut sum_u = 0.0f64;
-                                let mut sum_v = 0.0f64;
-                                let mut phasor_x = 0.0f64;
-                                let mut phasor_y = 0.0f64;
-
-                                for emitter in &emitters {
-                                    let dx = px - emitter.position[0];
-                                    let dy = py - emitter.position[1];
-                                    let dz = pz - emitter.position[2];
-                                    let r = (dx * dx + dy * dy + dz * dz).sqrt();
-
-                                    let atten = 1.0 / (1.0 + r * r);
-
-                                    let lambda_m = emitter.wavelength_nm * 1e-9;
-                                    let k = 2.0 * PI / lambda_m;
-
-                                    let wave_phase = k * r + emitter.phase;
-                                    let cos_phase = wave_phase.cos();
-                                    let sin_phase = wave_phase.sin();
-
-                                    let e_contrib = [
-                                        emitter.e_amplitude[0] * atten * cos_phase,
-                                        emitter.e_amplitude[1] * atten * cos_phase,
-                                        emitter.e_amplitude[2] * atten * cos_phase,
-                                    ];
-
-                                    total_e[0] += e_contrib[0];
-                                    total_e[1] += e_contrib[1];
-                                    total_e[2] += e_contrib[2];
-
-                                    let k_hat = if r > 1e-9 {
-                                        [dx / r, dy / r, dz / r]
-                                    } else {
-                                        [0.0, 0.0, 1.0]
-                                    };
-
-                                    let k_cross_e = [
-                                        k_hat[1] * e_contrib[2] - k_hat[2] * e_contrib[1],
-                                        k_hat[2] * e_contrib[0] - k_hat[0] * e_contrib[2],
-                                        k_hat[0] * e_contrib[1] - k_hat[1] * e_contrib[0],
-                                    ];
-
-                                    total_b[0] += k_cross_e[0] / c_light;
-                                    total_b[1] += k_cross_e[1] / c_light;
-                                    total_b[2] += k_cross_e[2] / c_light;
-
-                                    let amp_mag = (emitter.e_amplitude[0] * emitter.e_amplitude[0]
-                                        + emitter.e_amplitude[1] * emitter.e_amplitude[1]
-                                        + emitter.e_amplitude[2] * emitter.e_amplitude[2])
-                                        .sqrt();
-                                    let weight = (amp_mag * atten).max(1e-12);
-
-                                    sum_weight += weight;
-                                    sum_wavelength += weight * emitter.wavelength_nm;
-                                    sum_q += weight * emitter.stokes[0];
-                                    sum_u += weight * emitter.stokes[1];
-                                    sum_v += weight * emitter.stokes[2];
-
-                                    phasor_x += weight * cos_phase;
-                                    phasor_y += weight * sin_phase;
-                                }
-
-                                let (eff_wavelength, eff_q, eff_u, eff_v, eff_phase) =
-                                    if sum_weight > 0.0 {
-                                        (
-                                            (sum_wavelength / sum_weight) as f32,
-                                            (sum_q / sum_weight) as f32,
-                                            (sum_u / sum_weight) as f32,
-                                            (sum_v / sum_weight) as f32,
-                                            phasor_y.atan2(phasor_x) as f32,
-                                        )
-                                    } else {
-                                        (550.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32)
-                                    };
-
-                                let mut cell = EmfCellRecord64 {
-                                    e_field: [total_e[0] as f32, total_e[1] as f32, total_e[2] as f32],
-                                    b_field: [total_b[0] as f32, total_b[1] as f32, total_b[2] as f32],
-                                    poynting_flux: 0.0,
-                                    wavelength_nm: eff_wavelength,
-                                    refractive_n: 1.0,
-                                    extinction_k: 0.0,
-                                    coherence_phase: eff_phase,
-                                    stokes_q: eff_q,
-                                    stokes_u: eff_u,
-                                    stokes_v: eff_v,
-                                    spectral_sigma: ((eff_wavelength - 400.0) / 300.0).clamp(0.0, 1.0),
-                                    confidence_alpha: 1.0,
-                                };
-                                cell.poynting_flux = cell.poynting_flux_magnitude();
-
-                                let voxel_idx = emf_brick_voxel_linear_index(lx, ly, lz);
-                                brick_cells[voxel_idx] = cell;
-                            }
-                        }
-                    }
-
-                    bricks.push((hilbert_key, brick_cells));
-                }
-            }
-        }
-
-        bricks.sort_by_key(|(h, _)| *h);
-        for (h, cells) in bricks {
-            writer
-                .add_brick_chunk(h, &cells, 0, 1, 0)
-                .map_err(|e| format!("Failed to add brick chunk: {e}"))?;
-        }
-
-        let bytes = writer
-            .to_bytes()
-            .map_err(|e| format!("Failed to serialize EMF container: {e}"))?;
-        self.encode("emf", bytes)
-    }
-
     /// Parses and cryptographically verifies the Q42EMF64 container,
     /// aggregating energy density and peak Poynting flux.
     fn verify_emf(&mut self, a: &Args) -> Result<Value, String> {
@@ -280,9 +47,9 @@ impl AssetHost<'_> {
         let emf_val = required(a, "emf")?;
         let bytes = self.resolve_emf_bytes(emf_val)?;
 
-        self.charge(bytes.len() / 64, bytes.len())?;
+        self.charge(bytes.len() / 64, 0)?;
 
-        let reader = parse_sealed_emf(&bytes)?;
+        let reader = self.parse_emf_current(&bytes)?;
 
         let chunk_count = reader.chunk_count();
         let mut total_energy_density = 0.0f64;
@@ -310,6 +77,16 @@ impl AssetHost<'_> {
 
         let mut rec = BTreeMap::new();
         rec.insert("valid".into(), Value::Bool(true));
+        rec.insert("container_version".into(),Value::U64(u64::from(reader.header().version)));
+        rec.insert("cell_integrity".into(),Value::String("full_blake3_256".into()));
+        rec.insert("metadata_integrity".into(),Value::String("header_and_directory_crc32c".into()));
+        rec.insert("extension_integrity".into(),Value::String(if reader.extension().is_some(){"full_blake3_256"}else{"not_present"}.into()));
+        rec.insert("extension".into(),crate::electromagnetics_v3::emf_metadata_value(&reader)?);
+        let tracks=reader.extension().map(|extension|extension.metadata().audio_tracks.as_slice()).unwrap_or(&[]);
+        rec.insert("audio_track_count".into(),Value::U64(tracks.len() as u64));
+        rec.insert("audio_payload_bytes".into(),Value::U64(tracks.iter().try_fold(0u64,|sum,track|sum.checked_add(track.pcm_bytes)).ok_or("PCM aggregate overflow")?));
+        rec.insert("audio_integrity".into(),Value::String(if tracks.is_empty(){"not_present"}else{"full_blake3_256"}.into()));
+
         rec.insert("chunk_count".into(), Value::U64(chunk_count as u64));
         rec.insert(
             "voxel_size_meters".into(),
@@ -326,10 +103,9 @@ impl AssetHost<'_> {
 
     /// Renders a 2D spectral preview slice from an EMF-64 volume container to straight-alpha RGBA8.
     fn render_spectral_slice(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["emf", "axis", "slice_index", "width", "height", "exposure"])?;
+        fields(a, &["emf", "axis", "slice_index", "width", "height", "exposure", "time_slice"])?;
 
         let emf_val = required(a, "emf")?;
-        let bytes = self.resolve_emf_bytes(emf_val)?;
 
         let axis = match a.get("axis") {
             Some(v) => text(v)?,
@@ -366,14 +142,26 @@ impl AssetHost<'_> {
         }
 
         let pixel_count = (width as usize) * (height as usize);
-        self.charge(pixel_count, pixel_count * 4)?;
+        let pixel_bytes=pixel_count.checked_mul(4).ok_or("EMF pixel size overflow")?;
+        if pixel_bytes>self.limits.resource_bytes{return Err("EMF slice exceeds selected resource bytes".into());}
+        let bytes=self.resolve_emf_bytes_for(emf_val,pixel_bytes)?;
+        self.charge(pixel_count,0)?;
 
-        let reader = parse_sealed_emf(&bytes)?;
+        let time_slice=crate::electromagnetics_v3::selected_time_slice(a)?;
+        let reader = self.parse_emf_current(&bytes)?;
+        self.charge(reader.chunk_count(),0)?;
+        if !(0..reader.chunk_count()).any(|i|reader.chunk_entry(i).is_some_and(|e|e.time_slice_index==time_slice)) {
+            return Err("Requested EMF time_slice has no stored chunks".into());
+        }
+        self.charge(pixel_count.checked_mul(reader.lookup_work_bound()).ok_or("EMF preview work overflow")?,0)?;
+        crate::electromagnetics_v3::require_legacy_visible_projection(&reader)?;
+        let hilbert_order=reader.extension().map(|e|u32::from(e.metadata().field.hilbert_order)).unwrap_or(2);
+
 
         let dims = reader.header().grid_dims_bricks;
-        let vx_max = dims[0] * 8;
-        let vy_max = dims[1] * 8;
-        let vz_max = dims[2] * 8;
+        let vx_max = dims[0].checked_mul(8).ok_or("EMF voxel dimension overflow")?;
+        let vy_max = dims[1].checked_mul(8).ok_or("EMF voxel dimension overflow")?;
+        let vz_max = dims[2].checked_mul(8).ok_or("EMF voxel dimension overflow")?;
 
         match axis {
             "z" => {
@@ -404,7 +192,7 @@ impl AssetHost<'_> {
         }
 
         let mut pixels = Vec::with_capacity(pixel_count);
-        let order = 2u32;
+        let order = hilbert_order;
 
         for iy in 0..height {
             for ix in 0..width {
@@ -438,7 +226,7 @@ impl AssetHost<'_> {
                 let lz = (vz % 8) as u8;
 
                 let cell = reader
-                    .lookup_brick_cell(bx, by, bz, lx, ly, lz, order)
+                    .lookup_brick_cell_at_time(bx, by, bz, lx, ly, lz, order, time_slice)
                     .unwrap_or_default();
 
                 let base_rgb = spectral_wavelength_to_rgb(cell.wavelength_nm as f64);
@@ -482,7 +270,13 @@ impl AssetHost<'_> {
             }
         }
 
-        self.store_rgba(width, height, pixels)
+        let mut image=self.store_rgba(width,height,pixels)?;
+        if let Value::Record(meta)=&mut image {
+            meta.insert("projection_scope".into(),Value::String("legacy human-viewable spectral derivative; includes out-of-band false colour/clamping; not stored RGB".into()));
+            meta.insert("source_time_slice".into(),Value::U64(u64::from(time_slice)));
+            meta.insert("source_emf_version".into(),Value::U64(u64::from(reader.header().version)));
+        }
+        Ok(image)
     }
 
     /// 802.11 CSI → sanitized phase, contactless vitals, MUSIC AoA, camera-free receipt.
@@ -633,25 +427,28 @@ impl AssetHost<'_> {
     }
 
     /// Resolves container bytes from retained inputs or workspace encoded resources.
-    pub(super) fn resolve_emf_bytes(&self, val: &Value) -> Result<Vec<u8>, String> {
-        if let Ok(key) = text(val) {
-            self.inputs
-                .iter()
-                .find(|r| r.key == key)
-                .map(|r| r.bytes.clone())
-                .ok_or_else(|| format!("Missing retained input: {key}"))
-        } else if let Ok(res) = self.workspace.encoded(val) {
-            if res.kind != "emf" {
-                return Err(format!("Expected an 'emf' resource handle, found '{}'", res.kind));
-            }
-            Ok(res.bytes.clone())
-        } else {
-            Err("Expected retained resource key or encoded handle for emf".into())
-        }
+    pub(crate) fn emf_source_bytes<'b>(&'b self,val:&Value)->Result<&'b[u8],String>{
+        if let Ok(key)=text(val){
+            self.inputs.iter().find(|r|r.key==key).map(|r|r.bytes.as_slice()).ok_or_else(||format!("Missing retained input: {key}"))
+        }else if let Ok(resource)=self.workspace.encoded(val){
+            if resource.kind!="emf"{return Err(format!("Expected an 'emf' resource handle, found '{}'",resource.kind));}
+            Ok(&resource.bytes)
+        }else{Err("Expected retained resource key or encoded handle for emf".into())}
     }
+
+    pub(crate) fn resolve_emf_bytes(&self,val:&Value)->Result<Vec<u8>,String>{self.resolve_emf_bytes_for(val,0)}
+
+    /// Fixed backing is already included by peak admission; add exactly one
+    /// source clone, bounded parse/report scratch, and caller's live output/grid.
+    pub(crate) fn resolve_emf_bytes_for(&self,val:&Value,extra:usize)->Result<Vec<u8>,String>{
+        let required=self.emf_read_required(val)?.checked_add(extra).ok_or("EMF read peak overflow")?;
+        self.emf_peak_admit(required)?;
+        Ok(self.emf_source_bytes(val)?.to_vec())
+    }
+
 }
 
-/// QualiaDB `parse` admits CRC-only files; untrusted paths require a writer Bao seal.
+/// Current production admission requires v2/v3 full BLAKE3 seals, not legacy prefixes.
 pub(crate) fn parse_sealed_emf(bytes: &[u8]) -> Result<EmfContainerReader<'_>, String> {
     let reader = EmfContainerReader::parse(bytes)
         .map_err(|e| format!("Invalid EMF container: {e}"))?;
@@ -659,8 +456,8 @@ pub(crate) fn parse_sealed_emf(bytes: &[u8]) -> Result<EmfContainerReader<'_>, S
         let entry = reader
             .chunk_entry(chunk_idx)
             .ok_or_else(|| format!("Missing chunk directory entry at index {chunk_idx}"))?;
-        if entry.bao_hash_prefix == [0u8; 16] || entry.flags & 2 == 0 {
-            return Err("EMF container omitted BLAKE3-Bao seal".into());
+        if entry.flags & qualia_core_db::q42::emf_container::EMF_CHUNK_FLAG_BLAKE3_FULL == 0 {
+            return Err("EMF container omitted full BLAKE3 seal".into());
         }
     }
     Ok(reader)
@@ -963,8 +760,8 @@ mod tests {
             )
             .expect_err("tampered Q42EMF64 must fail closed");
         assert!(
-            err.contains("Invalid EMF") || err.contains("Bao") || err.contains("Checksum"),
-            "fail-closed error must name CRC/Bao verify, got: {err}"
+            err.contains("BLAKE3") || err.contains("Checksum"),
+            "fail-closed error must identify current CRC/full-BLAKE3 integrity, got: {err}"
         );
     }
 
@@ -981,7 +778,7 @@ mod tests {
             let off = dir_off + i * 64;
             let mut entry: EmfChunkDirectoryEntry =
                 bytemuck::pod_read_unaligned(&bytes[off..off + 64]);
-            entry.flags &= !2;
+            entry.flags &= !qualia_core_db::q42::emf_container::EMF_CHUNK_FLAG_BLAKE3_FULL;
             entry.bao_hash_prefix = [0u8; 16];
             entry.update_crc();
             bytes[off..off + 64].copy_from_slice(bytemuck::bytes_of(&entry));
@@ -1003,8 +800,8 @@ mod tests {
             .clone();
         strip_emf_bao_keep_crc(&mut unsigned);
         assert!(
-            EmfContainerReader::parse(&unsigned).is_ok(),
-            "QualiaDB parse still admits CRC-only EMF"
+            EmfContainerReader::parse(&unsigned).is_err(),
+            "V2 must refuse missing full BLAKE3 seals"
         );
 
         let admitted = host

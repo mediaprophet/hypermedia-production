@@ -114,7 +114,7 @@ impl<T> ScratchTexture<T> {
 #[derive(Debug, Default)]
 pub(crate) struct ScratchBuffers {
     /// Clear instances scratch buffer.
-    #[cfg(feature = "wgpu")]
+    #[cfg(feature = "etalon")]
     pub(crate) clear_instances: Vec<GpuClearInstance>,
     /// Blend instances scratch buffer.
     pub(crate) blend_instances: Vec<GpuBlendInstance>,
@@ -700,23 +700,23 @@ pub(crate) fn pack_tint(tint: Option<vello_common::paint::Tint>) -> (u32, u32) {
     }
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "webgl", feature = "wgpu"))]
+#[cfg(all(target_arch = "wasm32", feature = "webgl", feature = "etalon"))]
 pub(crate) fn maybe_warn_about_webgl_feature_conflict() {
     use core::sync::atomic::{AtomicBool, Ordering};
     static HAS_WARNED: AtomicBool = AtomicBool::new(false);
 
     if !HAS_WARNED.swap(true, Ordering::Release)
-        && wgpu::Backends::all().contains(wgpu::Backends::GL)
+        && etalon::Backends::all().contains(etalon::Backends::GL)
     {
         log::warn!(
-            r#"Both WebGL and wgpu with the "webgl" feature are enabled.
+            r#"Both WebGL and etalon with the "webgl" feature are enabled.
 For optimal performance and binary size on web targets, use only the dedicated WebGL renderer."#
         );
     }
 }
 
 #[cfg(all(
-    any(feature = "webgl", feature = "wgpu"),
-    not(all(target_arch = "wasm32", feature = "webgl", feature = "wgpu"))
+    any(feature = "webgl", feature = "etalon"),
+    not(all(target_arch = "wasm32", feature = "webgl", feature = "etalon"))
 ))]
 pub(crate) fn maybe_warn_about_webgl_feature_conflict() {}

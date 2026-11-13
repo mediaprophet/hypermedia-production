@@ -5,17 +5,19 @@
 //!
 //! ## Renderer Backends
 //!
-//! - `wgpu` contains the default renderer backend, leveraging `wgpu`.
+//! - `etalon` contains the default renderer backend, leveraging `etalon`.
 //! - `webgl` contains a WebGL2 backend if the `webgl` feature is active.
 
 pub(crate) mod common;
+#[cfg(feature = "etalon")]
+mod etalon;
 #[cfg(feature = "webgl")]
 mod webgl;
-#[cfg(feature = "wgpu")]
-mod wgpu;
 
 pub use common::{ClearSettings, Config, GpuStrip, RenderSize, TargetInit};
 
+#[cfg(feature = "etalon")]
+pub use etalon::{AtlasWriter, RenderTargetConfig, Renderer, TextureBindings};
 #[cfg(feature = "webgl")]
 pub use webgl::{
     AtlasTextureInfo, IncompatibleContextReason, WebGlAtlasWriter, WebGlContextOperation,
@@ -29,5 +31,3 @@ pub use webgl::{
     WebGlProbeOperation,
     probe::{WebGlPendingProbe, WebGlProbeError, WebGlProbeStatus},
 };
-#[cfg(feature = "wgpu")]
-pub use wgpu::{AtlasWriter, RenderTargetConfig, Renderer, TextureBindings};

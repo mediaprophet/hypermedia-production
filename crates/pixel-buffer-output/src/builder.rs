@@ -2,24 +2,24 @@ use crate::renderers::{ScalingMatrix, ScalingRenderer};
 use crate::{Error, Pixels, PixelsContext, ScalingMode, SurfaceSize, SurfaceTexture, TextureError};
 
 /// A builder to help create customized pixel buffers.
-pub struct PixelsBuilder<'req, 'dev, 'win, W: wgpu::WindowHandle + 'win> {
-    request_adapter_options: Option<wgpu::RequestAdapterOptions<'req, 'win>>,
-    device_descriptor: Option<wgpu::DeviceDescriptor<'dev>>,
-    backend: wgpu::Backends,
+pub struct PixelsBuilder<'req, 'dev, 'win, W: etalon::WindowHandle + 'win> {
+    request_adapter_options: Option<etalon::RequestAdapterOptions<'req, 'win>>,
+    device_descriptor: Option<etalon::DeviceDescriptor<'dev>>,
+    backend: etalon::Backends,
     width: u32,
     height: u32,
     _pixel_aspect_ratio: f64,
-    present_mode: wgpu::PresentMode,
+    present_mode: etalon::PresentMode,
     surface_texture: SurfaceTexture<W>,
-    texture_format: wgpu::TextureFormat,
-    render_texture_format: Option<wgpu::TextureFormat>,
-    surface_texture_format: Option<wgpu::TextureFormat>,
-    clear_color: wgpu::Color,
-    blend_state: wgpu::BlendState,
-    alpha_mode: wgpu::CompositeAlphaMode,
+    texture_format: etalon::TextureFormat,
+    render_texture_format: Option<etalon::TextureFormat>,
+    surface_texture_format: Option<etalon::TextureFormat>,
+    clear_color: etalon::Color,
+    blend_state: etalon::BlendState,
+    alpha_mode: etalon::CompositeAlphaMode,
 }
 
-impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHandle + 'win>
+impl<'req, 'dev, 'win, W: etalon::WindowHandle + raw_window_handle::HasDisplayHandle + 'win>
     PixelsBuilder<'req, 'dev, 'win, W>
 {
     /// Create a builder that can be finalized into a [`Pixels`] pixel buffer.
@@ -27,7 +27,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// # Examples
     ///
     /// ```no_run
-    /// use pixels::wgpu::{PowerPreference, RequestAdapterOptions};
+    /// use pixels::etalon::{PowerPreference, RequestAdapterOptions};
     ///
     /// # use pixels::PixelsBuilder;
     /// # let window = pixels_mocks::Window;
@@ -54,40 +54,40 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
         Self {
             request_adapter_options: None,
             device_descriptor: None,
-            backend: wgpu::Backends::from_env().unwrap_or_else(wgpu::Backends::all),
+            backend: etalon::Backends::from_env().unwrap_or_else(etalon::Backends::all),
             width,
             height,
             _pixel_aspect_ratio: 1.0,
-            present_mode: wgpu::PresentMode::AutoVsync,
+            present_mode: etalon::PresentMode::AutoVsync,
             surface_texture,
-            texture_format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            texture_format: etalon::TextureFormat::Rgba8UnormSrgb,
             render_texture_format: None,
             surface_texture_format: None,
-            clear_color: wgpu::Color::BLACK,
-            blend_state: wgpu::BlendState::ALPHA_BLENDING,
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            clear_color: etalon::Color::BLACK,
+            blend_state: etalon::BlendState::ALPHA_BLENDING,
+            alpha_mode: etalon::CompositeAlphaMode::Auto,
         }
     }
 
-    /// Add options for requesting a [`wgpu::Adapter`].
+    /// Add options for requesting a [`etalon::Adapter`].
     pub fn request_adapter_options(
         mut self,
-        request_adapter_options: wgpu::RequestAdapterOptions<'req, 'win>,
+        request_adapter_options: etalon::RequestAdapterOptions<'req, 'win>,
     ) -> Self {
         self.request_adapter_options = Some(request_adapter_options);
         self
     }
 
-    /// Add options for requesting a [`wgpu::Device`].
-    pub fn device_descriptor(mut self, device_descriptor: wgpu::DeviceDescriptor<'dev>) -> Self {
+    /// Add options for requesting a [`etalon::Device`].
+    pub fn device_descriptor(mut self, device_descriptor: etalon::DeviceDescriptor<'dev>) -> Self {
         self.device_descriptor = Some(device_descriptor);
         self
     }
 
-    /// Set which backends wgpu will attempt to use.
+    /// Set which backends etalon will attempt to use.
     ///
-    /// The default enables all backends, including the backends with "best effort" support in wgpu.
-    pub fn wgpu_backend(mut self, backend: wgpu::Backends) -> Self {
+    /// The default enables all backends, including the backends with "best effort" support in etalon.
+    pub fn etalon_backend(mut self, backend: etalon::Backends) -> Self {
         self.backend = backend;
         self
     }
@@ -118,28 +118,28 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///
     /// Vsync is enabled by default. It cannot be disabled on Web targets.
     ///
-    /// The `wgpu` present mode will be set to `AutoVsync` when Vsync is enabled, or `AutoNoVsync`
+    /// The `etalon` present mode will be set to `AutoVsync` when Vsync is enabled, or `AutoNoVsync`
     /// when Vsync is disabled. To set the present mode to `Mailbox` or another value, use the
     /// [`PixelsBuilder::present_mode`] method.
     pub fn enable_vsync(mut self, enable_vsync: bool) -> Self {
         self.present_mode = if enable_vsync {
-            wgpu::PresentMode::AutoVsync
+            etalon::PresentMode::AutoVsync
         } else {
-            wgpu::PresentMode::AutoNoVsync
+            etalon::PresentMode::AutoNoVsync
         };
         self
     }
 
-    /// Optimistically set the `wgpu` present mode.
+    /// Optimistically set the `etalon` present mode.
     ///
     /// This differs from [`PixelsBuilder::enable_vsync`] by allowing the present mode to be set to
     /// any value.
     ///
-    /// When the [`wgpu::Surface`] is created on [`PixelsBuilder::build`], if this present mode is
+    /// When the [`etalon::Surface`] is created on [`PixelsBuilder::build`], if this present mode is
     /// not supported, Pixels defaults to `AutoVsync` which is supported on all platforms.
     /// After building, [`PixelsContext::surface_capabilities`] can be used to check the surface's
     /// supported present modes.
-    pub fn present_mode(mut self, present_mode: wgpu::PresentMode) -> Self {
+    pub fn present_mode(mut self, present_mode: etalon::PresentMode) -> Self {
         self.present_mode = present_mode;
         self
     }
@@ -152,7 +152,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///
     /// This is the pixel format of the texture that most applications will interact with directly.
     /// The format influences the structure of byte data that is returned by [`Pixels::frame`].
-    pub fn texture_format(mut self, texture_format: wgpu::TextureFormat) -> Self {
+    pub fn texture_format(mut self, texture_format: etalon::TextureFormat) -> Self {
         self.texture_format = texture_format;
         self
     }
@@ -167,7 +167,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// There is a full example of a
     /// [custom-shader](https://github.com/parasyte/pixels/tree/master/examples/custom-shader)
     /// available that demonstrates how to deal with this.
-    pub fn render_texture_format(mut self, texture_format: wgpu::TextureFormat) -> Self {
+    pub fn render_texture_format(mut self, texture_format: etalon::TextureFormat) -> Self {
         self.render_texture_format = Some(texture_format);
         self
     }
@@ -184,7 +184,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// texture, but a view is provided to the `render_function` closure by [`Pixels::render_with`].
     /// The render texture can only be used as the final render target at the end of all
     /// post-processing shaders.
-    pub fn surface_texture_format(mut self, texture_format: wgpu::TextureFormat) -> Self {
+    pub fn surface_texture_format(mut self, texture_format: etalon::TextureFormat) -> Self {
         self.surface_texture_format = Some(texture_format);
         self
     }
@@ -197,18 +197,18 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// The default blend state is alpha blending with non-premultiplied alpha.
     ///
     /// ```no_run
-    /// use pixels::wgpu::BlendState;
+    /// use pixels::etalon::BlendState;
     ///
     /// # use pixels::PixelsBuilder;
     /// # let window = pixels_mocks::Window;
     /// # let surface_texture = pixels::SurfaceTexture::new(320, 240, &window);
     /// // Replace the old pixels with the new without mixing.
     /// let mut pixels = PixelsBuilder::new(320, 240, surface_texture)
-    ///     .blend_state(wgpu::BlendState::REPLACE)
+    ///     .blend_state(etalon::BlendState::REPLACE)
     ///     .build()?;
     /// # Ok::<(), pixels::Error>(())
     /// ```
-    pub fn blend_state(mut self, blend_state: wgpu::BlendState) -> Self {
+    pub fn blend_state(mut self, blend_state: etalon::BlendState) -> Self {
         self.blend_state = blend_state;
         self
     }
@@ -218,7 +218,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// Default value is `Auto`.
     ///
     /// ```no_run
-    /// use pixels::wgpu::CompositeAlphaMode;
+    /// use pixels::etalon::CompositeAlphaMode;
     ///
     /// # use pixels::PixelsBuilder;
     /// # let window = pixels_mocks::Window;
@@ -228,7 +228,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///     .build()?;
     /// # Ok::<(), pixels::Error>(())
     /// ```
-    pub fn alpha_mode(mut self, alpha_mode: wgpu::CompositeAlphaMode) -> Self {
+    pub fn alpha_mode(mut self, alpha_mode: etalon::CompositeAlphaMode) -> Self {
         self.alpha_mode = alpha_mode;
         self
     }
@@ -241,7 +241,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// The default value is pure black.
     ///
     /// ```no_run
-    /// use pixels::wgpu::Color;
+    /// use pixels::etalon::Color;
     ///
     /// # use pixels::PixelsBuilder;
     /// # let window = pixels_mocks::Window;
@@ -257,7 +257,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///     .build()?;
     /// # Ok::<(), pixels::Error>(())
     /// ```
-    pub fn clear_color(mut self, color: wgpu::Color) -> Self {
+    pub fn clear_color(mut self, color: etalon::Color) -> Self {
         self.clear_color = color;
         self
     }
@@ -269,55 +269,55 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///
     /// # Errors
     ///
-    /// Returns an error when a [`wgpu::Adapter`] cannot be found.
+    /// Returns an error when a [`etalon::Adapter`] cannot be found.
     async fn build_impl(self) -> Result<Pixels<'win>, Error> {
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = etalon::Instance::new(etalon::InstanceDescriptor {
             backends: self.backend,
-            ..wgpu::InstanceDescriptor::new_without_display_handle().with_env()
+            ..etalon::InstanceDescriptor::new_without_display_handle().with_env()
         });
 
         // TODO: Use `options.pixel_aspect_ratio` to stretch the scaled texture
         let surface = instance.create_surface(self.surface_texture.window)?;
         let compatible_surface = Some(&surface);
         let request_adapter_options = &self.request_adapter_options;
-        let adapter = match wgpu::util::initialize_adapter_from_env(&instance, compatible_surface)
-            .await
-        {
-            Ok(adapter) => Ok(adapter),
-            Err(_) => {
-                instance
-                    .request_adapter(&request_adapter_options.as_ref().map_or_else(
-                        || wgpu::RequestAdapterOptions {
-                            compatible_surface,
-                            force_fallback_adapter: false,
-                            power_preference: wgpu::PowerPreference::from_env().unwrap_or_default(),
-                            apply_limit_buckets: false,
-                        },
-                        |rao| wgpu::RequestAdapterOptions {
-                            compatible_surface: rao.compatible_surface.or(compatible_surface),
-                            force_fallback_adapter: rao.force_fallback_adapter,
-                            power_preference: rao.power_preference,
-                            apply_limit_buckets: rao.apply_limit_buckets,
-                        },
-                    ))
-                    .await
-            }
-        };
+        let adapter =
+            match etalon::util::initialize_adapter_from_env(&instance, compatible_surface).await {
+                Ok(adapter) => Ok(adapter),
+                Err(_) => {
+                    instance
+                        .request_adapter(&request_adapter_options.as_ref().map_or_else(
+                            || etalon::RequestAdapterOptions {
+                                compatible_surface,
+                                force_fallback_adapter: false,
+                                power_preference:
+                                    etalon::PowerPreference::from_env().unwrap_or_default(),
+                                apply_limit_buckets: false,
+                            },
+                            |rao| etalon::RequestAdapterOptions {
+                                compatible_surface: rao.compatible_surface.or(compatible_surface),
+                                force_fallback_adapter: rao.force_fallback_adapter,
+                                power_preference: rao.power_preference,
+                                apply_limit_buckets: rao.apply_limit_buckets,
+                            },
+                        ))
+                        .await
+                }
+            };
 
         let adapter = adapter.map_err(|_| Error::AdapterNotFound)?;
 
-        let device_descriptor = self
-            .device_descriptor
-            .unwrap_or_else(|| wgpu::DeviceDescriptor {
-                required_limits: adapter.limits(),
-                ..wgpu::DeviceDescriptor::default()
-            });
+        let device_descriptor =
+            self.device_descriptor
+                .unwrap_or_else(|| etalon::DeviceDescriptor {
+                    required_limits: adapter.limits(),
+                    ..etalon::DeviceDescriptor::default()
+                });
 
         let (device, queue) = adapter.request_device(&device_descriptor).await?;
 
         let surface_capabilities = surface.get_capabilities(&adapter);
         let present_mode_supported = match self.present_mode {
-            wgpu::PresentMode::AutoVsync | wgpu::PresentMode::AutoNoVsync => true,
+            etalon::PresentMode::AutoVsync | etalon::PresentMode::AutoNoVsync => true,
             _ => surface_capabilities
                 .present_modes
                 .contains(&self.present_mode),
@@ -325,9 +325,9 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
         let present_mode = if present_mode_supported {
             self.present_mode
         } else {
-            wgpu::PresentMode::AutoVsync
+            etalon::PresentMode::AutoVsync
         };
-        if self.alpha_mode != wgpu::CompositeAlphaMode::Auto
+        if self.alpha_mode != etalon::CompositeAlphaMode::Auto
             && !surface_capabilities.alpha_modes.contains(&self.alpha_mode)
         {
             return Err(Error::InvalidAlphaMode(self.alpha_mode));
@@ -338,7 +338,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
                 .formats
                 .iter()
                 .find(|format| format.is_srgb())
-                .unwrap_or(&wgpu::TextureFormat::Bgra8UnormSrgb)
+                .unwrap_or(&etalon::TextureFormat::Bgra8UnormSrgb)
         });
         let render_texture_format = self.render_texture_format.unwrap_or(surface_texture_format);
 
@@ -405,7 +405,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///
     /// # Errors
     ///
-    /// Returns an error when a [`wgpu::Adapter`] or [`wgpu::Device`] cannot be found.
+    /// Returns an error when a [`etalon::Adapter`] or [`etalon::Device`] cannot be found.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn build(self) -> Result<Pixels<'win>, Error> {
         pollster::block_on(self.build_impl())
@@ -416,7 +416,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     /// # Examples
     ///
     /// ```no_run
-    /// use pixels::wgpu::{Backends, DeviceDescriptor, Limits};
+    /// use pixels::etalon::{Backends, DeviceDescriptor, Limits};
     ///
     /// # async fn test() -> Result<(), pixels::Error> {
     /// # use pixels::PixelsBuilder;
@@ -432,7 +432,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
     ///
     /// # Errors
     ///
-    /// Returns an error when a [`wgpu::Adapter`] or [`wgpu::Device`] cannot be found.
+    /// Returns an error when a [`etalon::Adapter`] or [`etalon::Device`] cannot be found.
     pub async fn build_async(self) -> Result<Pixels<'win>, Error> {
         self.build_impl().await
     }
@@ -445,7 +445,7 @@ impl<'req, 'dev, 'win, W: wgpu::WindowHandle + raw_window_handle::HasDisplayHand
 /// - [`TextureError::TextureWidth`] when `width` is 0 or greater than GPU texture limits.
 /// - [`TextureError::TextureHeight`] when `height` is 0 or greater than GPU texture limits.
 pub fn check_texture_size(
-    device: &wgpu::Device,
+    device: &etalon::Device,
     width: u32,
     height: u32,
 ) -> Result<(), TextureError> {
@@ -462,20 +462,20 @@ pub fn check_texture_size(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn create_backing_texture(
-    device: &wgpu::Device,
+    device: &etalon::Device,
     width: u32,
     height: u32,
-    backing_texture_format: wgpu::TextureFormat,
+    backing_texture_format: etalon::TextureFormat,
     surface_size: &SurfaceSize,
-    render_texture_format: wgpu::TextureFormat,
-    clear_color: wgpu::Color,
-    blend_state: wgpu::BlendState,
+    render_texture_format: etalon::TextureFormat,
+    clear_color: etalon::Color,
+    blend_state: etalon::BlendState,
     scaling_mode: ScalingMode,
 ) -> Result<
     (
         ultraviolet::Mat4,
-        wgpu::Extent3d,
-        wgpu::Texture,
+        etalon::Extent3d,
+        etalon::Texture,
         ScalingRenderer,
         usize,
     ),
@@ -491,23 +491,23 @@ pub(crate) fn create_backing_texture(
     .transform
     .inversed();
 
-    let texture_extent = wgpu::Extent3d {
+    let texture_extent = etalon::Extent3d {
         width,
         height,
         depth_or_array_layers: 1,
     };
 
-    let texture = device.create_texture(&wgpu::TextureDescriptor {
+    let texture = device.create_texture(&etalon::TextureDescriptor {
         label: Some("pixels_source_texture"),
         size: texture_extent,
         mip_level_count: 1,
         sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
+        dimension: etalon::TextureDimension::D2,
         format: backing_texture_format,
-        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        usage: etalon::TextureUsages::TEXTURE_BINDING | etalon::TextureUsages::COPY_DST,
         view_formats: &[],
     });
-    let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+    let texture_view = texture.create_view(&etalon::TextureViewDescriptor::default());
 
     let scaling_renderer = ScalingRenderer::new(
         device,
@@ -534,8 +534,8 @@ pub(crate) fn create_backing_texture(
 
 #[rustfmt::skip]
 #[inline]
-const fn texture_format_size(texture_format: wgpu::TextureFormat) -> f32 {
-    use wgpu::{AstcBlock::*, TextureFormat::*};
+const fn texture_format_size(texture_format: etalon::TextureFormat) -> f32 {
+    use etalon::{AstcBlock::*, TextureFormat::*};
 
     // TODO: Use constant arithmetic when supported.
     // See: https://github.com/rust-lang/rust/issues/57241

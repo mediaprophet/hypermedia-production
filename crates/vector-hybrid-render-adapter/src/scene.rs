@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use anyrender::{Filter, NormalizedCoord, Paint, PaintRef, PaintScene, RenderContext, ResourceId};
+use etalon::{CommandEncoder, Device, Queue, Texture, TextureView, TextureViewDescriptor};
+use etalon_context::DeviceHandle;
 use glifo::FontEmbolden;
 use kurbo::{Affine, Diagonal2, Rect, Shape, Stroke};
 use peniko::{BlendMode, Color, Fill, FontData, ImageBrush, ImageData, StyleRef};
@@ -11,8 +13,6 @@ use vello_common::{
     paint::{ImageId, ImageSource, PaintType},
 };
 use vello_gpu::{Renderer, Resources};
-use wgpu::{CommandEncoder, Device, Queue, Texture, TextureView, TextureViewDescriptor};
-use wgpu_context::DeviceHandle;
 
 const DEFAULT_TOLERANCE: f64 = 0.1;
 

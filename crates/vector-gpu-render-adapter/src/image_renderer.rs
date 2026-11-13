@@ -1,9 +1,9 @@
 use anyrender::{ImageRenderer, RenderContext, ResourceId};
+use etalon::TextureUsages;
+use etalon_context::{BufferRenderer, BufferRendererConfig, EtalonContext};
 use peniko::ImageData;
 use rustc_hash::FxHashMap;
 use vello::{Renderer as VelloRenderer, RendererOptions, Scene as VelloScene};
-use wgpu::TextureUsages;
-use wgpu_context::{BufferRenderer, BufferRendererConfig, WGPUContext};
 
 use crate::{DEFAULT_THREADS, VelloScenePainter};
 
@@ -16,17 +16,17 @@ pub struct VelloImageRenderer {
 
 impl VelloImageRenderer {
     /// Like [`ImageRenderer::new`], but reusing compiled pipelines from a cache
-    /// wgpu built earlier. Creating the cache, persisting its data and deciding
+    /// etalon built earlier. Creating the cache, persisting its data and deciding
     /// when it is stale are all the caller's responsibility.
     pub fn with_pipeline_cache(
         width: u32,
         height: u32,
-        pipeline_cache: Option<wgpu::PipelineCache>,
+        pipeline_cache: Option<etalon::PipelineCache>,
     ) -> Self {
-        // Create WGPUContext
-        let mut context = WGPUContext::new();
+        // Create EtalonContext
+        let mut context = EtalonContext::new();
 
-        // Create wgpu_context::BufferRenderer
+        // Create etalon_context::BufferRenderer
         let buffer_renderer =
             pollster::block_on(context.create_buffer_renderer(BufferRendererConfig {
                 width,

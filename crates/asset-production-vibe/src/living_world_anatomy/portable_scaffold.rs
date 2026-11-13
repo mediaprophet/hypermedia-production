@@ -16,6 +16,9 @@ use qualia_core_db::render::vertebrate_anatomy::{
 };
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
+#[path = "portable_bind.rs"]
+mod portable_bind;
+use qualia_core_db::render::vertebrate_anatomy::authored_skin::{RIGHT_SHOULDER, RIGHT_ELBOW, RIGHT_WRIST};
 
 /// Compiles a 3-layer `.10d` vertebrate anatomical twin from a species spec (VibeScript record
 /// converted to its JSON data model).
@@ -71,6 +74,7 @@ pub fn build_anatomy_from_portable_scaffold(
     }
 
     let mut acc = AnatomyMeshAccumulator::new();
+    acc.authored_skin = portable_bind::parse(obj.get("bind_landmarks"), archetype)?;
     let mut materials = Vec::with_capacity(submeshes_arr.len().max(3));
     let mut submesh_ranges = Vec::with_capacity(submeshes_arr.len().max(3));
 
@@ -163,6 +167,8 @@ fn emit_submesh_primitives(
     sm_mirror: bool,
     palette: &BTreeMap<String, [f32; 4]>,
 ) -> Result<(), String> {
+    let bilateral_forelimbs = acc.authored_skin.is_some();
+    let mirror_joint = |joint| mirror_joint_for_binding(joint, bilateral_forelimbs);
     // 1. Multi-station countershaded lofts
     if let Some(lofts) = sm.get("lofts").and_then(|v| v.as_array()) {
         for loft in lofts {
@@ -432,7 +438,7 @@ fn parse_joint(val: Option<&JsonValue>, default_joint: usize) -> usize {
         return default_joint;
     };
     if let Some(idx) = v.as_u64() {
-        return (idx as usize).min(FAUNA_MAX_JOINTS - 1);
+        return (idx as usize).min(RIGHT_WRIST);
     }
     if let Some(s) = v.as_str() {
         match s.trim().to_ascii_lowercase().as_str() {
@@ -451,6 +457,9 @@ fn parse_joint(val: Option<&JsonValue>, default_joint: usize) -> usize {
             "left_shoulder" | "shoulder_l" | "shoulder" => JOINT_LEFT_SHOULDER,
             "left_elbow" | "elbow_l" | "elbow" => JOINT_LEFT_ELBOW,
             "left_wrist" | "left_wrist_wing" | "wrist" | "forepaw" => JOINT_LEFT_WRIST_WING,
+            "right_shoulder" | "shoulder_r" => RIGHT_SHOULDER,
+            "right_elbow" | "elbow_r" => RIGHT_ELBOW,
+            "right_wrist" | "wrist_r" => RIGHT_WRIST,
             "tail_base" => JOINT_TAIL_BASE,
             "tail_mid" => JOINT_TAIL_MID,
             "tail_tip" => JOINT_TAIL_TIP,
@@ -461,8 +470,14 @@ fn parse_joint(val: Option<&JsonValue>, default_joint: usize) -> usize {
     }
 }
 
-fn mirror_joint(joint: usize) -> usize {
+fn mirror_joint_for_binding(joint: usize, bilateral_forelimbs: bool) -> usize {
     match joint {
+        JOINT_LEFT_SHOULDER if bilateral_forelimbs => RIGHT_SHOULDER,
+        JOINT_LEFT_ELBOW if bilateral_forelimbs => RIGHT_ELBOW,
+        JOINT_LEFT_WRIST_WING if bilateral_forelimbs => RIGHT_WRIST,
+        RIGHT_SHOULDER if bilateral_forelimbs => JOINT_LEFT_SHOULDER,
+        RIGHT_ELBOW if bilateral_forelimbs => JOINT_LEFT_ELBOW,
+        RIGHT_WRIST if bilateral_forelimbs => JOINT_LEFT_WRIST_WING,
         JOINT_LEFT_HIP => JOINT_RIGHT_HIP,
         JOINT_LEFT_KNEE => JOINT_RIGHT_KNEE,
         JOINT_LEFT_ANKLE => JOINT_RIGHT_ANKLE,

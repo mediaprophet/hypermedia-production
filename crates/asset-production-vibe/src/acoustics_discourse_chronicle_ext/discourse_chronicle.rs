@@ -273,7 +273,12 @@ impl AssetHost<'_> {
     // 5. ManifoldClock Locked-Delta-t Deterministic Movie Capture
     // ------------------------------------------------------------------------
     pub(super) fn capture_deterministic_movie(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["frames", "audio", "fps"])?;
+        fields(a, &["frames", "audio", "fps", "profile"])?;
+        match a.get("profile").map(text).transpose()?.unwrap_or("preview") {
+            "png-sequence" => return self.capture_png_sequence(a),
+            "preview" => {},
+            _ => return Err("Unknown capture profile; use preview or png-sequence".into()),
+        }
 
         let frames_val = required(a, "frames")?;
         let frame_items = list(frames_val)?;

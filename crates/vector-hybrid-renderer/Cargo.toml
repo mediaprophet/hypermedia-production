@@ -41,9 +41,12 @@ default-target = "x86_64-unknown-linux-gnu"
 targets = ["wasm32-unknown-unknown"]
 
 [features]
+# Legacy feature spellings forward to the Etalon implementation.
+wgpu = ["etalon"]
+wgpu_default = ["etalon-default"]
 default = [
-    "wgpu",
-    "wgpu_default",
+    "etalon",
+    "etalon-default",
     "text",
 ]
 libm = [
@@ -65,13 +68,13 @@ webgl = [
     "dep:vello_gpu_shaders",
     "vello_gpu_shaders/glsl",
 ]
-wgpu = [
-    "dep:wgpu",
+etalon = [
+    "dep:etalon",
     "dep:vello_gpu_shaders",
 ]
-wgpu_default = [
-    "wgpu",
-    "wgpu/default",
+etalon-default = [
+    "etalon",
+    "etalon/default",
 ]
 
 [lib]
@@ -81,7 +84,7 @@ path = "src/lib.rs"
 [[example]]
 name = "render_to_file"
 path = "examples/render_to_file.rs"
-required-features = ["wgpu"]
+required-features = ["etalon"]
 
 [dependencies.bytemuck]
 version = "1.25.0"
@@ -140,7 +143,7 @@ features = [
 ]
 optional = true
 
-[dependencies.wgpu]
+[dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"

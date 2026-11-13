@@ -50,6 +50,8 @@ static MANIFOLD_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[123].abi_descriptor,
     MORPHISMS[124].abi_descriptor,
     MORPHISMS[125].abi_descriptor,
+    // The Qualia-owned species constructor declares ABI sub-id 2 (manifold).
+    MORPHISMS[144].abi_descriptor,
 ];
 static SURFACE_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[24].abi_descriptor,
@@ -254,6 +256,21 @@ pub static HYPERMEDIA_PROVIDER_DESCRIPTOR: ProviderDescriptor = ProviderDescript
 /// Zero-heap VibeScript namespace provider exposing the ontological contracts and `NQuin48` triples
 /// for all Hypermedia asset production morphisms.
 pub struct HypermediaOntologyProvider;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_catalog_morphism_has_exactly_one_metadata_descriptor() {
+        let descriptors: Vec<_> = SUB_NAMESPACES.iter().flat_map(|ns| ns.functions).collect();
+        assert_eq!(descriptors.len(), MORPHISMS.len());
+        for morphism in MORPHISMS {
+            assert_eq!(descriptors.iter().filter(|d| d.stable_id == morphism.abi_descriptor.stable_id).count(), 1,
+                "descriptor must be bijective for {}", morphism.id);
+        }
+    }
+}
 
 impl VibeNamespaceProvider for HypermediaOntologyProvider {
     fn descriptor(&self) -> &'static ProviderDescriptor {

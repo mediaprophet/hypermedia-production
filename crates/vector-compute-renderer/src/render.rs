@@ -7,7 +7,7 @@ use crate::recording::{BufferProxy, ImageFormat, ImageProxy, Recording, Resource
 use crate::shaders::FullShaders;
 use crate::{AaConfig, RenderParams};
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 use crate::Scene;
 
 use vello_encoding::{Encoding, Resolver, WorkgroupSize, make_mask_lut, make_mask_lut_16};
@@ -80,7 +80,7 @@ impl CapturedBuffers {
     }
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 pub(crate) fn render_full(
     scene: &Scene,
     resolver: &mut Resolver,
@@ -91,7 +91,7 @@ pub(crate) fn render_full(
     render_encoding_full(scene.encoding(), resolver, shaders, image_atlas, params)
 }
 
-#[cfg(feature = "wgpu")]
+#[cfg(feature = "etalon")]
 /// Create a single recording with both coarse and fine render stages.
 ///
 /// This function is not recommended when the scene can be complex, as it does not
@@ -220,7 +220,7 @@ impl Render {
         let wg_counts = &cpu_config.workgroup_counts;
 
         if packed.is_empty() {
-            // HACK: wgpu doesn't allow empty buffers, so we make sure that the scene buffer we upload
+            // HACK: etalon doesn't allow empty buffers, so we make sure that the scene buffer we upload
             // can contain at least one array item.
             // The values passed here should never be read, because the scene size in config
             // is zero.

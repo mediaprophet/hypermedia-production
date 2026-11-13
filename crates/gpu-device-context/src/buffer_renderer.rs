@@ -1,5 +1,5 @@
-use crate::{DeviceHandle, block_on_wgpu, util::create_texture};
-use wgpu::{
+use crate::{DeviceHandle, block_on_etalon, util::create_texture};
+use etalon::{
     BufferDescriptor, BufferUsages, CommandEncoderDescriptor, Device, Extent3d, Queue,
     TexelCopyBufferInfo, TexelCopyBufferLayout, TextureFormat, TextureUsages, TextureView,
 };
@@ -18,8 +18,8 @@ pub struct BufferRenderer {
     pub device_handle: DeviceHandle,
 
     config: BufferRendererConfig,
-    texture_view: wgpu::TextureView,
-    gpu_buffer: wgpu::Buffer,
+    texture_view: etalon::TextureView,
+    gpu_buffer: etalon::Buffer,
 }
 
 impl std::fmt::Debug for BufferRenderer {
@@ -151,10 +151,10 @@ impl BufferRenderer {
         let buf_slice = self.gpu_buffer.slice(..);
 
         let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
-        buf_slice.map_async(wgpu::MapMode::Read, move |v| sender.send(v).unwrap());
+        buf_slice.map_async(etalon::MapMode::Read, move |v| sender.send(v).unwrap());
 
         if let Ok(recv_result) =
-            block_on_wgpu(self.device(), receiver.receive()).inspect_err(|err| {
+            block_on_etalon(self.device(), receiver.receive()).inspect_err(|err| {
                 panic!("channel inaccessible: {:#}", err);
             })
         {

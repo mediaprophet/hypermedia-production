@@ -1,13 +1,16 @@
-use crate::WgpuContextError;
-use wgpu::{Device, TextureFormat, TextureUsages, TextureView};
+use crate::EtalonContextError;
+use etalon::{Device, TextureFormat, TextureUsages, TextureView};
 
 /// Block on a future, polling the device as needed.
 ///
 /// This will deadlock if the future is awaiting anything other than GPU progress.
 #[cfg_attr(docsrs, doc(hidden))]
-pub fn block_on_wgpu<F: Future>(device: &Device, fut: F) -> Result<F::Output, WgpuContextError> {
+pub fn block_on_etalon<F: Future>(
+    device: &Device,
+    fut: F,
+) -> Result<F::Output, EtalonContextError> {
     if cfg!(target_arch = "wasm32") {
-        panic!("WGPU is inherently async on WASM, so blocking doesn't work.");
+        panic!("Etalon is inherently async on WASM, so blocking doesn't work.");
     }
 
     // Create context to poll future with
@@ -19,14 +22,14 @@ pub fn block_on_wgpu<F: Future>(device: &Device, fut: F) -> Result<F::Output, Wg
     loop {
         match fut.as_mut().poll(&mut context) {
             std::task::Poll::Pending => {
-                device.poll(wgpu::PollType::wait_indefinitely())?;
+                device.poll(etalon::PollType::wait_indefinitely())?;
             }
             std::task::Poll::Ready(item) => break Ok(item),
         }
     }
 }
 
-/// Create a WGPU Texture, returning a default TextureView
+/// Create a Etalon Texture, returning a default TextureView
 pub(crate) fn create_texture(
     width: u32,
     height: u32,
@@ -34,20 +37,23 @@ pub(crate) fn create_texture(
     usage: TextureUsages,
     device: &Device,
 ) -> TextureView {
-    let texture = device.create_texture(&wgpu::TextureDescriptor {
+    let texture = device.create_texture(&etalon::TextureDescriptor {
         label: None,
-        size: wgpu::Extent3d {
+        size: etalon::Extent3d {
             width,
             height,
             depth_or_array_layers: 1,
         },
         mip_level_count: 1,
         sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
+        dimension: etalon::TextureDimension::D2,
         usage,
         format,
         view_formats: &[],
     });
 
-    texture.create_view(&wgpu::TextureViewDescriptor::default())
+    texture.create_view(&etalon::TextureViewDescriptor::default())
 }
+// Compatibility for external consumers of the earlier public helper name.
+#[doc(hidden)]
+pub use block_on_etalon as block_on_wgpu;

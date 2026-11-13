@@ -21,7 +21,7 @@ autobins = false
 autoexamples = false
 autotests = false
 autobenches = false
-description = "Simple profiler scopes for wgpu using timer queries"
+description = "Simple profiler scopes for etalon using timer queries"
 homepage = "https://github.com/Wumpf/wgpu-profiler"
 readme = "README.md"
 keywords = ["graphics"]
@@ -39,7 +39,7 @@ tracy = [
 ]
 
 [lib]
-name = "wgpu_profiler"
+name = "etalon_profiler"
 path = "src/lib.rs"
 
 [[example]]
@@ -64,7 +64,7 @@ version = "2"
 version = "0.18"
 optional = true
 
-[dependencies.wgpu]
+[dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
@@ -83,7 +83,7 @@ version = "0.17"
 [dev-dependencies.tracy-client]
 version = "0.18"
 
-[dev-dependencies.wgpu]
+[dev-dependencies.etalon]
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"

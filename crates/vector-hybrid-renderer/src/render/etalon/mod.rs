@@ -1,7 +1,7 @@
 // Copyright 2025 the Vello Authors
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! `wgpu` backend for Vello GPU.
+//! `etalon` backend for Vello GPU.
 
 #![expect(
     clippy::cast_possible_truncation,
@@ -41,6 +41,12 @@ use crate::{
 use alloc::vec::Vec;
 use alloc::{sync::Arc, vec};
 use core::{fmt::Debug, num::NonZeroU64, ops::Range};
+use etalon::{
+    BindGroup, BindGroupLayout, BlendState, Buffer, BufferDescriptor, COPY_BUFFER_ALIGNMENT,
+    ColorTargetState, ColorWrites, CommandEncoder, Device, Extent3d, PipelineCompilationOptions,
+    Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, Sampler, Texture,
+    TextureView, TextureViewDescriptor, util::DeviceExt,
+};
 #[cfg(feature = "text")]
 use glifo::PendingClearRect;
 use hashbrown::{HashMap, hash_map::Entry};
@@ -59,12 +65,6 @@ use vello_common::{
     pixmap::Pixmap,
     tile::Tile,
 };
-use wgpu::{
-    BindGroup, BindGroupLayout, BlendState, Buffer, BufferDescriptor, COPY_BUFFER_ALIGNMENT,
-    ColorTargetState, ColorWrites, CommandEncoder, Device, Extent3d, PipelineCompilationOptions,
-    Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, Sampler, Texture,
-    TextureView, TextureViewDescriptor, util::DeviceExt,
-};
 
 /// Placeholder value for uninitialized GPU encoded paints.
 const GPU_PAINT_PLACEHOLDER: GpuEncodedPaint = GpuEncodedPaint::LinearGradient(GpuLinearGradient {
@@ -77,7 +77,7 @@ const GPU_PAINT_PLACEHOLDER: GpuEncodedPaint = GpuEncodedPaint::LinearGradient(G
 #[derive(Debug)]
 pub struct RenderTargetConfig {
     /// Format of the rendering target
-    pub format: wgpu::TextureFormat,
+    pub format: etalon::TextureFormat,
     /// Width of the rendering target
     pub width: u16,
     /// Height of the rendering target
@@ -102,12 +102,12 @@ impl TextureBindings {
     /// The [`TextureView`] must fit the following binding type.
     ///
     /// ```ignore
-    /// wgpu::BindGroupLayoutEntry {
+    /// etalon::BindGroupLayoutEntry {
     ///     binding: 1,
-    ///     visibility: wgpu::ShaderStages::FRAGMENT,
-    ///     ty: wgpu::BindingType::Texture {
-    ///         sample_type: wgpu::TextureSampleType::Float { filterable: false },
-    ///         view_dimension: wgpu::TextureViewDimension::D2,
+    ///     visibility: etalon::ShaderStages::FRAGMENT,
+    ///     ty: etalon::BindingType::Texture {
+    ///         sample_type: etalon::TextureSampleType::Float { filterable: false },
+    ///         view_dimension: etalon::TextureViewDimension::D2,
     ///         multisampled: false,
     ///     },
     ///     count: None,
@@ -115,8 +115,8 @@ impl TextureBindings {
     /// ```
     ///
     /// This means the view must be a non-array 2D view of a float-sampleable texture (e.g. integer
-    /// formats are rejected by wgpu at bind time), the underlying texture must include
-    /// [`wgpu::TextureUsages::TEXTURE_BINDING`], and only mip level 0 is read.
+    /// formats are rejected by etalon at bind time), the underlying texture must include
+    /// [`etalon::TextureUsages::TEXTURE_BINDING`], and only mip level 0 is read.
     #[inline]
     pub fn insert(&mut self, texture_id: TextureId, view: TextureView) {
         self.views.insert(texture_id, view);
@@ -211,11 +211,11 @@ impl Renderer {
     /// Creates a depth texture view compatible with [`render`](Self::render).
     ///
     /// The returned view has the same dimensions as `render_size`, uses
-    /// [`TextureFormat::Depth24Plus`](wgpu::TextureFormat::Depth24Plus), and can be used as a
+    /// [`TextureFormat::Depth24Plus`](etalon::TextureFormat::Depth24Plus), and can be used as a
     /// render attachment.
     pub fn create_depth_texture_view(device: &Device, render_size: &RenderSize) -> TextureView {
         device
-            .create_texture(&wgpu::TextureDescriptor {
+            .create_texture(&etalon::TextureDescriptor {
                 label: Some("Vello GPU Depth Texture"),
                 size: Extent3d {
                     width: u32::from(render_size.width.max(1)),
@@ -224,9 +224,9 @@ impl Renderer {
                 },
                 mip_level_count: 1,
                 sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Depth24Plus,
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                dimension: etalon::TextureDimension::D2,
+                format: etalon::TextureFormat::Depth24Plus,
+                usage: etalon::TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[],
             })
             .create_view(&TextureViewDescriptor::default())
@@ -241,9 +241,9 @@ impl Renderer {
     /// To render without any texture bindings, you can pass an empty [`TextureBindings`].
     ///
     /// Passing `Some(depth_view)` enables depth buffering to reduce overdraw. The depth view must
-    /// use [`TextureFormat::Depth24Plus`](wgpu::TextureFormat::Depth24Plus), have the same
+    /// use [`TextureFormat::Depth24Plus`](etalon::TextureFormat::Depth24Plus), have the same
     /// dimensions as `render_size`, have a sample count of one, and support
-    /// [`TextureUsages::RENDER_ATTACHMENT`](wgpu::TextureUsages::RENDER_ATTACHMENT). Pass `None`
+    /// [`TextureUsages::RENDER_ATTACHMENT`](etalon::TextureUsages::RENDER_ATTACHMENT). Pass `None`
     /// to render without a depth buffer.
     ///
     /// The [WebGPU render pass validation rules] require every color and depth attachment view in
@@ -347,7 +347,7 @@ impl Renderer {
         atlas_id: AtlasId,
         texture_bindings: &TextureBindings,
     ) -> Result<(), RenderError> {
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor {
             label: Some("Render to Atlas Encoder"),
         });
 
@@ -488,7 +488,7 @@ impl Renderer {
             texture_bindings,
             external_texture_bind_groups: HashMap::new(),
             scratch_buffers: &mut self.scratch_buffers,
-            root_load_op: wgpu::LoadOp::Load,
+            root_load_op: etalon::LoadOp::Load,
         };
 
         ctx.init_root_clear(target_init, root_output_target);
@@ -639,10 +639,10 @@ impl Renderer {
             color_attachments: &[Some(RenderPassColorAttachment {
                 view: &layer_view,
                 resolve_target: None,
-                ops: wgpu::Operations {
+                ops: etalon::Operations {
                     // Don't clear entire texture, just the scissor region
-                    load: wgpu::LoadOp::Load,
-                    store: wgpu::StoreOp::Store,
+                    load: etalon::LoadOp::Load,
+                    store: etalon::StoreOp::Store,
                 },
                 depth_slice: None,
             })],
@@ -865,18 +865,18 @@ fn clear_atlas_region(queue: &Queue, renderer: &mut Renderer, rect: &PendingClea
     let byte_count = rect.width as usize * rect.height as usize * 4;
     renderer.atlas_clear_scratch.resize(byte_count, 0);
     queue.write_texture(
-        wgpu::TexelCopyTextureInfo {
+        etalon::TexelCopyTextureInfo {
             texture: renderer.atlas_texture(AtlasId::new(rect.page_index)),
             mip_level: 0,
-            origin: wgpu::Origin3d {
+            origin: etalon::Origin3d {
                 x: rect.x as u32,
                 y: rect.y as u32,
                 z: 0,
             },
-            aspect: wgpu::TextureAspect::All,
+            aspect: etalon::TextureAspect::All,
         },
         &renderer.atlas_clear_scratch[..byte_count],
-        wgpu::TexelCopyBufferLayout {
+        etalon::TexelCopyBufferLayout {
             offset: 0,
             bytes_per_row: Some(rect.width as u32 * 4),
             rows_per_image: None,
@@ -961,7 +961,7 @@ fn create_arena_buffer(device: &Device, size: u64) -> Buffer {
     device.create_buffer(&BufferDescriptor {
         label: Some("Strips Arena"),
         size,
-        usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+        usage: etalon::BufferUsages::VERTEX | etalon::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     })
 }
@@ -1071,8 +1071,8 @@ const SIZE_OF_CONFIG: NonZeroU64 = NonZeroU64::new(size_of::<Config>() as u64).u
 
 impl GpuStrip {
     /// Vertex attributes for the strip
-    pub fn vertex_attributes() -> [wgpu::VertexAttribute; 6] {
-        wgpu::vertex_attr_array![
+    pub fn vertex_attributes() -> [etalon::VertexAttribute; 6] {
+        etalon::vertex_attr_array![
             0 => Uint32,
             1 => Uint32,
             2 => Uint32,
@@ -1092,35 +1092,35 @@ impl Programs {
         resource_texture_dimension_2d: u32,
     ) -> Self {
         let strip_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Strip Bind Group Layout"),
                 entries: &[
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Uint,
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Uint,
+                            view_dimension: etalon::TextureViewDimension::D2,
                             multisampled: false,
                         },
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
+                        visibility: etalon::ShaderStages::VERTEX | etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Buffer {
+                            ty: etalon::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 2,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Float { filterable: false },
+                            view_dimension: etalon::TextureViewDimension::D2,
                             multisampled: false,
                         },
                         count: None,
@@ -1128,32 +1128,32 @@ impl Programs {
                 ],
             });
 
-        let external_texture_layout_entry = |binding| wgpu::BindGroupLayoutEntry {
+        let external_texture_layout_entry = |binding| etalon::BindGroupLayoutEntry {
             binding,
-            visibility: wgpu::ShaderStages::FRAGMENT,
-            ty: wgpu::BindingType::Texture {
-                sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                view_dimension: wgpu::TextureViewDimension::D2,
+            visibility: etalon::ShaderStages::FRAGMENT,
+            ty: etalon::BindingType::Texture {
+                sample_type: etalon::TextureSampleType::Float { filterable: false },
+                view_dimension: etalon::TextureViewDimension::D2,
                 multisampled: false,
             },
             count: None,
         };
         let external_texture_layout_entries = [external_texture_layout_entry(0)];
         let external_texture_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("External Texture Bind Group Layout"),
                 entries: &external_texture_layout_entries,
             });
 
         let encoded_paints_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Encoded Paints Bind Group Layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
+                entries: &[etalon::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Uint,
-                        view_dimension: wgpu::TextureViewDimension::D2,
+                    visibility: etalon::ShaderStages::VERTEX | etalon::ShaderStages::FRAGMENT,
+                    ty: etalon::BindingType::Texture {
+                        sample_type: etalon::TextureSampleType::Uint,
+                        view_dimension: etalon::TextureViewDimension::D2,
                         multisampled: false,
                     },
                     count: None,
@@ -1161,32 +1161,32 @@ impl Programs {
             });
 
         let gradient_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Gradient Bind Group Layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
+                entries: &[etalon::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
+                    visibility: etalon::ShaderStages::FRAGMENT,
+                    ty: etalon::BindingType::Texture {
+                        sample_type: etalon::TextureSampleType::Float { filterable: true },
+                        view_dimension: etalon::TextureViewDimension::D2,
                         multisampled: false,
                     },
                     count: None,
                 }],
             });
 
-        let strip_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let strip_shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("Strip Shader"),
-            source: wgpu::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::RENDER.into()),
+            source: etalon::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::RENDER.into()),
         });
 
-        let clear_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let clear_shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("Clear Shader"),
-            source: wgpu::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::CLEAR.into()),
+            source: etalon::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::CLEAR.into()),
         });
 
         let strip_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: Some("Strip Pipeline Layout"),
                 bind_group_layouts: &[
                     Some(&strip_bind_group_layout),
@@ -1198,32 +1198,32 @@ impl Programs {
             });
 
         let clear_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: Some("Clear Pipeline Layout"),
                 bind_group_layouts: &[],
                 immediate_size: 0,
             });
 
-        let depth_format = wgpu::TextureFormat::Depth24Plus;
+        let depth_format = etalon::TextureFormat::Depth24Plus;
 
-        let strip_vertex_state = wgpu::VertexBufferLayout {
+        let strip_vertex_state = etalon::VertexBufferLayout {
             array_stride: size_of::<GpuStrip>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
+            step_mode: etalon::VertexStepMode::Instance,
             attributes: &GpuStrip::vertex_attributes(),
         };
 
         let create_strip_pipeline =
-            |label, format, blend, depth_stencil: Option<wgpu::DepthStencilState>| {
-                device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            |label, format, blend, depth_stencil: Option<etalon::DepthStencilState>| {
+                device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
                     label: Some(label),
                     layout: Some(&strip_pipeline_layout),
-                    vertex: wgpu::VertexState {
+                    vertex: etalon::VertexState {
                         module: &strip_shader,
                         entry_point: Some("vs_main"),
                         buffers: &[Some(strip_vertex_state.clone())],
                         compilation_options: PipelineCompilationOptions::default(),
                     },
-                    fragment: Some(wgpu::FragmentState {
+                    fragment: Some(etalon::FragmentState {
                         module: &strip_shader,
                         entry_point: Some("fs_main"),
                         targets: &[Some(ColorTargetState {
@@ -1233,28 +1233,28 @@ impl Programs {
                         })],
                         compilation_options: PipelineCompilationOptions::default(),
                     }),
-                    primitive: wgpu::PrimitiveState {
-                        topology: wgpu::PrimitiveTopology::TriangleStrip,
+                    primitive: etalon::PrimitiveState {
+                        topology: etalon::PrimitiveTopology::TriangleStrip,
                         ..Default::default()
                     },
                     depth_stencil,
-                    multisample: wgpu::MultisampleState::default(),
+                    multisample: etalon::MultisampleState::default(),
                     multiview_mask: None,
                     cache: None,
                 })
             };
 
-        let depth_stencil = |depth_write_enabled| wgpu::DepthStencilState {
+        let depth_stencil = |depth_write_enabled| etalon::DepthStencilState {
             format: depth_format,
             depth_write_enabled: Some(depth_write_enabled),
-            depth_compare: Some(wgpu::CompareFunction::LessEqual),
-            stencil: wgpu::StencilState::default(),
-            bias: wgpu::DepthBiasState::default(),
+            depth_compare: Some(etalon::CompareFunction::LessEqual),
+            stencil: etalon::StencilState::default(),
+            bias: etalon::DepthBiasState::default(),
         };
 
         let intermediate_strip_pipeline = create_strip_pipeline(
             "Strip Intermediate Pipeline",
-            wgpu::TextureFormat::Rgba8Unorm,
+            etalon::TextureFormat::Rgba8Unorm,
             Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING),
             None,
         );
@@ -1280,10 +1280,10 @@ impl Programs {
             Some(depth_stencil(true)),
         );
 
-        let clear_vertex_state = wgpu::VertexBufferLayout {
+        let clear_vertex_state = etalon::VertexBufferLayout {
             array_stride: size_of::<GpuClearInstance>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &wgpu::vertex_attr_array![
+            step_mode: etalon::VertexStepMode::Instance,
+            attributes: &etalon::vertex_attr_array![
                 0 => Uint32x2,
                 1 => Uint32x2,
                 2 => Uint32x2,
@@ -1291,16 +1291,16 @@ impl Programs {
             ],
         };
         let create_clear_pipeline = |label, format| {
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
                 label: Some(label),
                 layout: Some(&clear_pipeline_layout),
-                vertex: wgpu::VertexState {
+                vertex: etalon::VertexState {
                     module: &clear_shader,
                     entry_point: Some("vs_main"),
                     buffers: &[Some(clear_vertex_state.clone())],
                     compilation_options: PipelineCompilationOptions::default(),
                 },
-                fragment: Some(wgpu::FragmentState {
+                fragment: Some(etalon::FragmentState {
                     module: &clear_shader,
                     entry_point: Some("fs_main"),
                     targets: &[Some(ColorTargetState {
@@ -1310,78 +1310,79 @@ impl Programs {
                     })],
                     compilation_options: PipelineCompilationOptions::default(),
                 }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleStrip,
+                primitive: etalon::PrimitiveState {
+                    topology: etalon::PrimitiveTopology::TriangleStrip,
                     ..Default::default()
                 },
                 depth_stencil: None,
-                multisample: wgpu::MultisampleState::default(),
+                multisample: etalon::MultisampleState::default(),
                 multiview_mask: None,
                 cache: None,
             })
         };
         let clear_pipeline =
-            create_clear_pipeline("Clear Pipeline", wgpu::TextureFormat::Rgba8Unorm);
+            create_clear_pipeline("Clear Pipeline", etalon::TextureFormat::Rgba8Unorm);
         let root_clear_pipeline =
             create_clear_pipeline("Root Clear Pipeline", render_target_config.format);
 
         // Create atlas clear pipeline
         let atlas_clear_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: Some("Atlas Clear Pipeline Layout"),
                 bind_group_layouts: &[],
                 immediate_size: 0,
             });
         // TODO: Change the atlas clear pipeline to use the existing layer clear mechanism.
-        let atlas_clear_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Atlas Clear Pipeline"),
-            layout: Some(&atlas_clear_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &clear_shader,
-                // Use a different vertex shader entry point
-                entry_point: Some("vs_main_fullscreen"),
-                buffers: &[],
-                compilation_options: PipelineCompilationOptions::default(),
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &clear_shader,
-                entry_point: Some("fs_transparent"),
-                targets: &[Some(ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
-                    blend: None,
-                    write_mask: ColorWrites::ALL,
-                })],
-                compilation_options: PipelineCompilationOptions::default(),
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleStrip,
-                ..Default::default()
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview_mask: None,
-            cache: None,
-        });
+        let atlas_clear_pipeline =
+            device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
+                label: Some("Atlas Clear Pipeline"),
+                layout: Some(&atlas_clear_pipeline_layout),
+                vertex: etalon::VertexState {
+                    module: &clear_shader,
+                    // Use a different vertex shader entry point
+                    entry_point: Some("vs_main_fullscreen"),
+                    buffers: &[],
+                    compilation_options: PipelineCompilationOptions::default(),
+                },
+                fragment: Some(etalon::FragmentState {
+                    module: &clear_shader,
+                    entry_point: Some("fs_transparent"),
+                    targets: &[Some(ColorTargetState {
+                        format: etalon::TextureFormat::Rgba8Unorm,
+                        blend: None,
+                        write_mask: ColorWrites::ALL,
+                    })],
+                    compilation_options: PipelineCompilationOptions::default(),
+                }),
+                primitive: etalon::PrimitiveState {
+                    topology: etalon::PrimitiveTopology::TriangleStrip,
+                    ..Default::default()
+                },
+                depth_stencil: None,
+                multisample: etalon::MultisampleState::default(),
+                multiview_mask: None,
+                cache: None,
+            });
 
-        let filter_texture_entry = wgpu::BindGroupLayoutEntry {
+        let filter_texture_entry = etalon::BindGroupLayoutEntry {
             binding: 0,
-            visibility: wgpu::ShaderStages::FRAGMENT,
-            ty: wgpu::BindingType::Texture {
-                sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                view_dimension: wgpu::TextureViewDimension::D2,
+            visibility: etalon::ShaderStages::FRAGMENT,
+            ty: etalon::BindingType::Texture {
+                sample_type: etalon::TextureSampleType::Float { filterable: true },
+                view_dimension: etalon::TextureViewDimension::D2,
                 multisampled: false,
             },
             count: None,
         };
         let filter_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Filter Bind Group Layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
+                entries: &[etalon::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Uint,
-                        view_dimension: wgpu::TextureViewDimension::D2,
+                    visibility: etalon::ShaderStages::FRAGMENT,
+                    ty: etalon::BindingType::Texture {
+                        sample_type: etalon::TextureSampleType::Uint,
+                        view_dimension: etalon::TextureViewDimension::D2,
                         multisampled: false,
                     },
                     count: None,
@@ -1389,31 +1390,31 @@ impl Programs {
             });
         let filter_input_bind_group_layouts = [
             // Input texture and linear sampler.
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Filter Input Bind Group Layout"),
                 entries: &[
                     filter_texture_entry,
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Sampler(etalon::SamplerBindingType::Filtering),
                         count: None,
                     },
                 ],
             }),
             // The original layer texture.
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Filter Original Texture Bind Group Layout"),
                 entries: &[filter_texture_entry],
             }),
         ];
 
-        let filter_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let filter_shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("Filter Shader"),
-            source: wgpu::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::FILTER.into()),
+            source: etalon::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::FILTER.into()),
         });
         let filter_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: Some("Filter Pipeline Layout"),
                 bind_group_layouts: &[
                     Some(&filter_bind_group_layout),
@@ -1422,16 +1423,16 @@ impl Programs {
                 ],
                 immediate_size: 0,
             });
-        let filter_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let filter_pipeline = device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
             label: Some("Filter Pipeline"),
             layout: Some(&filter_pipeline_layout),
-            vertex: wgpu::VertexState {
+            vertex: etalon::VertexState {
                 module: &filter_shader,
                 entry_point: Some("vs_main"),
-                buffers: &[Some(wgpu::VertexBufferLayout {
+                buffers: &[Some(etalon::VertexBufferLayout {
                     array_stride: size_of::<FilterInstanceData>() as u64,
-                    step_mode: wgpu::VertexStepMode::Instance,
-                    attributes: &wgpu::vertex_attr_array![
+                    step_mode: etalon::VertexStepMode::Instance,
+                    attributes: &etalon::vertex_attr_array![
                         0 => Uint32,
                         1 => Uint32,
                         2 => Uint32,
@@ -1445,56 +1446,56 @@ impl Programs {
                 })],
                 compilation_options: PipelineCompilationOptions::default(),
             },
-            fragment: Some(wgpu::FragmentState {
+            fragment: Some(etalon::FragmentState {
                 module: &filter_shader,
                 entry_point: Some("fs_main"),
                 targets: &[Some(ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    format: etalon::TextureFormat::Rgba8Unorm,
                     blend: None,
                     write_mask: ColorWrites::ALL,
                 })],
                 compilation_options: PipelineCompilationOptions::default(),
             }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleStrip,
+            primitive: etalon::PrimitiveState {
+                topology: etalon::PrimitiveTopology::TriangleStrip,
                 ..Default::default()
             },
             depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
+            multisample: etalon::MultisampleState::default(),
             cache: None,
             multiview_mask: None,
         });
 
         let blend_layer_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Blend Layer Textures Bind Group Layout"),
                 entries: &[
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Float { filterable: false },
+                            view_dimension: etalon::TextureViewDimension::D2,
                             multisampled: false,
                         },
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Float { filterable: false },
+                            view_dimension: etalon::TextureViewDimension::D2,
                             multisampled: false,
                         },
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
+                    etalon::BindGroupLayoutEntry {
                         binding: 2,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Uint,
-                            view_dimension: wgpu::TextureViewDimension::D2,
+                        visibility: etalon::ShaderStages::FRAGMENT,
+                        ty: etalon::BindingType::Texture {
+                            sample_type: etalon::TextureSampleType::Uint,
+                            view_dimension: etalon::TextureViewDimension::D2,
                             multisampled: false,
                         },
                         count: None,
@@ -1503,42 +1504,43 @@ impl Programs {
             });
 
         let copy_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&etalon::BindGroupLayoutDescriptor {
                 label: Some("Copy Bind Group Layout"),
-                entries: &[wgpu::BindGroupLayoutEntry {
+                entries: &[etalon::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                        view_dimension: wgpu::TextureViewDimension::D2,
+                    visibility: etalon::ShaderStages::FRAGMENT,
+                    ty: etalon::BindingType::Texture {
+                        sample_type: etalon::TextureSampleType::Float { filterable: false },
+                        view_dimension: etalon::TextureViewDimension::D2,
                         multisampled: false,
                     },
                     count: None,
                 }],
             });
-        let blend_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let blend_shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("Blend Shader"),
-            source: wgpu::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::BLEND.into()),
+            source: etalon::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::BLEND.into()),
         });
-        let copy_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let copy_shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("Copy Shader"),
-            source: wgpu::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::COPY.into()),
+            source: etalon::ShaderSource::Wgsl(vello_gpu_shaders::wgsl::COPY.into()),
         });
         let blend_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
                 label: Some("Blend Pipeline Layout"),
                 bind_group_layouts: &[Some(&blend_layer_bind_group_layout)],
                 immediate_size: 0,
             });
-        let copy_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Copy Pipeline Layout"),
-            bind_group_layouts: &[Some(&copy_bind_group_layout)],
-            immediate_size: 0,
-        });
-        let blend_vertex_state = wgpu::VertexBufferLayout {
+        let copy_pipeline_layout =
+            device.create_pipeline_layout(&etalon::PipelineLayoutDescriptor {
+                label: Some("Copy Pipeline Layout"),
+                bind_group_layouts: &[Some(&copy_bind_group_layout)],
+                immediate_size: 0,
+            });
+        let blend_vertex_state = etalon::VertexBufferLayout {
             array_stride: size_of::<GpuBlendInstance>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &wgpu::vertex_attr_array![
+            step_mode: etalon::VertexStepMode::Instance,
+            attributes: &etalon::vertex_attr_array![
                 0 => Uint32,
                 1 => Uint32,
                 2 => Uint32,
@@ -1549,10 +1551,10 @@ impl Programs {
                 7 => Uint32,
             ],
         };
-        let copy_vertex_state = wgpu::VertexBufferLayout {
+        let copy_vertex_state = etalon::VertexBufferLayout {
             array_stride: size_of::<GpuCopyInstance>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &wgpu::vertex_attr_array![
+            step_mode: etalon::VertexStepMode::Instance,
+            attributes: &etalon::vertex_attr_array![
                 0 => Uint32,
                 1 => Uint32,
                 2 => Uint32,
@@ -1561,34 +1563,34 @@ impl Programs {
         };
         let create_texture_op_pipeline =
             |label,
-             shader_module: &wgpu::ShaderModule,
+             shader_module: &etalon::ShaderModule,
              layout,
-             vertex_state: &wgpu::VertexBufferLayout<'_>| {
-                device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+             vertex_state: &etalon::VertexBufferLayout<'_>| {
+                device.create_render_pipeline(&etalon::RenderPipelineDescriptor {
                     label: Some(label),
                     layout: Some(layout),
-                    vertex: wgpu::VertexState {
+                    vertex: etalon::VertexState {
                         module: shader_module,
                         entry_point: Some("vs_main"),
                         buffers: &[Some(vertex_state.clone())],
                         compilation_options: PipelineCompilationOptions::default(),
                     },
-                    fragment: Some(wgpu::FragmentState {
+                    fragment: Some(etalon::FragmentState {
                         module: shader_module,
                         entry_point: Some("fs_main"),
                         targets: &[Some(ColorTargetState {
-                            format: wgpu::TextureFormat::Rgba8Unorm,
+                            format: etalon::TextureFormat::Rgba8Unorm,
                             blend: None,
                             write_mask: ColorWrites::ALL,
                         })],
                         compilation_options: PipelineCompilationOptions::default(),
                     }),
-                    primitive: wgpu::PrimitiveState {
-                        topology: wgpu::PrimitiveTopology::TriangleStrip,
+                    primitive: etalon::PrimitiveState {
+                        topology: etalon::PrimitiveTopology::TriangleStrip,
                         ..Default::default()
                     },
                     depth_stencil: None,
-                    multisample: wgpu::MultisampleState::default(),
+                    multisample: etalon::MultisampleState::default(),
                     multiview_mask: None,
                     cache: None,
                 })
@@ -1607,10 +1609,10 @@ impl Programs {
         );
 
         let texture_size = layer_config.min_texture_size;
-        let filter_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+        let filter_sampler = device.create_sampler(&etalon::SamplerDescriptor {
             label: Some("Filter Linear Sampler"),
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: etalon::FilterMode::Linear,
+            min_filter: etalon::FilterMode::Linear,
             ..Default::default()
         });
 
@@ -1776,7 +1778,7 @@ impl Programs {
         size: SizeU16,
         label: &'static str,
     ) -> TextureView {
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
+        let texture = device.create_texture(&etalon::TextureDescriptor {
             label: Some(label),
             size: Extent3d {
                 width: u32::from(size.width()),
@@ -1785,9 +1787,10 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba8Unorm,
+            usage: etalon::TextureUsages::TEXTURE_BINDING
+                | etalon::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[],
         });
 
@@ -1879,21 +1882,21 @@ impl Programs {
         layer_texture_views: [&TextureView; 2],
         alphas_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Blend Layer Textures Bind Group"),
             layout,
             entries: &[
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(layer_texture_views[0]),
+                    resource: etalon::BindingResource::TextureView(layer_texture_views[0]),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(layer_texture_views[1]),
+                    resource: etalon::BindingResource::TextureView(layer_texture_views[1]),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::TextureView(alphas_texture_view),
+                    resource: etalon::BindingResource::TextureView(alphas_texture_view),
                 },
             ],
         })
@@ -1904,12 +1907,12 @@ impl Programs {
         layout: &BindGroupLayout,
         source_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Copy Source Bind Group"),
             layout,
-            entries: &[wgpu::BindGroupEntry {
+            entries: &[etalon::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(source_texture_view),
+                resource: etalon::BindingResource::TextureView(source_texture_view),
             }],
         })
     }
@@ -1920,7 +1923,7 @@ impl Programs {
         height: u32,
         alpha_texture_width: u32,
     ) -> Buffer {
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        device.create_buffer_init(&etalon::util::BufferInitDescriptor {
             label: Some("Config Buffer"),
             contents: bytemuck::bytes_of(&Config {
                 width,
@@ -1932,12 +1935,12 @@ impl Programs {
                 strip_offset_y: 0,
                 negate_ndc: 0,
             }),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            usage: etalon::BufferUsages::UNIFORM | etalon::BufferUsages::COPY_DST,
         })
     }
 
     fn create_alphas_texture(device: &Device, width: u32, height: u32) -> Texture {
-        device.create_texture(&wgpu::TextureDescriptor {
+        device.create_texture(&etalon::TextureDescriptor {
             label: Some("Alpha Texture"),
             size: Extent3d {
                 width,
@@ -1946,15 +1949,15 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba32Uint,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba32Uint,
+            usage: etalon::TextureUsages::TEXTURE_BINDING | etalon::TextureUsages::COPY_DST,
             view_formats: &[],
         })
     }
 
     fn create_atlas_texture(device: &Device, width: u16, height: u16) -> Texture {
-        device.create_texture(&wgpu::TextureDescriptor {
+        device.create_texture(&etalon::TextureDescriptor {
             label: Some("Atlas Texture"),
             size: Extent3d {
                 width: u32::from(width),
@@ -1963,18 +1966,18 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING
-                | wgpu::TextureUsages::COPY_DST
-                | wgpu::TextureUsages::COPY_SRC
-                | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba8Unorm,
+            usage: etalon::TextureUsages::TEXTURE_BINDING
+                | etalon::TextureUsages::COPY_DST
+                | etalon::TextureUsages::COPY_SRC
+                | etalon::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[],
         })
     }
 
     fn create_filter_data_texture(device: &Device, width: u32, height: u32) -> Texture {
-        device.create_texture(&wgpu::TextureDescriptor {
+        device.create_texture(&etalon::TextureDescriptor {
             label: Some("Filter Data Texture"),
             size: Extent3d {
                 width,
@@ -1983,9 +1986,9 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba32Uint,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba32Uint,
+            usage: etalon::TextureUsages::TEXTURE_BINDING | etalon::TextureUsages::COPY_DST,
             view_formats: &[],
         })
     }
@@ -1995,18 +1998,18 @@ impl Programs {
         filter_bind_group_layout: &BindGroupLayout,
         filter_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Filter Base Bind Group"),
             layout: filter_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
+            entries: &[etalon::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(filter_texture_view),
+                resource: etalon::BindingResource::TextureView(filter_texture_view),
             }],
         })
     }
 
     fn create_placeholder_external_texture(device: &Device) -> TextureView {
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
+        let texture = device.create_texture(&etalon::TextureDescriptor {
             label: Some("Placeholder External Texture"),
             size: Extent3d {
                 width: 1,
@@ -2015,9 +2018,9 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba8Unorm,
+            usage: etalon::TextureUsages::TEXTURE_BINDING,
             view_formats: &[],
         });
         texture.create_view(&TextureViewDescriptor::default())
@@ -2028,11 +2031,11 @@ impl Programs {
         external_texture_bind_group_layout: &BindGroupLayout,
         texture_views: [&TextureView; EXTERNAL_TEXTURE_SLOT_COUNT],
     ) -> BindGroup {
-        let entries = [wgpu::BindGroupEntry {
+        let entries = [etalon::BindGroupEntry {
             binding: 0,
-            resource: wgpu::BindingResource::TextureView(texture_views[0]),
+            resource: etalon::BindingResource::TextureView(texture_views[0]),
         }];
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("External Texture Bind Group"),
             layout: external_texture_bind_group_layout,
             entries: &entries,
@@ -2040,7 +2043,7 @@ impl Programs {
     }
 
     fn create_encoded_paints_texture(device: &Device, width: u32, height: u32) -> Texture {
-        device.create_texture(&wgpu::TextureDescriptor {
+        device.create_texture(&etalon::TextureDescriptor {
             label: Some("Encoded Paints Texture"),
             size: Extent3d {
                 width,
@@ -2049,9 +2052,9 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba32Uint,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba32Uint,
+            usage: etalon::TextureUsages::TEXTURE_BINDING | etalon::TextureUsages::COPY_DST,
             view_formats: &[],
         })
     }
@@ -2061,18 +2064,18 @@ impl Programs {
         encoded_paints_bind_group_layout: &BindGroupLayout,
         encoded_paints_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Encoded Paints Bind Group"),
             layout: encoded_paints_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
+            entries: &[etalon::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(encoded_paints_texture_view),
+                resource: etalon::BindingResource::TextureView(encoded_paints_texture_view),
             }],
         })
     }
 
     fn create_gradient_texture(device: &Device, width: u32, height: u32) -> Texture {
-        device.create_texture(&wgpu::TextureDescriptor {
+        device.create_texture(&etalon::TextureDescriptor {
             label: Some("Gradient Texture"),
             size: Extent3d {
                 width,
@@ -2081,9 +2084,9 @@ impl Programs {
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            dimension: etalon::TextureDimension::D2,
+            format: etalon::TextureFormat::Rgba8Unorm,
+            usage: etalon::TextureUsages::TEXTURE_BINDING | etalon::TextureUsages::COPY_DST,
             view_formats: &[],
         })
     }
@@ -2093,12 +2096,12 @@ impl Programs {
         gradient_bind_group_layout: &BindGroupLayout,
         gradient_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Gradient Bind Group"),
             layout: gradient_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
+            entries: &[etalon::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(gradient_texture_view),
+                resource: etalon::BindingResource::TextureView(gradient_texture_view),
             }],
         })
     }
@@ -2110,21 +2113,21 @@ impl Programs {
         config_buffer: &Buffer,
         strip_texture_view: &TextureView,
     ) -> BindGroup {
-        device.create_bind_group(&wgpu::BindGroupDescriptor {
+        device.create_bind_group(&etalon::BindGroupDescriptor {
             label: Some("Strip Bind Group"),
             layout: strip_bind_group_layout,
             entries: &[
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 0,
-                    resource: wgpu::BindingResource::TextureView(alphas_texture_view),
+                    resource: etalon::BindingResource::TextureView(alphas_texture_view),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 1,
                     resource: config_buffer.as_entire_binding(),
                 },
-                wgpu::BindGroupEntry {
+                etalon::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::TextureView(strip_texture_view),
+                    resource: etalon::BindingResource::TextureView(strip_texture_view),
                 },
             ],
         })
@@ -2390,14 +2393,14 @@ impl Programs {
         alphas.resize(rows * row_bytes, 0);
 
         queue.write_texture(
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: &self.resources.alphas_texture,
                 mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
+                origin: etalon::Origin3d::ZERO,
+                aspect: etalon::TextureAspect::All,
             },
             alphas,
-            wgpu::TexelCopyBufferLayout {
+            etalon::TexelCopyBufferLayout {
                 offset: 0,
                 // 16 bytes per RGBA32Uint texel (4 u32s × 4 bytes each), which is equivalent to
                 // a bit shift of 4.
@@ -2440,14 +2443,14 @@ impl Programs {
             &mut self.encoded_paints_data[..rows * encoded_paints_texture_width as usize * 16],
         );
         queue.write_texture(
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: encoded_paints_texture,
                 mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
+                origin: etalon::Origin3d::ZERO,
+                aspect: etalon::TextureAspect::All,
             },
             &self.encoded_paints_data[..rows * encoded_paints_texture_width as usize * 16],
-            wgpu::TexelCopyBufferLayout {
+            etalon::TexelCopyBufferLayout {
                 offset: 0,
                 // 16 bytes per RGBA32Uint texel (4 u32s × 4 bytes each), equivalent to bit shift of 4
                 bytes_per_row: Some(encoded_paints_texture_width << 4),
@@ -2475,14 +2478,14 @@ impl Programs {
 
         filter_context.serialize_to_buffer(&mut self.filter_data[..rows * width as usize * 16]);
         queue.write_texture(
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: filter_texture,
                 mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
+                origin: etalon::Origin3d::ZERO,
+                aspect: etalon::TextureAspect::All,
             },
             &self.filter_data[..rows * width as usize * 16],
-            wgpu::TexelCopyBufferLayout {
+            etalon::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(width << 4),
                 rows_per_image: Some(rows as u32),
@@ -2511,14 +2514,14 @@ impl Programs {
             luts.resize(total_capacity, 0);
 
             queue.write_texture(
-                wgpu::TexelCopyTextureInfo {
+                etalon::TexelCopyTextureInfo {
                     texture: gradient_texture,
                     mip_level: 0,
-                    origin: wgpu::Origin3d::ZERO,
-                    aspect: wgpu::TextureAspect::All,
+                    origin: etalon::Origin3d::ZERO,
+                    aspect: etalon::TextureAspect::All,
                 },
                 &luts,
-                wgpu::TexelCopyBufferLayout {
+                etalon::TexelCopyBufferLayout {
                     offset: 0,
                     // 4 bytes per RGBA8 pixel
                     bytes_per_row: Some(gradient_texture_width << 2),
@@ -2586,20 +2589,20 @@ struct RendererContext<'a> {
     texture_bindings: &'a TextureBindings,
     external_texture_bind_groups: HashMap<ExternalTextureBindings, BindGroup>,
     scratch_buffers: &'a mut ScratchBuffers,
-    root_load_op: wgpu::LoadOp<wgpu::Color>,
+    root_load_op: etalon::LoadOp<etalon::Color>,
 }
 
 impl RendererContext<'_> {
     fn init_root_clear(&mut self, target_init: TargetInit<'_>, root_target: RootTarget) {
         self.root_load_op = match target_init {
-            TargetInit::SrcOver => wgpu::LoadOp::Load,
+            TargetInit::SrcOver => etalon::LoadOp::Load,
             TargetInit::Clear(ClearSettings::Viewport { color }) => {
-                wgpu::LoadOp::Clear(clear_color(color))
+                etalon::LoadOp::Clear(clear_color(color))
             }
             TargetInit::Clear(clear @ ClearSettings::Rects { .. }) => {
                 self.clear_pass_inner(DrawPassTarget::Root(root_target), clear);
 
-                wgpu::LoadOp::Load
+                etalon::LoadOp::Load
             }
         };
     }
@@ -2607,25 +2610,25 @@ impl RendererContext<'_> {
     fn finish_root_clear(&mut self) {
         // If the load mode was set to clear but no actual drawing instructions were
         // emitted, we still need to start a pass to clear the output.
-        if let wgpu::LoadOp::Clear(color) = self.take_root_load_op() {
+        if let etalon::LoadOp::Clear(color) = self.take_root_load_op() {
             Self::clear_full_target(self.encoder, self.view, color);
         }
     }
 
-    fn take_root_load_op(&mut self) -> wgpu::LoadOp<wgpu::Color> {
-        core::mem::replace(&mut self.root_load_op, wgpu::LoadOp::Load)
+    fn take_root_load_op(&mut self) -> etalon::LoadOp<etalon::Color> {
+        core::mem::replace(&mut self.root_load_op, etalon::LoadOp::Load)
     }
 
-    fn clear_full_target(encoder: &mut CommandEncoder, view: &TextureView, color: wgpu::Color) {
+    fn clear_full_target(encoder: &mut CommandEncoder, view: &TextureView, color: etalon::Color) {
         encoder.begin_render_pass(&RenderPassDescriptor {
             label: Some("Clear Target"),
             color_attachments: &[Some(RenderPassColorAttachment {
                 view,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(color),
-                    store: wgpu::StoreOp::Store,
+                ops: etalon::Operations {
+                    load: etalon::LoadOp::Clear(color),
+                    store: etalon::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
@@ -2694,7 +2697,7 @@ impl RendererContext<'_> {
             self.take_root_load_op()
         } else {
             // For layer targets we always want to load.
-            wgpu::LoadOp::Load
+            etalon::LoadOp::Load
         };
         let (view, config_buffer, bind_group_target) = match target {
             DrawPassTarget::Root(_) => (
@@ -2741,18 +2744,18 @@ impl RendererContext<'_> {
 
         let depth_stencil_attachment = if enable_opaque {
             let depth_load = if self.programs.depth_cleared_this_frame {
-                wgpu::LoadOp::Load
+                etalon::LoadOp::Load
             } else {
                 self.programs.depth_cleared_this_frame = true;
-                wgpu::LoadOp::Clear(1.0)
+                etalon::LoadOp::Clear(1.0)
             };
-            Some(wgpu::RenderPassDepthStencilAttachment {
+            Some(etalon::RenderPassDepthStencilAttachment {
                 view: self
                     .depth_view
                     .expect("enabled depth buffering requires a depth texture view"),
-                depth_ops: Some(wgpu::Operations {
+                depth_ops: Some(etalon::Operations {
                     load: depth_load,
-                    store: wgpu::StoreOp::Store,
+                    store: etalon::StoreOp::Store,
                 }),
                 stencil_ops: None,
             })
@@ -2766,9 +2769,9 @@ impl RendererContext<'_> {
                 view,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations {
+                ops: etalon::Operations {
                     load: color_load_op,
-                    store: wgpu::StoreOp::Store,
+                    store: etalon::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment,
@@ -2787,7 +2790,7 @@ impl RendererContext<'_> {
                 .slice(strips_range.clone()),
         );
 
-        let draw_strip_runs = |render_pass: &mut wgpu::RenderPass<'_>, first_instance, count| {
+        let draw_strip_runs = |render_pass: &mut etalon::RenderPass<'_>, first_instance, count| {
             if external_texture_runs.is_empty() {
                 render_pass.set_bind_group(
                     1,
@@ -2894,10 +2897,10 @@ impl RendererContext<'_> {
         let instance_count = u32::try_from(self.scratch_buffers.blend_instances.len()).unwrap();
         let instance_buffer = self
             .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            .create_buffer_init(&etalon::util::BufferInitDescriptor {
                 label: Some("Blend Instances Buffer"),
                 contents: bytemuck::cast_slice(&self.scratch_buffers.blend_instances),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: etalon::BufferUsages::VERTEX,
             });
 
         {
@@ -2907,9 +2910,9 @@ impl RendererContext<'_> {
                     view: self.programs.resources.scratch_view(),
                     depth_slice: None,
                     resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Load,
-                        store: wgpu::StoreOp::Store,
+                    ops: etalon::Operations {
+                        load: etalon::LoadOp::Load,
+                        store: etalon::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
@@ -3062,10 +3065,10 @@ impl RendererContext<'_> {
 
         let clear_buffer = self
             .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            .create_buffer_init(&etalon::util::BufferInitDescriptor {
                 label: Some("Clear Buffer"),
                 contents: bytemuck::cast_slice(&self.scratch_buffers.clear_instances),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: etalon::BufferUsages::VERTEX,
             });
         let mut render_pass = self.encoder.begin_render_pass(&RenderPassDescriptor {
             label: Some("Clear Rects"),
@@ -3073,9 +3076,9 @@ impl RendererContext<'_> {
                 view,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: wgpu::StoreOp::Store,
+                ops: etalon::Operations {
+                    load: etalon::LoadOp::Load,
+                    store: etalon::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
@@ -3171,10 +3174,10 @@ fn encode_copy_pass(
     output_view: &TextureView,
     label: &'static str,
 ) {
-    let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let instance_buffer = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
         label: Some(label),
         contents: bytemuck::cast_slice(instances),
-        usage: wgpu::BufferUsages::VERTEX,
+        usage: etalon::BufferUsages::VERTEX,
     });
     let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
         label: Some(label),
@@ -3182,9 +3185,9 @@ fn encode_copy_pass(
             view: output_view,
             depth_slice: None,
             resolve_target: None,
-            ops: wgpu::Operations {
-                load: wgpu::LoadOp::Load,
-                store: wgpu::StoreOp::Store,
+            ops: etalon::Operations {
+                load: etalon::LoadOp::Load,
+                store: etalon::StoreOp::Store,
             },
         })],
         depth_stencil_attachment: None,
@@ -3210,10 +3213,10 @@ fn encode_filter_pass(
 ) {
     let output_view = resources.layer_view(output);
     let instance_count = u32::try_from(instances.len()).unwrap();
-    let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let instance_buffer = device.create_buffer_init(&etalon::util::BufferInitDescriptor {
         label: Some("Filter Instances Buffer"),
         contents: bytemuck::cast_slice(instances),
-        usage: wgpu::BufferUsages::VERTEX,
+        usage: etalon::BufferUsages::VERTEX,
     });
 
     let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
@@ -3222,9 +3225,9 @@ fn encode_filter_pass(
             view: output_view,
             depth_slice: None,
             resolve_target: None,
-            ops: wgpu::Operations {
-                load: wgpu::LoadOp::Load,
-                store: wgpu::StoreOp::Store,
+            ops: etalon::Operations {
+                load: etalon::LoadOp::Load,
+                store: etalon::StoreOp::Store,
             },
         })],
         depth_stencil_attachment: None,
@@ -3246,17 +3249,17 @@ fn create_filter_input_bind_group(
     sampler: &Sampler,
     texture_view: &TextureView,
 ) -> BindGroup {
-    device.create_bind_group(&wgpu::BindGroupDescriptor {
+    device.create_bind_group(&etalon::BindGroupDescriptor {
         label: Some("Filter Input Bind Group"),
         layout,
         entries: &[
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(texture_view),
+                resource: etalon::BindingResource::TextureView(texture_view),
             },
-            wgpu::BindGroupEntry {
+            etalon::BindGroupEntry {
                 binding: 1,
-                resource: wgpu::BindingResource::Sampler(sampler),
+                resource: etalon::BindingResource::Sampler(sampler),
             },
         ],
     })
@@ -3267,12 +3270,12 @@ fn create_filter_original_texture_bind_group(
     layout: &BindGroupLayout,
     layer_texture_view: &TextureView,
 ) -> BindGroup {
-    device.create_bind_group(&wgpu::BindGroupDescriptor {
+    device.create_bind_group(&etalon::BindGroupDescriptor {
         label: Some("Filter Original Texture Bind Group"),
         layout,
-        entries: &[wgpu::BindGroupEntry {
+        entries: &[etalon::BindGroupEntry {
             binding: 0,
-            resource: wgpu::BindingResource::TextureView(layer_texture_view),
+            resource: etalon::BindingResource::TextureView(layer_texture_view),
         }],
     })
 }
@@ -3302,7 +3305,7 @@ pub trait AtlasWriter {
     );
 }
 
-/// Implementation for `wgpu::Texture` - uses texture-to-texture copy
+/// Implementation for `etalon::Texture` - uses texture-to-texture copy
 impl AtlasWriter for Texture {
     fn width(&self) -> u16 {
         u16::try_from(self.width()).expect("texture width exceeds the u16 atlas domain")
@@ -3323,21 +3326,21 @@ impl AtlasWriter for Texture {
         height: u16,
     ) {
         encoder.copy_texture_to_texture(
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: self,
                 mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
+                origin: etalon::Origin3d::ZERO,
+                aspect: etalon::TextureAspect::All,
             },
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: atlas_texture,
                 mip_level: 0,
-                origin: wgpu::Origin3d {
+                origin: etalon::Origin3d {
                     x: u32::from(offset[0]),
                     y: u32::from(offset[1]),
                     z: 0,
                 },
-                aspect: wgpu::TextureAspect::All,
+                aspect: etalon::TextureAspect::All,
             },
             Extent3d {
                 width: u32::from(width),
@@ -3371,18 +3374,18 @@ impl AtlasWriter for Pixmap {
         let width = u32::from(width);
         let height = u32::from(height);
         queue.write_texture(
-            wgpu::TexelCopyTextureInfo {
+            etalon::TexelCopyTextureInfo {
                 texture: atlas_texture,
                 mip_level: 0,
-                origin: wgpu::Origin3d {
+                origin: etalon::Origin3d {
                     x: u32::from(offset[0]),
                     y: u32::from(offset[1]),
                     z: 0,
                 },
-                aspect: wgpu::TextureAspect::All,
+                aspect: etalon::TextureAspect::All,
             },
             self.data_as_u8_slice(),
-            wgpu::TexelCopyBufferLayout {
+            etalon::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(4 * width),
                 rows_per_image: Some(height),
@@ -3421,9 +3424,9 @@ impl AtlasWriter for Arc<Pixmap> {
     }
 }
 
-fn clear_color(color: AlphaColor<Srgb>) -> wgpu::Color {
+fn clear_color(color: AlphaColor<Srgb>) -> etalon::Color {
     let [r, g, b, a] = color.premultiply().components;
-    wgpu::Color {
+    etalon::Color {
         r: f64::from(r),
         g: f64::from(g),
         b: f64::from(b),

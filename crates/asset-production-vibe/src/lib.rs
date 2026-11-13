@@ -2,11 +2,15 @@
 //! This module owns handles and admission, not geometry/image/audio algorithms.
 mod acoustics_discourse_chronicle_ext;
 mod acoustics_ops;
+mod boolean_conforming;
 mod chronicle_ops;
+mod chronicle_sequence;
 mod discourse_docs;
 pub mod domain_extensions;
 mod electromagnetics_geodesy_ext;
 mod electromagnetics_ops;
+mod electromagnetics_compile;
+mod electromagnetics_v3;
 mod geodesy_ops;
 mod geometry;
 mod glyph;
@@ -22,10 +26,12 @@ mod locus_ops;
 mod manifold_fields_sdf;
 mod manifold_ops;
 mod manifold_topology;
+mod mesh_edit_policy;
 pub mod ontology;
 mod operations_catalog;
 mod preview;
 mod radiance_color;
+mod radiance_precision;
 mod radiance_compositor_gi;
 mod radiance_photo;
 mod raster;
@@ -98,6 +104,7 @@ pub enum Artifact {
     Mesh(Mesh),
     Image(Raster),
     Rgba(graphics::Rgba),
+    Rgba16(radiance_precision::Rgba16),
     Audio { rate: u32, samples: Vec<f32> },
     Encoded(Resource),
 }
@@ -108,6 +115,7 @@ impl Artifact {
             Self::Mesh(_) => "mesh",
             Self::Image(_) => "image",
             Self::Rgba(_) => "rgba",
+            Self::Rgba16(_) => "rgba16",
             Self::Audio { .. } => "audio",
             Self::Encoded(r) => &r.kind,
         }
@@ -118,6 +126,7 @@ impl Artifact {
             Self::Mesh(m) => (m.positions.len() + m.triangles.len()) * 12,
             Self::Image(r) => r.rgb.len(),
             Self::Rgba(r) => r.pixels.len() * 4,
+            Self::Rgba16(r) => r.pixels.len() * 8,
             Self::Audio { samples, .. } => samples.len() * 4,
             Self::Encoded(r) => r.bytes.len(),
         }
@@ -128,6 +137,7 @@ impl Artifact {
 #[derive(Clone, Default)]
 pub struct AssetWorkspace {
     entries: Vec<Arc<Artifact>>,
+    imported: Vec<Option<Arc<qualia_core_db::render::assets::ImportedMesh>>>,
     bytes: usize,
 }
 impl AssetWorkspace {
@@ -161,6 +171,7 @@ impl AssetWorkspace {
         let handle = self.entries.len();
         let kind = artifact.kind().to_owned();
         self.entries.push(Arc::new(artifact));
+        self.imported.push(None);
         self.bytes = total;
         Ok(Value::Record(BTreeMap::from([
             ("handle".into(), Value::U64(handle as u64)),
@@ -210,6 +221,7 @@ impl AssetHost<'_> {
         let result = self.invoke_inner(id, value);
         if result.is_err() {
             self.workspace.entries.truncate(mark.0);
+            self.workspace.imported.truncate(mark.0);
             self.workspace.bytes = mark.1;
         }
         result
@@ -219,7 +231,9 @@ impl AssetHost<'_> {
             return Err(format!("Production capability not admitted: {id}"));
         };
         self.charge(1, 0)?;
-        let args = record(value)?;
+        let original_args = record(value)?;
+        let prepared_args = self.prepare_geometry_edit(canonical_id, original_args)?;
+        let args = prepared_args.as_ref().unwrap_or(original_args);
         let result = if matches!(
             canonical_id,
             "hypermedia.locus.solve_parametric_sketch"
@@ -474,7 +488,13 @@ impl AssetHost<'_> {
             &uvs,
         )
         .map_err(|e| format!("UV01 attach failed: {e:?}"))?;
-        self.encode("10d", with_uv)
+        let mut resealed = self.encode("10d", with_uv)?;
+        if let (Value::Record(old), Value::Record(new)) = (&compiled, &mut resealed) {
+            if let Some(textures) = old.get("textures") {
+                new.insert("textures".into(), textures.clone());
+            }
+        }
+        Ok(resealed)
     }
 }
 type Args = BTreeMap<String, Value>;

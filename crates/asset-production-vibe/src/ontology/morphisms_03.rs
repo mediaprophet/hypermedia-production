@@ -124,7 +124,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "Functor",
         teleology: "Renders a complete Webizen desktop application view, website wireframe/mockup, or interactive state sheet (default, hover, focus, active, disabled) to an RGBA8 image lattice with vector glyph labels.",
         units_and_frames: "Width/height in 64..2048 px; straight-alpha RGBA8 pixel lattice.",
-        arguments: "layout: solved layout record, theme: bound theme record, title=\"\", show_labels=true",
+        arguments: "layout: solved layout record, theme?: bound theme record, scale?: 0.1..2, font?: retained static OpenType input key; shared glyph outlines in raster and SVG",
         composable_with: &[
             "hypermedia.radiance.compose_rgba",
             "hypermedia.radiance.filter_rgba",
@@ -152,7 +152,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "CoalgebricProjection",
         teleology: "Projects a solved Webizen UI/website layout and scoped theme into a clean, inspectable SVG design artifact with embedded `--webizen-<scope>-*` CSS variables and interactive state badges.",
         units_and_frames: "Standalone UTF-8 SVG 1.1 document with `<style>` custom properties and `<g id=... data-role=... data-state=...>` groups.",
-        arguments: "layout: solved layout record, theme: bound theme record, title=\"\"",
+        arguments: "layout: solved layout record, theme?: bound theme record, scale?: 0.1..2, font?: retained static OpenType input key; text preserved as accessible path labels",
         composable_with: &["hypermedia.discourse.review_gallery"],
         human_preview_affordance: "Directly viewable as image/svg+xml in browsers and hypermedia.discourse.review_gallery.",
         abi_descriptor: morphism_func!(

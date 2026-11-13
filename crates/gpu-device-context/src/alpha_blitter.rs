@@ -4,9 +4,9 @@
 //! This is needed when the alpha representation of a renderer's output does not
 //! match what the window surface expects:
 //!
-//! - A [`wgpu::CompositeAlphaMode::PostMultiplied`] surface expects *straight*
+//! - A [`etalon::CompositeAlphaMode::PostMultiplied`] surface expects *straight*
 //!   alpha, because the OS compositor multiplies the colour by alpha itself.
-//! - A [`wgpu::CompositeAlphaMode::PreMultiplied`] surface expects colour that
+//! - A [`etalon::CompositeAlphaMode::PreMultiplied`] surface expects colour that
 //!   has *already* been multiplied by alpha.
 //!
 //! Renderers differ: Vello Hybrid emits premultiplied alpha, whereas Vello
@@ -15,7 +15,7 @@
 //! into PreMultiplied) partially-transparent pixels. This blitter applies the
 //! matching correction (`rgb / a` or `rgb * a`) while copying.
 
-use wgpu::{
+use etalon::{
     BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingResource, BindingType, ColorTargetState, ColorWrites,
     CommandEncoder, Device, FragmentState, LoadOp, MultisampleState, Operations,
@@ -29,11 +29,11 @@ use wgpu::{
 pub enum AlphaConversion {
     /// Convert straight alpha to premultiplied (`rgb * a`). Use when the
     /// renderer emits straight alpha and the surface expects premultiplied
-    /// (i.e. [`wgpu::CompositeAlphaMode::PreMultiplied`]).
+    /// (i.e. [`etalon::CompositeAlphaMode::PreMultiplied`]).
     Premultiply,
     /// Convert premultiplied alpha to straight (`rgb / a`). Use when the
     /// renderer emits premultiplied alpha and the surface expects straight
-    /// (i.e. [`wgpu::CompositeAlphaMode::PostMultiplied`]).
+    /// (i.e. [`etalon::CompositeAlphaMode::PostMultiplied`]).
     Unpremultiply,
 }
 
@@ -77,7 +77,7 @@ fn fs_premultiply(in: VertexOutput) -> @location(0) vec4<f32> {
 /// Blits a texture into another texture, converting between premultiplied and
 /// straight alpha in the process.
 ///
-/// Mirrors the API of [`wgpu::util::TextureBlitter`] so it can be used as a
+/// Mirrors the API of [`etalon::util::TextureBlitter`] so it can be used as a
 /// drop-in replacement.
 pub struct AlphaConvertBlitter {
     pipeline: RenderPipeline,
@@ -88,9 +88,9 @@ impl AlphaConvertBlitter {
     /// Create a blitter that applies `conversion` and writes to a target
     /// texture of the given `format`.
     pub fn new(device: &Device, format: TextureFormat, conversion: AlphaConversion) -> Self {
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let shader = device.create_shader_module(etalon::ShaderModuleDescriptor {
             label: Some("alpha convert blit shader"),
-            source: wgpu::ShaderSource::Wgsl(SHADER.into()),
+            source: etalon::ShaderSource::Wgsl(SHADER.into()),
         });
 
         let entry_point = match conversion {
@@ -176,7 +176,7 @@ impl AlphaConvertBlitter {
                 depth_slice: None,
                 resolve_target: None,
                 ops: Operations {
-                    load: LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    load: LoadOp::Clear(etalon::Color::TRANSPARENT),
                     store: StoreOp::Store,
                 },
             })],

@@ -7,7 +7,7 @@
 [![Latest published version.](https://img.shields.io/crates/v/vello.svg)](https://crates.io/crates/vello)
 [![Documentation build status.](https://img.shields.io/docsrs/vello.svg)](https://docs.rs/vello)
 [![Apache 2.0 or MIT license.](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](#license)
-[![Required wgpu version.](https://img.shields.io/badge/wgpu-v30.0.0-orange.svg)](https://crates.io/crates/wgpu)
+GPU implementation: [Etalon](https://github.com/mediaprophet/etalon), at the revision declared in `Cargo.toml`.
 \
 [![Linebender Zulip chat.](https://img.shields.io/badge/Linebender-%23vello-blue?logo=Zulip)](https://xi.zulipchat.com/#narrow/channel/197075-vello) [![GitHub Actions CI status.](https://img.shields.io/github/actions/workflow/status/linebender/vello/ci.yml?logo=github&label=CI)](https://github.com/linebender/vello/actions)
 [![Dependency staleness status.](https://deps.rs/crate/vello/latest/status.svg)](https://deps.rs/crate/vello)
@@ -16,7 +16,7 @@
 
 Vello is a 2D graphics rendering engine written in Rust, with a focus on GPU
 compute. It can draw large 2D scenes with interactive or near-interactive
-performance, using [`wgpu`] for GPU access.
+performance, using [`etalon`] for GPU access.
 
 Quickstart to run an example program:
 
@@ -30,12 +30,12 @@ cargo run -p with_winit
 
 The `vello` crate provides the following Cargo features:
 
-- `wgpu` (enabled by default) enables the GPU renderer and shader pipeline;
-  `wgpu_default` (also enabled by default) enables the dependency's default
-  features. Disable the latter when supplying a custom `wgpu` dependency.
+- `etalon` (enabled by default) enables the GPU renderer and shader pipeline;
+  `etalon-default` (also enabled by default) enables the dependency's default
+  features. Disable the latter when supplying a custom `etalon` dependency.
 - `bump_estimate` enables the GPU memory usage estimation instrumentation.
 - `debug_layers` enables development-only debug layers for the async pipeline.
-- `wgpu-profiler` enables the embedded `wgpu-profiler` integration.
+- `etalon-profiler` enables the embedded `etalon-profiler` integration.
 - `hot_reload` enables development-only shader hot reloading inside the Vello
   repository.
 
@@ -79,16 +79,16 @@ This means that Vello needs a GPU with support for compute shaders to run.
 
 Vello is meant to be integrated deep in UI render stacks. While drawing in a
 Vello scene is easy, actually rendering that scene to a surface requires setting
-up a wgpu context, which is a non-trivial task.
+up a etalon context, which is a non-trivial task.
 
 To use Vello as the renderer for your PDF reader / GUI toolkit / etc, your code
 will have to look roughly like this:
 
 ```rust
-// Initialize wgpu and get handles
+// Initialize etalon and get handles
 let (width, height) = ...;
-let device: wgpu::Device = ...;
-let queue: wgpu::Queue = ...;
+let device: etalon::Device = ...;
+let queue: etalon::Queue = ...;
 let mut renderer = Renderer::new(
    &device,
    RendererOptions::default()
@@ -108,7 +108,7 @@ scene.fill(...);
 scene.stroke(...);
 scene.pop_layer(...);
 let texture = device.create_texture(&...);
-// Render to a wgpu Texture
+// Render to a etalon Texture
 renderer
    .render_to_texture(
       &device,
@@ -124,7 +124,7 @@ renderer
    )
    .expect("Failed to render to a texture");
 // Do things with surface texture, such as blitting it to the Surface using
-// wgpu::util::TextureBlitter.
+// etalon::util::TextureBlitter.
 ```
 
 See the repository's
@@ -185,7 +185,7 @@ cargo run -p with_winit
 ## Platforms
 
 We aim to target all environments which can support WebGPU with the
-[default limits](https://www.w3.org/TR/webgpu/#limits). We defer to [`wgpu`] for
+[default limits](https://www.w3.org/TR/webgpu/#limits). We defer to [`etalon`] for
 this support. Other platforms are more tricky, and may require special
 building/running procedures.
 
@@ -297,7 +297,7 @@ Contributions are welcome by pull request. The [Rust code of conduct] applies.
 
 Vello was previously known as `piet-gpu`. This prior incarnation used a custom
 cross-API hardware abstraction layer, called `piet-gpu-hal`, instead of
-[`wgpu`].
+[`etalon`].
 
 An archive of this version can be found in the branches
 [`custom-hal-archive-with-shaders`] and [`custom-hal-archive`]. This succeeded
@@ -334,7 +334,7 @@ Licensed under either of
 at your option.
 
 [piet-metal]: https://github.com/linebender/piet-metal
-[`wgpu`]: https://wgpu.rs/
+[`etalon`]: https://github.com/mediaprophet/etalon
 [Rust code of conduct]: https://www.rust-lang.org/policies/code-of-conduct
 [`custom-hal-archive-with-shaders`]:
   https://github.com/linebender/piet-gpu/tree/custom-hal-archive-with-shaders
