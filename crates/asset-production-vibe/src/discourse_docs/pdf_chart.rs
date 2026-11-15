@@ -84,7 +84,9 @@ impl AssetHost<'_> {
             let items = list(s_val)?;
             if !items.is_empty() {
                 if let Ok(first_rec) = record(&items[0]) {
-                    let _ = first_rec;
+                    if !first_rec.contains_key("values") {
+                        return Err("Chart series record requires 'values'".into());
+                    }
                     for (idx, item) in items.iter().enumerate() {
                         let r = record(item)?;
                         let default_name = format!("Series {}", idx + 1);

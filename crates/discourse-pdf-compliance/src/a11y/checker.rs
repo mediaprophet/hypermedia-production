@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::rules::{Category, Rule};
+use super::rules::Rule;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Status {

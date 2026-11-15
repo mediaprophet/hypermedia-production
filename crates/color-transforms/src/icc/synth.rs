@@ -4,7 +4,6 @@
 //! and bounded least-squares inversion with Gray Component Replacement (GCR) and Total Area Coverage (TAC) limits.
 
 use crate::icc::clut::Clut;
-use crate::icc::curve::Curve;
 use crate::icc::math;
 use crate::icc::pipeline::Stage;
 use crate::icc::profile::{ColorSpace, Lut, LutKind, Pcs, Profile, ProfileClass};

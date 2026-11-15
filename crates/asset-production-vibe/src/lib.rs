@@ -271,6 +271,8 @@ impl AssetHost<'_> {
                 | "hypermedia.geodesy.step_sector_continuum_3d"
                 | "hypermedia.layout.synchronize_companion_frustum"
                 | "qualia.species.assemble_corpus"
+                | "hypermedia.manifold.calibrate_biological_subject"
+                | "hypermedia.kinetics.evaluate_mobility_fracture_risk"
         ) {
             self.living_world_anatomy_op(canonical_id, args)
         } else if matches!(

@@ -2,8 +2,8 @@
 //!
 //! Grounded in authoring rights and creative preservation (UDHR Art. 19, 27).
 
-use kurbo::{Point, Rect};
-use vector_locus_geometry::{PathData, SubPath};
+use kurbo::Point;
+use vector_locus_geometry::PathData;
 
 use crate::three_d::revolve::{Face, V3};
 

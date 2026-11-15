@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
-use crate::core::addr::{CellRef, MAX_COLS, MAX_ROWS, RangeRef};
+use crate::core::addr::{CellRef, RangeRef};
 use crate::core::value::CellError;
 
 /// One end of a reference, with `$` anchors.

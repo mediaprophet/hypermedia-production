@@ -450,6 +450,8 @@ mod tests {
         let tile1 = grid1.tile_arc(0, 0).unwrap();
         let tile2 = grid2.tile_arc(0, 0).unwrap();
         assert_eq!(tile1.as_slice(), tile2.as_slice());
+        assert_eq!(grid1.undo_stack[0].label, "journal_replay");
+        assert_eq!(GeoStudioError::TileNotFound(9, 9).to_string(), "Tile (9, 9) not found");
 
         let mut low_budget_grid = CowTerrainTileGrid::new(16, 1.0, 500).unwrap();
         let err = low_budget_grid.ensure_tile(0, 0, 1.0).unwrap_err();

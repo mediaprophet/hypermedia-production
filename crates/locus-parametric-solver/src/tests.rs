@@ -6,10 +6,10 @@ use drafting_geometry::Vec2;
 
 use super::solver::auto::{InferOptions, infer};
 use super::solver::conflict::{SolveError, SolveOptions, solve_system};
-use super::solver::expr::{Env, ExprError, parse as parse_expr};
-use super::solver::lm::{jacobian, rank, solve, solve_dense};
+use super::solver::expr::{Env, ExprError};
+use super::solver::lm::{rank, solve, solve_dense};
 use super::solver::model::{
-    EntityKind, GeomRef, Handle, Model, SketchCircle, SketchLine, SketchPoint, Sub,
+    EntityKind, GeomRef, Handle, SketchCircle, SketchLine, Sub,
 };
 use super::solver::residual::{Constraint, ConstraintKind, DistAxis};
 use super::typography::mtext::{MTextParams, decode_controls, layout_mtext, plain_mtext};

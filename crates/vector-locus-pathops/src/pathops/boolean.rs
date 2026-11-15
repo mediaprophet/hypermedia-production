@@ -5,10 +5,10 @@
 //! Evaluates binary and N-ary boolean operations (Union, Intersect, Difference, Xor)
 //! over filled vector paths with curve refitting.
 
-use kurbo::{BezPath, CubicBez, ParamCurve, PathEl, Point, Rect, Shape as _, Vec2};
+use kurbo::{Point, Rect, Vec2};
 use vector_locus_geometry::{Anchor, FillRule, PathData, SubPath};
 
-use crate::pathops::fit::{end_tangent, fit_cubics, is_straight, sample, start_tangent};
+use crate::pathops::fit::{fit_cubics, sample};
 
 pub const DEFAULT_PRECISION: f64 = 0.01;
 
@@ -164,7 +164,6 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
         is_intersection: bool,
         entry: bool,
         visited: bool,
-        alpha: f64,
         neighbor: Option<usize>,
     }
 
@@ -175,7 +174,6 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
             is_intersection: false,
             entry: false,
             visited: false,
-            alpha: 0.0,
             neighbor: None,
         })
         .collect();
@@ -187,7 +185,6 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
             is_intersection: false,
             entry: false,
             visited: false,
-            alpha: 0.0,
             neighbor: None,
         })
         .collect();
@@ -258,7 +255,7 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
     let mut s_inserted = 0;
     let mut s_indices = Vec::new();
 
-    for (edge_idx, t, _, _, pt) in &intersections {
+    for (edge_idx, _, _, _, pt) in &intersections {
         let insert_at = edge_idx + 1 + s_inserted;
         subj_list.insert(
             insert_at,
@@ -267,7 +264,6 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
                 is_intersection: true,
                 entry: false,
                 visited: false,
-                alpha: *t,
                 neighbor: None,
             },
         );
@@ -283,7 +279,7 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
     clip_intersections.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)));
 
     let mut c_inserted = 0;
-    for (s_idx, c_edge, u, pt) in clip_intersections {
+    for (s_idx, c_edge, _, pt) in clip_intersections {
         let insert_at = c_edge + 1 + c_inserted;
         clip_list.insert(
             insert_at,
@@ -292,7 +288,6 @@ pub fn clip_polygon(subject: &[Point], clip: &[Point], op: BoolOp) -> Vec<Vec<Po
                 is_intersection: true,
                 entry: false,
                 visited: false,
-                alpha: u,
                 neighbor: Some(s_idx),
             },
         );
@@ -433,8 +428,8 @@ pub fn rings_to_path(rings: &[Vec<Point>], precision: f64) -> PathData {
             let prev = ring[(i + n - 1) % n];
             let curr = ring[i];
             let next = ring[(i + 1) % n];
-            let v0 = (curr - prev);
-            let v1 = (next - curr);
+            let v0 = curr - prev;
+            let v1 = next - curr;
             let l0 = v0.hypot();
             let l1 = v1.hypot();
             if l0 > 1e-6 && l1 > 1e-6 {

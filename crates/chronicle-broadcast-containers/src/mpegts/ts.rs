@@ -95,7 +95,6 @@ pub fn write_ts_packet(
     out[2] = pid as u8;
 
     let has_pcr = pcr.is_some();
-    let needed_af_len = if has_pcr { 7 } else { 0 };
     let max_payload_without_af = 184;
 
     if payload.len() <= max_payload_without_af && !has_pcr {

@@ -368,7 +368,7 @@ pub fn dollarde(args: &[Value]) -> R<Value> {
     if f == 0.0 { return Err(CellError::Div0); }
     let int_part = fractional.trunc();
     let frac_part = fractional - int_part;
-    Ok(Value::Number(int_part + frac_part * 10.0_f64.powf((f.log10().ceil())) / f))
+    Ok(Value::Number(int_part + frac_part * 10.0_f64.powf(f.log10().ceil()) / f))
 }
 
 pub fn dollarfr(args: &[Value]) -> R<Value> {
@@ -378,7 +378,7 @@ pub fn dollarfr(args: &[Value]) -> R<Value> {
     if f == 0.0 { return Err(CellError::Div0); }
     let int_part = decimal.trunc();
     let frac_part = decimal - int_part;
-    Ok(Value::Number(int_part + frac_part * f / 10.0_f64.powf((f.log10().ceil()))))
+    Ok(Value::Number(int_part + frac_part * f / 10.0_f64.powf(f.log10().ceil())))
 }
 
 // ---------------------------------------------------------------------------------------------

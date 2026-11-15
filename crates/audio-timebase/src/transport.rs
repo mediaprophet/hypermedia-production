@@ -1,6 +1,5 @@
 //! Unified transport position, timeline displays, and timebase conversions.
 
-use crate::grid::GridDivision;
 use crate::rate::{SampleRate, Samples, Seconds, Ticks};
 use crate::tempo::{BarBeat, TempoMap};
 use crate::timecode::{FeetFrames, Timecode, TimecodeRate, feet_frames};

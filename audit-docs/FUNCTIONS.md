@@ -22,7 +22,7 @@ Every function/method found in the codebase, alphabetical.
 | `aac_esds_roundtrip` | 0 | `crates/media-isobmff/src/codec.rs:1636` | - |  |
 | `aac_priming_edit` | 0 | `crates/media-isobmff/tests/oracle_mux.rs:210` | - |  |
 | `abaqus_deck_format_test` | 0 | `crates/kinetics-continuum-multiphysics/src/interchange/abaqus.rs:56` | - |  |
-| `impl ApplicationHandler<()> for State::about_to_wait` | 2 | `crates/gpu-command-profiler/examples/demo.rs:318` | - |  |
+| `impl ApplicationHandler<()> for State::about_to_wait` | 2 | `crates/gpu-command-profiler/examples/demo.rs:320` | - |  |
 | `abs` | 1 | `crates/chronicle-tabular-engine/src/functions/math.rs:21` | - |  |
 | `impl Complex32::abs` | 1 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:32` | - |  |
 | `absolute_grids` | 0 | `crates/audio-timebase/src/grid.rs:245` | - |  |
@@ -37,6 +37,7 @@ Every function/method found in the codebase, alphabetical.
 | `aces_cct_decode` | 1 | `crates/radiance-color-grading/src/log.rs:327` | - |  |
 | `aces_cct_encode` | 1 | `crates/radiance-color-grading/src/log.rs:319` | - |  |
 | `acknowledged_reset_releases_but_a_later_play_invalidates_old_ack` | 0 | `crates/pcm-device-output/src/device_slot_tests.rs:28` | - |  |
+| `acoustic_frequency_is_chosen_independently_of_the_em_field` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/projection_tests.rs:88` | - |  |
 | `impl AssetHost<'_>::acoustics_discourse_chronicle_ext_op` | 3 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:120` | - | Categorical operations dispatch for acoustics, discourse, and chronicle extensions. |
 | `impl AssetHost<'_>::acoustics_ext` | 3 | `crates/asset-production-vibe/src/acoustics_ops.rs:9` | - | Categorical operations dispatch for the `acoustics` category extensions. |
 | `impl SurfaceRenderer<'s>::acquire` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:249` | - | Acquire the next surface frame. |
@@ -46,10 +47,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl Scene::active_rect` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:256` | 2d |  |
 | `impl CowTerrainTileGrid::active_samples` | 1 | `crates/terrain-brushes/adaptation/grid-impl.rs:32` | - |  |
 | `impl CowTerrainTileGrid::active_samples` | 1 | `crates/terrain-brushes/src/lib.rs:213` | - |  |
-| `actual_gaps_are_budgeted_across_wrap_nonreference_and_mmco5` | 0 | `crates/video-h264-preview/src/lib.rs:471` | - |  |
-| `actual_idr_samples_decode_to_different_srgb_frames` | 0 | `crates/video-h264-preview/src/lib.rs:728` | - |  |
-| `impl Pixels<'win>::adapter` | 1 | `crates/pixel-buffer-output/src/lib.rs:343` | - | Returns a reference of the `wgpu` adapter used by the crate. |
-| `impl DeviceHandle::adapter` | 1 | `crates/vector-compute-renderer/src/util.rs:217` | - | Returns the adapter associated with the device. |
+| `actual_gaps_are_budgeted_across_wrap_nonreference_and_mmco5` | 0 | `crates/video-h264-preview/src/lib.rs:472` | - |  |
+| `actual_idr_samples_decode_to_different_srgb_frames` | 0 | `crates/video-h264-preview/src/lib.rs:729` | - |  |
+| `impl Pixels<'win>::adapter` | 1 | `crates/pixel-buffer-output/src/lib.rs:338` | - | Returns a reference of the `etalon` adapter used by the crate. |
+| `impl DeviceHandle::adapter` | 1 | `crates/vector-compute-renderer/src/util.rs:220` | - | Returns the adapter associated with the device. |
 | `impl StreamInstant::add` | 2 | `crates/audio-device-cpal/src/lib.rs:435` | - | Returns the instant in time after the given duration has passed. |
 | `impl Cpx::add` | 2 | `crates/audio-opus-codec/src/celt/mdct.rs:19` | - |  |
 | `impl std::ops::Add for Tick::add` | 2 | `crates/chronicle-timeline-interchange/src/time.rs:53` | - |  |
@@ -80,13 +81,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl AutoLayoutFrame::add_child` | 2 | `crates/layout-box-autolayout/src/frame.rs:145` | - |  |
 | `impl SliceDecoder<'a>::add_chroma` | 1 | `crates/video-h264-codec/src/slicedec.rs:948` | - |  |
 | `impl ChangeDag::add_comment` | 5 | `crates/kinetics-schedule-cpm/src/change_dag.rs:216` | - |  |
-| `impl WgpuEngine::add_compute_shader` | 6 | `crates/vector-compute-renderer/src/wgpu_engine.rs:248` | 3d | Add a shader. |
-| `impl WhitegumMeshBuilder::add_curved_tube` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:99` | - | Add a continuous, welded multi-station curved tube with parallel-transported ring frames. |
+| `impl EtalonEngine::add_compute_shader` | 6 | `crates/vector-compute-renderer/src/etalon_engine.rs:248` | 3d | Add a shader. |
+| `impl WhitegumMeshBuilder::add_curved_tube` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:102` | - | Add a continuous, welded multi-station curved tube with parallel-transported ring frames. |
 | `impl Project::add_dependency` | 5 | `crates/kinetics-schedule-cpm/src/model.rs:592` | - |  |
 | `add_disconnect_listener` | 2 | `crates/audio-device-cpal/src/host/coreaudio/macos/mod.rs:449` | - | Register the on-disconnect callback. |
 | `impl SpatialGraph::add_edge` | 6 | `crates/geodesy-spatial-analysis/src/network_topology.rs:51` | graph |  |
 | `impl ZipArchiveWriter::add_file` | 3 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:55` | - |  |
-| `impl WhitegumMeshBuilder::add_foliage_lobe` | 8 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:205` | - | Add an ellipsoid or sculpted foliage cluster lobe with organic surface modulation. |
+| `impl WhitegumMeshBuilder::add_foliage_lobe` | 8 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_foliage.rs:6` | - |  |
 | `impl PbrLayerStack::add_layer` | 2 | `crates/surface-pbr-studio/src/compose.rs:88` | - |  |
 | `impl Atlases::add_layer_atlas` | 2 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:88` | - |  |
 | `impl SliceDecoder<'a>::add_luma_block4` | 2 | `crates/video-h264-codec/src/slicedec.rs:920` | - |  |
@@ -99,21 +100,21 @@ Every function/method found in the codebase, alphabetical.
 | `impl GeodesicRuler::add_point` | 3 | `crates/drafting-geometry/src/geodesic_ruler.rs:146` | - |  |
 | `impl GpxTracklog::add_point` | 2 | `crates/radiance-camera-raw/src/metadata.rs:61` | - |  |
 | `impl IntBbox::add_pt` | 2 | `crates/vector-compute-shaders/src/cpu/flatten.rs:540` | 2d |  |
-| `impl WhitegumMeshBuilder::add_quad` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:93` | - |  |
-| `impl WgpuEngine::add_render_shader` | 10 | `crates/vector-compute-renderer/src/wgpu_engine.rs:317` | 3d |  |
+| `impl WhitegumMeshBuilder::add_quad` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:96` | - |  |
+| `impl EtalonEngine::add_render_shader` | 10 | `crates/vector-compute-renderer/src/etalon_engine.rs:317` | 3d |  |
 | `impl Project::add_resource` | 5 | `crates/kinetics-schedule-cpm/src/model.rs:617` | - |  |
 | `impl Figure::add_series` | 2 | `crates/discourse-scientific-matlang/src/plot.rs:148` | - |  |
 | `impl Workbook::add_sheet` | 2 | `crates/chronicle-tabular-engine/src/calc/model.rs:172` | - |  |
 | `impl MxfWriter<W>::add_sound_track` | 4 | `crates/chronicle-broadcast-containers/src/mxf/writer.rs:118` | - |  |
 | `impl Project::add_sprint` | 6 | `crates/kinetics-schedule-cpm/src/model.rs:660` | - |  |
-| `add_synthetic_audio_edit` | 1 | `crates/video-h264-preview/src/lib.rs:630` | - |  |
+| `add_synthetic_audio_edit` | 1 | `crates/video-h264-preview/src/lib.rs:631` | - |  |
 | `impl Project::add_task` | 4 | `crates/kinetics-schedule-cpm/src/model.rs:551` | - |  |
 | `impl Mp4Writer<W>::add_timecode_track` | 4 | `crates/media-isobmff/src/mux.rs:546` | - | Add a QuickTime timecode track referenced by `video_track`. Its single sample (the start |
 | `impl Mp4Writer<W>::add_track` | 2 | `crates/media-isobmff/src/mux.rs:535` | - | Add a track; returns its index (track ids are index + 1). |
 | `impl FragmentedWriter<W>::add_track` | 2 | `crates/media-isobmff/src/mux.rs:745` | - | Add a track (before the first fragment). PCM is not supported in fragments. |
 | `add_tree` | 3 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:140` | - |  |
-| `impl WhitegumMeshBuilder::add_triangle` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:87` | - |  |
-| `impl WhitegumMeshBuilder::add_vertex` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:77` | 3d |  |
+| `impl WhitegumMeshBuilder::add_triangle` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:90` | - |  |
+| `impl WhitegumMeshBuilder::add_vertex` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:80` | 3d |  |
 | `impl Model::add_wire` | 5 | `crates/kinetics-block-simulation/src/model.rs:53` | - |  |
 | `adjust` | 4 | `crates/chronicle-tabular-engine/src/formula/adjust.rs:72` | - |  |
 | `adjust_ref` | 2 | `crates/chronicle-tabular-engine/src/formula/adjust.rs:92` | - |  |
@@ -122,7 +123,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl CowTerrainTileGrid::admit` | 2 | `crates/terrain-brushes/src/lib.rs:220` | - |  |
 | `impl GapBudget::admit` | 6 | `crates/video-h264-preview/src/lib.rs:26` | - | Mirrors Decoder::start_picture and submit_pending, including a gap on |
 | `admit_audio_edit` | 4 | `crates/video-h264-preview/src/lib.rs:174` | - |  |
-| `impl AssetHost<'_>::admit_encoded` | 3 | `crates/asset-production-vibe/src/lib.rs:198` | - | Admit bytes the production host already holds. The files producer accepts the handle. |
+| `impl AssetHost<'_>::admit_encoded` | 3 | `crates/asset-production-vibe/src/lib.rs:210` | - | Admit bytes the production host already holds. The files producer accepts the handle. |
+| `admit_pixels` | 5 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:307` | - |  |
 | `admit_sample_table` | 2 | `crates/video-h264-preview/src/lib.rs:186` | - | Bound every table allocation before passing the input to the MP4 parser. |
 | `impl LatticeProfile::admits_16bit` | 1 | `crates/asset-production-vibe/src/graphics.rs:36` | - | Named origin profiles stay 8-bit; default/2k/16-bit admit 16-bit codecs. |
 | `admits_complete_single_stream_with_final_trim` | 0 | `crates/media-ogg/src/strict_opus.rs:140` | - |  |
@@ -141,18 +143,20 @@ Every function/method found in the codebase, alphabetical.
 | `impl SchedulePoint::after_or_at` | 2 | `crates/vector-hybrid-renderer/src/schedule/round.rs:417` | - | Return the first occurrence of `stage` at or after this point. |
 | `impl Resources::after_render` | 3 | `crates/vector-hybrid-renderer/src/text.rs:131` | 2d |  |
 | `aggregate_limits_include_conversion_and_quantization` | 0 | `crates/raster-layer-mask-adapter/src/tests.rs:39` | - |  |
+| `align64` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:47` | - |  |
 | `align_cues` | 2 | `crates/chronicle-timeline-interchange/src/captions/align.rs:29` | - | Align all cues in a caption document according to the specified options. |
 | `impl BitWriter::align_zero` | 1 | `crates/bitstream-codec/src/lib.rs:223` | - | Pad with zero bits to a byte boundary. |
 | `impl ChartOfAccounts::all` | 1 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:84` | - |  |
 | `impl RangeRef::all` | 0 | `crates/chronicle-tabular-engine/src/core/addr.rs:161` | - |  |
 | `impl DebugLayers::all` | 0 | `crates/vector-compute-renderer/src/debug.rs:87` | - | A `DebugLayers` with all layers enabled. |
-| `impl AaSupport::all` | 0 | `crates/vector-compute-renderer/src/lib.rs:218` | 3d | Support every anti-aliasing method. |
+| `impl AaSupport::all` | 0 | `crates/vector-compute-renderer/src/lib.rs:223` | 3d | Support every anti-aliasing method. |
 | `all_15_warp_presets_evaluate_without_nan` | 0 | `crates/vector-locus-pathops/src/effects/warp.rs:146` | - |  |
+| `all_current_consumers_reject_corrupted_payload` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:94` | - |  |
 | `all_empty_samples_roundtrip` | 0 | `crates/media-isobmff/tests/roundtrip.rs:211` | - | Found by `progressive_roundtrip`: only zero-byte samples must not be written as uniform |
 | `all_fixture_names` | 0 | `crates/media-isobmff/tests/common/mod.rs:143` | - |  |
 | `all_ontology_nquins_verify_five_field_parity_and_spans` | 0 | `crates/asset-production-vibe/src/ontology/tests.rs:5` | semantics |  |
 | `impl CompilerOptions::all_optimizations` | 0 | `crates/layout-nodegraph-compiler/src/compiler/pipeline.rs:20` | - |  |
-| `impl StripBufferArena::alloc` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:989` | - |  |
+| `impl StripBufferArena::alloc` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:989` | - |  |
 | `alloc_cmd` | 1 | `crates/vector-compute-shaders/shader/coarse.wgsl:68` | - |  |
 | `impl TileState::alloc_cmd` | 5 | `crates/vector-compute-shaders/src/cpu/coarse.rs:47` | - |  |
 | `impl Atlases::allocate_layer` | 2 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:50` | - |  |
@@ -171,6 +175,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::analyse_element` | 3 | `crates/audio-aac-codec/src/encoder/mod.rs:457` | - |  |
 | `analyze` | 1 | `crates/discourse-academic-tex/src/texparse/stats.rs:41` | - | Compute stats for `.tex` source `src` in single O(n) pass. |
 | `impl AssetHost<'_>::analyze_ebu_r128_camelot_daw` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:135` | - | 139: `hypermedia.acoustics.analyze_ebu_r128_camelot_daw` |
+| `anatomy_bridge_v4_canonical_and_profile_resources_roundtrip_all_consumers` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:290` | - |  |
 | `anchor_a1` | 1 | `crates/chronicle-tabular-engine/src/formula/printer.rs:48` | - |  |
 | `impl PathData::anchor_count` | 1 | `crates/vector-locus-geometry/src/path.rs:363` | - |  |
 | `impl TraceResult::anchor_count` | 1 | `crates/vector-radiance-trace/src/lib.rs:316` | - |  |
@@ -187,6 +192,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Vec2::angle_to` | 2 | `crates/drafting-geometry/src/vec.rs:46` | 2d |  |
 | `angles_normalize` | 0 | `crates/drafting-geometry/src/tests.rs:8` | - |  |
 | `impl GeodesicRuler::angular_distance_degrees` | 2 | `crates/drafting-geometry/src/geodesic_ruler.rs:301` | - |  |
+| `anisotropy_field_from_args` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1173` | - |  |
 | `ankle_joint` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:304` | - |  |
 | `annexb_nals` | 1 | `crates/bitstream-codec/src/lib.rs:282` | - | Split an Annex-B byte stream (start codes `00 00 01` / `00 00 00 01`) into NAL units (escaped payloads). |
 | `annexb_split` | 0 | `crates/bitstream-codec/src/lib.rs:389` | - |  |
@@ -200,6 +206,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl DtvccWindow::append` | 2 | `crates/chronicle-timeline-interchange/src/captions/cea708.rs:68` | - |  |
 | `impl Scene::append` | 3 | `crates/vector-compute-renderer/src/scene.rs:444` | - | Appends a child scene. |
 | `append_breaking_word` | 8 | `crates/asset-production-vibe/src/glyph/shaping_svg.rs:12` | - | Append `word` with per-character breaks so wrap width includes pair kerning. |
+| `append_extrusion_caps` | 3 | `crates/asset-production-vibe/src/geometry.rs:363` | - |  |
 | `append_minified_code` | 2 | `crates/vector-hybrid-shaders/src/minify.rs:80` | - | Appends minified code without merging tokens across the append boundary. |
 | `append_path_el_to_sk_path` | 2 | `crates/vector-skia-render-adapter/src/scene.rs:1357` | - |  |
 | `apple_log_decode` | 1 | `crates/color-transforms/src/log.rs:243` | - |  |
@@ -256,7 +263,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl CowTerrainTileGrid::apply_stroke_sample` | 2 | `crates/terrain-brushes/src/lib.rs:295` | - | Prepare all touched tile successors, then install atomically for this sample. |
 | `apply_suggestion` | 2 | `crates/discourse-academic-tex/src/review/suggest.rs:79` | - | Apply a suggestion to `src`, returning the new source if uniquely anchored. |
 | `apply_terraces` | 4 | `crates/terrain-erosion-solvers/src/fractal_terrace.rs:87` | - | Apply stratigraphic terracing to an entire 2D heightfield in-place. |
-| `impl SubElementHooks::apply_to_rig_pose` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:308` | - | Applies the macro + sub-element hooks onto an 18-joint `FaunaSkeletalRig10d` PGA motor pose. |
+| `impl SubElementHooks::apply_to_rig_pose` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:306` | - | Applies the macro + sub-element hooks onto an 18-joint `FaunaSkeletalRig10d` PGA motor pose. |
 | `impl Lut3d::apply_trilinear` | 2 | `crates/color-transforms/src/lut.rs:136` | - | Trilinear interpolation (kept for comparison; LUTs render tetrahedrally). |
 | `impl Lut3d::apply_trilinear` | 2 | `crates/radiance-color-grading/src/lut.rs:146` | - | Trilinear 3D interpolation. |
 | `impl Mat3::apply_vec` | 2 | `crates/drafting-geometry/src/mat.rs:70` | 2d |  |
@@ -282,10 +289,11 @@ Every function/method found in the codebase, alphabetical.
 | `area` | 1 | `crates/vector-locus-geometry/src/recognize.rs:144` | - |  |
 | `area` | 1 | `crates/vector-locus-pathops/src/pathops/boolean.rs:53` | - | Total signed area of a path. |
 | `area` | 1 | `crates/vector-locus-pathops/src/three_d/visibility.rs:36` | - |  |
-| `impl AaSupport::area_only` | 0 | `crates/vector-compute-renderer/src/lib.rs:229` | - | Support only [`AaConfig::Area`]. |
+| `impl AaSupport::area_only` | 0 | `crates/vector-compute-renderer/src/lib.rs:234` | - | Support only [`AaConfig::Area`]. |
 | `area_text_layout_wraps_lines` | 0 | `crates/vector-glyph-shaping/src/layout.rs:266` | - |  |
 | `impl Complex32::arg` | 1 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:37` | - |  |
-| `arguments` | 1 | `crates/asset-production-vibe/src/lib.rs:85` | - |  |
+| `args` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:16` | - |  |
+| `arguments` | 1 | `crates/asset-production-vibe/src/lib.rs:92` | - |  |
 | `impl Cur<'a>::array` | 1 | `crates/media-isobmff/src/bytes.rs:89` | - |  |
 | `art_brush_warps_along_curve` | 0 | `crates/vector-surface-brush/src/art.rs:192` | - |  |
 | `arxiv_body` | 1 | `crates/discourse-academic-tex/src/bibliography/identifiers.rs:68` | - |  |
@@ -368,7 +376,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl CpuBinding<'_>::as_slice` | 1 | `crates/vector-compute-shaders/src/cpu.rs:128` | - |  |
 | `impl Data::as_slice_mut` | 1 | `crates/audio-device-cpal/src/lib.rs:576` | - | Access the data as a slice of sample type `T`. |
 | `impl CpuBinding<'_>::as_slice_mut` | 1 | `crates/vector-compute-shaders/src/cpu.rs:138` | - |  |
-| `impl BehaviorMacro::as_str` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:91` | - |  |
+| `impl VertebrateSegmentKind::as_str` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:33` | - |  |
+| `impl BioelectricSourceKind::as_str` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:114` | - |  |
+| `impl BotanicalMetamerKind::as_str` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:193` | - |  |
+| `impl BehaviorMacro::as_str` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:89` | - |  |
 | `impl Axis::as_str` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:70` | - |  |
 | `impl SpecSource::as_str` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec.rs:29` | - |  |
 | `impl RulesSource::as_str` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec.rs:103` | - |  |
@@ -396,8 +407,13 @@ Every function/method found in the codebase, alphabetical.
 | `aspect_label` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:511` | - |  |
 | `aspect_proportion` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:536` | - |  |
 | `aspect_proportions_and_labels` | 0 | `crates/multimodal-synthesis-schema/src/catalog.rs:624` | - |  |
+| `assemble_canonical_4mode_qac` | 15 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_envelope.rs:33` | numerics |  |
+| `assemble_emf_v4_container` | 16 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_envelope.rs:38` | 3d, semantics |  |
+| `assemble_qac_v1_bundles` | 9 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:459` | - |  |
 | `impl AssetHost<'_>::assemble_species_corpus` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/corpus_values.rs:282` | - | `qualia.species.assemble_corpus`: validate a species document and seal it as `.q42`. |
+| `assembly_smooth_shading_retains_shared_vertex_normals` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:738` | 3d |  |
 | `assert_bit_equal` | 4 | `crates/raster-blend-operators/src/migration_oracle.rs:121` | - |  |
+| `assert_emf_qac_bundle_handles` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:567` | - |  |
 | `assert_golden` | 5 | `crates/media-test-support/src/golden.rs:275` | - | [`check_golden`] that panics on failure. |
 | `assert_pixels` | 2 | `crates/vector-cpu-render-adapter/src/scene.rs:264` | - |  |
 | `assert_same_packets` | 2 | `crates/media-isobmff/tests/oracle_mux.rs:93` | - | Compare ffprobe's view of two files (per-stream packets: pts, dts, size, key flag). |
@@ -425,21 +441,25 @@ Every function/method found in the codebase, alphabetical.
 | `impl glifo::GlyphRenderer for Scene::atlas_image_source` | 2 | `crates/vector-hybrid-renderer/src/text.rs:358` | - |  |
 | `impl WebGlRenderer::atlas_info` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:818` | - | Returns the current allocation state of the image/glyph atlas texture. |
 | `impl glifo::GlyphRenderer for Scene::atlas_paint_transform` | 2 | `crates/vector-hybrid-renderer/src/text.rs:363` | - |  |
+| `atlas_preserves_imported_frames_material_ranges_and_tangent_basis` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:659` | - |  |
+| `atlas_returns_split_mesh_and_vertex_remap_for_seam` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:633` | computational geometry, 3d |  |
 | `atlas_skips_opaque` | 0 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:405` | - |  |
+| `impl Renderer::atlas_texture` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:617` | - | Returns an individual image atlas texture. |
 | `impl WebGlRenderer::atlas_texture` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:808` | - | Returns an individual image atlas texture. |
-| `impl Renderer::atlas_texture` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:617` | - | Returns an individual image atlas texture. |
 | `impl Parser<'_>::atom` | 1 | `crates/locus-parametric-solver/src/solver/expr.rs:113` | - |  |
+| `attach_emf_qac_bundle` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:499` | - |  |
 | `attach_script` | 3 | `crates/discourse-academic-tex/src/typeset.rs:306` | - |  |
 | `attach_skl1_into_10d` | 2 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:626` | - |  |
 | `impl XEl::attr` | 2 | `crates/chronicle-office-codecs/src/xml/dom.rs:50` | - |  |
 | `impl XmlNode::attr` | 2 | `crates/chronicle-timeline-interchange/src/xml.rs:150` | - |  |
+| `attributed_edit_requires_explicit_new_geometry_revision` | 0 | `crates/asset-production-vibe/src/mesh_edit_policy.rs:85` | - |  |
 | `attribution_row` | 2 | `crates/media-test-support/src/golden.rs:228` | - | The `ATTRIBUTION.md` table row for a golden image at workspace-relative `rel`. |
 | `impl SampleEntry::audio` | 5 | `crates/media-isobmff/src/codec.rs:1261` | - | Convenience constructor for an audio entry (ISO v0 layout; the muxer upgrades PCM in MOV to v2). |
 | `impl Track::audio` | 1 | `crates/media-isobmff/src/demux.rs:150` | - |  |
 | `audio_callback_fn` | 1 | `crates/audio-device-cpal/src/host/emscripten/mod.rs:264` | - |  |
 | `impl Stream::audio_context` | 1 | `crates/audio-device-cpal/src/host/webaudio/mod.rs:400` | - | Return the [`AudioContext`](https://developer.mozilla.org/docs/Web/API/AudioContext) used |
 | `audio_devices` | 0 | `crates/audio-device-cpal/src/host/coreaudio/macos/enumerate.rs:16` | - |  |
-| `audio_peak` | 2 | `crates/asset-production-vibe/src/sound.rs:266` | - |  |
+| `audio_peak` | 2 | `crates/asset-production-vibe/src/sound.rs:757` | - |  |
 | `impl Encoder::audio_specific_config` | 1 | `crates/audio-aac-codec/src/encoder/mod.rs:241` | - | `AudioSpecificConfig` bytes for the MP4 `esds` decoder-specific info. |
 | `audio_unit_from_device` | 2 | `crates/audio-device-cpal/src/host/coreaudio/macos/mod.rs:473` | - |  |
 | `audit_bib` | 1 | `crates/discourse-academic-tex/src/bibliography/audit.rs:42` | - | Run audit rules over a [`BibFile`]. |
@@ -447,8 +467,11 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::audit_tex_pdf_ua_matlang` | 2 | `crates/asset-production-vibe/src/discourse_chronicle_fiduciary.rs:15` | - | 142: `hypermedia.discourse.audit_tex_pdf_ua_matlang` |
 | `audit_tex_pdf_ua_matlang_emits_tagged_pdf_ua_object` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:944` | - |  |
 | `audit_trail_integrity_and_verification` | 0 | `crates/chronicle-fiduciary-ledger/src/audit.rs:181` | - |  |
+| `authored_graph_and_maps_bind_to_material_and_dependencies` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1606` | graph |  |
+| `authored_mesh_skin_is_sealed_and_checked` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:368` | computational geometry |  |
 | `authored_normals_use_full_world_inverse_transpose_and_uvs_survive` | 0 | `crates/profile-authoring/provenance/original-spatial-tests.rs:112` | - |  |
 | `authored_normals_use_full_world_inverse_transpose_and_uvs_survive` | 0 | `crates/profile-authoring/src/tests.rs:213` | - |  |
+| `authored_wallaby_knee_has_continuous_ring_frames` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/portable_bind.rs:71` | - |  |
 | `autofit_widths` | 3 | `crates/layout-paged-typesetter/src/table_layout/autofit.rs:9` | - | Auto-fits column widths to available table width. |
 | `impl SampleEntry::av1` | 3 | `crates/media-isobmff/src/codec.rs:1281` | - | AV1 entry (`av01`). |
 | `av1_vp9_opus_roundtrip` | 0 | `crates/media-isobmff/src/codec.rs:1616` | - |  |
@@ -466,7 +489,7 @@ Every function/method found in the codebase, alphabetical.
 | `axis_citation` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:288` | - |  |
 | `impl PerspectiveGrid::axis_col` | 2 | `crates/vector-locus-geometry/src/perspective.rs:208` | - | The image of `axis`'s point at infinity. |
 | `impl Body::b` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:141` | - |  |
-| `b_frame_follows_composition_order_and_selection` | 0 | `crates/video-h264-preview/src/lib.rs:599` | - |  |
+| `b_frame_follows_composition_order_and_selection` | 0 | `crates/video-h264-preview/src/lib.rs:600` | - |  |
 | `b_mb_type` | 1 | `crates/video-h264-codec/src/mbtypes.rs:118` | - | B-slice mb_type 0..=22 (23.. are intra). |
 | `b_sub_mb_type` | 1 | `crates/video-h264-codec/src/mbtypes.rs:170` | - |  |
 | `b_types` | 0 | `crates/video-h264-codec/src/mbtypes.rs:227` | - |  |
@@ -515,12 +538,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl DeviceSlot<'a>::before_play` | 1 | `crates/pcm-device-output/src/device.rs:36` | - |  |
 | `impl Resources::before_render` | 4 | `crates/vector-hybrid-renderer/src/text.rs:98` | - |  |
 | `impl WebGlRenderer::begin` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:261` | 3d, 2d | Begins creating a WebGL2 renderer and its persistent resources. |
-| `impl StripBufferArena::begin_frame` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:978` | - |  |
-| `impl WhitegumMeshBuilder::begin_layer` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:51` | - |  |
+| `impl StripBufferArena::begin_frame` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:978` | - |  |
+| `impl WhitegumMeshBuilder::begin_layer` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:54` | - |  |
 | `impl GeodesicRuler::begin_move` | 1 | `crates/drafting-geometry/src/geodesic_ruler.rs:177` | - |  |
 | `impl GpuProfiler::begin_pass_query` | 3 | `crates/gpu-command-profiler/src/profiler.rs:266` | physics | Starts a new profiler query to be used for render/compute pass timestamp writes. |
 | `impl GpuProfiler::begin_query` | 3 | `crates/gpu-command-profiler/src/profiler.rs:232` | - | Starts a new profiler query on the given encoder or rendering/compute pass (if enabled). |
-| `impl GpuProfiler::begin_query_internal` | 4 | `crates/gpu-command-profiler/src/profiler.rs:685` | - |  |
+| `impl GpuProfiler::begin_query_internal` | 4 | `crates/gpu-command-profiler/src/profiler.rs:687` | - |  |
 | `impl CowTerrainTileGrid::begin_stroke` | 1 | `crates/terrain-brushes/adaptation/grid-impl.rs:85` | - |  |
 | `impl CowTerrainTileGrid::begin_stroke` | 1 | `crates/terrain-brushes/provenance/original-cow_delta_undo.rs:182` | - |  |
 | `impl CowTerrainTileGrid::begin_stroke` | 1 | `crates/terrain-brushes/src/lib.rs:266` | - |  |
@@ -559,6 +582,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl WebGlIntermediateTexture::binding_texture` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1348` | - |  |
 | `binning` | 2 | `crates/vector-compute-shaders/src/cpu/binning.rs:110` | - |  |
 | `binning_main` | 9 | `crates/vector-compute-shaders/src/cpu/binning.rs:25` | - |  |
+| `bioelectric_dipole_bad_record_crc32c_fails_closed` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:381` | - |  |
 | `impl WindowShape::bit` | 1 | `crates/audio-aac-codec/src/mdct.rs:158` | - |  |
 | `impl TnsData::bit_count` | 2 | `crates/audio-aac-codec/src/tns.rs:96` | - | Bits `write` would produce. |
 | `bit_count_matches_written_bits` | 0 | `crates/audio-aac-codec/src/encoder/quant.rs:369` | - |  |
@@ -583,24 +607,24 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::bits_per_mb` | 1 | `crates/video-prores-codec/src/encode.rs:68` | - |  |
 | `black_disc_is_one_closed_path_with_disc_area` | 0 | `crates/vector-radiance-trace/src/tests.rs:30` | - |  |
 | `black_point` | 2 | `crates/color-transforms/src/icc/transform.rs:230` | - |  |
-| `blackbody_rgb` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:391` | - |  |
+| `blackbody_rgb` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:401` | - |  |
 | `impl BlendMode::blend` | 3 | `crates/surface-pbr-studio/src/compose.rs:21` | - |  |
 | `impl RoundStage::blend` | 1 | `crates/vector-hybrid-renderer/src/schedule/round.rs:375` | - |  |
 | `blend_case` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:90` | - |  |
 | `blend_channel` | 3 | `crates/raster-blend-operators/src/lib.rs:20` | - | Evaluates one operator for one backdrop/source channel pair. |
-| `blend_color` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:74` | - |  |
+| `blend_color` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:75` | - |  |
 | `blend_is_constrained_to_parent_clip_bbox` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:926` | - |  |
 | `blend_mix` | 3 | `crates/vector-compute-shaders/shader/shared/blend.wgsl:147` | 3d |  |
 | `impl Drawable for RecordedDraw::blend_mode` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:106` | - |  |
 | `blend_mode_from` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1210` | - |  |
 | `blend_mode_rgb` | 3 | `crates/raster-blend-operators/src/lib.rs:175` | - | Evaluates a `BlendMode` on straight (not premultiplied) RGB in `[0, 1]`. |
 | `blend_operator_rgb` | 3 | `crates/raster-blend-operators/src/lib.rs:68` | - | Evaluates a `BlendOperator` independently for three RGB channels. |
+| `impl Backend for RendererContext<'_>::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3134` | - |  |
 | `impl Backend for WebGlRendererContext<'_>::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3270` | - |  |
-| `impl Backend for RendererContext<'_>::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3131` | - |  |
 | `trait Backend::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:51` | - | Execute a blend pass between a parent and child texture. |
 | `impl Backend for Recorder::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:261` | - |  |
+| `impl RendererContext<'_>::blend_pass_inner` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2853` | - |  |
 | `impl WebGlRendererContext<'_>::blend_pass_inner` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2943` | - |  |
-| `impl RendererContext<'_>::blend_pass_inner` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2850` | - |  |
 | `blend_release` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:366` | - |  |
 | `blend_rgb` | 3 | `crates/raster-blend-operators/src/lib.rs:245` | - | Evaluates an operator or blend mode independently across RGB channels. |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::blend_state` | 2 | `crates/pixel-buffer-output/src/builder.rs:211` | - | Set the blend state. |
@@ -608,15 +632,18 @@ Every function/method found in the codebase, alphabetical.
 | `impl SurfaceRenderer<'s>::blit_from_intermediate_texture_to_surface` | 3 | `crates/gpu-device-context/src/surface_renderer.rs:324` | - | Blit from the intermediate texture to the surface texture |
 | `blit_opaque` | 8 | `crates/asset-production-vibe/src/graphics_pack.rs:16` | - |  |
 | `blit_rect_nn` | 14 | `crates/asset-production-vibe/src/graphics_pack.rs:41` | 2d |  |
+| `blk` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_envelope.rs:27` | - |  |
+| `blk` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_envelope.rs:22` | - |  |
 | `blk4_maps_consistent` | 0 | `crates/video-h264-codec/src/tables.rs:162` | - |  |
 | `impl Model::block` | 2 | `crates/kinetics-block-simulation/src/model.rs:94` | - |  |
 | `block_motion` | 3 | `crates/video-h264-codec/src/deblock.rs:26` | - |  |
 | `impl Model::block_mut` | 2 | `crates/kinetics-block-simulation/src/model.rs:99` | - |  |
 | `impl Model::block_names` | 1 | `crates/kinetics-block-simulation/src/model.rs:90` | - |  |
-| `block_on_wgpu` | 2 | `crates/gpu-device-context/src/util.rs:8` | - | Block on a future, polling the device as needed. |
-| `block_on_wgpu` | 2 | `crates/vector-compute-renderer/src/util.rs:257` | - | Block on a future, polling the device as needed. |
+| `block_on` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/gpu_gi.rs:311` | - |  |
+| `block_on_etalon` | 2 | `crates/gpu-device-context/src/util.rs:8` | - | Block on a future, polling the device as needed. |
+| `block_on_etalon` | 2 | `crates/vector-compute-renderer/src/util.rs:260` | - | Block on a future, polling the device as needed. |
 | `book` | 1 | `crates/audio-aac-codec/src/huffman.rs:52` | - | Spectrum codebook 1..=11. |
-| `boolean` | 3 | `crates/asset-production-vibe/src/lib.rs:536` | - |  |
+| `boolean` | 3 | `crates/asset-production-vibe/src/lib.rs:557` | - |  |
 | `impl SigMeta::boolean` | 1 | `crates/kinetics-block-simulation/src/signal.rs:27` | - |  |
 | `impl SigVal::boolean` | 1 | `crates/kinetics-block-simulation/src/signal.rs:104` | - |  |
 | `boolean` | 3 | `crates/vector-locus-pathops/src/pathops/boolean.rs:496` | - | Execute a binary boolean operation on two paths. |
@@ -628,10 +655,13 @@ Every function/method found in the codebase, alphabetical.
 | `border_impl` | 4 | `crates/raster-layer-mask-adapter/provenance/morphology-lib-before.rs:149` | - |  |
 | `border_impl` | 4 | `crates/raster-selection-morphology/src/lib.rs:234` | - |  |
 | `border_matches_measured_oracle` | 0 | `crates/raster-selection-morphology/src/tests.rs:33` | - |  |
+| `botanical_emf_v4_and_qac_v1_double_produce_byte_and_digest_equality` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/tests.rs:64` | - |  |
+| `both_emf_previews_select_same_key_time_slices_and_default_to_zero` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:84` | - |  |
 | `impl Rect::bottom` | 1 | `crates/layout-box-autolayout/src/types.rs:116` | - |  |
 | `impl Rect::bottom` | 1 | `crates/layout-paged-typesetter/src/pagination/types.rs:34` | - |  |
 | `boundaries_at_large_world_coordinates_keep_distinct_vertices` | 0 | `crates/drafting-geometry/src/region.rs:390` | - |  |
 | `boundary_at` | 3 | `crates/drafting-geometry/src/region.rs:367` | 2d | The closed loop enclosing `p` plus the islands inside it, or `None` when `p` isn't enclosed. |
+| `bounded` | 5 | `crates/asset-production-vibe/src/radiance_precision.rs:111` | - |  |
 | `bounded_count` | 2 | `crates/media-isobmff/src/demux.rs:34` | - |  |
 | `impl Arc::bounds` | 1 | `crates/drafting-geometry/src/curve.rs:113` | - |  |
 | `impl Circle::bounds` | 1 | `crates/drafting-geometry/src/curve.rs:175` | - |  |
@@ -644,12 +674,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl Mesh::bounds` | 1 | `crates/surface-pbr-studio/src/mesh.rs:39` | - |  |
 | `impl PathData::bounds` | 1 | `crates/vector-locus-geometry/src/path.rs:435` | 2d | Tight geometric bounds (curve extrema, not control points). |
 | `bounds` | 1 | `crates/vector-locus-pathops/src/three_d/visibility.rs:29` | 2d |  |
-| `bounds2` | 1 | `crates/asset-production-vibe/src/geometry.rs:381` | - |  |
+| `bounds2` | 1 | `crates/asset-production-vibe/src/geometry.rs:412` | - |  |
 | `impl RasterImage::box_blur` | 2 | `crates/surface-pbr-studio/src/raster.rs:97` | - | Fast separable box blur of all channels. |
-| `box_spec` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:380` | - |  |
-| `box_xywh` | 2 | `crates/asset-production-vibe/src/layout_ops/mod.rs:391` | - |  |
+| `box_spec` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:381` | - |  |
+| `box_xywh` | 2 | `crates/asset-production-vibe/src/layout_ops/mod.rs:392` | - |  |
 | `boxes` | 1 | `crates/media-isobmff/src/bytes.rs:201` | - |  |
-| `boxes` | 3 | `crates/video-h264-preview/src/lib.rs:633` | - |  |
+| `boxes` | 3 | `crates/video-h264-preview/src/lib.rs:634` | - |  |
 | `boxes_non_overlapping` | 1 | `crates/asset-production-vibe/src/layout_ops/box_theme.rs:68` | - |  |
 | `impl Parser::braced` | 2 | `crates/discourse-academic-tex/src/texparse/bib.rs:364` | - |  |
 | `braced` | 3 | `crates/discourse-academic-tex/src/typeset.rs:325` | - |  |
@@ -689,17 +719,19 @@ Every function/method found in the codebase, alphabetical.
 | `impl Bvh::build` | 1 | `crates/surface-pbr-studio/src/bvh.rs:29` | computational geometry | Build a BVH for a mesh. An empty mesh yields an empty tree. |
 | `impl Scheduler<'a, 'p>::build` | 1 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:320` | - | Build the complete dependency-ordered schedule. |
 | `impl VlcTable::build` | 1 | `crates/video-h264-codec/src/cavlc.rs:15` | - |  |
-| `build_anatomy_from_portable_scaffold` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:22` | - | Compiles a 3-layer `.10d` vertebrate anatomical twin from a species spec (VibeScript record |
+| `build_anatomy_from_portable_scaffold` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:25` | - | Compiles a 3-layer `.10d` vertebrate anatomical twin from a species spec (VibeScript record |
 | `build_and_check` | 2 | `crates/video-h264-codec/src/synth_tests.rs:374` | - |  |
 | `build_and_parse_sfnt_roundtrip` | 0 | `crates/vector-glyph-shaping/src/subset.rs:150` | - |  |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::build_async` | 1 | `crates/pixel-buffer-output/src/builder.rs:436` | 2d | Create a pixel buffer from the options builder without blocking the current thread. |
 | `impl Device::build_audioclient` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:363` | - | Returns an uninitialized `IAudioClient`. |
 | `build_authored_part` | 9 | `crates/asset-production-vibe/src/living_world_anatomy/human_welfare_anatomy.rs:1401` | computational geometry | One Synth-authored part. The mesh is generated here. No external model is fetched. |
-| `build_avc_mp4` | 7 | `crates/asset-production-vibe/src/chronicle_ops.rs:617` | - |  |
-| `build_bvh_recursive` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:175` | - |  |
+| `build_avc_mp4` | 7 | `crates/asset-production-vibe/src/chronicle_ops.rs:612` | - |  |
+| `build_bvh_recursive` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:176` | - |  |
 | `impl Rounds::build_draw` | 5 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:929` | - |  |
-| `build_fauna_production_plan_json` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:416` | - | Builds the complete **Model Production Plan** (`qualia.model-production-plan/v1`) for a Fauna |
-| `build_flora_mycelium_production_plan_json` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:487` | - | Builds the complete **Flora & Mycelial Neural Network Production Plan** |
+| `build_etalon_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:238` | - |  |
+| `build_etalon_context` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:187` | - |  |
+| `build_fauna_production_plan_json` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:414` | - | Builds the complete **Model Production Plan** (`qualia.model-production-plan/v1`) for a Fauna |
+| `build_flora_mycelium_production_plan_json` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:485` | - | Builds the complete **Flora & Mycelial Neural Network Production Plan** |
 | `build_human_welfare_anatomy_10d` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/human_welfare_anatomy.rs:344` | - | Builds a complete 3-layer / 17-system Human Welfare & Maternal-Fetal `.10d` container |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::build_impl` | 1 | `crates/pixel-buffer-output/src/builder.rs:273` | 2d | Create a pixel buffer from the options builder. |
 | `build_input_stream` | 5 | `crates/audio-device-cpal/src/host/oboe/mod.rs:222` | - |  |
@@ -742,21 +774,19 @@ Every function/method found in the codebase, alphabetical.
 | `build_perm_table` | 1 | `crates/terrain-erosion-solvers/src/fractal_terrace.rs:38` | - | PRNG table generator for strata hash lookup. |
 | `build_pes_packet` | 4 | `crates/chronicle-broadcast-containers/src/mpegts/pes.rs:113` | - | Create a PES packet containing `data` with optional PTS/DTS. |
 | `build_pmt` | 4 | `crates/chronicle-broadcast-containers/src/mpegts/psi.rs:152` | - | Build a PMT section including CRC-32. |
-| `build_pps` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:513` | - |  |
+| `build_pps` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:508` | - |  |
 | `build_range` | 6 | `crates/surface-pbr-studio/src/bvh.rs:206` | computational geometry, graph |  |
 | `impl Dpb<F>::build_ref_lists` | 5 | `crates/video-h264-codec/src/dpb.rs:164` | - | Initial reference picture lists (8.2.4.2) + modification (8.2.4.3) for a frame slice, each |
 | `build_rest_tris` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:88` | computational geometry |  |
 | `build_set` | 3 | `crates/chronicle-broadcast-containers/src/dnx/tables.rs:211` | - |  |
 | `build_sfnt_font` | 2 | `crates/vector-glyph-shaping/src/subset.rs:91` | - | Assemble a valid standalone SFNT font binary from a set of table records. |
-| `impl WgpuEngine::build_shaders_if_needed` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:163` | - | Initialise (in parallel) any shaders which are yet to be created |
-| `build_sps` | 3 | `crates/asset-production-vibe/src/chronicle_ops.rs:470` | - |  |
+| `impl EtalonEngine::build_shaders_if_needed` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:163` | - | Initialise (in parallel) any shaders which are yet to be created |
+| `build_sps` | 3 | `crates/asset-production-vibe/src/chronicle_ops.rs:465` | - |  |
 | `build_stream_err` | 1 | `crates/audio-device-cpal/src/host/asio/stream.rs:707` | - |  |
 | `impl Device::build_stream_inner` | 4 | `crates/audio-device-cpal/src/host/alsa/mod.rs:244` | - |  |
-| `build_theme_tokens` | 4 | `crates/asset-production-vibe/src/layout_ops/mod.rs:85` | - |  |
+| `build_theme_tokens` | 4 | `crates/asset-production-vibe/src/layout_ops/mod.rs:86` | - |  |
 | `impl SliceDecoder<'a>::build_weights` | 4 | `crates/video-h264-codec/src/slicedec.rs:331` | - |  |
-| `build_wgpu_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:238` | - |  |
-| `build_wgpu_context` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:187` | - |  |
-| `build_whitegum_whole_organism_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:299` | - | Builds a high-craft Scale-1 Whole-Organism Whitegum / Ghost Gum (`Corymbia aparrerinja`) |
+| `build_whitegum_whole_organism_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:238` | - | Builds a high-craft Scale-1 Whole-Organism Whitegum / Ghost Gum (`Corymbia aparrerinja`) |
 | `builtin_format` | 1 | `crates/chronicle-tabular-engine/src/numfmt/builtin.rs:42` | - |  |
 | `builtin_id` | 1 | `crates/chronicle-tabular-engine/src/numfmt/builtin.rs:46` | - |  |
 | `builtins_are_available` | 0 | `crates/discourse-academic-tex/src/review/snippets.rs:227` | - |  |
@@ -780,7 +810,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl CowTerrainTileGrid::byte_budget` | 1 | `crates/terrain-brushes/src/lib.rs:207` | - |  |
 | `byte_budget_evicts_lru_but_not_current_frame` | 0 | `crates/vector-cpu-render-adapter/src/image_cache.rs:210` | - |  |
 | `impl BitReader<'a>::byte_pos` | 1 | `crates/bitstream-codec/src/lib.rs:61` | - | Byte offset of the current position (rounded down). |
-| `impl Artifact::bytes` | 1 | `crates/asset-production-vibe/src/lib.rs:115` | - |  |
+| `impl Artifact::bytes` | 1 | `crates/asset-production-vibe/src/lib.rs:124` | - |  |
 | `impl Data::bytes` | 1 | `crates/audio-device-cpal/src/lib.rs:540` | - | The raw slice of memory representing the underlying audio data as a slice of bytes. |
 | `impl BitWriter::bytes` | 1 | `crates/bitstream-codec/src/lib.rs:246` | - |  |
 | `impl Cur<'a>::bytes` | 2 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:154` | - |  |
@@ -801,7 +831,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Oscillator::calculate_sine_output_from_freq` | 2 | `crates/audio-device-cpal/examples/synth_tones.rs:45` | - |  |
 | `calculate_splat_cost` | 2 | `crates/multimodal-synthesis-schema/src/splat_cost.rs:71` | - | Calculate the cost of a 3D Gaussian Splat / radiance field generation. |
 | `calendar_skips_weekends_and_holidays` | 0 | `crates/kinetics-schedule-cpm/src/model.rs:874` | - |  |
-| `impl VibeNamespaceProvider for HypermediaOntologyProvider::call` | 4 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:267` | - |  |
+| `call` | 3 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:27` | - |  |
+| `impl VibeNamespaceProvider for HypermediaOntologyProvider::call` | 4 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:416` | - |  |
 | `callback_crosses_slots_in_order_and_starvation_cannot_resume_old_audio` | 0 | `crates/pcm-device-output/src/queue_tests.rs:53` | - |  |
 | `caller_limits_refuse_input_track_and_table_counts_before_expansion` | 0 | `crates/media-isobmff/src/demux.rs:1243` | - |  |
 | `calligraphic_sweep` | 0 | `crates/vector-surface-brush/src/calligraphic.rs:237` | - |  |
@@ -819,11 +850,14 @@ Every function/method found in the codebase, alphabetical.
 | `cancellation_silences_pending_samples_and_rejects_new_enqueue` | 0 | `crates/pcm-device-output/src/queue_tests.rs:70` | - |  |
 | `candidates` | 1 | `crates/audio-aac-codec/src/encoder/quant.rs:142` | - | Candidate codebooks for a band whose largest magnitude is `m` (0 for all-zero bands). |
 | `canon` | 1 | `crates/discourse-academic-tex/src/texparse/graph.rs:209` | - |  |
+| `canonical_ghost_gum_metamer_rig_and_corpus` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_fixtures.rs:256` | - | Builds a canonical evidenced `SpeciesCorpus` and Murray-law `BotanicalMetamerRig` |
 | `canonical_joint` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:45` | - |  |
 | `canonical_morphism_id` | 1 | `crates/asset-production-vibe/src/ontology/mod.rs:247` | - | Resolves any operation identifier to its canonical categorical ID (`hypermedia.<category>.<morphism>`). |
+| `canonical_wallaby_rig_and_corpus` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_fixtures.rs:55` | - | Builds a canonical evidenced `SpeciesCorpus` and articulated `VertebrateAnatomicalRig` |
 | `caps_match_reference_shape` | 0 | `crates/audio-opus-codec/src/celt/rate.rs:573` | - |  |
 | `impl Project::capture_baseline` | 2 | `crates/kinetics-schedule-cpm/src/model.rs:688` | - |  |
 | `impl AssetHost<'_>::capture_deterministic_movie` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:275` | - |  |
+| `impl AssetHost<'_>::capture_png_sequence` | 2 | `crates/asset-production-vibe/src/chronicle_sequence.rs:24` | - |  |
 | `impl MaterialPreset::car_paint` | 3 | `crates/surface-pbr-studio/src/material.rs:129` | - |  |
 | `impl ScreenBuffer::carriage_return` | 1 | `crates/chronicle-timeline-interchange/src/captions/cea608.rs:166` | - |  |
 | `impl RangeEncoder::carry_out` | 2 | `crates/audio-opus-codec/src/range.rs:285` | - |  |
@@ -834,6 +868,7 @@ Every function/method found in the codebase, alphabetical.
 | `carve_one_vertical_seam_rgba8` | 3 | `crates/raster-spatial-operators/src/seam_carve.rs:84` | - |  |
 | `cast_slice_mut` | 1 | `crates/audio-device-cpal/src/host/asio/stream.rs:670` | - | Cast a byte slice into a mutable slice of desired type. |
 | `catalog` | 0 | `crates/discourse-academic-tex/src/catalog.rs:388` | - | The full catalog, sorted by [`CommandSpec::name`]. |
+| `catalog_botanical_and_rig_emit_emf_qac_bundles_verify_cleanly` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1613` | - |  |
 | `catalog_compile_10d_pbr_albedo_samples_unwrap_uv01` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:638` | - |  |
 | `catalog_compile_10d_pbr_auto_unwraps_albedo_without_source_10d` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:775` | - |  |
 | `catalog_compile_10d_pbr_consumes_unwrap_uv01` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:569` | - |  |
@@ -842,23 +877,27 @@ Every function/method found in the codebase, alphabetical.
 | `catalog_dispatch_cubic_loft_not_interpolation_rejected` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:400` | - |  |
 | `catalog_dispatch_nurbs_loft_and_revolve_optional` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:462` | - |  |
 | `catalog_emf_spectral_png_is_non_black` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:845` | - |  |
+| `catalog_encode_aac_qac_mode_and_compile_emf_dipoles_constitutive_roundtrip` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1705` | - |  |
 | `catalog_is_large_enough` | 0 | `crates/discourse-academic-tex/src/catalog.rs:422` | - |  |
 | `catalog_is_sorted_and_unique` | 0 | `crates/discourse-academic-tex/src/catalog.rs:427` | - |  |
 | `catalog_pack_nine_slice_insets_sidecar` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1196` | - |  |
 | `catalog_pack_pbr_set_encoded_png` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1233` | - |  |
+| `catalog_pack_sprite_sheet_autotile_two_produce_sha256` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1383` | 2d |  |
+| `catalog_pack_sprite_sheet_autotile_wrap_repeat` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1330` | 2d |  |
 | `catalog_pack_sprite_sheet_frames_no_overlap` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1133` | 2d |  |
 | `catalog_pack_sprite_sheet_two_produce_sha256` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1300` | 2d |  |
-| `catalog_pack_sprite_sheet_unknown_argument` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1330` | 2d |  |
+| `catalog_pack_sprite_sheet_unknown_argument` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1417` | 2d |  |
 | `catalog_rows_raise_wave_b_objects` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:344` | - |  |
 | `catalog_synthesize_maps_side_1024_envelope` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1265` | - |  |
 | `catalog_text` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:335` | - |  |
-| `catalogue` | 0 | `crates/asset-production-vibe/src/lib.rs:73` | - |  |
+| `catalog_vertebrate_anatomy_emit_emf_qac_routes_canonical_and_profile_handles_to_all_consumers` | 0 | `crates/asset-production-vibe/src/operations_catalog.rs:1440` | - |  |
+| `catalogue` | 0 | `crates/asset-production-vibe/src/lib.rs:80` | - |  |
 | `categories_json` | 0 | `crates/asset-production-vibe/src/ontology/mod.rs:261` | semantics | Serializes the category-theoretic ontology taxonomy for agentic discovery (`synth.ontology.categories`). |
 | `impl Rule::category` | 1 | `crates/discourse-pdf-compliance/src/a11y/rules.rs:115` | - |  |
 | `catmull_rom` | 3 | `crates/vector-locus-pathops/src/effects/util.rs:75` | - | Smooth subpath through points using Catmull-Rom tangents. |
-| `catmull_rom_axis` | 5 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:605` | - |  |
-| `catmull_rom_point3` | 5 | `crates/asset-production-vibe/src/manifold_ops.rs:915` | - |  |
-| `catmull_rom_scalar` | 5 | `crates/asset-production-vibe/src/manifold_ops.rs:906` | - |  |
+| `catmull_rom_axis` | 5 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:624` | - |  |
+| `catmull_rom_point3` | 5 | `crates/asset-production-vibe/src/manifold_ops.rs:1165` | - |  |
+| `catmull_rom_scalar` | 5 | `crates/asset-production-vibe/src/manifold_ops.rs:1156` | - |  |
 | `cb` | 3 | `crates/video-prores-codec/src/tables.rs:12` | - |  |
 | `impl SliceDecoder<'_>::cbf_chroma_ac_cond` | 5 | `crates/video-h264-codec/src/cabac_mb.rs:367` | - |  |
 | `impl SliceDecoder<'_>::cbf_dc_cond` | 4 | `crates/video-h264-codec/src/cabac_mb.rs:358` | - |  |
@@ -893,7 +932,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Shaper::change` | 4 | `crates/terrain-erosion-solvers/src/thermal_shaper.rs:148` | - |  |
 | `change_dag_records_and_enforces_roles` | 0 | `crates/kinetics-schedule-cpm/src/change_dag.rs:334` | - |  |
 | `impl GpuProfiler::change_settings` | 2 | `crates/gpu-command-profiler/src/profiler.rs:117` | - | Changes the settings of an existing profiler. |
-| `change_settings_while_query_open` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:85` | - |  |
+| `change_settings_while_query_open` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:89` | - |  |
 | `changed_profile_parameters_change_real_geometry` | 0 | `crates/profile-authoring/provenance/original-spatial-tests.rs:65` | - |  |
 | `changed_profile_parameters_change_section_dimensions_and_area` | 0 | `crates/profile-authoring/src/tests.rs:60` | - |  |
 | `impl LineSeg::channel_bin` | 1 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:80` | - |  |
@@ -915,10 +954,11 @@ Every function/method found in the codebase, alphabetical.
 | `char_advance` | 1 | `crates/locus-parametric-solver/src/typography/stroke.rs:119` | - |  |
 | `char_class` | 1 | `crates/discourse-academic-tex/src/typeset.rs:168` | - | Class of a raw character for spacing purposes. |
 | `impl SGlyph::char_glyph` | 1 | `crates/vector-glyph-shaping/src/composer.rs:30` | - |  |
-| `char_to_svg_subpath` | 5 | `crates/asset-production-vibe/src/glyph/mod.rs:193` | - | Emits the clean vector strokes for `ch` into `out` as SVG path instructions `M ... L ...`. |
+| `char_to_svg_subpath` | 5 | `crates/asset-production-vibe/src/glyph/mod.rs:194` | - | Emits the clean vector strokes for `ch` into `out` as SVG path instructions `M ... L ...`. |
 | `char_to_svg_subpath_ext` | 6 | `crates/asset-production-vibe/src/glyph/stroke_table.rs:5` | - |  |
 | `impl Ttf::char_width` | 2 | `crates/discourse-academic-tex/src/texpdf.rs:154` | - | Advance width of a character in font units (0 for .notdef). |
-| `impl AssetHost<'_>::charge` | 3 | `crates/asset-production-vibe/src/lib.rs:179` | - |  |
+| `impl AssetHost<'_>::charge` | 3 | `crates/asset-production-vibe/src/lib.rs:191` | - |  |
+| `impl AssetHost<'_>::charge_current_read` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:49` | - |  |
 | `chart_lookup_and_normal_balance` | 0 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:120` | 3d |  |
 | `check` | 2 | `crates/audio-aac-codec/tests/encoder_oracle.rs:124` | - |  |
 | `check` | 1 | `crates/vector-hybrid-shaders/src/lint/no_dynamic_indexing.rs:10` | - |  |
@@ -942,13 +982,14 @@ Every function/method found in the codebase, alphabetical.
 | `check_packets` | 4 | `crates/media-isobmff/tests/oracle_demux.rs:127` | - | `strict`: ffprobe timestamps must equal ours + edit offset. Otherwise (edit starting mid-frame, |
 | `check_redundancy` | 4 | `crates/locus-parametric-solver/src/solver/conflict.rs:75` | - | Check if a candidate constraint is redundant with existing active constraints. |
 | `check_round_trip` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:833` | - |  |
-| `check_sample` | 3 | `crates/video-h264-preview/src/lib.rs:396` | - | Reject in-band SPS/PPS changes, B/SP/SI slices and mixed IDR/non-IDR |
+| `check_sample` | 3 | `crates/video-h264-preview/src/lib.rs:397` | - | Reject in-band SPS/PPS changes, B/SP/SI slices and mixed IDR/non-IDR |
 | `check_self_intersections` | 1 | `crates/geodesy-spatial-analysis/src/network_topology.rs:293` | - | Checks for self-intersections within a polyline. |
 | `check_size` | 1 | `crates/kinetics-schedule-cpm/src/format.rs:38` | - |  |
 | `check_stream` | 3 | `crates/media-isobmff/tests/oracle_demux.rs:30` | - |  |
 | `impl Sps::check_supported` | 1 | `crates/video-h264-codec/src/params.rs:527` | - |  |
 | `check_texture_size` | 3 | `crates/pixel-buffer-output/src/builder.rs:447` | - | Compare the given size to the limits defined by `device`. |
 | `check_top_level` | 1 | `crates/video-h264-preview/src/lib.rs:202` | - | Admission for the owning demuxer: reject fragmented/event/extended boxes |
+| `checked` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:28` | - |  |
 | `checked` | 1 | `crates/video-h264-codec/src/slice.rs:503` | - |  |
 | `impl Tick::checked_add` | 2 | `crates/timeline-editing/src/timebase.rs:70` | - |  |
 | `impl TransitionSpan::checked_end` | 1 | `crates/timeline-editing/src/transition.rs:40` | - |  |
@@ -978,8 +1019,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl ChromaFormat::chroma_width` | 2 | `crates/video-prores-codec/src/types.rs:31` | - | Width of a chroma plane for a given luma width. |
 | `impl Frame::chroma_width` | 1 | `crates/video-prores-codec/src/types.rs:191` | - |  |
 | `impl Frame::chroma_window` | 8 | `crates/video-h264-codec/src/picture.rs:244` | - | Copy the w x h window of chroma component `c` at (x0, y0) (clamped) into `out`. |
-| `chronicle_locked_dt_movie_otio_ledger_objects` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:876` | - |  |
-| `chronicle_mux_mp4_origin_still_returns_mp4` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:858` | - |  |
+| `chronicle_locked_dt_movie_otio_ledger_objects` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:893` | - |  |
+| `chronicle_mux_mp4_origin_still_returns_mp4` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:853` | - |  |
 | `impl AssetHost<'_>::chronicle_op` | 3 | `crates/asset-production-vibe/src/chronicle_ops.rs:13` | - |  |
 | `cid_info` | 1 | `crates/chronicle-broadcast-containers/src/dnx/tables.rs:120` | - |  |
 | `impl Model::circle` | 3 | `crates/locus-parametric-solver/src/solver/model.rs:262` | 2d |  |
@@ -995,7 +1036,7 @@ Every function/method found in the codebase, alphabetical.
 | `clamp` | 3 | `crates/layout-presentation-deck/src/morph/interpolate.rs:5` | - |  |
 | `clamp_i64` | 1 | `crates/timeline-editing/src/timebase.rs:214` | - |  |
 | `clamp_index` | 2 | `crates/terrain-erosion-solvers/src/thermal_shaper.rs:29` | - |  |
-| `impl Pixels<'win>::clamp_pixel_pos` | 2 | `crates/pixel-buffer-output/src/lib.rs:730` | 2d | Clamp a pixel position to the pixel buffer texture size. |
+| `impl Pixels<'win>::clamp_pixel_pos` | 2 | `crates/pixel-buffer-output/src/lib.rs:725` | 2d | Clamp a pixel position to the pixel buffer texture size. |
 | `clamp_size` | 3 | `crates/layout-box-autolayout/src/types.rs:147` | - |  |
 | `clamped_uniform_knots` | 2 | `crates/drafting-geometry/src/spline.rs:214` | - |  |
 | `impl AxisRom::classify` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:147` | - |  |
@@ -1019,25 +1060,25 @@ Every function/method found in the codebase, alphabetical.
 | `impl Clear for Ranges::clear` | 1 | `crates/vector-hybrid-renderer/src/util.rs:138` | - |  |
 | `impl Recording::clear_all` | 2 | `crates/vector-compute-renderer/src/recording.rs:202` | - | Commands to clear the whole buffer. |
 | `impl Scheduler<'a, 'p>::clear_and_release_allocation` | 4 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:763` | - | Schedule an allocation to be cleared and released after the given round. |
+| `impl Renderer::clear_atlas_region` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:626` | - | Clear a specific region of the atlas texture. |
+| `clear_atlas_region` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:863` | 2d |  |
 | `impl WebGlRenderer::clear_atlas_region` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:828` | - | Clear a specific region of an atlas texture. |
 | `clear_atlas_region` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1099` | 2d |  |
-| `impl Renderer::clear_atlas_region` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:626` | - | Clear a specific region of the atlas texture. |
-| `clear_atlas_region` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:863` | 2d |  |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::clear_color` | 2 | `crates/pixel-buffer-output/src/builder.rs:260` | - | Set the clear color. |
-| `impl Pixels<'win>::clear_color` | 2 | `crates/pixel-buffer-output/src/lib.rs:308` | - | Change the clear color. |
+| `impl Pixels<'win>::clear_color` | 2 | `crates/pixel-buffer-output/src/lib.rs:303` | - | Change the clear color. |
 | `impl ClearSettings<'_>::clear_color` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:45` | - |  |
-| `clear_color` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3424` | - |  |
+| `clear_color` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3427` | - |  |
 | `clear_destroys_registry_entries` | 0 | `crates/vector-cpu-render-adapter/src/image_cache.rs:227` | - |  |
-| `impl RendererContext<'_>::clear_full_target` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2619` | - |  |
+| `impl RendererContext<'_>::clear_full_target` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2622` | - |  |
 | `impl VelloCpuImageRenderer::clear_image_cache` | 1 | `crates/vector-cpu-render-adapter/src/image_renderer.rs:23` | - | Drop all cached image conversions. |
 | `impl VelloCpuScenePainter::clear_image_cache` | 1 | `crates/vector-cpu-render-adapter/src/scene.rs:56` | - | Drop all cached image conversions. |
-| `impl Programs::clear_layer_bind_group_caches` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1856` | - |  |
+| `impl Programs::clear_layer_bind_group_caches` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1859` | - |  |
+| `impl Backend for RendererContext<'_>::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3155` | - |  |
 | `impl Backend for WebGlRendererContext<'_>::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3287` | - |  |
-| `impl Backend for RendererContext<'_>::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3152` | - |  |
 | `trait Backend::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:46` | - | Execute a clear pass with the given rectangles against the target. |
 | `impl Backend for Recorder::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:251` | - |  |
+| `impl RendererContext<'_>::clear_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3013` | - |  |
 | `impl WebGlRendererContext<'_>::clear_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3173` | - |  |
-| `impl RendererContext<'_>::clear_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3010` | - |  |
 | `impl Round::clear_passes` | 1 | `crates/vector-hybrid-renderer/src/schedule/round.rs:216` | - |  |
 | `impl TriggerReceiver::clear_pipe` | 1 | `crates/audio-device-cpal/src/host/alsa/mod.rs:148` | - |  |
 | `impl AllocatedTextureRegion::clear_region` | 1 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:180` | - |  |
@@ -1054,8 +1095,8 @@ Every function/method found in the codebase, alphabetical.
 | `clip_leaf` | 2 | `crates/vector-compute-shaders/src/cpu/clip_leaf.rs:75` | - |  |
 | `clip_leaf_main` | 5 | `crates/vector-compute-shaders/src/cpu/clip_leaf.rs:20` | - |  |
 | `clip_polygon` | 3 | `crates/vector-locus-pathops/src/pathops/boolean.rs:122` | computational geometry | Greiner-Hormann polygon clipping between two simple polygons. |
-| `impl ScalingRenderer::clip_rect` | 1 | `crates/pixel-buffer-output/src/renderers.rs:291` | 2d | Get the clipping rectangle for the scaling renderer. |
-| `impl ScalingMatrix::clip_rect` | 1 | `crates/pixel-buffer-output/src/renderers.rs:382` | 2d |  |
+| `impl ScalingRenderer::clip_rect` | 1 | `crates/pixel-buffer-output/src/renderers.rs:299` | 2d | Get the clipping rectangle for the scaling renderer. |
+| `impl ScalingMatrix::clip_rect` | 1 | `crates/pixel-buffer-output/src/renderers.rs:390` | 2d |  |
 | `clip_reduce` | 2 | `crates/vector-compute-shaders/src/cpu/clip_reduce.rs:50` | - |  |
 | `clip_reduce_main` | 5 | `crates/vector-compute-shaders/src/cpu/clip_reduce.rs:10` | - |  |
 | `impl Bsp::clip_to` | 3 | `crates/manifold-bim-csg/src/csg.rs:302` | - |  |
@@ -1063,6 +1104,7 @@ Every function/method found in the codebase, alphabetical.
 | `clipped_away_blend` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:308` | - |  |
 | `clipped_away_filtered_blend_under_atlas_pressure` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:332` | - |  |
 | `clips_extreme_pocs_before_narrowing` | 0 | `crates/video-h264-codec/src/slicedec.rs:274` | - |  |
+| `clock_value` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:376` | - |  |
 | `clog2_decode` | 1 | `crates/color-transforms/src/log.rs:164` | - |  |
 | `clog2_decode` | 1 | `crates/radiance-color-grading/src/log.rs:172` | - |  |
 | `clog2_encode` | 1 | `crates/color-transforms/src/log.rs:160` | - |  |
@@ -1071,14 +1113,16 @@ Every function/method found in the codebase, alphabetical.
 | `clog3_decode` | 1 | `crates/radiance-color-grading/src/log.rs:191` | - |  |
 | `clog3_encode` | 1 | `crates/color-transforms/src/log.rs:173` | - |  |
 | `clog3_encode` | 1 | `crates/radiance-color-grading/src/log.rs:181` | - |  |
+| `impl ttf_parser::OutlineBuilder for Outline<'_>::close` | 1 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:115` | - |  |
 | `impl XmlWriter::close` | 1 | `crates/chronicle-timeline-interchange/src/xml.rs:102` | - |  |
 | `close` | 2 | `crates/drafting-geometry/src/tests.rs:3` | - |  |
 | `impl OutlinePen for BezPathOutline::close` | 1 | `crates/vector-compute-renderer/src/scene.rs:1099` | - |  |
 | `close_all` | 1 | `crates/vector-locus-pathops/src/pathops/offset.rs:14` | - |  |
-| `impl SubpathBuilder<'a>::closed` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:170` | - |  |
+| `impl SubpathBuilder<'a>::closed` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:171` | - |  |
 | `impl Partition::closed` | 1 | `crates/chronicle-broadcast-containers/src/mxf/partition.rs:62` | - |  |
 | `closed` | 1 | `crates/vector-locus-geometry/src/hit.rs:19` | - | `path` with each open subpath closed by a straight line back to its start. |
 | `closed_corners` | 2 | `crates/vector-locus-geometry/src/recognize.rs:119` | - |  |
+| `closed_oriented` | 2 | `crates/asset-production-vibe/src/boolean_conforming.rs:5` | - |  |
 | `closed_polygon` | 1 | `crates/profile-authoring/src/lib.rs:52` | computational geometry |  |
 | `closed_spline_is_smooth_at_the_seam` | 0 | `crates/drafting-geometry/src/tests.rs:149` | - |  |
 | `impl Line::closest` | 2 | `crates/drafting-geometry/src/curve.rs:35` | computational geometry, 2d | Closest point on the segment. |
@@ -1128,7 +1172,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl XEl::collect_text` | 2 | `crates/chronicle-office-codecs/src/xml/dom.rs:91` | - |  |
 | `impl LbmGrid3D::collide` | 1 | `crates/kinetics-continuum-multiphysics/src/lbm/d3q19.rs:99` | - | Two-relaxation-time (TRT) collision operator with magic parameter Lambda = 1/4. |
 | `impl SliceDecoder<'a>::colocated` | 2 | `crates/video-h264-codec/src/slicedec.rs:553` | - | Co-located (mvCol, refIdxCol, referenced picture id) for 4x4 block `raster` of the current MB. |
-| `color` | 1 | `crates/asset-production-vibe/src/geometry.rs:411` | - |  |
+| `color` | 1 | `crates/asset-production-vibe/src/geometry.rs:442` | - |  |
 | `color4f_from_alpha_color` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1151` | - |  |
 | `color4f_from_dynamic_color` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1160` | - |  |
 | `impl CfaPattern::color_at` | 3 | `crates/radiance-camera-raw/src/demosaic.rs:21` | - | Returns 0 for Red, 1 for Green, 2 for Blue at sensor coordinate (x, y). |
@@ -1143,7 +1187,7 @@ Every function/method found in the codebase, alphabetical.
 | `color_index` | 2 | `crates/vector-compute-renderer/src/scene.rs:1177` | - |  |
 | `color_mode_palette_size_matches_request` | 0 | `crates/vector-radiance-trace/src/tests.rs:167` | - |  |
 | `color_palette` | 2 | `crates/vector-radiance-trace/src/quantize.rs:235` | - | Color mode's palette for the histogram bins `used`, as `params.palette` asks. |
-| `color_to_value` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:61` | - |  |
+| `color_to_value` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:62` | - |  |
 | `colorants` | 4 | `crates/color-transforms/src/icc/builtin.rs:111` | - |  |
 | `colour_bars_parade_levels_and_vectorscope_targets` | 0 | `crates/radiance-color-grading/src/scopes/tests.rs:78` | - |  |
 | `impl RangeRef::cols` | 2 | `crates/chronicle-tabular-engine/src/core/addr.rs:157` | - | Whole columns `c0..=c1`. |
@@ -1154,7 +1198,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl IntermediateTextureAllocations::combine` | 2 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:233` | - | Combine the current set of allocations with another one. |
 | `combine_draw_monoid` | 2 | `crates/vector-compute-shaders/shader/shared/drawtag.wgsl:38` | - |  |
 | `combine_tag_monoid` | 2 | `crates/vector-compute-shaders/shader/shared/pathtag.wgsl:48` | - |  |
-| `combined_audio_edit_preserves_video_timeline` | 0 | `crates/video-h264-preview/src/lib.rs:648` | - |  |
+| `combined_audio_edit_preserves_video_timeline` | 0 | `crates/video-h264-preview/src/lib.rs:649` | - |  |
 | `commands_and_groups` | 0 | `crates/discourse-academic-tex/src/texparse/lex.rs:153` | - |  |
 | `impl Parser::comment_entry` | 2 | `crates/discourse-academic-tex/src/texparse/bib.rs:163` | - |  |
 | `comments_and_mentions` | 0 | `crates/kinetics-schedule-cpm/src/change_dag.rs:344` | - |  |
@@ -1163,6 +1207,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl CowTerrainTileGrid::commit_stroke` | 2 | `crates/terrain-brushes/adaptation/grid-impl.rs:188` | - | Commit preparation refuses without changing preview, redo, IDs or history. |
 | `impl CowTerrainTileGrid::commit_stroke` | 2 | `crates/terrain-brushes/provenance/original-cow_delta_undo.rs:245` | - |  |
 | `impl CowTerrainTileGrid::commit_stroke` | 2 | `crates/terrain-brushes/src/lib.rs:373` | - | Commit preparation refuses without changing preview, redo, IDs or history. |
+| `common_carrier` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:217` | - |  |
 | `impl Circle::common_tangents` | 2 | `crates/drafting-geometry/src/curve.rs:195` | 2d | Lines tangent to both `self` and `other`, as (point on `self`, point on `other`) pairs: |
 | `common_tangents_of_two_circles` | 0 | `crates/drafting-geometry/src/tests.rs:207` | - |  |
 | `compact` | 2 | `crates/vector-radiance-trace/src/quantize.rs:110` | - | Drop unused palette entries and merge duplicates. |
@@ -1176,34 +1221,40 @@ Every function/method found in the codebase, alphabetical.
 | `impl Model::compile` | 1 | `crates/kinetics-block-simulation/src/model.rs:104` | - |  |
 | `impl NodeGraphCompiler::compile` | 2 | `crates/layout-nodegraph-compiler/src/compiler/pipeline.rs:46` | - |  |
 | `impl Timeline::compile` | 1 | `crates/layout-presentation-deck/src/timeline/timeline.rs:21` | - |  |
+| `compile_args` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:19` | - |  |
 | `compile_assembly` | 2 | `crates/profile-authoring/src/assembly.rs:164` | - |  |
-| `impl AssetHost<'_>::compile_bim_ifc4` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:360` | - | 124: `hypermedia.manifold.compile_bim_ifc4` |
-| `impl AssetHost<'_>::compile_botanical_organ_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:22` | computational geometry | Compiles a 4-scale botanical `.10d` organ container (`Scale 1` whole organism, `Scale 2` |
+| `impl AssetHost<'_>::compile_bim_ifc4` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:364` | - | 124: `hypermedia.manifold.compile_bim_ifc4` |
+| `impl AssetHost<'_>::compile_botanical_organ_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:20` | computational geometry | Compiles a 4-scale botanical `.10d` organ container (`Scale 1` whole organism, `Scale 2` |
 | `impl AssetHost<'_>::compile_bsdf_graph` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:14` | graph |  |
 | `impl AssetHost<'_>::compile_dataflow_nodegraph` | 2 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:353` | - | 134: `hypermedia.layout.compile_dataflow_nodegraph` (`layout-nodegraph-compiler` + `layout-presentation-deck`) |
-| `impl AssetHost<'_>::compile_deck_pptx` | 2 | `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:159` | - |  |
+| `impl AssetHost<'_>::compile_deck_pptx` | 2 | `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:158` | - |  |
 | `compile_deck_pptx_emits_one_paragraph_per_bullet` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:1069` | - |  |
 | `compile_deck_pptx_emits_openxml_object` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:1032` | - |  |
-| `impl AssetHost<'_>::compile_emf` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:57` | - | Synthesizes a 3D wave-optical & electromagnetic field volume and seals it |
-| `compile_green_dipole` | 1 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:875` | - |  |
-| `compile_green_dipole` | 1 | `crates/asset-production-vibe/src/sound.rs:231` | - |  |
+| `impl AssetHost<'_>::compile_emf` | 2 | `crates/asset-production-vibe/src/electromagnetics_compile.rs:4` | - |  |
+| `compile_emf_accepts_dipoles_and_constitutive_and_fails_closed_on_invalid` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:457` | - |  |
+| `impl AssetHost<'_>::compile_emf_current` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/compile_host.rs:130` | - |  |
+| `compile_generated` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:53` | - |  |
+| `compile_green_dipole` | 1 | `crates/asset-production-vibe/src/sound.rs:722` | - |  |
+| `impl AssetHost<'_>::compile_heightfield_m64` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:536` | - | Seal the retained field via QualiaDB's checked georaster profile. Samples |
 | `impl AssetHost<'_>::compile_human_welfare_anatomy_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/human_welfare_anatomy.rs:1538` | - | Morphism `hypermedia.manifold.compile_human_welfare_anatomy_10d`: |
 | `compile_human_welfare_q42_bytes` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/human_welfare_anatomy.rs:1273` | - | Compiles a deterministic 832-byte `.q42` (`Q42LOGIC`) welfare & maternal-fetal rule container |
-| `impl AssetHost<'_>::compile_m64` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:439` | - |  |
-| `compile_m64_holo_occupancy_omits_record_crc` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:792` | - |  |
-| `impl AssetHost<'_>::compile_m64_occupancy` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:547` | - |  |
-| `compile_m64_point_occupancy_omits_record_crc` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:1042` | - |  |
-| `impl AssetHost<'_>::compile_m64_strata` | 5 | `crates/asset-production-vibe/src/geodesy_ops.rs:486` | - |  |
-| `compile_m64_strata_default_and_e64_magic_alias_round_trip` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:739` | - |  |
-| `compile_model_logic_q42_bytes` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:615` | - | Compiles a deterministic `.q42` (`Q42LOGIC` 64-byte header + 16 parity-verified 48-byte `NQuin` |
+| `impl AssetHost<'_>::compile_m64` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:476` | - |  |
+| `compile_m64_holo_occupancy_omits_record_crc` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:917` | - |  |
+| `impl AssetHost<'_>::compile_m64_occupancy` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:622` | - |  |
+| `compile_m64_point_occupancy_omits_record_crc` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:1165` | - |  |
+| `impl AssetHost<'_>::compile_m64_strata` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:563` | - |  |
+| `compile_m64_strata_default_and_e64_magic_alias_round_trip` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:864` | - |  |
+| `compile_model_logic_q42_bytes` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:613` | - | Compiles a deterministic `.q42` (`Q42LOGIC` 64-byte header + 16 parity-verified 48-byte `NQuin` |
 | `impl AssetHost<'_>::compile_pdf` | 2 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:294` | - |  |
 | `compile_pdf_emits_tagged_pdf_ua_object` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:910` | - |  |
-| `impl AssetHost<'_>::compile_prose_docx` | 2 | `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:21` | - |  |
+| `impl AssetHost<'_>::compile_prose_docx` | 2 | `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:20` | - |  |
 | `compile_prose_docx_emits_openxml_object` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:984` | - |  |
 | `compile_rule_pack_q42` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:314` | - | Compiles rules into a `Q42LOGIC` container. Lamport clocks follow rule order, starting at 1. |
 | `compile_shader` | 2 | `crates/vector-hybrid-shaders/build.rs:98` | 3d |  |
 | `compile_stage` | 5 | `crates/vector-hybrid-shaders/src/compile.rs:61` | 3d |  |
-| `impl AssetHost<'_>::compile_vertebrate_anatomy_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:152` | computational geometry | Compiles a Scale-5 comparative vertebrate 3-layer `.10d` anatomy container (`Osteology`, |
+| `compile_v3_preserves_original_pcm_bits_and_reports_typed_metadata_while_default_stays_v2` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:30` | - |  |
+| `compile_v3_refuses_ambiguous_metadata_and_both_previews_refuse_unsupported_rgb_conversion` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:61` | - |  |
+| `impl AssetHost<'_>::compile_vertebrate_anatomy_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:172` | computational geometry | Compiles a Scale-5 comparative vertebrate 3-layer `.10d` anatomy container (`Osteology`, |
 | `compile_vertebrate_anatomy_10d_is_stacked_ellipsoids_not_a_clinic_heart` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:170` | computational geometry | `compile_vertebrate_anatomy_10d` is a stacked-ellipsoid / primitive scaffold |
 | `compile_wgsl_shader` | 5 | `crates/vector-hybrid-shaders/src/compile.rs:22` | 3d | Compiles the given wgsl source into GLSL using [naga]. |
 | `impl Partition::complete` | 1 | `crates/chronicle-broadcast-containers/src/mxf/partition.rs:66` | - |  |
@@ -1214,7 +1265,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Parser<'_>::complex` | 1 | `crates/manifold-bim-csg/src/step.rs:293` | - |  |
 | `component_bits` | 1 | `crates/video-prores-codec/src/encode.rs:271` | - |  |
 | `components` | 1 | `crates/drafting-geometry/src/region.rs:246` | 3d, graph | Connected component id of every vertex. |
-| `impl AssetHost<'_>::compose` | 2 | `crates/asset-production-vibe/src/graphics.rs:261` | - |  |
+| `impl AssetHost<'_>::compose` | 2 | `crates/asset-production-vibe/src/graphics.rs:266` | - |  |
 | `compose` | 5 | `crates/vector-glyph-shaping/src/composer.rs:96` | - | Knuth-Plass line composition over glyph slice `g`. |
 | `compose_empty_paragraph` | 0 | `crates/vector-glyph-shaping/src/composer.rs:239` | - |  |
 | `compose_invert_and_round_trip` | 0 | `crates/vector-locus-geometry/src/projective.rs:129` | - |  |
@@ -1239,8 +1290,8 @@ Every function/method found in the codebase, alphabetical.
 | `compute_allocation` | 10 | `crates/audio-opus-codec/src/celt/rate.rs:285` | - | `clt_compute_allocation` (decoder side). |
 | `compute_aspect` | 3 | `crates/geodesy-spatial-analysis/src/morphometry.rs:117` | - | Computes aspect in degrees clockwise from North (0..360, 0 = North, 90 = East, etc.). Flat terrain is assigned -1.0. |
 | `compute_baseline_variance` | 2 | `crates/kinetics-schedule-cpm/src/schedule.rs:287` | - |  |
-| `compute_box_colors` | 2 | `crates/asset-production-vibe/src/layout_ops/mod.rs:269` | - |  |
-| `compute_box_corner_radius` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:258` | - |  |
+| `compute_box_colors` | 2 | `crates/asset-production-vibe/src/layout_ops/mod.rs:270` | - |  |
+| `compute_box_corner_radius` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:259` | - |  |
 | `compute_caps` | 1 | `crates/audio-opus-codec/src/celt/rate.rs:212` | - |  |
 | `impl NeoHookean::compute_cauchy_stress` | 2 | `crates/kinetics-continuum-multiphysics/src/fem/constitutive.rs:127` | - | Compute Cauchy stress sigma from deformation gradient F (3x3). |
 | `compute_class_breaks` | 3 | `crates/geodesy-spatial-analysis/src/cartography.rs:83` | - | Computes class break boundaries for graduated symbology. |
@@ -1249,7 +1300,7 @@ Every function/method found in the codebase, alphabetical.
 | `compute_evm` | 2 | `crates/kinetics-schedule-cpm/src/schedule.rs:515` | - |  |
 | `impl FiduciaryAuditEntry::compute_hash` | 9 | `crates/chronicle-fiduciary-ledger/src/audit.rs:34` | - |  |
 | `compute_hillshade` | 4 | `crates/geodesy-spatial-analysis/src/morphometry.rs:138` | - | Computes analytical hillshade illumination values (0..255). |
-| `impl AssetHost<'_>::compute_mikktspace` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:494` | - |  |
+| `impl AssetHost<'_>::compute_mikktspace` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:571` | - |  |
 | `compute_node_hashes` | 1 | `crates/layout-nodegraph-compiler/src/compiler/cse.rs:52` | graph | Compute deterministic hash trees for all nodes in topological order. |
 | `impl Mesh::compute_normals` | 1 | `crates/surface-pbr-studio/src/mesh.rs:48` | 3d | Compute face/area-weighted vertex normals if not provided. |
 | `impl GpuProfilerQuery::compute_pass_timestamp_writes` | 1 | `crates/gpu-command-profiler/src/profiler_query.rs:92` | - | Use the reserved query for compute pass timestamp writes if any. |
@@ -1285,6 +1336,7 @@ Every function/method found in the codebase, alphabetical.
 | `configure_for_recording` | 1 | `crates/audio-device-cpal/src/host/coreaudio/ios/mod.rs:384` | - |  |
 | `impl RenderContext::configure_surface` | 2 | `crates/vector-compute-renderer/src/util.rs:139` | - |  |
 | `conflict_summary` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/corpus_values.rs:334` | - |  |
+| `conforming_union` | 7 | `crates/asset-production-vibe/src/boolean_conforming.rs:30` | computational geometry, economics | Caller must supply the existing mesh/work/byte budgets; no provider cap is raised. |
 | `impl Complex32::conj` | 1 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:47` | - |  |
 | `impl Homography::conjugated` | 2 | `crates/vector-locus-geometry/src/projective.rs:91` | - | `self` seen through `a`: the map `a ∘ self ∘ a⁻¹`. |
 | `impl Stream::connect_to_system_inputs` | 1 | `crates/audio-device-cpal/src/host/jack/stream.rs:184` | - | Connect to the standard system outputs in jack, system:capture_1 and system:capture_2 |
@@ -1300,11 +1352,11 @@ Every function/method found in the codebase, alphabetical.
 | `construct_reflection_map_from_vertex` | 0 | `crates/vector-hybrid-shaders/src/types.rs:212` | 3d |  |
 | `impl Reader<'a>::consume` | 2 | `crates/chronicle-broadcast-containers/src/dnx/bits.rs:47` | - |  |
 | `impl Reader<'a>::consume` | 2 | `crates/video-prores-codec/src/bits.rs:46` | - |  |
-| `impl AssetHost<'_>::consume_unwrap_uv01` | 3 | `crates/asset-production-vibe/src/lib.rs:434` | - | When unwrap sealed UV01 into `.10d`, public compile_10d_pbr consumes it. |
+| `impl AssetHost<'_>::consume_unwrap_uv01` | 3 | `crates/asset-production-vibe/src/lib.rs:449` | - | When unwrap sealed UV01 into `.10d`, public compile_10d_pbr consumes it. |
 | `impl Reader<'a>::consumed` | 1 | `crates/chronicle-broadcast-containers/src/dnx/bits.rs:53` | - |  |
 | `impl Reader<'a>::consumed` | 1 | `crates/video-prores-codec/src/bits.rs:52` | - |  |
 | `impl DeviceOutput::consumed_frames` | 1 | `crates/pcm-device-output/src/device.rs:215` | - |  |
-| `container_and_cancellation_refuse_safely` | 0 | `crates/video-h264-preview/src/lib.rs:781` | - |  |
+| `container_and_cancellation_refuse_safely` | 0 | `crates/video-h264-preview/src/lib.rs:782` | - |  |
 | `container_family` | 2 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:176` | - | Produce-safe family for gallery presentation of sealed Q42 containers. |
 | `impl AngleRange::contains` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:87` | - |  |
 | `impl SampleRange::contains` | 2 | `crates/audio-timebase/src/rate.rs:105` | - |  |
@@ -1320,7 +1372,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl RangeRef::contains_range` | 2 | `crates/chronicle-tabular-engine/src/core/addr.rs:193` | - |  |
 | `impl SectionProps::content_height` | 1 | `crates/layout-paged-typesetter/src/pagination/types.rs:76` | - |  |
 | `impl SectionProps::content_width` | 1 | `crates/layout-paged-typesetter/src/pagination/types.rs:72` | - |  |
-| `impl Pixels<'win>::context` | 1 | `crates/pixel-buffer-output/src/lib.rs:757` | - | Provides access to the internal [`PixelsContext`]. |
+| `impl Pixels<'win>::context` | 1 | `crates/pixel-buffer-output/src/lib.rs:752` | - | Provides access to the internal [`PixelsContext`]. |
 | `context_around` | 3 | `crates/discourse-academic-tex/src/review/suggest.rs:70` | - | Capture context around a range in `src` on char boundaries. |
 | `context_init_formula` | 0 | `crates/video-h264-codec/src/cabac.rs:293` | - |  |
 | `context_ok` | 5 | `crates/discourse-academic-tex/src/review/suggest.rs:49` | - |  |
@@ -1335,6 +1387,7 @@ Every function/method found in the codebase, alphabetical.
 | `conv_extend` | 1 | `crates/vector-compute-renderer/src/scene.rs:1198` | - |  |
 | `conv_point` | 1 | `crates/vector-compute-renderer/src/scene.rs:1194` | - |  |
 | `conv_skrifa_transform` | 1 | `crates/vector-compute-renderer/src/scene.rs:1113` | - |  |
+| `convert` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:74` | - |  |
 | `impl InputTransform::convert` | 2 | `crates/color-transforms/src/transform.rs:259` | 2d, semantics, numerics | Signal → working linear for one RGB triple (table + pixel stage). |
 | `convert` | 1 | `crates/discourse-academic-tex/src/bibliography/import.rs:262` | - | Convert source buffer (CSL-JSON or RIS) to BibTeX entries. |
 | `convert_data_type` | 1 | `crates/audio-device-cpal/src/host/asio/device.rs:208` | - |  |
@@ -1355,7 +1408,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl VelloHybridScenePainter<'_>::convert_paint` | 2 | `crates/vector-hybrid-render-adapter/src/scene.rs:152` | - |  |
 | `impl WebGlScenePainter<'_>::convert_paint` | 2 | `crates/vector-hybrid-render-adapter/src/webgl_scene.rs:78` | - |  |
 | `impl Transform::convert_u8` | 6 | `crates/color-transforms/src/icc/transform.rs:134` | - | Converts interleaved 8-bit pixels. |
-| `convex` | 1 | `crates/asset-production-vibe/src/geometry.rs:393` | - |  |
+| `convex` | 1 | `crates/asset-production-vibe/src/geometry.rs:424` | - |  |
+| `convex_caps_use_only_boundary_vertices_and_close_both_windings` | 0 | `crates/asset-production-vibe/src/geometry.rs:460` | - |  |
 | `convolve_rgba32f` | 4 | `crates/raster-spatial-operators/src/convolve.rs:132` | - | General 2D convolution for RGBA32F image buffer. |
 | `convolve_rgba8` | 4 | `crates/raster-spatial-operators/src/convolve.rs:87` | - | General 2D convolution for RGBA8 image buffer. |
 | `cool_teal_orange_preset` | 1 | `crates/asset-production-vibe/src/radiance_color.rs:21` | - |  |
@@ -1363,6 +1417,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Lut3d::coord` | 3 | `crates/radiance-color-grading/src/lut.rs:92` | - |  |
 | `impl AlphaConvertBlitter::copy` | 5 | `crates/gpu-device-context/src/alpha_blitter.rs:156` | - | Copy `source` into `target`, applying the alpha conversion. |
 | `impl IntermediateBlitter::copy` | 5 | `crates/gpu-device-context/src/surface_renderer.rs:41` | - |  |
+| `copy_autotile_gutter` | 7 | `crates/asset-production-vibe/src/graphics_pack.rs:93` | 2d | Copy 1px wrap gutter after an opaque tile blit: right from the tile's left |
 | `copy_clamped` | 3 | `crates/video-h264-codec/src/picture.rs:306` | graph | Copy `out.len()` samples of `line` starting at x0, replicating edge samples outside the line. |
 | `impl Frame::copy_cropped` | 2 | `crates/video-h264-codec/src/picture.rs:256` | - | Crop and copy the frame into planar buffers (waits for completion). |
 | `impl GpuBlendInstance::copy_from_scratch` | 1 | `crates/vector-hybrid-renderer/src/blend.rs:85` | - |  |
@@ -1381,10 +1436,11 @@ Every function/method found in the codebase, alphabetical.
 | `corner_sources` | 2 | `crates/vector-locus-geometry/src/shapes.rs:238` | 2d |  |
 | `impl Bounds2::corners` | 1 | `crates/drafting-geometry/src/bounds.rs:82` | 2d |  |
 | `corpus` | 0 | `crates/audio-aac-codec/tests/robustness.rs:9` | - |  |
+| `corpus_assertion_json` | 8 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_fixtures.rs:11` | semantics |  |
 | `corpus_joint_ranges_cite_assertion_ids_and_unsourced_rules_stay_assumptions` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:473` | - |  |
 | `corrupt_pages_are_skipped_and_truncation_is_safe` | 0 | `crates/media-ogg/src/tests.rs:138` | - |  |
 | `impl Corner::cos` | 1 | `crates/vector-locus-geometry/src/corners.rs:51` | - | The cosine of the angle between the sides. |
-| `count` | 4 | `crates/asset-production-vibe/src/lib.rs:521` | - |  |
+| `count` | 4 | `crates/asset-production-vibe/src/lib.rs:542` | - |  |
 | `impl RangeRef::count` | 1 | `crates/chronicle-tabular-engine/src/core/addr.rs:173` | - |  |
 | `count` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:262` | - |  |
 | `count` | 3 | `crates/kinetics-block-simulation/src/blocks/params.rs:55` | - |  |
@@ -1416,69 +1472,69 @@ Every function/method found in the codebase, alphabetical.
 | `impl GlResource for WebGlVertexShader::create` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:162` | - |  |
 | `impl GlResource for WebGlFragmentShader::create` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:175` | - |  |
 | `impl GlResource for WebGlVertexArrayObject::create` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:188` | - |  |
-| `impl Programs::create_alphas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1939` | - |  |
-| `create_arena_buffer` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:960` | - |  |
+| `impl Programs::create_alphas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1942` | - |  |
+| `create_arena_buffer` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:960` | - |  |
+| `impl Programs::create_atlas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1959` | - |  |
 | `create_atlas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2552` | - | Create an image atlas texture. |
-| `impl Programs::create_atlas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1956` | - |  |
 | `create_audio_unit` | 0 | `crates/audio-device-cpal/src/host/coreaudio/ios/mod.rs:380` | - |  |
 | `create_backing_texture` | 9 | `crates/pixel-buffer-output/src/builder.rs:464` | 3d |  |
-| `impl TransientBindMap<'a>::create_bind_group` | 8 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1081` | - |  |
-| `impl WgpuEngine::create_bind_group_layout_entries` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:787` | - |  |
-| `impl Programs::create_blend_layer_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1876` | - |  |
-| `impl WGPUContext::create_buffer_renderer` | 2 | `crates/gpu-device-context/src/lib.rs:183` | - | Creates a new `BufferRenderer` for the specified dimensions. |
-| `impl WgpuEngine::create_compute_pipeline` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:839` | - |  |
-| `impl Programs::create_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1917` | - |  |
-| `impl Programs::create_copy_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1902` | - |  |
-| `impl TransientBindMap<'a>::create_cpu_resources` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1213` | - |  |
+| `impl TransientBindMap<'a>::create_bind_group` | 8 | `crates/vector-compute-renderer/src/etalon_engine.rs:1085` | - |  |
+| `impl EtalonEngine::create_bind_group_layout_entries` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:789` | - |  |
+| `impl Programs::create_blend_layer_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1879` | - |  |
+| `impl EtalonContext::create_buffer_renderer` | 2 | `crates/gpu-device-context/src/lib.rs:191` | - | Creates a new `BufferRenderer` for the specified dimensions. |
+| `impl EtalonEngine::create_compute_pipeline` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:841` | - |  |
+| `impl Programs::create_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1920` | - |  |
+| `impl Programs::create_copy_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1905` | - |  |
+| `impl TransientBindMap<'a>::create_cpu_resources` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:1218` | - |  |
 | `impl Mesh::create_cube` | 1 | `crates/surface-pbr-studio/src/mesh.rs:101` | - | Creates a unit cube centered at origin. |
 | `create_data_texture_storage` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2362` | - | Create a zero-initialized data texture backed by immutable storage (`texStorage2D`). |
 | `create_default_device_async` | 1 | `crates/gpu-command-profiler/tests/src/mod.rs:10` | - |  |
-| `impl Renderer::create_depth_texture_view` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:216` | - | Creates a depth texture view compatible with [`render`](Self::render). |
+| `impl Renderer::create_depth_texture_view` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:216` | - | Creates a depth texture view compatible with [`render`](Self::render). |
 | `create_device` | 1 | `crates/gpu-command-profiler/tests/src/mod.rs:7` | - |  |
-| `impl WGPUContext::create_device` | 2 | `crates/gpu-device-context/src/lib.rs:243` | - | Creates a compatible device handle id. |
-| `impl WGPUContext::create_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:230` | - |  |
+| `impl EtalonContext::create_device` | 2 | `crates/gpu-device-context/src/lib.rs:251` | - | Creates a compatible device handle id. |
+| `impl EtalonContext::create_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:238` | - |  |
 | `create_encoded_gradient` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:311` | - |  |
-| `impl Programs::create_encoded_paints_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2059` | - |  |
-| `impl Programs::create_encoded_paints_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2042` | - |  |
-| `impl Programs::create_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2026` | - |  |
-| `impl Programs::create_filter_base_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1993` | - |  |
-| `impl Programs::create_filter_data_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1976` | - |  |
-| `create_filter_input_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3243` | - |  |
-| `create_filter_original_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3265` | - |  |
+| `impl Programs::create_encoded_paints_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2062` | - |  |
+| `impl Programs::create_encoded_paints_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2045` | - |  |
+| `impl Programs::create_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2029` | - |  |
+| `impl Programs::create_filter_base_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1996` | - |  |
+| `impl Programs::create_filter_data_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1979` | - |  |
+| `create_filter_input_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3246` | - |  |
+| `create_filter_original_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3268` | - |  |
 | `create_framebuffer_for_texture` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2568` | - | Create a framebuffer for a texture. |
 | `create_gr_context` | 6 | `crates/vector-skia-render-adapter/src/vulkan.rs:759` | - |  |
 | `create_gradient` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:320` | - |  |
-| `impl Programs::create_gradient_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2091` | - |  |
-| `impl Programs::create_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2074` | - |  |
+| `impl Programs::create_gradient_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2094` | - |  |
+| `impl Programs::create_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2077` | - |  |
 | `create_instance` | 2 | `crates/vector-skia-render-adapter/src/vulkan.rs:524` | - |  |
+| `impl Programs::create_intermediate_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1776` | - |  |
 | `create_intermediate_texture` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2532` | - |  |
-| `impl Programs::create_intermediate_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1774` | - |  |
 | `create_logical_device` | 3 | `crates/vector-skia-render-adapter/src/vulkan.rs:596` | - |  |
-| `impl Programs::create_placeholder_external_texture` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2008` | - |  |
+| `impl Programs::create_placeholder_external_texture` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2011` | - |  |
 | `create_placeholder_rgba32ui_texture` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2379` | - | Create a 1x1 RGBA32UI placeholder texture. |
 | `create_placeholder_rgba8_texture` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2391` | - | Create a 1x1 RGBA8 placeholder texture. |
 | `impl Mesh::create_quad` | 1 | `crates/surface-pbr-studio/src/mesh.rs:67` | - | Creates a unit quad on the XY plane with UVs in [0, 1]. |
 | `impl RenderContext::create_render_surface` | 5 | `crates/vector-compute-renderer/src/util.rs:69` | - | Creates a new render surface for the specified window and dimensions. |
-| `impl Programs::create_run_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2361` | - |  |
-| `impl Programs::create_strip_bind_group` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2106` | - |  |
-| `impl DeviceHandle::create_surface` | 4 | `crates/gpu-device-context/src/lib.rs:79` | - | Creates a new surface for the specified window and dimensions. |
-| `impl WGPUContext::create_surface` | 2 | `crates/gpu-device-context/src/lib.rs:150` | - | Creates a new surface for the specified window and dimensions. |
+| `impl Programs::create_run_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2364` | - |  |
+| `impl Programs::create_strip_bind_group` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2109` | - |  |
+| `impl DeviceHandle::create_surface` | 4 | `crates/gpu-device-context/src/lib.rs:87` | - | Creates a new surface for the specified window and dimensions. |
+| `impl EtalonContext::create_surface` | 2 | `crates/gpu-device-context/src/lib.rs:158` | - | Creates a new surface for the specified window and dimensions. |
 | `impl RenderContext::create_surface` | 5 | `crates/vector-compute-renderer/src/util.rs:52` | - | Creates a new surface for the specified window and dimensions. |
 | `impl OpenGLBackend::create_surface` | 6 | `crates/vector-skia-render-adapter/src/opengl.rs:167` | - |  |
-| `impl WGPUContext::create_surface_renderer` | 4 | `crates/gpu-device-context/src/lib.rs:158` | - | Creates a new surface for the specified window and dimensions. |
+| `impl EtalonContext::create_surface_renderer` | 4 | `crates/gpu-device-context/src/lib.rs:166` | - | Creates a new surface for the specified window and dimensions. |
 | `create_swapchain` | 9 | `crates/vector-skia-render-adapter/src/vulkan.rs:626` | - |  |
 | `create_sync_objects` | 1 | `crates/vector-skia-render-adapter/src/vulkan.rs:803` | - |  |
-| `create_targets` | 3 | `crates/vector-compute-renderer/src/util.rs:196` | 3d | Vello uses a compute shader to render to the provided texture, which means that it can't bind the surface |
+| `create_targets` | 3 | `crates/vector-compute-renderer/src/util.rs:199` | 3d | Vello uses a compute shader to render to the provided texture, which means that it can't bind the surface |
 | `create_test_host` | 4 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:173` | - |  |
 | `create_test_host` | 3 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:176` | - |  |
-| `create_test_host` | 3 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:526` | - |  |
-| `create_test_host` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:741` | - |  |
+| `create_test_host` | 3 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:496` | - |  |
+| `create_test_host` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:221` | - |  |
 | `create_test_host` | 4 | `crates/asset-production-vibe/src/glyph_layout_diegetic/mod.rs:45` | - |  |
 | `create_test_host` | 4 | `crates/asset-production-vibe/src/kinetics_ops/mod.rs:42` | - |  |
 | `create_test_host` | 4 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:148` | - |  |
-| `create_test_host` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:103` | - |  |
+| `create_test_host` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:104` | - |  |
 | `create_test_host` | 3 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:150` | - |  |
-| `create_texture` | 5 | `crates/gpu-device-context/src/util.rs:30` | - | Create a WGPU Texture, returning a default TextureView |
+| `create_texture` | 5 | `crates/gpu-device-context/src/util.rs:33` | - | Create a Etalon Texture, returning a default TextureView |
 | `create_texture` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2268` | graph | Create a texture with the requested filtering and clamp-to-edge wrapping. |
 | `create_texture_inner` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2281` | - |  |
 | `create_texture_storage` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2322` | - | Create a texture backed by immutable storage (`texStorage2D`). |
@@ -1505,8 +1561,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl Vec2::cross` | 2 | `crates/vector-compute-shaders/src/cpu/util.rs:85` | - |  |
 | `impl V3::cross` | 2 | `crates/vector-locus-pathops/src/three_d/revolve.rs:18` | - |  |
 | `cross_check_ffmpeg` | 3 | `crates/video-h264-codec/src/synth_tests.rs:439` | - | Validate the hand-built stream and its expected output with ffmpeg when available. |
+| `crossing_closed_tetrahedra_produce_one_closed_union` | 0 | `crates/asset-production-vibe/src/boolean_conforming.rs:72` | - |  |
 | `crossing_lines_make_faces` | 0 | `crates/drafting-geometry/src/region.rs:407` | - |  |
-| `cryptomatte_murmur3` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:15` | - |  |
+| `cryptomatte_murmur3` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:16` | - |  |
 | `cse_deduplicate` | 1 | `crates/layout-nodegraph-compiler/src/compiler/cse.rs:107` | graph | Deduplicate identical subexpressions: |
 | `csg_subtract_pocket` | 0 | `crates/manifold-bim-csg/src/csg.rs:444` | - |  |
 | `csg_union_and_intersect` | 0 | `crates/manifold-bim-csg/src/csg.rs:454` | - |  |
@@ -1519,7 +1576,7 @@ Every function/method found in the codebase, alphabetical.
 | `cube_roundtrip_3d_1d_and_shaper` | 0 | `crates/color-transforms/src/lut.rs:553` | - |  |
 | `cube_sizes_up_to_65_and_errors` | 0 | `crates/color-transforms/src/lut.rs:583` | - |  |
 | `cubic_bc` | 3 | `crates/raster-spatial-operators/src/resample.rs:82` | - |  |
-| `cubic_bezier` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:272` | - | Evaluates a 4-point cubic Bezier curve at parameter `t` in `[0, 1]`. |
+| `cubic_bezier` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:211` | - | Evaluates a 4-point cubic Bezier curve at parameter `t` in `[0, 1]`. |
 | `cubic_end_normal` | 4 | `crates/vector-compute-shaders/shader/flatten.wgsl:316` | 3d |  |
 | `cubic_end_tangent` | 4 | `crates/vector-compute-shaders/shader/flatten.wgsl:303` | - |  |
 | `cubic_end_tangent` | 4 | `crates/vector-compute-shaders/src/cpu/flatten.rs:63` | 2d |  |
@@ -1533,11 +1590,13 @@ Every function/method found in the codebase, alphabetical.
 | `cumipmt` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:115` | - |  |
 | `cumprinc` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:130` | - |  |
 | `impl Parser::cur` | 1 | `crates/discourse-academic-tex/src/texparse/bib.rs:86` | - |  |
+| `impl Renderer::current_allocations` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:393` | - |  |
 | `impl WebGlRenderer::current_allocations` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:586` | - |  |
-| `impl Renderer::current_allocations` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:393` | - |  |
 | `impl VelloWindowRenderer::current_device_handle` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:190` | - |  |
 | `impl VelloHybridWindowRenderer::current_device_handle` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:179` | - |  |
+| `current_morphism_production_verify_slice_ray_and_sound_agree` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:35` | 3d |  |
 | `impl glifo::GlyphRenderer for Scene::current_paint` | 1 | `crates/vector-hybrid-renderer/src/text.rs:353` | - |  |
+| `impl AssetHost<'_>::current_read_plan` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:20` | - |  |
 | `impl Cursor::current_round` | 1 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:37` | - |  |
 | `current_space` | 0 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:160` | - |  |
 | `cursor` | 0 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:148` | - |  |
@@ -1545,6 +1604,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl ColorSpace::curve` | 1 | `crates/color-transforms/src/spaces.rs:257` | - |  |
 | `impl ColorSpace::curve` | 1 | `crates/radiance-color-grading/src/spaces.rs:314` | - |  |
 | `curve_elem` | 1 | `crates/color-transforms/src/icc/write.rs:33` | - |  |
+| `impl ttf_parser::OutlineBuilder for Outline<'_>::curve_to` | 7 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:112` | - |  |
 | `impl OutlinePen for BezPathOutline::curve_to` | 7 | `crates/vector-compute-renderer/src/scene.rs:1091` | - |  |
 | `impl Corner::cut` | 3 | `crates/vector-locus-geometry/src/corners.rs:97` | - | The two anchors replacing the corner when cut with `radius` (> 0, fitted): where the cut |
 | `cut_antimeridian_line` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:616` | - | Splits a polyline at the antimeridian (where consecutive points jump across > 180 degrees longitude). |
@@ -1583,7 +1643,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl JLine::debit` | 2 | `crates/chronicle-fiduciary-ledger/src/journal.rs:24` | - |  |
 | `deblock_mb` | 3 | `crates/video-h264-codec/src/deblock.rs:283` | - | Deblock one macroblock (macroblocks must be processed in raster order). |
 | `decimal_digits` | 1 | `crates/chronicle-tabular-engine/src/numfmt/decimal.rs:5` | - |  |
-| `declared_sample_sizes_cannot_trigger_unbounded_reads` | 0 | `crates/video-h264-preview/src/lib.rs:764` | - |  |
+| `declared_sample_sizes_cannot_trigger_unbounded_reads` | 0 | `crates/video-h264-preview/src/lib.rs:765` | - |  |
+| `declared_unsupported_png_profile_refuses_and_untagged_grade_requires_interpretation` | 0 | `crates/asset-production-vibe/src/radiance_precision.rs:123` | - |  |
 | `declares_document_class` | 1 | `crates/discourse-academic-tex/src/texparse/graph.rs:182` | - |  |
 | `impl Decoder::decode` | 2 | `crates/audio-aac-codec/src/decoder.rs:126` | - | Decode one access unit (one `raw_data_block`) into 1024 samples per channel. |
 | `impl Tree::decode` | 2 | `crates/audio-aac-codec/src/huffman.rs:85` | - |  |
@@ -1646,7 +1707,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl SliceDecoder<'_>::decode_mb_type_i` | 3 | `crates/video-h264-codec/src/cabac_mb.rs:77` | - | Intra mb_type suffix / I-slice mb_type (Table 9-36). `base` is 3 (I slice) or 17/32 (prefix |
 | `decode_mcc_hex` | 1 | `crates/chronicle-timeline-interchange/src/captions/mcc.rs:79` | - |  |
 | `decode_mp4` | 4 | `crates/video-h264-preview/src/lib.rs:74` | economics | Decode a single traversal of the selected media range. Caller must supply a |
-| `impl AssetHost<'_>::decode_mp4_frame` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:115` | - |  |
+| `impl AssetHost<'_>::decode_mp4_frame` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:113` | - |  |
 | `decode_mp4_stream` | 5 | `crates/video-h264-preview/src/lib.rs:86` | - | Decode to a caller-owned, backpressured sink without retaining the whole |
 | `impl SliceDecoder<'_>::decode_mvd` | 6 | `crates/video-h264-codec/src/cabac_mb.rs:216` | - | One mvd component for the (sub-)partition with top-left 4x4 block (x, y) (9.3.3.1.1.7, UEG3). |
 | `decode_mvt_geometry` | 2 | `crates/locus-geospatial-codecs/src/tiles/mvt.rs:31` | - | Decodes an MVT command integer sequence into vector Geometry. |
@@ -1669,7 +1730,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl SliceDecoder<'_>::decode_skip_flag` | 2 | `crates/video-h264-codec/src/cabac_mb.rs:68` | - |  |
 | `decode_slice` | 2 | `crates/video-h264-codec/src/decoder.rs:571` | - |  |
 | `decode_slice` | 8 | `crates/video-prores-codec/src/decode.rs:251` | - |  |
-| `decode_source_10d_vertex_colors` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:847` | 3d |  |
+| `decode_source_10d_vertex_colors` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1097` | 3d |  |
 | `decode_spectral` | 3 | `crates/audio-aac-codec/src/huffman.rs:126` | - | Decode one codeword of codebook `cb` (1..=11) into `out[..dim]`, including sign bits and escapes. |
 | `decode_stroke` | 1 | `crates/locus-parametric-solver/src/typography/stroke.rs:127` | 2d |  |
 | `impl SliceDecoder<'_>::decode_sub_mb_type` | 2 | `crates/video-h264-codec/src/cabac_mb.rs:148` | - |  |
@@ -1689,8 +1750,8 @@ Every function/method found in the codebase, alphabetical.
 | `deeply_nested_layers` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:584` | - |  |
 | `impl Default for BiquadCoeffs::default` | 0 | `crates/acoustics-daw-session/src/dsp/biquad.rs:30` | - |  |
 | `impl Default for Oscillator::default` | 0 | `crates/acoustics-daw-session/src/dsp/osc.rs:26` | - |  |
-| `impl Default for FontMetrics::default` | 0 | `crates/asset-production-vibe/src/glyph/mod.rs:25` | - |  |
-| `impl Default for ToolLimits::default` | 0 | `crates/asset-production-vibe/src/lib.rs:54` | - |  |
+| `impl Default for FontMetrics::default` | 0 | `crates/asset-production-vibe/src/glyph/mod.rs:26` | - |  |
+| `impl Default for ToolLimits::default` | 0 | `crates/asset-production-vibe/src/lib.rs:61` | - |  |
 | `impl Default for IcsInfo::default` | 0 | `crates/audio-aac-codec/src/ics.rs:42` | - |  |
 | `impl Default for Devices::default` | 0 | `crates/audio-device-cpal/src/host/coreaudio/ios/enumerate.rs:21` | - |  |
 | `impl Default for Devices::default` | 0 | `crates/audio-device-cpal/src/host/emscripten/mod.rs:370` | - |  |
@@ -1721,7 +1782,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Default for CartoSymbol::default` | 0 | `crates/geodesy-spatial-analysis/src/cartography.rs:54` | - |  |
 | `impl Default for Extent::default` | 0 | `crates/geodesy-spatial-analysis/src/geodesy.rs:50` | - |  |
 | `impl Default for GpuProfilerSettings::default` | 0 | `crates/gpu-command-profiler/src/profiler_settings.rs:40` | - |  |
-| `impl Default for WGPUContext::default` | 0 | `crates/gpu-device-context/src/lib.rs:110` | - |  |
+| `impl Default for EtalonContext::default` | 0 | `crates/gpu-device-context/src/lib.rs:118` | - |  |
 | `impl Default for Model::default` | 0 | `crates/kinetics-block-simulation/src/model.rs:24` | - |  |
 | `impl Default for SimConfig::default` | 0 | `crates/kinetics-block-simulation/src/sim.rs:38` | - |  |
 | `impl Default for FabricMaterial::default` | 0 | `crates/kinetics-garment-draping/src/energy.rs:22` | - |  |
@@ -1776,7 +1837,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Default for SnowConfig::default` | 0 | `crates/terrain-erosion-solvers/src/snow_accumulation.rs:32` | - |  |
 | `impl Default for ThermalShaperConfig::default` | 0 | `crates/terrain-erosion-solvers/src/thermal_shaper.rs:285` | - |  |
 | `impl Default for FrameRate::default` | 0 | `crates/timeline-editing/src/timebase.rs:130` | - |  |
-| `impl Default for RendererOptions::default` | 0 | `crates/vector-compute-renderer/src/lib.rs:411` | - |  |
+| `impl Default for RendererOptions::default` | 0 | `crates/vector-compute-renderer/src/lib.rs:419` | - |  |
 | `impl Default for Render::default` | 0 | `crates/vector-compute-renderer/src/render.rs:115` | - |  |
 | `impl Default for IntBbox::default` | 0 | `crates/vector-compute-shaders/src/cpu/flatten.rs:529` | - |  |
 | `impl Default for ImageCacheConfig::default` | 0 | `crates/vector-cpu-render-adapter/src/image_cache.rs:27` | - |  |
@@ -1824,7 +1885,7 @@ Every function/method found in the codebase, alphabetical.
 | `default_dot_art` | 0 | `crates/vector-surface-brush/src/scatter.rs:39` | - |  |
 | `impl DepKind::default_ext` | 1 | `crates/discourse-academic-tex/src/texparse/graph.rs:36` | - |  |
 | `impl Device::default_format` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:492` | - |  |
-| `impl BehaviorMacro::default_hooks` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:105` | - | Returns the baseline `SubElementHooks` preset for this whole-model macro before any |
+| `impl BehaviorMacro::default_hooks` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:103` | - | Returns the baseline `SubElementHooks` preset for this whole-model macro before any |
 | `default_host` | 0 | `crates/audio-device-cpal/src/platform/mod.rs:596` | - | The default host for the current compilation target platform. |
 | `default_host` | 0 | `crates/audio-device-cpal/src/platform/mod.rs:614` | - | The default host for the current compilation target platform. |
 | `default_host` | 0 | `crates/audio-device-cpal/src/platform/mod.rs:632` | - | The default host for the current compilation target platform. |
@@ -1913,9 +1974,11 @@ Every function/method found in the codebase, alphabetical.
 | `default_stitch_tile` | 0 | `crates/vector-surface-brush/src/pattern.rs:55` | - |  |
 | `default_supported_configs` | 1 | `crates/audio-device-cpal/src/host/oboe/mod.rs:107` | - |  |
 | `default_threads` | 0 | `crates/video-h264-codec/src/decoder.rs:111` | - | The worker threads [`Decoder::new`] uses: the available cores (at most 16) with the `threads` |
+| `default_v2_compile_admits_combined_cells_and_output_before_field_work` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:213` | - |  |
 | `impl PbrChannel::default_value` | 1 | `crates/surface-pbr-studio/src/material.rs:61` | - |  |
 | `impl RuleKind::defaults` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:66` | - |  |
 | `deferred_reuse` | 0 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:178` | - |  |
+| `deformed_foliage_has_outward_faces_finite_normals_and_no_pole_or_wrap_cracks` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_foliage.rs:119` | - |  |
 | `deg` | 1 | `crates/drafting-geometry/src/lib.rs:63` | - |  |
 | `impl Grid::degree` | 2 | `crates/vector-radiance-trace/src/centerline.rs:185` | - |  |
 | `deinterleave_hadamard` | 5 | `crates/audio-opus-codec/src/celt/bands.rs:151` | - |  |
@@ -1945,9 +2008,9 @@ Every function/method found in the codebase, alphabetical.
 | `denormalise_bands` | 8 | `crates/audio-opus-codec/src/celt/bands.rs:879` | - | Multiplies the normalised shapes by the band energies (`denormalise_bands`). |
 | `denormalize_c` | 3 | `crates/radiance-color-grading/src/matrix.rs:208` | - | Normalized Cb/Cr float (-0.5..0.5 nominal) -> integer sample clamped to range. |
 | `denormalize_y` | 3 | `crates/radiance-color-grading/src/matrix.rs:192` | - | Normalized Y float (0..1 nominal) -> integer sample clamped to range. |
-| `densify_axis_cubic` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:619` | - |  |
-| `densify_loft_rings_cubic` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:945` | numerics | Cubic Catmull-Rom densify of loft stations. Linear/ruled skinning is applied after. |
-| `densify_loft_rings_nurbs` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:979` | - | NURBS densify of loft stations via `parametric_cad::nurbs_eval` (unit weights). |
+| `densify_axis_cubic` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:638` | - |  |
+| `densify_loft_rings_cubic` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1275` | numerics | Cubic Catmull-Rom densify of loft stations. Linear/ruled skinning is applied after. |
+| `densify_loft_rings_nurbs` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1309` | - | NURBS densify of loft stations via `parametric_cad::nurbs_eval` (unit weights). |
 | `densify_print` | 1 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:118` | - |  |
 | `denv` | 4 | `crates/discourse-academic-tex/src/catalog.rs:88` | - |  |
 | `dep` | 3 | `crates/discourse-academic-tex/src/texparse/graph.rs:221` | - |  |
@@ -1972,15 +2035,18 @@ Every function/method found in the codebase, alphabetical.
 | `impl wasm_bindgen::describe::WasmDescribe for BufferSize::describe` | 0 | `crates/audio-device-cpal/src/lib.rs:241` | - |  |
 | `impl Builtin::description` | 1 | `crates/color-transforms/src/icc/builtin.rs:62` | - |  |
 | `description` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:337` | - |  |
-| `impl VibeNamespaceProvider for HypermediaOntologyProvider::descriptor` | 1 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:259` | - |  |
+| `impl VibeNamespaceProvider for HypermediaOntologyProvider::descriptor` | 1 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:408` | - |  |
 | `descriptor` | 1 | `crates/media-isobmff/src/codec.rs:1121` | - |  |
+| `descriptor_contracts_and_arguments_expose_emf_v4_qac_v1_and_anatomy_parameters` | 0 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:275` | - |  |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::descriptor_target_schema` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:52` | - |  |
+| `impl DomainRegistry for QacV1CueRegistry::descriptor_target_schema` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:127` | - |  |
 | `impl Deserialize<'de> for WirePoint::deserialize` | 1 | `crates/vector-locus-geometry/src/path.rs:80` | - |  |
 | `impl BiquadCoeffs::design` | 5 | `crates/acoustics-daw-session/src/dsp/biquad.rs:45` | - | Designs an audio filter from frequency, Q factor, gain (dB), and sample rate. |
 | `design_fractional` | 5 | `crates/audio-opus-codec/src/silk/resampler.rs:34` | - | Least-squares fractional-delay interpolator: taps at offsets `-past+1 ..= future` (in input |
 | `impl VelloRendererOptions::desired_maximum_frame_latency` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:140` | - |  |
 | `impl VelloHybridRendererOptions::desired_maximum_frame_latency` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:130` | - |  |
+| `impl Renderer::destroy_image` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:594` | - | Destroy an image from the cache and clear the allocated slot in the atlas. |
 | `impl WebGlRenderer::destroy_image` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:784` | - | Destroy an image from the cache and clear the allocated slot in the atlas. |
-| `impl Renderer::destroy_image` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:594` | - | Destroy an image from the cache and clear the allocated slot in the atlas. |
 | `destructive_empty` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:703` | - |  |
 | `det` | 1 | `crates/color-transforms/src/icc/math.rs:36` | - |  |
 | `impl Matrix::det` | 1 | `crates/discourse-scientific-matlang/src/matrix.rs:254` | - |  |
@@ -1993,6 +2059,7 @@ Every function/method found in the codebase, alphabetical.
 | `detect_shi_tomasi_corners` | 4 | `crates/kinetics-motion-compositor/src/track/klt.rs:54` | - | Detect good features to track using the Shi-Tomasi minimum eigenvalue criterion. |
 | `detects_tampering` | 0 | `crates/chronicle-fiduciary-ledger/src/audit.rs:213` | - |  |
 | `impl DMat2::determinant` | 1 | `crates/kinetics-garment-draping/src/math.rs:214` | - |  |
+| `deterministic_hoa_angles` | 2 | `crates/asset-production-vibe/src/sound.rs:186` | - |  |
 | `deterministic_replay_stroke_journal_and_byte_budget_fail_closed` | 0 | `crates/terrain-brushes/provenance/original-cow_delta_undo.rs:435` | - |  |
 | `deterministic_replay_stroke_journal_and_byte_budget_fail_closed` | 0 | `crates/terrain-brushes/src/lib.rs:601` | - |  |
 | `impl AssetHost<'_>::develop_camera_raw_hdr` | 2 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:8` | 3d | 128: `hypermedia.radiance.develop_camera_raw_hdr` |
@@ -2000,9 +2067,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::develop_photo` | 2 | `crates/asset-production-vibe/src/radiance_photo/develop.rs:9` | - |  |
 | `impl BufferRenderer::device` | 1 | `crates/gpu-device-context/src/buffer_renderer.rs:63` | - |  |
 | `impl SurfaceRenderer<'s>::device` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:208` | - |  |
-| `impl Pixels<'win>::device` | 1 | `crates/pixel-buffer-output/src/lib.rs:740` | - | Provides access to the internal [`wgpu::Device`]. |
+| `impl Pixels<'win>::device` | 1 | `crates/pixel-buffer-output/src/lib.rs:735` | - | Provides access to the internal [`etalon::Device`]. |
 | `impl RenderContext::device` | 2 | `crates/vector-compute-renderer/src/util.rs:145` | - | Finds or creates a compatible device handle id. |
-| `impl PixelsBuilder<'req, 'dev, 'win, W>::device_descriptor` | 2 | `crates/pixel-buffer-output/src/builder.rs:82` | - | Add options for requesting a [`wgpu::Device`]. |
+| `impl PixelsBuilder<'req, 'dev, 'win, W>::device_descriptor` | 2 | `crates/pixel-buffer-output/src/builder.rs:82` | - | Add options for requesting a [`etalon::Device`]. |
 | `device_limits` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:227` | - |  |
 | `trait ErrDeviceNotAvailable::device_not_available` | 0 | `crates/audio-device-cpal/src/host/wasapi/mod.rs:61` | - |  |
 | `impl ErrDeviceNotAvailable for crate::BuildStreamError::device_not_available` | 0 | `crates/audio-device-cpal/src/host/wasapi/mod.rs:65` | - |  |
@@ -2034,9 +2101,11 @@ Every function/method found in the codebase, alphabetical.
 | `difference_rgb` | 2 | `crates/raster-blend-operators/src/lib.rs:391` | - |  |
 | `dijkstra_shortest_path` | 3 | `crates/geodesy-spatial-analysis/src/network_topology.rs:111` | graph | Computes the shortest route between start_node and end_node using Dijkstra's algorithm. |
 | `impl ElementType::dimension` | 1 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:34` | - |  |
+| `impl GridAtTime<'a>::dimensions` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:249` | - |  |
 | `dimensions` | 1 | `crates/asset-production-vibe/src/graphics.rs:70` | - |  |
 | `dimensions_and_initial_height_refuse_before_allocation_or_mutation` | 0 | `crates/terrain-brushes/src/adaptation_tests.rs:80` | - |  |
 | `impl PageSize::dimensions_mm` | 1 | `crates/geodesy-spatial-analysis/src/cartography.rs:276` | - |  |
+| `dipole_only_wire_freeze_v4_container_slices_raymarches_and_sonifies` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:329` | - |  |
 | `impl Line::dir` | 1 | `crates/drafting-geometry/src/curve.rs:19` | 2d |  |
 | `dir_n` | 2 | `crates/locus-parametric-solver/src/solver/residual.rs:105` | 2d |  |
 | `direct` | 1 | `crates/audio-aac-codec/src/mdct.rs:217` | - |  |
@@ -2051,6 +2120,8 @@ Every function/method found in the codebase, alphabetical.
 | `dispatch` | 3 | `crates/chronicle-tabular-engine/src/functions/mod.rs:14` | - |  |
 | `impl Recording::dispatch` | 4 | `crates/vector-compute-renderer/src/recording.rs:159` | 3d |  |
 | `impl Decoder::dispatch` | 4 | `crates/video-h264-codec/src/decoder.rs:483` | - |  |
+| `dispatch_gpu_sdfgi` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/gpu_gi.rs:272` | - | Dispatch cascaded irradiance probes and GGX/HG froxel shading on GPU. |
+| `dispatch_gpu_sdfgi_native` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/gpu_gi.rs:291` | - |  |
 | `impl Recording::dispatch_indirect` | 5 | `crates/vector-compute-renderer/src/recording.rs:173` | 3d | Do an indirect dispatch. |
 | `impl OutputTransform::display` | 1 | `crates/color-transforms/src/transform.rs:299` | numerics | For the monitors: SDR BT.709 linear (encode with the sRGB curve as usual). |
 | `impl MovieInfo::display_aspect` | 1 | `crates/video-h264-preview/src/movie.rs:63` | - |  |
@@ -2141,7 +2212,7 @@ Every function/method found in the codebase, alphabetical.
 | `drag_transition_span` | 5 | `crates/timeline-editing/src/transition.rs:209` | graph | Compute a drag preview without changing a document. The host commits the |
 | `drainage_network` | 4 | `crates/terrain-erosion-solvers/src/drainage_pyramid.rs:279` | - | Execute full drainage analysis pipeline: priority-flood conditioning, D8 routing, accumulation, and channel carving. |
 | `impl AssetHost<'_>::drape_orthotropic_garment` | 2 | `crates/asset-production-vibe/src/kinetics_fem_garment_blocks.rs:105` | - | 136: `hypermedia.kinetics.drape_orthotropic_garment` (`kinetics-garment-draping`) |
-| `draw` | 4 | `crates/gpu-command-profiler/examples/demo.rs:326` | - |  |
+| `draw` | 4 | `crates/gpu-command-profiler/examples/demo.rs:328` | - |  |
 | `impl Recording::draw` | 2 | `crates/vector-compute-renderer/src/recording.rs:189` | - | Issue a draw call |
 | `impl DrawGlyphs<'a>::draw` | 3 | `crates/vector-compute-renderer/src/scene.rs:604` | - | Encodes a fill or stroke for the given sequence of glyphs and consumes the builder. |
 | `impl RoundStage::draw` | 1 | `crates/vector-hybrid-renderer/src/schedule/round.rs:361` | - |  |
@@ -2177,8 +2248,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl ScheduleTarget for LayerTextureRegion::draw_mut` | 2 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:1079` | - |  |
 | `draw_order` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:217` | - |  |
 | `impl DrawGlyphs<'a>::draw_outline_glyphs` | 3 | `crates/vector-compute-renderer/src/scene.rs:623` | - |  |
+| `impl Backend for RendererContext<'_>::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3117` | - |  |
 | `impl Backend for WebGlRendererContext<'_>::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3255` | - |  |
-| `impl Backend for RendererContext<'_>::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3114` | - |  |
 | `trait Backend::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:36` | - | Execute a draw pass against the given target. |
 | `impl Backend for Recorder::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:240` | - |  |
 | `draw_reduce` | 2 | `crates/vector-compute-shaders/src/cpu/draw_reduce.rs:27` | - |  |
@@ -2225,6 +2296,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Keyframe::eased` | 1 | `crates/kinetics-motion-compositor/src/keyframe/mod.rs:124` | - |  |
 | `edge_filter_speed` | 0 | `crates/video-h264-codec/src/deblock.rs:483` | graph | Rough timing of the edge filters (`cargo test --release -p video-h264-codec --lib edge_filter_speed -- --ignored --nocapture`). |
 | `edge_mode_to_gpu` | 1 | `crates/vector-hybrid-renderer/src/filter.rs:86` | graph |  |
+| `edits_geometry` | 1 | `crates/asset-production-vibe/src/mesh_edit_policy.rs:4` | - |  |
 | `edt` | 3 | `crates/raster-selection-morphology/src/distance.rs:15` | 2d | Euclidean distance to the nearest `true` pixel, in row-major order. |
 | `edt_scratch_bound` | 3 | `crates/raster-layer-mask-adapter/provenance/morphology-lib-after.rs:115` | - |  |
 | `edt_scratch_bound` | 3 | `crates/raster-layer-mask-adapter/provenance/morphology-lib-before.rs:100` | - |  |
@@ -2243,8 +2315,9 @@ Every function/method found in the codebase, alphabetical.
 | `el_uint` | 3 | `crates/chronicle-broadcast-containers/src/matroska/mux.rs:95` | - |  |
 | `impl ElasticIsotropic::elasticity_matrix_3d` | 1 | `crates/kinetics-continuum-multiphysics/src/fem/constitutive.rs:42` | numerics | 6x6 elasticity matrix (Voigt notation: [eps_xx, eps_yy, eps_zz, gamma_yz, gamma_xz, gamma_xy]). |
 | `elasticity_matrix_symmetry` | 0 | `crates/kinetics-continuum-multiphysics/src/fem/constitutive.rs:244` | numerics |  |
+| `impl SampledField<'_>::electric_v_per_m` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:15` | - |  |
 | `impl AssetHost<'_>::electromagnetics_geodesy_ext_op` | 3 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:18` | - | Categorical operations dispatch for electromagnetics and geodesy extensions. |
-| `impl AssetHost<'_>::electromagnetics_op` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:32` | - | Categorical operations dispatch for the `electromagnetics` category. |
+| `impl AssetHost<'_>::electromagnetics_op` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:6` | - | Categorical operations dispatch for the `electromagnetics` category. |
 | `impl Matrix::elem_add` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:209` | - |  |
 | `impl Matrix::elem_mul` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:231` | - |  |
 | `impl Matrix::elem_sub` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:220` | - |  |
@@ -2259,19 +2332,31 @@ Every function/method found in the codebase, alphabetical.
 | `ellipse_rotation` | 1 | `crates/vector-locus-geometry/src/recognize.rs:194` | - |  |
 | `elliptical_arc_bounds_exclude_extrema_outside_the_sweep` | 0 | `crates/drafting-geometry/src/tests.rs:265` | - |  |
 | `emergency_stop_is_cascade` | 0 | `crates/discourse-academic-tex/src/review/logrules.rs:211` | - |  |
-| `emf_cell_display_irradiance` | 1 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:673` | numerics | Vacuum-impedance irradiance (W/m²) used as the display-linear quantity. |
+| `emf_inspection_to_vibe_value` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:457` | - | Convert an `EmfV4InspectionReport` into a deterministic `vibe::Value::Record`. |
+| `emf_metadata_value` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:73` | - |  |
+| `impl AssetHost<'_>::emf_peak_admit` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/compile_host.rs:309` | - | Conservative logical live-payload admission, including immutable sources. |
+| `impl AssetHost<'_>::emf_peak_admit` | 2 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:89` | - | This local admission includes fixed retained inputs and workspace payloads, |
+| `emf_preview_admits_clone_plus_outputs_and_raymarch_checks_actual_phases` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:180` | - |  |
+| `impl AssetHost<'_>::emf_read_required` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:46` | - |  |
+| `impl AssetHost<'_>::emf_read_required` | 2 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:184` | - | Borrowed envelope sizing only; the core reader remains the integrity owner. |
+| `impl AssetHost<'_>::emf_source_bytes` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:177` | - | Resolves container bytes from retained inputs or workspace encoded resources. |
+| `emf_source_resolution_admits_encoded_or_retained_backing_and_clone_before_copy` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:160` | - |  |
+| `impl AssetHost<'_>::emf_v3_request` | 3 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:100` | - |  |
 | `emit` | 3 | `crates/discourse-academic-tex/src/bibliography/import.rs:58` | - | Emit `@kind{key, fields…}` from `(name, value)` pairs. |
 | `impl FilterPassBuilder<'a>::emit` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:541` | - | Emit one pass, reading from the current region and writing to the other texture parity. |
 | `impl Decoder::emit` | 2 | `crates/video-h264-codec/src/decoder.rs:500` | - |  |
 | `impl FilterPassBuilder<'a>::emit_blur_sequence` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:572` | - | Apply the sequences of passes that is needed to create a full Gaussian blur with |
 | `impl InnerError::emit_msg` | 3 | `crates/vector-compute-shaders/src/compile/mod.rs:68` | - |  |
-| `emit_submesh_primitives` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:158` | - |  |
+| `emit_submesh_primitives` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:162` | - |  |
 | `emit_txbody_paragraphs` | 2 | `crates/chronicle-office-codecs/src/presentation/pptx.rs:92` | - |  |
+| `emitter` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/tests.rs:4` | - |  |
 | `empirical_variogram` | 3 | `crates/geodesy-spatial-analysis/src/kriging.rs:91` | - | Computes experimental semivariogram bins from sample points. |
 | `impl XmlWriter::empty` | 3 | `crates/chronicle-timeline-interchange/src/xml.rs:108` | - |  |
 | `impl RangedSlice<'a, T>::empty` | 0 | `crates/vector-hybrid-renderer/src/util.rs:174` | - |  |
 | `empty_and_garbage_never_panic` | 0 | `crates/audio-opus-codec/src/range.rs:487` | - |  |
+| `empty_current_verification_reports_missing_field_maxima` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:124` | - |  |
 | `empty_doc_is_an_error` | 0 | `crates/discourse-academic-tex/src/texpdf.rs:497` | - |  |
+| `empty_document_has_no_field_maximum_and_host_charge_is_prebounded` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/model_tests.rs:91` | - |  |
 | `impl ScheduledCase::empty_draw_view` | 0 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:233` | - |  |
 | `empty_generated_path_is_not_recorded` | 0 | `crates/vector-hybrid-renderer/src/scene.rs:972` | - |  |
 | `empty_layer` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:692` | - |  |
@@ -2283,11 +2368,11 @@ Every function/method found in the codebase, alphabetical.
 | `impl DrawTarget for LayerTextureRegion::enable_depth` | 1 | `crates/vector-hybrid-renderer/src/target.rs:299` | - |  |
 | `impl DrawPassTarget::enable_opaque` | 1 | `crates/vector-hybrid-renderer/src/target.rs:27` | - |  |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::enable_vsync` | 2 | `crates/pixel-buffer-output/src/builder.rs:124` | - | Enable or disable Vsync. |
-| `impl Pixels<'win>::enable_vsync` | 2 | `crates/pixel-buffer-output/src/lib.rs:445` | - | Enable or disable Vsync. |
+| `impl Pixels<'win>::enable_vsync` | 2 | `crates/pixel-buffer-output/src/lib.rs:440` | - | Enable or disable Vsync. |
 | `impl log::Log for BuildScriptLog::enabled` | 2 | `crates/vector-compute-shaders/build.rs:146` | - |  |
 | `impl AngleRange::encloses` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:91` | - |  |
 | `enclosing_loop` | 3 | `crates/drafting-geometry/src/region.rs:361` | 2d | The closed loop enclosing `p`, counter-clockwise, or `None`. |
-| `impl AssetHost<'_>::encode` | 3 | `crates/asset-production-vibe/src/lib.rs:193` | - |  |
+| `impl AssetHost<'_>::encode` | 3 | `crates/asset-production-vibe/src/lib.rs:205` | - |  |
 | `impl Encoder::encode` | 2 | `crates/audio-aac-codec/src/encoder/mod.rs:262` | - | Feed planar samples (±1.0 full scale); returns any complete access units. Missing channels are |
 | `encode` | 2 | `crates/audio-aac-codec/tests/common/mod.rs:131` | - |  |
 | `impl RangeEncoder::encode` | 4 | `crates/audio-opus-codec/src/range.rs:310` | - |  |
@@ -2302,43 +2387,50 @@ Every function/method found in the codebase, alphabetical.
 | `impl Enc::encode` | 3 | `crates/video-h264-codec/src/cabac.rs:245` | - |  |
 | `impl Enc::encode` | 4 | `crates/video-h264-codec/src/synth_tests.rs:248` | - |  |
 | `impl Encoder::encode` | 2 | `crates/video-prores-codec/src/encode.rs:80` | - | Encode one frame. Input planes may be at any bit depth 8..=16 (10 is typical); the frame's |
-| `impl AssetHost<'_>::encode_aac` | 2 | `crates/asset-production-vibe/src/acoustics_ops.rs:248` | - | AAC-LC CBR audio encoding with ADTS framing. |
+| `impl AssetHost<'_>::encode_aac` | 2 | `crates/asset-production-vibe/src/acoustics_ops.rs:249` | - | AAC-LC CBR audio encoding with ADTS framing, or canonical QAC v1 (`qac\0\0\0\0\0` v1) |
 | `encode_advected_strata_m64` | 5 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/m64_continuum.rs:11` | - |  |
 | `encode_aiff` | 1 | `crates/acoustics-daw-session/src/codecs/mod.rs:148` | - | Encodes an AudioBuffer as a standard 16-bit AIFF file. |
 | `encode_alpha` | 3 | `crates/video-prores-codec/src/encode.rs:432` | - |  |
 | `encode_alpha_slice` | 4 | `crates/video-prores-codec/src/encode.rs:411` | - |  |
+| `encode_bioelectric_dipole_record` | 10 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:206` | - | Encode one 128-byte Mode `0x0107` (`bioelectric_dipole_v1`) record with sealed CRC-32C at `124..128`. |
+| `impl Renderer::encode_blurred_rounded_rect_paint` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:844` | 2d |  |
 | `impl WebGlRenderer::encode_blurred_rounded_rect_paint` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1045` | 2d |  |
-| `impl Renderer::encode_blurred_rounded_rect_paint` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:844` | 2d |  |
 | `encode_channel` | 3 | `crates/color-transforms/src/transform.rs:59` | numerics | Encode one channel: working-linear → decoder-normalised signal (inverse of [`decode_channel`]). |
 | `encode_component` | 3 | `crates/video-prores-codec/src/encode.rs:222` | - |  |
-| `encode_copy_pass` | 7 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3165` | - |  |
+| `encode_copy_pass` | 7 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3168` | - |  |
 | `impl Scene::encode_current_paint` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:291` | - | Encode the current paint into a `Paint` that can be used for rendering. |
+| `impl Renderer::encode_external_texture_paint` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:747` | - |  |
 | `impl WebGlRenderer::encode_external_texture_paint` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:949` | - |  |
-| `impl Renderer::encode_external_texture_paint` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:747` | - |  |
 | `encode_f32` | 2 | `crates/media-test-support/src/wav.rs:6` | - | Encode planar `f32` channels (equal lengths) as a 32-bit float WAV file. |
-| `encode_filter_pass` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3201` | - |  |
+| `encode_filter_pass` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3204` | - |  |
 | `encode_flac` | 1 | `crates/acoustics-daw-session/src/codecs/mod.rs:208` | - | Encodes an AudioBuffer as a valid lossless FLAC bitstream (subset: RFC 9639 uncompressed / verbatim subframes). |
 | `impl Encoder::encode_frame` | 2 | `crates/audio-aac-codec/src/encoder/mod.rs:616` | - | `last`: final frame of the stream — a CBR stream spends (or pads away) the whole reservoir so |
 | `encode_geom_into` | 2 | `crates/locus-geospatial-codecs/src/wkb.rs:223` | - |  |
+| `impl Renderer::encode_gradient_paint` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:773` | - |  |
 | `impl WebGlRenderer::encode_gradient_paint` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:974` | - |  |
-| `impl Renderer::encode_gradient_paint` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:773` | - |  |
-| `encode_idr_ipcm_frame` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:534` | - |  |
+| `encode_hoa_order1_sn3d_frame` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:283` | - | Encode one 16-byte Mode `0x0102` (`hoa_spatial_audio`, 1st-order ACN/SN3D `[W, Y, Z, X]`) frame. |
+| `encode_idr_ipcm_frame` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:529` | - |  |
+| `impl Renderer::encode_image_paint` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:721` | - |  |
 | `impl WebGlRenderer::encode_image_paint` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:923` | - |  |
-| `impl Renderer::encode_image_paint` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:721` | - |  |
+| `encode_instantaneous_e_b_record` | 7 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:108` | - | Encode one 128-byte Mode `0x0100` (`instantaneous_E_B_v1`) record. |
+| `encode_modal_resonance_record` | 7 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:299` | - | Encode one 32-byte Mode `0x0104` (`modal_resonance`) record per wire-freeze §5.5: |
 | `encode_mtc_quarter_frame` | 2 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:242` | - | Encodes an MTC quarter-frame MIDI message (0xF1, data_byte). |
 | `encode_png` | 1 | `crates/media-test-support/src/golden.rs:40` | - | Encode as PNG (RGB when fully opaque, else RGBA), maximum compression. |
+| `encode_polarimetric_ray_record` | 7 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:143` | 3d | Encode one 128-byte Mode `0x0101` (`polarimetric_ray_v1`) record. |
 | `encode_prores_mov` | 3 | `crates/video-prores-codec/src/mov.rs:27` | - | Encode a sequence of same-sized frames into a QuickTime `.mov` container at the given frame rate. |
 | `impl AssetHost<'_>::encode_psd` | 2 | `crates/asset-production-vibe/src/radiance_photo/psd_codec.rs:8` | - |  |
+| `impl AssetHost<'_>::encode_rgba16_png` | 2 | `crates/asset-production-vibe/src/radiance_precision.rs:29` | - |  |
 | `encode_rgba_png` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:480` | - |  |
-| `impl AssetHost<'_>::encode_rgba_png_handle` | 3 | `crates/asset-production-vibe/src/graphics_pack.rs:91` | - |  |
+| `impl AssetHost<'_>::encode_rgba_png_handle` | 3 | `crates/asset-production-vibe/src/graphics_pack.rs:128` | - |  |
+| `encode_sampled_spectrum_record` | 5 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:179` | - | Encode one Mode `0x0103` (`sampled_spectrum_v1`) record with explicit trailing zero padding. |
 | `encode_timestamp` | 2 | `crates/chronicle-broadcast-containers/src/mpegts/pes.rs:24` | - |  |
 | `encode_wav` | 1 | `crates/acoustics-daw-session/src/codecs/mod.rs:34` | - | Encodes an AudioBuffer as a 16-bit PCM standard WAV file. |
 | `encode_wkb` | 1 | `crates/locus-geospatial-codecs/src/wkb.rs:217` | - | Encodes a geometry as ISO WKB little-endian bytes. |
-| `encoded` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:853` | - |  |
-| `impl AssetWorkspace::encoded` | 2 | `crates/asset-production-vibe/src/lib.rs:134` | - |  |
+| `encoded` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:848` | - |  |
+| `impl AssetWorkspace::encoded` | 2 | `crates/asset-production-vibe/src/lib.rs:145` | - |  |
 | `encoded_bytes` | 2 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:901` | - |  |
-| `encoded_bytes` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:1124` | - |  |
-| `encoded_bytes` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:718` | - |  |
+| `encoded_bytes` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:242` | - |  |
+| `encoded_bytes` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:804` | - |  |
 | `encoder_decoder_filters_are_inverse` | 0 | `crates/audio-aac-codec/src/tns.rs:293` | - |  |
 | `encoder_handles_hostile_input` | 0 | `crates/audio-aac-codec/tests/robustness.rs:96` | - |  |
 | `impl Scene::encoding` | 1 | `crates/vector-compute-renderer/src/scene.rs:74` | - | Returns the underlying raw encoding. |
@@ -2349,8 +2441,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl TimeRange::end` | 1 | `crates/timeline-editing/src/timebase.rs:111` | - |  |
 | `impl GpuProfiler::end_frame` | 1 | `crates/gpu-command-profiler/src/profiler.rs:394` | - | Marks the end of a frame. |
 | `end_frame_unclosed_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:25` | - |  |
-| `end_frame_unresolved_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:55` | - |  |
-| `impl WhitegumMeshBuilder::end_layer` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:61` | - |  |
+| `end_frame_unresolved_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:57` | - |  |
+| `impl WhitegumMeshBuilder::end_layer` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:64` | - |  |
 | `end_mismatch_replaces_wrong_env_name` | 0 | `crates/discourse-academic-tex/src/review/ai_repair.rs:271` | - |  |
 | `impl GeodesicRuler::end_move` | 1 | `crates/drafting-geometry/src/geodesic_ruler.rs:201` | - |  |
 | `impl Arc::end_point` | 1 | `crates/drafting-geometry/src/curve.rs:74` | 2d |  |
@@ -2396,7 +2488,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Equivalent<FontCacheKey> for FontCacheKeyBorrowed<'_>::equivalent` | 2 | `crates/vector-skia-render-adapter/src/cache.rs:164` | - |  |
 | `erf` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:17` | - | Error function erf(x) via Chebyshev approximation |
 | `erf7` | 1 | `crates/vector-compute-shaders/shader/fine.wgsl:715` | - |  |
-| `impl AssetHost<'_>::erode_geomorphic_heightfield` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:476` | - | 125: `hypermedia.manifold.erode_geomorphic_heightfield` |
+| `impl AssetHost<'_>::erode_geomorphic_heightfield` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:480` | - | 125: `hypermedia.manifold.erode_geomorphic_heightfield` |
 | `impl Parser::err` | 2 | `crates/chronicle-tabular-engine/src/formula/parser.rs:65` | - |  |
 | `err` | 1 | `crates/video-h264-preview/src/synth.rs:16` | - |  |
 | `err_fn` | 1 | `crates/audio-device-cpal/examples/feedback.rs:172` | - |  |
@@ -2429,6 +2521,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl CowTerrainTileGrid::estimate_memory_bytes` | 1 | `crates/terrain-brushes/adaptation/grid-impl.rs:285` | - |  |
 | `impl CowTerrainTileGrid::estimate_memory_bytes` | 1 | `crates/terrain-brushes/provenance/original-cow_delta_undo.rs:307` | - |  |
 | `impl CowTerrainTileGrid::estimate_memory_bytes` | 1 | `crates/terrain-brushes/src/lib.rs:470` | - |  |
+| `impl PixelsBuilder<'req, 'dev, 'win, W>::etalon_backend` | 2 | `crates/pixel-buffer-output/src/builder.rs:90` | - | Set which backends etalon will attempt to use. |
 | `impl Evaluator<'h>::eval` | 2 | `crates/chronicle-tabular-engine/src/calc/eval.rs:69` | - |  |
 | `impl Clut::eval` | 3 | `crates/color-transforms/src/icc/clut.rs:75` | - | Interpolates at `input` into `out`. |
 | `impl Stage::eval` | 3 | `crates/color-transforms/src/icc/pipeline.rs:53` | - |  |
@@ -2489,14 +2582,16 @@ Every function/method found in the codebase, alphabetical.
 | `evaluate_preflight` | 2 | `crates/discourse-pdf-compliance/src/preflight/evaluator.rs:64` | - |  |
 | `evaluate_rule` | 2 | `crates/discourse-pdf-compliance/src/a11y/checker.rs:99` | - |  |
 | `evaluate_scratch_position` | 2 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:210` | - | Evaluates turntable needle position (in beats) and mute gain at beat time $t$. |
+| `evaluate_snapshot` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:228` | - |  |
 | `evaluate_stratum` | 3 | `crates/terrain-erosion-solvers/src/fractal_terrace.rs:51` | - | Compute single-elevation terraced profile and strata color index. |
 | `evaluate_text_animators` | 3 | `crates/kinetics-motion-compositor/src/typography/animator.rs:66` | - | Evaluate all characters of a string through a set of kinetic text animators. |
-| `evaluate_tree_lighting` | 5 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:226` | 3d, graph |  |
+| `evaluate_tree_lighting` | 5 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:227` | 3d, graph |  |
 | `evaluate_tween` | 2 | `crates/asset-production-vibe/src/kinetics_sim/nav_nla_zones.rs:402` | - |  |
 | `impl RangeSelector::evaluate_unit` | 3 | `crates/kinetics-motion-compositor/src/typography/selectors.rs:96` | - | Evaluate the selector weight in [-1, 1] for unit index `i` out of `total_units`. |
 | `impl WigglySelector::evaluate_unit` | 3 | `crates/kinetics-motion-compositor/src/typography/wiggly.rs:32` | - | Evaluate wiggly weight for unit `i` at time `t_sec`. |
 | `evaluate_warp_timeline` | 2 | `crates/acoustics-daw-session/src/elastic_warp/mod.rs:45` | numerics | Evaluates source playback time $t_{\text{src}}$ corresponding to destination time $t_{\text{dst}}$ using piecewise linear interpolation. |
 | `even_child` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:448` | - |  |
+| `every_catalog_morphism_has_exactly_one_metadata_descriptor` | 0 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:265` | - |  |
 | `every_entry_has_a_doc_line` | 0 | `crates/discourse-academic-tex/src/catalog.rs:467` | - |  |
 | `every_env_is_reachable_via_environments` | 0 | `crates/discourse-academic-tex/src/catalog.rs:434` | - |  |
 | `every_shipped_shader_passes_the_lint` | 0 | `crates/vector-hybrid-shaders/src/lib.rs:24` | 3d |  |
@@ -2539,8 +2634,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::expand_procedural_brush` | 2 | `crates/asset-production-vibe/src/surface_pbr_brush.rs:157` | - | 127: `hypermedia.surface.expand_procedural_brush` |
 | `expands_defaults_and_caret` | 0 | `crates/discourse-academic-tex/src/review/snippets.rs:199` | - |  |
 | `impl Parser<'_>::expect` | 2 | `crates/manifold-bim-csg/src/step.rs:154` | - |  |
-| `impl Requires::expect_time_result` | 2 | `crates/gpu-command-profiler/tests/src/mod.rs:39` | - |  |
-| `expected_scope` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:56` | - |  |
+| `impl Requires::expect_time_result` | 2 | `crates/gpu-command-profiler/tests/src/mod.rs:40` | - |  |
+| `expected_scope` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:57` | - |  |
 | `expected_secs` | 2 | `crates/multimodal-synthesis-schema/src/catalog.rs:365` | - |  |
 | `impl serde::de::Visitor<'de> for V::expecting` | 2 | `crates/vector-locus-geometry/src/path.rs:84` | - |  |
 | `explicit_history_discard_drops_redo_without_changing_accepted_heights_or_ids` | 0 | `crates/terrain-brushes/src/adaptation_tests.rs:261` | - |  |
@@ -2554,6 +2649,7 @@ Every function/method found in the codebase, alphabetical.
 | `export_nastran_bdf` | 5 | `crates/kinetics-continuum-multiphysics/src/interchange/nastran.rs:8` | - | Export to 8-field small-field Nastran BDF format. |
 | `export_vtu_hex` | 3 | `crates/kinetics-continuum-multiphysics/src/interchange/vtk.rs:12` | computational geometry | Export hexahedral mesh to VTK XML UnstructuredGrid (.vtu) format with nodal displacements. |
 | `export_xfdf` | 1 | `crates/discourse-pdf-compliance/src/forms/xfdf.rs:11` | - | Export AcroForm field values as an XML XFDF document. |
+| `exported_state_artwork_does_not_apply_a_second_visual_effect` | 0 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:458` | - |  |
 | `impl Formula::expr` | 1 | `crates/chronicle-tabular-engine/src/calc/model.rs:69` | - |  |
 | `impl Parser::expr` | 2 | `crates/chronicle-tabular-engine/src/formula/parser.rs:72` | - |  |
 | `impl Parser::expression` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:175` | - |  |
@@ -2564,15 +2660,16 @@ Every function/method found in the codebase, alphabetical.
 | `impl Bounds::extent` | 1 | `crates/surface-pbr-studio/src/math.rs:335` | 3d |  |
 | `external` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:698` | - |  |
 | `external_sources` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:683` | - |  |
-| `impl RendererContext<'_>::external_texture_bind_group_for_textures` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2638` | - |  |
+| `impl RendererContext<'_>::external_texture_bind_group_for_textures` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2641` | - |  |
 | `impl OpaqueDraw::external_texture_runs` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:106` | - |  |
 | `external_texture_slots` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:672` | - |  |
-| `impl WGPUContext::extra_features` | 1 | `crates/gpu-device-context/src/lib.rs:141` | - |  |
+| `impl EtalonContext::extra_features` | 1 | `crates/gpu-device-context/src/lib.rs:149` | - |  |
 | `impl Model::extract` | 3 | `crates/locus-parametric-solver/src/solver/model.rs:279` | - | Extract updated entity from solved parameters. |
 | `extract_affinity_preview` | 2 | `crates/surface-layered-codecs/src/affinity.rs:228` | - | Inspects the embedded preview thumbnail record without full image decode. |
 | `extract_attr` | 2 | `crates/discourse-pdf-compliance/src/forms/xfdf.rs:84` | - |  |
 | `extract_attr` | 2 | `crates/locus-geospatial-codecs/src/formats/landxml.rs:70` | - |  |
 | `extract_attribute` | 2 | `crates/surface-layered-codecs/src/xcf_ora.rs:471` | - | Helper to extract XML attribute value. |
+| `extract_audio_energy_and_modals` | 5 | `crates/asset-production-vibe/src/sound.rs:204` | numerics |  |
 | `extract_blocks` | 2 | `crates/kinetics-schedule-cpm/src/format.rs:472` | - |  |
 | `extract_collapse_mask` | 3 | `crates/audio-opus-codec/src/celt/bands.rs:112` | - |  |
 | `extract_command` | 1 | `crates/discourse-academic-tex/src/review/logrules.rs:179` | - |  |
@@ -2586,6 +2683,7 @@ Every function/method found in the codebase, alphabetical.
 | `extract_quoted` | 1 | `crates/discourse-academic-tex/src/review/logrules.rs:172` | - |  |
 | `extract_segments` | 1 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:99` | - |  |
 | `extract_segments_at_level` | 2 | `crates/geodesy-spatial-analysis/src/morphometry.rs:277` | - |  |
+| `extract_spectral_representative` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:133` | - |  |
 | `extract_tag` | 2 | `crates/kinetics-schedule-cpm/src/format.rs:464` | - |  |
 | `extract_tag_value` | 2 | `crates/locus-geospatial-codecs/src/formats/kml.rs:43` | - |  |
 | `extract_val` | 2 | `crates/kinetics-motion-compositor/src/lottie/eval.rs:62` | - |  |
@@ -2595,15 +2693,18 @@ Every function/method found in the codebase, alphabetical.
 | `extrude_rectangle_generates_six_faces` | 0 | `crates/vector-locus-pathops/src/three_d/bevel.rs:148` | - |  |
 | `impl GroupReader<'r, 'a>::extrusion` | 1 | `crates/drafting-geometry/src/dxf_reader.rs:169` | - |  |
 | `impl Matrix::eye` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:61` | - |  |
+| `f` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_envelope.rs:19` | - |  |
+| `f` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_envelope.rs:14` | - |  |
 | `impl GroupReader<'r, 'a>::f` | 2 | `crates/drafting-geometry/src/dxf_reader.rs:160` | - |  |
 | `f2dot14_to_f32` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:296` | - |  |
-| `f32_to_f16` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:279` | - |  |
+| `f32_to_f16` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:312` | - |  |
 | `impl Cur<'a>::f64` | 1 | `crates/media-isobmff/src/bytes.rs:120` | - |  |
 | `impl BoxBuf::f64` | 2 | `crates/media-isobmff/src/bytes.rs:301` | - |  |
-| `f64_field` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:540` | - |  |
-| `f64_field` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:1117` | - |  |
+| `f64_field` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:510` | - |  |
+| `f64_field` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:235` | - |  |
+| `f64_field` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:247` | - |  |
 | `impl MaterialPreset::fabric` | 3 | `crates/surface-pbr-studio/src/material.rs:155` | - |  |
-| `face` | 3 | `crates/profile-authoring/src/frames.rs:57` | - |  |
+| `face` | 3 | `crates/profile-authoring/src/frames.rs:60` | - |  |
 | `impl CholeskyFactor::factorize` | 2 | `crates/kinetics-continuum-multiphysics/src/solver/cholesky.rs:14` | numerics | Factorize symmetric positive-definite n x n matrix in row-major slice. |
 | `impl LdltFactor::factorize` | 2 | `crates/kinetics-continuum-multiphysics/src/solver/ldlt.rs:23` | numerics | Factorize symmetric n x n matrix. |
 | `impl Queue::fail` | 2 | `crates/pcm-device-output/src/queue.rs:171` | - |  |
@@ -2637,7 +2738,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl BibEntry::field` | 2 | `crates/discourse-academic-tex/src/texparse/bib.rs:22` | - | Case-insensitive field lookup. |
 | `impl AcroForm::field` | 2 | `crates/discourse-pdf-compliance/src/forms/model.rs:92` | - |  |
 | `impl AcroForm::field_mut` | 2 | `crates/discourse-pdf-compliance/src/forms/model.rs:96` | - |  |
-| `fields` | 2 | `crates/asset-production-vibe/src/lib.rs:543` | - |  |
+| `fields` | 2 | `crates/asset-production-vibe/src/lib.rs:564` | - |  |
 | `fifth_external_texture_starts_a_fresh_run` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:771` | - |  |
 | `file` | 1 | `crates/discourse-academic-tex/src/catalog.rs:66` | - |  |
 | `file_arg` | 4 | `crates/discourse-academic-tex/src/texparse/graph.rs:186` | - |  |
@@ -2660,7 +2761,7 @@ Every function/method found in the codebase, alphabetical.
 | `fill_lakes` | 4 | `crates/terrain-erosion-solvers/src/lacustrine_fill.rs:45` | economics | Fill lakes, depressions, and seas up to hydrostatic equilibrium across a 2D heightfield. |
 | `fill_lakes_creates_flat_surface_in_bowl` | 0 | `crates/terrain-erosion-solvers/src/lacustrine_fill.rs:153` | - |  |
 | `impl Decoder::fill_noise` | 3 | `crates/audio-aac-codec/src/decoder.rs:451` | - | Perceptual noise substitution. `pair` = (left channel, ms mask) for the right channel of a CPE: |
-| `fill_occupancy_brick` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:191` | - |  |
+| `fill_occupancy_brick` | 6 | `crates/asset-production-vibe/src/geodesy_ops.rs:224` | - |  |
 | `fill_path` | 3 | `crates/vector-compute-shaders/shader/fine.wgsl:1005` | 2d |  |
 | `fill_path` | 5 | `crates/vector-compute-shaders/src/cpu/fine.rs:51` | - |  |
 | `impl vello_common::probe::ProbeRenderer for Scene::fill_path` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/probe.rs:330` | - |  |
@@ -2674,7 +2775,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl DrawSink for Scene::fill_rect` | 2 | `crates/vector-hybrid-renderer/src/text.rs:172` | 2d |  |
 | `impl Array::filled` | 3 | `crates/chronicle-tabular-engine/src/core/value.rs:99` | - |  |
 | `impl RasterImage::filled` | 3 | `crates/surface-pbr-studio/src/raster.rs:23` | - |  |
-| `impl AssetHost<'_>::filter` | 2 | `crates/asset-production-vibe/src/graphics.rs:337` | - |  |
+| `impl AssetHost<'_>::filter` | 2 | `crates/asset-production-vibe/src/graphics.rs:342` | - |  |
 | `filter` | 1 | `crates/chronicle-tabular-engine/src/functions/dynamic.rs:30` | - |  |
 | `impl LayerSamplePlacement::filter` | 1 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:891` | - |  |
 | `impl RoundStage::filter` | 1 | `crates/vector-hybrid-renderer/src/schedule/round.rs:368` | - |  |
@@ -2689,12 +2790,12 @@ Every function/method found in the codebase, alphabetical.
 | `filter_op` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:694` | - |  |
 | `filter_op` | 1 | `crates/vector-hybrid-renderer/src/schedule/round.rs:569` | - |  |
 | `filter_page_size` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:187` | - |  |
+| `impl Backend for RendererContext<'_>::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3145` | - |  |
 | `impl Backend for WebGlRendererContext<'_>::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3279` | - |  |
-| `impl Backend for RendererContext<'_>::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3142` | - |  |
 | `trait Backend::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:61` | - | Execute a filter pass according to the filter plan between two textures. |
 | `impl Backend for Recorder::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:273` | - |  |
+| `impl RendererContext<'_>::filter_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2948` | - |  |
 | `impl WebGlRendererContext<'_>::filter_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3067` | - |  |
-| `impl RendererContext<'_>::filter_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2945` | - |  |
 | `filter_round_resolving` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:794` | - |  |
 | `impl KWeightingChannel::filter_sample` | 2 | `crates/acoustics-daw-session/src/dsp/meter.rs:38` | - |  |
 | `filter_siblings` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:836` | - |  |
@@ -2703,6 +2804,7 @@ Every function/method found in the codebase, alphabetical.
 | `filter_vertical` | 6 | `crates/video-h264-codec/src/deblock.rs:230` | graph | Filter a vertical edge whose q0 column is at `x`, for `N` lines starting at row `y`. |
 | `impl StreamDecoder::final_range` | 1 | `crates/audio-opus-codec/src/decoder.rs:67` | - | Final range coder state of the last decoded frame (for conformance checks). |
 | `impl Decoder::final_range` | 1 | `crates/audio-opus-codec/src/multistream.rs:76` | - | Final range coder state of the first stream (conformance testing). |
+| `final_sequence_uses_exact_ntsc_timing_and_preserves_png16_resource_leaves` | 0 | `crates/asset-production-vibe/src/chronicle_sequence.rs:89` | - |  |
 | `impl Dsu::find` | 2 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:101` | - |  |
 | `impl Body::find` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:128` | - |  |
 | `find` | 2 | `crates/manifold-bim-csg/src/step.rs:104` | - |  |
@@ -2711,14 +2813,14 @@ Every function/method found in the codebase, alphabetical.
 | `find_capture` | 3 | `crates/media-ogg/src/lib.rs:331` | - |  |
 | `impl XEl::find_child` | 2 | `crates/chronicle-office-codecs/src/xml/dom.rs:67` | - |  |
 | `impl XEl::find_children` | 2 | `crates/chronicle-office-codecs/src/xml/dom.rs:78` | - |  |
-| `impl WGPUContext::find_compatible_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:209` | - | Finds or creates a compatible device handle id. |
+| `impl EtalonContext::find_compatible_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:217` | - | Finds or creates a compatible device handle id. |
 | `find_dominant_aoa_peak` | 1 | `crates/electromagnetics-rf-sensing/src/beamforming.rs:110` | - | Finds the dominant peak in a MUSIC spectrum. |
 | `find_exact` | 1 | `crates/discourse-academic-tex/src/catalog.rs:400` | - | Exact lookup by `name` (case-sensitive). |
 | `find_exact_hits_and_misses` | 0 | `crates/discourse-academic-tex/src/catalog.rs:461` | - |  |
-| `impl WGPUContext::find_existing_device_idx` | 2 | `crates/gpu-device-context/src/lib.rs:218` | - | Finds  a compatible device handle id. |
+| `impl EtalonContext::find_existing_device_idx` | 2 | `crates/gpu-device-context/src/lib.rs:226` | - | Finds  a compatible device handle id. |
 | `find_min_reducible` | 2 | `crates/raster-spatial-operators/src/octree.rs:121` | graph |  |
 | `impl References::find_mut` | 2 | `crates/multimodal-synthesis-schema/src/references.rs:152` | - |  |
-| `impl WGPUContext::find_or_create_device` | 2 | `crates/gpu-device-context/src/lib.rs:198` | - | Finds or creates a compatible device handle id. |
+| `impl EtalonContext::find_or_create_device` | 2 | `crates/gpu-device-context/src/lib.rs:206` | - | Finds or creates a compatible device handle id. |
 | `find_ph` | 3 | `crates/layout-presentation-deck/src/model/resolve.rs:67` | - |  |
 | `find_pitch` | 1 | `crates/audio-opus-codec/src/celt/mod.rs:540` | - |  |
 | `find_prefix` | 1 | `crates/discourse-academic-tex/src/catalog.rs:393` | - | Commands and environments whose `name` starts with `prefix` (case-sensitive). |
@@ -2751,13 +2853,14 @@ Every function/method found in the codebase, alphabetical.
 | `impl Track::finish_indexes` | 1 | `crates/media-isobmff/src/demux.rs:180` | - |  |
 | `impl Mp4Writer<W>::finish_mdat` | 1 | `crates/media-isobmff/src/mux.rs:620` | - |  |
 | `impl SliceDecoder<'a>::finish_pcm` | 1 | `crates/video-h264-codec/src/slicedec.rs:1078` | - | Common state for an I_PCM MB. |
-| `impl RendererContext<'_>::finish_root_clear` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2607` | - |  |
+| `impl RendererContext<'_>::finish_root_clear` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2610` | - |  |
 | `impl WebGlPendingProbe::finish_success` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/probe.rs:216` | - |  |
 | `finite` | 4 | `crates/vector-locus-pathops/src/three_d/revolve.rs:84` | - |  |
 | `finite_positive` | 1 | `crates/profile-authoring/provenance/original-lib.rs:28` | - |  |
 | `finite_positive` | 1 | `crates/profile-authoring/src/lib.rs:56` | - |  |
+| `finite_small_triangle_has_unit_normal_and_degenerate_fails` | 0 | `crates/profile-authoring/src/frames.rs:71` | 3d |  |
 | `first_char` | 1 | `crates/vector-hybrid-shaders/src/minify.rs:284` | - | Returns the first character of a known non-empty source section. |
-| `first_class_strata_column` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:251` | physics | First-class 6-layer STRATA column: sculpted elevation plus slope hydrology |
+| `first_class_strata_column` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:284` | physics | First-class 6-layer STRATA column: sculpted elevation plus slope hydrology |
 | `first_string` | 1 | `crates/manifold-bim-csg/src/step.rs:108` | - |  |
 | `fisher_jenks_breaks` | 2 | `crates/geodesy-spatial-analysis/src/cartography.rs:127` | - | Fisher-Jenks natural breaks optimization algorithm for 1D sorted data. |
 | `impl Frame::fit` | 3 | `crates/video-h264-preview/src/lib.rs:55` | - |  |
@@ -2816,6 +2919,8 @@ Every function/method found in the codebase, alphabetical.
 | `floor_boundary` | 2 | `crates/discourse-academic-tex/src/texparse/magic.rs:121` | - |  |
 | `flow_accumulation` | 4 | `crates/terrain-erosion-solvers/src/drainage_pyramid.rs:220` | - | Compute upstream flow accumulation area for every cell from D8 directions. |
 | `flow_accumulation_accumulates_to_sink` | 0 | `crates/terrain-erosion-solvers/src/drainage_pyramid.rs:319` | - |  |
+| `flower_capsule_layout_is_separate_in_front_and_side_projections` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_visual_tests.rs:72` | - |  |
+| `impl std::io::Write for Counter::flush` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:59` | - |  |
 | `impl Encoder::flush` | 1 | `crates/audio-aac-codec/src/encoder/mod.rs:283` | - | Encode the remaining input (zero-padded). Afterwards the decoded stream, minus |
 | `impl Writer::flush` | 1 | `crates/chronicle-broadcast-containers/src/dnx/bits.rs:116` | - |  |
 | `flush` | 6 | `crates/discourse-academic-tex/src/bibliography/import.rs:191` | - |  |
@@ -2864,7 +2969,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl fmt::Display for MatError::fmt` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:17` | - |  |
 | `impl std::fmt::Display for DxfError::fmt` | 2 | `crates/drafting-geometry/src/dxf_reader.rs:73` | - |  |
 | `impl std::fmt::Debug for BufferRenderer::fmt` | 2 | `crates/gpu-device-context/src/buffer_renderer.rs:26` | - |  |
-| `impl Display for WgpuContextError::fmt` | 2 | `crates/gpu-device-context/src/error.rs:30` | - |  |
+| `impl Display for EtalonContextError::fmt` | 2 | `crates/gpu-device-context/src/error.rs:30` | - |  |
 | `impl std::fmt::Debug for SurfaceRenderer<'_>::fmt` | 2 | `crates/gpu-device-context/src/surface_renderer.rs:135` | - |  |
 | `impl fmt::Display for SimError::fmt` | 2 | `crates/kinetics-block-simulation/src/lib.rs:42` | - |  |
 | `impl fmt::Display for SyncError::fmt` | 2 | `crates/kinetics-schedule-cpm/src/change_dag.rs:106` | - |  |
@@ -2888,7 +2993,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl std::fmt::Display for GeoStudioError::fmt` | 2 | `crates/terrain-brushes/src/lib.rs:30` | - |  |
 | `impl Debug for DebugLayers::fmt` | 2 | `crates/vector-compute-renderer/src/debug.rs:22` | - |  |
 | `impl fmt::Debug for LineEndpoint::fmt` | 2 | `crates/vector-compute-renderer/src/debug/validate.rs:38` | - |  |
-| `impl std::fmt::Debug for RenderSurface<'_>::fmt` | 2 | `crates/vector-compute-renderer/src/util.rs:234` | - |  |
+| `impl std::fmt::Debug for RenderSurface<'_>::fmt` | 2 | `crates/vector-compute-renderer/src/util.rs:237` | - |  |
 | `impl fmt::Display for ErrorVec::fmt` | 2 | `crates/vector-compute-shaders/src/compile/mod.rs:48` | - |  |
 | `impl fmt::Debug for BindingIndex::fmt` | 2 | `crates/vector-compute-shaders/src/types.rs:53` | - |  |
 | `impl fmt::Display for MessageSuffix<'_>::fmt` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/error.rs:193` | - |  |
@@ -2897,10 +3002,10 @@ Every function/method found in the codebase, alphabetical.
 | `fmt_fixed` | 2 | `crates/chronicle-fiduciary-ledger/src/money.rs:97` | - |  |
 | `fmt_money` | 1 | `crates/chronicle-fiduciary-ledger/src/money.rs:113` | - |  |
 | `fmt_money_grouped` | 1 | `crates/chronicle-fiduciary-ledger/src/money.rs:118` | - | Formats money with thousands separators: e.g. `12,345.60` or `-1,234.56`. |
-| `fnv1a_60` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:564` | - | Deterministic FNV-1a 60-bit hash (`lexicon.rs` mask `0x0FFF_FFFF_FFFF_FFFF`). |
+| `fnv1a_60` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:562` | - | Deterministic FNV-1a 60-bit hash (`lexicon.rs` mask `0x0FFF_FFFF_FFFF_FFFF`). |
 | `fnv1a_hash_str` | 2 | `crates/layout-nodegraph-compiler/src/compiler/cse.rs:9` | - |  |
 | `fnv1a_hash_tagged_value` | 2 | `crates/layout-nodegraph-compiler/src/compiler/cse.rs:17` | - |  |
-| `fnv1a_hex` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:455` | - |  |
+| `fnv1a_hex` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:450` | - |  |
 | `fnv1a_hex` | 1 | `crates/chronicle-fiduciary-ledger/src/audit.rs:167` | - |  |
 | `fnv1a_hex` | 1 | `crates/kinetics-schedule-cpm/src/change_dag.rs:320` | - |  |
 | `impl Doc::font` | 4 | `crates/discourse-academic-tex/src/texpdf.rs:310` | - |  |
@@ -2942,11 +3047,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl Profile::fourcc` | 1 | `crates/video-prores-codec/src/types.rs:103` | - | The QuickTime sample-entry four-character code. |
 | `frac_mul16` | 2 | `crates/audio-opus-codec/src/celt/bands.rs:194` | - |  |
 | `impl ArcPath::fraction_at` | 2 | `crates/vector-locus-geometry/src/arc.rs:72` | - | Distance as a fraction (0..1) of the path's length. |
+| `fractional_clock_survives_current_writer_and_typed_cache` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/clock_tests.rs:68` | - |  |
 | `fractional_radii_follow_coverage_rules` | 0 | `crates/raster-selection-morphology/src/tests.rs:60` | - |  |
 | `impl JohnsonCookDamage::fracture_strain` | 4 | `crates/kinetics-continuum-multiphysics/src/explicit/damage.rs:23` | - | Fracture strain eps_f = [d1 + d2 * exp(d3 * sigma*)] * [1 + d4 * ln(eps_dot*)] * [1 + d5 * T*] |
 | `fragmented_roundtrip` | 0 | `crates/media-isobmff/src/mux.rs:932` | - |  |
 | `fragmented_writer_ffmpeg` | 0 | `crates/media-isobmff/tests/oracle_mux.rs:232` | - |  |
-| `impl Pixels<'win>::frame` | 1 | `crates/pixel-buffer-output/src/lib.rs:646` | 2d | Get an immutable byte slice for the pixel buffer. |
+| `impl Pixels<'win>::frame` | 1 | `crates/pixel-buffer-output/src/lib.rs:641` | 2d | Get an immutable byte slice for the pixel buffer. |
 | `frame` | 1 | `crates/timeline-editing/src/transition.rs:276` | - |  |
 | `impl Track::frame` | 2 | `crates/vector-surface-brush/src/track.rs:123` | 2d | Point and unit tangent at arc length `s`. |
 | `impl Poc::frame` | 1 | `crates/video-h264-codec/src/slice.rs:495` | - |  |
@@ -2964,12 +3070,15 @@ Every function/method found in the codebase, alphabetical.
 | `impl PerspectiveGrid::frame_homography` | 4 | `crates/vector-locus-geometry/src/perspective.rs:243` | - | The plane spanned by axes `u` and `v` through the point `at.1` along axis `at.0`. |
 | `frame_index` | 2 | `crates/timeline-editing/src/timebase.rs:194` | - | Keep the mathematical frame index wide until the public API needs an i64. |
 | `impl Movie::frame_index_at` | 2 | `crates/video-h264-preview/src/movie.rs:313` | - |  |
-| `impl Pixels<'win>::frame_mut` | 1 | `crates/pixel-buffer-output/src/lib.rs:638` | 2d | Get a mutable byte slice for the pixel buffer. The buffer is _not_ cleared for you; it will |
+| `impl Pixels<'win>::frame_mut` | 1 | `crates/pixel-buffer-output/src/lib.rs:633` | 2d | Get a mutable byte slice for the pixel buffer. The buffer is _not_ cleared for you; it will |
 | `impl PocState::frame_num_offset` | 4 | `crates/video-h264-codec/src/slice.rs:550` | - |  |
 | `impl Dpb<F>::frame_num_wrap` | 3 | `crates/video-h264-codec/src/dpb.rs:65` | - |  |
+| `frame_rate` | 3 | `crates/asset-production-vibe/src/chronicle_sequence.rs:7` | - | The shared timeline owner normalizes rational rates; reject invalid values |
 | `impl Toc::frame_samples` | 2 | `crates/audio-opus-codec/src/packet.rs:74` | - | Samples per frame at `rate`. |
 | `impl Toc::frame_samples_48k` | 1 | `crates/audio-opus-codec/src/packet.rs:69` | - | Samples per frame at 48 kHz. |
+| `frame_spacing_m` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:43` | - |  |
 | `impl Movie::frame_time` | 2 | `crates/video-h264-preview/src/movie.rs:321` | - |  |
+| `frame_value` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:411` | - |  |
 | `impl WebGlIntermediateTexture::framebuffer` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1352` | - |  |
 | `impl TimecodeRate::frames_at` | 3 | `crates/audio-timebase/src/timecode.rs:101` | - | Total whole frames at a sample position (floored). |
 | `frames_to_duration` | 2 | `crates/audio-device-cpal/src/host/alsa/mod.rs:905` | - |  |
@@ -2980,7 +3089,7 @@ Every function/method found in the codebase, alphabetical.
 | `frames_to_duration` | 2 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:546` | - | Convert the given duration in frames at the given sample rate to a `std::time::Duration`. |
 | `impl Recording::free_buffer` | 2 | `crates/vector-compute-renderer/src/recording.rs:207` | - | Commands to free the given buffer. |
 | `free_distort` | 3 | `crates/vector-locus-pathops/src/effects/distort.rs:31` | computational geometry, 2d | Free Distort: bilinear mapping of bounding box onto four corners. |
-| `impl WgpuEngine::free_download` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:783` | - |  |
+| `impl EtalonEngine::free_download` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:785` | - |  |
 | `impl Recording::free_image` | 2 | `crates/vector-compute-renderer/src/recording.rs:212` | - | Commands to free the given image. |
 | `impl Recording::free_resource` | 2 | `crates/vector-compute-renderer/src/recording.rs:217` | - | Commands to free the given resource. |
 | `impl From<bitstream_codec::BitError> for Error::from` | 1 | `crates/audio-aac-codec/src/lib.rs:69` | - |  |
@@ -3010,10 +3119,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl From<windows::core::Error> for BackendSpecificError::from` | 1 | `crates/audio-device-cpal/src/host/wasapi/mod.rs:53` | - |  |
 | `impl From<SupportedStreamConfig> for StreamConfig::from` | 1 | `crates/audio-device-cpal/src/lib.rs:813` | - |  |
 | `impl From<Value> for Ev::from` | 1 | `crates/chronicle-tabular-engine/src/calc/eval.rs:31` | - |  |
-| `impl From<wgpu::CreateSurfaceError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:58` | - |  |
-| `impl From<RequestAdapterError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:64` | - |  |
-| `impl From<RequestDeviceError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:70` | - |  |
-| `impl From<PollError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:76` | - |  |
+| `impl From<etalon::CreateSurfaceError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:58` | - |  |
+| `impl From<RequestAdapterError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:64` | - |  |
+| `impl From<RequestDeviceError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:70` | - |  |
+| `impl From<PollError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:76` | - |  |
 | `impl From<&[u8; 4]> for FourCc::from` | 1 | `crates/media-isobmff/src/bytes.rs:42` | - |  |
 | `impl From<io::Error> for Error::from` | 1 | `crates/media-ogg/src/lib.rs:83` | - |  |
 | `impl From<anyrender::RendererConfig> for PixelsRendererOptions::from` | 1 | `crates/pixel-window-render-adapter/src/lib.rs:65` | - |  |
@@ -3069,6 +3178,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl ShaderInfo::from_default` | 0 | `crates/vector-compute-shaders/src/compile/mod.rs:182` | 3d | Same as [`ShaderInfo::from_dir`] but uses the default shader directory provided by [`shader_dir`]. |
 | `impl ShaderInfo::from_dir` | 1 | `crates/vector-compute-shaders/src/compile/mod.rs:186` | 3d |  |
 | `impl OpusHead::from_dops` | 1 | `crates/audio-opus-codec/src/header.rs:62` | - | Parses the payload of an ISO-BMFF `dOps` box (Opus in MP4, big-endian fields). |
+| `impl ImageFormat::from_etalon` | 1 | `crates/vector-compute-renderer/src/recording.rs:253` | - |  |
+| `from_f64_epoch` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/clock.rs:9` | - |  |
 | `impl BlendStrip::from_fill_segment` | 2 | `crates/vector-hybrid-renderer/src/blend.rs:108` | 2d |  |
 | `impl GpuStrip::from_fill_segment` | 5 | `crates/vector-hybrid-renderer/src/draw.rs:397` | 2d |  |
 | `impl Spline::from_fit` | 2 | `crates/drafting-geometry/src/spline.rs:154` | 2d | Interpolation through fit points, open or closed (see `from_fit_points_closed`). |
@@ -3086,13 +3197,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl WarpStyle::from_id` | 1 | `crates/vector-locus-pathops/src/effects/warp.rs:34` | - |  |
 | `impl Device::from_immdevice` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:335` | - |  |
 | `impl ColorSpace::from_info` | 1 | `crates/color-transforms/src/spaces.rs:284` | - | The colour space signalled by stream metadata (VUI / `colr` / MKV Colour). |
-| `impl FromIterator<AaConfig> for AaSupport::from_iter` | 1 | `crates/vector-compute-renderer/src/lib.rs:239` | - |  |
+| `impl FromIterator<AaConfig> for AaSupport::from_iter` | 1 | `crates/vector-compute-renderer/src/lib.rs:244` | - |  |
 | `impl Element::from_jet` | 2 | `crates/kinetics-garment-draping/src/energy.rs:103` | - |  |
 | `from_json` | 1 | `crates/kinetics-schedule-cpm/src/format.rs:51` | - |  |
 | `impl PsdBlendMode::from_key` | 1 | `crates/surface-layered-codecs/src/psd/mod.rs:214` | - |  |
 | `from_le` | 1 | `crates/audio-device-cpal/src/host/asio/stream.rs:676` | - | Helper function to convert from little endianness. |
 | `impl RefMedia::from_library` | 5 | `crates/multimodal-synthesis-schema/src/references.rs:71` | - |  |
-| `impl LightTreeMeasure::from_light` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:42` | - |  |
+| `impl LightTreeMeasure::from_light` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:43` | - |  |
 | `from_linear` | 2 | `crates/color-transforms/src/lib.rs:204` | numerics |  |
 | `from_linear` | 2 | `crates/radiance-color-grading/src/matrix.rs:242` | numerics | Convert linear light to encoded display value. |
 | `impl GrayImage::from_luma` | 3 | `crates/kinetics-motion-compositor/src/track/correlation.rs:22` | - |  |
@@ -3143,7 +3254,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl MorphologyKernel::from_slice` | 3 | `crates/raster-selection-morphology/src/grayscale.rs:137` | - | Custom structuring element from row-major slice. |
 | `impl Arc::from_start_center_end` | 3 | `crates/drafting-geometry/src/curve.rs:100` | 2d | Arc from start point, center and end point (CCW). |
 | `impl HumanAnatomyProfile::from_str_and_week` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/human_welfare_anatomy.rs:49` | - |  |
-| `impl BehaviorMacro::from_str_name` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:76` | - |  |
+| `impl BehaviorMacro::from_str_name` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:74` | - |  |
 | `impl OtFeatures::from_tags` | 1 | `crates/vector-glyph-shaping/src/features.rs:55` | - | Parse a feature list like `["dlig", "smcp", "-liga"]`. |
 | `impl CsrMatrix::from_triplets` | 3 | `crates/kinetics-continuum-multiphysics/src/solver/sparse.rs:29` | numerics | Construct CSR matrix from triplets (row, col, value). |
 | `impl AseKind::from_u16` | 1 | `crates/color-transforms/src/palette/ase.rs:25` | - |  |
@@ -3157,7 +3268,6 @@ Every function/method found in the codebase, alphabetical.
 | `impl TileType::from_u8` | 1 | `crates/locus-geospatial-codecs/src/tiles/pmtiles.rs:39` | - |  |
 | `impl OperationalPattern::from_ul` | 1 | `crates/chronicle-broadcast-containers/src/mxf/partition.rs:80` | - |  |
 | `impl Tick::from_units` | 2 | `crates/timeline-editing/src/timebase.rs:47` | - | Convert a count of units at `per_second`, such as audio samples, |
-| `impl ImageFormat::from_wgpu` | 1 | `crates/vector-compute-renderer/src/recording.rs:253` | - |  |
 | `fs_main` | 1 | `crates/gpu-command-profiler/examples/shader.wgsl:27` | - |  |
 | `fs_main` | 1 | `crates/pixel-buffer-output/shaders/scale.wgsl:29` | 2d |  |
 | `fs_main` | 1 | `crates/pixel-buffer-output/shaders/scale_fill.wgsl:30` | 2d |  |
@@ -3176,7 +3286,7 @@ Every function/method found in the codebase, alphabetical.
 | `full_typography_pipeline_smoke` | 0 | `crates/vector-glyph-shaping/src/lib.rs:41` | - |  |
 | `fv` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:57` | - |  |
 | `fv_calc` | 5 | `crates/chronicle-tabular-engine/src/functions/financial.rs:21` | - |  |
-| `g` | 4 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:420` | - |  |
+| `g` | 4 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:430` | - |  |
 | `gain` | 1 | `crates/audio-aac-codec/src/encoder/quant.rs:89` | - |  |
 | `gain34` | 1 | `crates/audio-aac-codec/src/encoder/quant.rs:85` | - |  |
 | `impl OpusHead::gain_linear` | 1 | `crates/audio-opus-codec/src/header.rs:127` | numerics | Linear output gain factor. |
@@ -3197,6 +3307,7 @@ Every function/method found in the codebase, alphabetical.
 | `gaussian_blur_rgba32f` | 5 | `crates/raster-spatial-operators/src/convolve.rs:239` | - | Separable 2D Gaussian blur for RGBA32F buffer. |
 | `gaussian_blur_rgba8` | 5 | `crates/raster-spatial-operators/src/convolve.rs:178` | 2d | Separable 2D Gaussian blur for RGBA8 buffer. |
 | `gaussian_kernel_1d` | 2 | `crates/raster-spatial-operators/src/convolve.rs:64` | - | Create a 1D Gaussian kernel with radius and standard deviation sigma. |
+| `gcd` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_envelope.rs:328` | - |  |
 | `gcd` | 2 | `crates/audio-opus-codec/src/silk/resampler.rs:27` | - |  |
 | `gcd` | 2 | `crates/media-isobmff/tests/oracle_demux.rs:121` | - |  |
 | `gcd` | 2 | `crates/timeline-editing/src/timebase.rs:218` | - |  |
@@ -3218,20 +3329,25 @@ Every function/method found in the codebase, alphabetical.
 | `generate_is_cached_and_atomic` | 0 | `crates/media-test-support/src/fixtures.rs:124` | - |  |
 | `impl GamutCheck::generate_mask` | 4 | `crates/color-transforms/src/icc/gamut.rs:86` | - | Evaluates a mask buffer: writes 255 for out-of-gamut pixels, 0 for in-gamut pixels. |
 | `generate_materialx_document` | 3 | `crates/surface-pbr-studio/src/materialx.rs:68` | 3d | Generates a complete MaterialX 1.39 XML document connecting maps to a surface shader. |
+| `generate_peak` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:31` | - |  |
 | `generate_straight_stair` | 7 | `crates/manifold-bim-csg/src/parametric.rs:205` | - | Generates a straight stair flight with uniform risers and treads. |
 | `generate_wgsl_shader_module` | 2 | `crates/vector-hybrid-shaders/build.rs:180` | 3d |  |
+| `generate_work` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/model.rs:41` | - |  |
+| `generated` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/tests.rs:13` | - |  |
+| `generation_keeps_f64_fields_optional_carrier_and_model_context` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/model_tests.rs:3` | - |  |
 | `impl Oscillator::generative_waveform` | 3 | `crates/audio-device-cpal/examples/synth_tones.rs:59` | - |  |
 | `generic_cmyk` | 0 | `crates/color-transforms/src/icc/builtin.rs:103` | - |  |
 | `geodesic_buffer_point` | 3 | `crates/geodesy-spatial-analysis/src/geodesy.rs:603` | computational geometry | Buffers a single point by `distance_m` on the geodetic manifold, returning a polygon ring. |
 | `geodesic_ring_area_m2` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:347` | computational geometry | Area of a closed polygon ring on the spherical earth (square metres, always positive). |
 | `geodesic_ruler_measures_distances_and_supports_undo_redo` | 0 | `crates/drafting-geometry/src/tests.rs:327` | - |  |
-| `impl AssetHost<'_>::geodesy_op` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:302` | - |  |
-| `geodesy_strata_holo_kriging_e64_objects` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:873` | - |  |
+| `impl AssetHost<'_>::geodesy_op` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:335` | - |  |
+| `geodesy_strata_holo_kriging_e64_objects` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:996` | - |  |
 | `impl AssetHost<'_>::geometry` | 3 | `crates/asset-production-vibe/src/geometry.rs:7` | - |  |
+| `impl AssetHost<'_>::geometry_only_copy` | 3 | `crates/asset-production-vibe/src/mesh_edit_policy.rs:59` | - |  |
 | `trait DrawTarget::geometry_shift` | 1 | `crates/vector-hybrid-renderer/src/target.rs:285` | - | A positional shift that needs to be applied to all geometry when rendering to this target. |
 | `impl DrawTarget for RootTarget::geometry_shift` | 1 | `crates/vector-hybrid-renderer/src/target.rs:293` | - |  |
 | `impl DrawTarget for LayerTextureRegion::geometry_shift` | 1 | `crates/vector-hybrid-renderer/src/target.rs:303` | - |  |
-| `impl AssetWorkspace::get` | 2 | `crates/asset-production-vibe/src/lib.rs:140` | - |  |
+| `impl AssetWorkspace::get` | 2 | `crates/asset-production-vibe/src/lib.rs:151` | - |  |
 | `impl Set::get` | 2 | `crates/chronicle-broadcast-containers/src/mxf/meta.rs:81` | - |  |
 | `impl Metadata::get` | 2 | `crates/chronicle-broadcast-containers/src/mxf/meta.rs:121` | - |  |
 | `impl ChartOfAccounts::get` | 2 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:72` | - |  |
@@ -3247,8 +3363,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Rgba8::get` | 3 | `crates/media-test-support/src/golden.rs:30` | - |  |
 | `impl BlendIf::get` | 2 | `crates/raster-layer-mask-adapter/src/masks.rs:216` | - |  |
 | `impl ScratchTexture<T>::get` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:108` | - |  |
+| `impl TextureBindings::get` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:127` | - | Get a texture binding. |
 | `impl WebGlTextureBindings::get` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:205` | - | Get a texture binding. |
-| `impl TextureBindings::get` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:127` | - | Get a texture binding. |
 | `impl Lru<K>::get` | 2 | `crates/video-h264-preview/src/movie.rs:98` | - |  |
 | `impl CsiFrame::get_amplitudes` | 3 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:101` | - | Extracts amplitudes for a specific Tx-Rx antenna pair across all subcarriers. |
 | `get_audio_clock` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:937` | - | Get the audio clock used to produce `StreamInstant`s. |
@@ -3256,21 +3372,21 @@ Every function/method found in the codebase, alphabetical.
 | `get_audio_track_min_buffer_size` | 3 | `crates/audio-device-cpal/src/host/oboe/android_media.rs:46` | - |  |
 | `get_available_frames` | 1 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:308` | - |  |
 | `get_blend_uniforms` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2173` | - |  |
-| `impl BindMap::get_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:928` | - |  |
-| `impl ResourcePool::get_buf` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:976` | - | Get a buffer from the pool or create one. |
+| `impl BindMap::get_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:931` | - |  |
+| `impl ResourcePool::get_buf` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:980` | - | Get a buffer from the pool or create one. |
 | `impl ChartOfAccounts::get_by_code` | 2 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:76` | - |  |
 | `impl ChartOfAccounts::get_by_name` | 2 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:80` | - |  |
 | `get_client` | 2 | `crates/audio-device-cpal/src/host/jack/mod.rs:143` | - |  |
 | `get_client_options` | 1 | `crates/audio-device-cpal/src/host/jack/mod.rs:134` | - |  |
 | `impl glifo::GlyphRenderer for Scene::get_context_color` | 1 | `crates/vector-hybrid-renderer/src/text.rs:344` | - |  |
 | `get_copy_uniforms` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2184` | - |  |
-| `impl BindMap::get_cpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:906` | - | Get a CPU buffer. |
+| `impl BindMap::get_cpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:909` | - | Get a CPU buffer. |
 | `get_descriptors` | 0 | `crates/surface-layered-codecs/src/ontology.rs:135` | - |  |
-| `impl WgpuEngine::get_download` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:779` | - |  |
+| `impl EtalonEngine::get_download` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:781` | - |  |
 | `get_enumerator` | 0 | `crates/audio-device-cpal/src/host/wasapi/device.rs:838` | - |  |
 | `get_fabric_by_id` | 1 | `crates/kinetics-garment-draping/src/fabrics.rs:110` | - |  |
 | `get_filter_pass_uniforms` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2157` | - |  |
-| `impl BindMap::get_gpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:896` | - | Get a buffer, only if it's on GPU. |
+| `impl BindMap::get_gpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:899` | - | Get a buffer, only if it's on GPU. |
 | `get_imports` | 1 | `crates/vector-compute-shaders/src/compile/preprocess.rs:8` | 3d |  |
 | `get_io_buffer_frame_size_range` | 1 | `crates/audio-device-cpal/src/host/coreaudio/macos/mod.rs:928` | - |  |
 | `get_max_texture_dimension_2d` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:109` | - | Query the WebGL context for the max texture size. |
@@ -3281,7 +3397,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl SkiaScenePainter<'_>::get_or_cache_font` | 5 | `crates/vector-skia-render-adapter/src/scene.rs:248` | - |  |
 | `impl SkiaScenePainter<'_>::get_or_cache_normalized_typeface` | 3 | `crates/vector-skia-render-adapter/src/scene.rs:291` | - |  |
 | `impl SkiaScenePainter<'_>::get_or_cache_typeface` | 3 | `crates/vector-skia-render-adapter/src/scene.rs:363` | - |  |
-| `impl BindMap::get_or_create_image` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:932` | - |  |
+| `impl BindMap::get_or_create_image` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:935` | - |  |
 | `impl Device::get_or_create_input_stream` | 3 | `crates/audio-device-cpal/src/host/asio/stream.rs:507` | - | Create a new CPAL Input Stream. |
 | `impl Device::get_or_create_output_stream` | 3 | `crates/audio-device-cpal/src/host/asio/stream.rs:554` | - | Create a new CPAL Output Stream. |
 | `impl GradientRampCache::get_or_create_ramp` | 2 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:75` | - |  |
@@ -3301,9 +3417,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl Ttf::gid` | 2 | `crates/discourse-academic-tex/src/texpdf.rs:131` | - | Unicode scalar -> glyph ID (0 = .notdef). |
 | `impl WebGlRenderer::gl_context` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:712` | - | Get a reference to the underlying WebGL context. |
 | `impl MaterialPreset::glass` | 3 | `crates/surface-pbr-studio/src/material.rs:116` | - |  |
+| `glb` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1570` | - |  |
 | `global_snippets_path` | 0 | `crates/discourse-academic-tex/src/review/snippets.rs:52` | - | Global snippets path: `$ACADEMIC_TEX_HOME/snippets.json`, else `~/.academic-tex/snippets.json`. |
 | `glyph` | 1 | `crates/locus-parametric-solver/src/typography/stroke.rs:14` | - |  |
-| `glyph_advance` | 1 | `crates/asset-production-vibe/src/glyph/mod.rs:55` | - | Proportional advance width in normalized em units (1.0 = em height). |
+| `glyph_advance` | 1 | `crates/asset-production-vibe/src/glyph/mod.rs:56` | - | Proportional advance width in normalized em units (1.0 = em height). |
 | `glyph_atlas_resources_are_lazy` | 0 | `crates/vector-hybrid-renderer/src/scene.rs:1000` | - |  |
 | `impl AssetHost<'_>::glyph_layout_diegetic_op` | 3 | `crates/asset-production-vibe/src/glyph_layout_diegetic/mod.rs:13` | - |  |
 | `glyph_measure_bounds_kerning_and_wrap` | 0 | `crates/asset-production-vibe/src/glyph/shaping_svg.rs:577` | - |  |
@@ -3319,9 +3436,11 @@ Every function/method found in the codebase, alphabetical.
 | `gpu_shadow` | 0 | `crates/vector-hybrid-renderer/src/filter.rs:717` | - |  |
 | `gpu_strip` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:655` | - |  |
 | `impl AssetHost<'_>::grade_cdl_scopes` | 2 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:124` | - | 129: `hypermedia.radiance.grade_cdl_scopes` |
+| `impl AssetHost<'_>::grade_rgba16` | 2 | `crates/asset-production-vibe/src/radiance_precision.rs:58` | - |  |
+| `grade_vector` | 5 | `crates/asset-production-vibe/src/radiance_precision.rs:112` | - |  |
 | `gradient_shader_cs_from_cs_tag` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1170` | 3d |  |
 | `gradient_shader_hue_method_from_hue_direction` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1190` | 3d |  |
-| `impl AssetHost<'_>::graphics` | 3 | `crates/asset-production-vibe/src/graphics.rs:112` | - |  |
+| `impl AssetHost<'_>::graphics` | 3 | `crates/asset-production-vibe/src/graphics.rs:113` | - |  |
 | `gray` | 2 | `crates/color-transforms/src/icc/builtin.rs:159` | - |  |
 | `impl Planes::gray` | 2 | `crates/video-h264-codec/src/picture.rs:21` | - |  |
 | `grayscale_dilate` | 4 | `crates/raster-selection-morphology/src/grayscale.rs:159` | - | Grayscale morphological dilation: `out(x, y) = max (input + kernel)`. |
@@ -3384,7 +3503,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Hash for FontCacheKeyBorrowed<'a>::hash` | 2 | `crates/vector-skia-render-adapter/src/cache.rs:131` | - |  |
 | `impl Hash for FontCacheKey::hash` | 2 | `crates/vector-skia-render-adapter/src/cache.rs:152` | - |  |
 | `hash128` | 1 | `crates/chronicle-broadcast-containers/src/mxf/writer.rs:32` | - |  |
-| `hash2d` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:377` | - |  |
+| `hash2d` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:387` | - |  |
 | `hash_coord` | 3 | `crates/kinetics-motion-compositor/src/typography/wiggly.rs:65` | - |  |
 | `hat_weight` | 1 | `crates/radiance-camera-raw/src/fusion.rs:25` | - | Hat weighting function: favors midtones, drops to 0 at extremes (over/underexposure). |
 | `haversine_km` | 2 | `crates/drafting-geometry/src/geodesic_ruler.rs:44` | - | Great-circle distance between two (latitude, longitude) pairs in degrees. |
@@ -3407,18 +3526,19 @@ Every function/method found in the codebase, alphabetical.
 | `impl MathLayout::height` | 1 | `crates/layout-paged-typesetter/src/equation/layout.rs:37` | - |  |
 | `impl PsdLayer::height` | 1 | `crates/surface-layered-codecs/src/psd/mod.rs:294` | - |  |
 | `impl Cell::height` | 1 | `crates/terrain-erosion-solvers/src/hydraulic_droplet.rs:106` | - |  |
+| `trait AtlasWriter::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3293` | - | Get the height of the image. |
+| `impl AtlasWriter for Texture::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3314` | - |  |
+| `impl AtlasWriter for Pixmap::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3360` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3408` | - |  |
 | `trait WebGlAtlasWriter::height` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3310` | - | Get the height of the image. |
 | `impl WebGlAtlasWriter for Pixmap::height` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3329` | - |  |
 | `impl WebGlAtlasWriter for Arc<Pixmap>::height` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3372` | - |  |
 | `impl WebGlAtlasWriter for WebGlTexture::height` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3398` | - |  |
 | `impl WebGlAtlasWriter for WebGlTextureWithDimensions::height` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3448` | - |  |
-| `trait AtlasWriter::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3290` | - | Get the height of the image. |
-| `impl AtlasWriter for Texture::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3311` | - |  |
-| `impl AtlasWriter for Pixmap::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3357` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3405` | - |  |
 | `impl Scene::height` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:878` | - | Get the height of the render context. |
 | `impl DrawSink for Scene::height` | 1 | `crates/vector-hybrid-renderer/src/text.rs:212` | - |  |
 | `impl Sps::height` | 1 | `crates/video-h264-codec/src/params.rs:457` | - |  |
+| `heightfield_record` | 4 | `crates/asset-production-vibe/src/geodesy_ops.rs:18` | - | A square, metre-based heightfield record shared by sculpt, erosion and M64. |
 | `hemisphere_sample` | 4 | `crates/surface-pbr-studio/src/bake.rs:243` | 3d |  |
 | `impl SampleEntry::hevc` | 3 | `crates/media-isobmff/src/codec.rs:1277` | - | HEVC entry (`hvc1`, parameter sets in the config only). |
 | `hex` | 0 | `crates/color-transforms/src/lib.rs:487` | - |  |
@@ -3440,23 +3560,27 @@ Every function/method found in the codebase, alphabetical.
 | `impl PerspectiveGrid::homography` | 2 | `crates/vector-locus-geometry/src/perspective.rs:232` | - | The homography of `plane` at its current offset. |
 | `impl PerspectiveGrid::homography_at` | 3 | `crates/vector-locus-geometry/src/perspective.rs:237` | 3d | The homography of the plane parallel to `plane` that lies `depth` points along its normal. |
 | `impl Padding::horizontal` | 1 | `crates/layout-box-autolayout/src/types.rs:139` | - |  |
-| `host` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:464` | - |  |
-| `host` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:356` | - |  |
-| `host` | 3 | `crates/asset-production-vibe/src/chronicle_ops.rs:825` | - |  |
+| `host` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:463` | - |  |
+| `host` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:367` | - |  |
+| `host` | 3 | `crates/asset-production-vibe/src/chronicle_ops.rs:820` | - |  |
 | `host` | 2 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:888` | - |  |
+| `host` | 3 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:3` | - |  |
+| `host` | 3 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:24` | - |  |
 | `host` | 4 | `crates/asset-production-vibe/src/glyph_layout_diegetic/diegetic_input.rs:423` | - |  |
-| `host` | 2 | `crates/asset-production-vibe/src/graphics.rs:684` | - |  |
+| `host` | 2 | `crates/asset-production-vibe/src/graphics.rs:689` | - |  |
 | `host` | 4 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:461` | - |  |
-| `host` | 4 | `crates/asset-production-vibe/src/layout_ops/mod.rs:365` | - |  |
+| `host` | 4 | `crates/asset-production-vibe/src/layout_ops/mod.rs:366` | - |  |
 | `host` | 2 | `crates/asset-production-vibe/src/operations_catalog.rs:312` | - |  |
 | `host` | 2 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:373` | - |  |
-| `host` | 2 | `crates/asset-production-vibe/src/sound.rs:221` | - |  |
+| `host` | 2 | `crates/asset-production-vibe/src/sound.rs:712` | - |  |
 | `host_device_setup` | 0 | `crates/audio-device-cpal/examples/synth_tones.rs:115` | - |  |
 | `host_time_to_stream_instant` | 1 | `crates/audio-device-cpal/src/host/coreaudio/mod.rs:71` | - |  |
+| `host_work_bound` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:60` | - | Upper bound for the host charge before admission: selected payload work is |
+| `impl CurrentDocument<'a>::host_work_used` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:162` | - |  |
 | `hostile_font_bytes_error_not_panic` | 0 | `crates/discourse-academic-tex/src/texpdf.rs:502` | - |  |
 | `hostile_input_does_not_panic` | 0 | `crates/drafting-geometry/src/region.rs:514` | - |  |
 | `hostile_input_never_panics` | 0 | `crates/discourse-academic-tex/src/texparse/lex.rs:189` | - |  |
-| `hostile_nested_box_and_sample_size_are_refused_before_decode` | 0 | `crates/video-h264-preview/src/lib.rs:770` | - |  |
+| `hostile_nested_box_and_sample_size_are_refused_before_decode` | 0 | `crates/video-h264-preview/src/lib.rs:771` | - |  |
 | `hostile_never_panics` | 0 | `crates/discourse-academic-tex/src/texparse/bib.rs:484` | - |  |
 | `hostile_never_panics` | 0 | `crates/discourse-academic-tex/src/typeset.rs:546` | - |  |
 | `hourglass_zero_for_rigid_translation` | 0 | `crates/kinetics-continuum-multiphysics/src/explicit/hourglass.rs:53` | - |  |
@@ -3522,13 +3646,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl Lut3d::identity` | 1 | `crates/radiance-color-grading/src/lut.rs:63` | - |  |
 | `impl Transform::identity` | 0 | `crates/vector-compute-shaders/src/cpu/util.rs:140` | - |  |
 | `impl Dpb<F>::idr` | 3 | `crates/video-h264-codec/src/dpb.rs:97` | - | IDR: mark all references unused; output (or drop) prior pictures. |
-| `idr` | 1 | `crates/video-h264-preview/src/lib.rs:503` | - |  |
-| `idr_slice` | 3 | `crates/video-h264-preview/src/lib.rs:525` | - |  |
-| `idr_slice_bits` | 4 | `crates/video-h264-preview/src/lib.rs:526` | - |  |
+| `idr` | 1 | `crates/video-h264-preview/src/lib.rs:504` | - |  |
+| `idr_slice` | 3 | `crates/video-h264-preview/src/lib.rs:526` | - |  |
+| `idr_slice_bits` | 4 | `crates/video-h264-preview/src/lib.rs:527` | - |  |
 | `ids_parse` | 0 | `crates/color-transforms/src/spaces.rs:408` | - |  |
 | `ids_text` | 1 | `crates/locus-parametric-solver/src/solver/conflict.rs:37` | - |  |
 | `impl LbmGrid3D::idx` | 4 | `crates/kinetics-continuum-multiphysics/src/lbm/d3q19.rs:94` | - |  |
-| `ifc4_roundtrip_wall` | 1 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:665` | - |  |
+| `ifc4_roundtrip_wall` | 1 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:684` | - |  |
 | `impl MepCategory::ifc_class_and_type` | 1 | `crates/manifold-bim-csg/src/parametric.rs:264` | - |  |
 | `ifc_export_and_guid` | 0 | `crates/manifold-bim-csg/src/ifc.rs:218` | - |  |
 | `ifc_guid` | 2 | `crates/manifold-bim-csg/src/ifc.rs:29` | - | Generates a deterministic 22-character IFC GlobalId from a 64-bit integer seed. |
@@ -3536,21 +3660,25 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::image` | 2 | `crates/asset-production-vibe/src/raster.rs:246` | - |  |
 | `image` | 1 | `crates/vector-cpu-render-adapter/src/image_cache.rs:146` | - |  |
 | `image` | 1 | `crates/vector-cpu-render-adapter/src/image_convert.rs:61` | - |  |
-| `impl AssetHost<'_>::image_limits` | 1 | `crates/asset-production-vibe/src/graphics.rs:105` | - |  |
+| `impl AssetHost<'_>::image_limits` | 1 | `crates/asset-production-vibe/src/graphics.rs:106` | - |  |
 | `image_page_models` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:490` | - |  |
 | `imdct_matches_direct_formula` | 0 | `crates/audio-opus-codec/src/celt/mdct.rs:181` | - | The folded output must equal the direct IMDCT formula folded by TDAC symmetry. |
 | `immendpoint_from_immdevice` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:137` | - |  |
 | `impl AssetHost<'_>::import_psd` | 2 | `crates/asset-production-vibe/src/radiance_photo/psd_codec.rs:193` | - |  |
-| `impl AssetHost<'_>::import_rgba` | 2 | `crates/asset-production-vibe/src/graphics.rs:175` | - |  |
+| `impl AssetHost<'_>::import_rgba` | 2 | `crates/asset-production-vibe/src/graphics.rs:177` | - |  |
 | `import_xfdf` | 2 | `crates/discourse-pdf-compliance/src/forms/xfdf.rs:32` | - | Import field values from an XML XFDF document into an AcroForm. |
+| `imported_frames_and_uv_survive_pbr_compile` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1543` | - |  |
+| `imported_gradient_keeps_more_than_8bit_precision_through_grade_transfer_and_png_reload` | 0 | `crates/asset-production-vibe/src/radiance_precision.rs:146` | - |  |
 | `in_bool` | 2 | `crates/kinetics-block-simulation/src/signal.rs:138` | - |  |
 | `in_circle` | 4 | `crates/kinetics-continuum-multiphysics/src/mesh/cdt.rs:37` | - | In-circle test: positive if p is inside the circumcircle of counter-clockwise (p0, p1, p2). |
 | `impl Track::in_out` | 2 | `crates/vector-surface-brush/src/track.rs:97` | 3d, 2d | Incoming and outgoing unit directions at vertex `i`. |
 | `in_real` | 2 | `crates/kinetics-block-simulation/src/signal.rs:130` | - |  |
 | `incompatible_siblings` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:514` | - |  |
+| `incomplete_or_unknown_bind_landmarks_refuse` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/portable_bind.rs:97` | - |  |
 | `inconsistent_and_empty_dimensions_do_not_panic` | 0 | `crates/raster-selection-morphology/src/distance/tests.rs:73` | - |  |
-| `inconsistent_composition_table_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:606` | - |  |
+| `inconsistent_composition_table_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:607` | - |  |
 | `impl XmlWriter::indent` | 1 | `crates/chronicle-timeline-interchange/src/xml.rs:85` | - |  |
+| `index_digest` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:368` | - |  |
 | `index_fn` | 1 | `crates/chronicle-tabular-engine/src/functions/lookup.rs:46` | - |  |
 | `index_of` | 2 | `crates/audio-aac-codec/src/huffman.rs:164` | - | Codebook index of the (sign-stripped for unsigned books) values. |
 | `impl Model::index_of` | 2 | `crates/kinetics-block-simulation/src/model.rs:86` | - |  |
@@ -3563,7 +3691,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Mode::init_caps` | 3 | `crates/audio-opus-codec/src/celt/rate.rs:141` | - | Per-band allocation caps for this frame (`init_caps`). |
 | `impl Cabac<'a>::init_contexts` | 3 | `crates/video-h264-codec/src/cabac.rs:88` | - |  |
 | `impl Cabac<'a>::init_engine` | 1 | `crates/video-h264-codec/src/cabac.rs:100` | - | 9.3.1.2: codIRange = 510, codIOffset = read_bits(9) (from the current byte-aligned position). |
-| `impl RendererContext<'_>::init_root_clear` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2593` | - |  |
+| `impl RendererContext<'_>::init_root_clear` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2596` | - |  |
 | `init_tables` | 0 | `crates/video-h264-codec/src/cavlc.rs:88` | physics | Force table construction (so the first slice does not pay for it). |
 | `impl Mode::initial` | 1 | `crates/kinetics-motion-compositor/src/typography/selectors.rs:32` | - |  |
 | `initialize_blend_vao` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2217` | - |  |
@@ -3609,25 +3737,28 @@ Every function/method found in the codebase, alphabetical.
 | `impl Block for Sine::inputs` | 1 | `crates/kinetics-block-simulation/src/blocks/sources.rs:112` | - |  |
 | `impl Block for Ramp::inputs` | 1 | `crates/kinetics-block-simulation/src/blocks/sources.rs:156` | - |  |
 | `impl Block for Clock::inputs` | 1 | `crates/kinetics-block-simulation/src/blocks/sources.rs:196` | - |  |
-| `impl AssetWorkspace::insert` | 3 | `crates/asset-production-vibe/src/lib.rs:149` | - |  |
+| `impl AssetWorkspace::insert` | 3 | `crates/asset-production-vibe/src/lib.rs:160` | - |  |
 | `impl ZipPackage::insert` | 3 | `crates/chronicle-office-codecs/src/zip/minizip.rs:61` | - |  |
 | `impl Graph::insert` | 3 | `crates/chronicle-tabular-engine/src/calc/recalc.rs:51` | graph |  |
 | `impl Env::insert` | 3 | `crates/locus-parametric-solver/src/solver/expr.rs:181` | - |  |
 | `impl OctreeNode::insert` | 6 | `crates/raster-spatial-operators/src/octree.rs:38` | - |  |
 | `impl OctreeQuantizer::insert` | 5 | `crates/raster-spatial-operators/src/octree.rs:79` | - |  |
+| `impl TextureBindings::insert` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:121` | - | Insert or replace a texture binding. |
 | `impl WebGlTextureBindings::insert` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:199` | numerics | Insert or replace a texture binding. |
-| `impl TextureBindings::insert` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:121` | - | Insert or replace a texture binding. |
 | `impl Index::insert` | 3 | `crates/vector-locus-pathops/src/three_d/visibility.rs:128` | 2d |  |
 | `impl GenerationalCache<K, T>::insert` | 3 | `crates/vector-skia-render-adapter/src/cache.rs:72` | - |  |
 | `impl SubPath::insert_anchor` | 3 | `crates/vector-locus-geometry/src/path.rs:252` | - | Split segment `seg` at parameter `t`, inserting a new anchor. Returns the new anchor index. |
 | `insert_anchor_on_curve_keeps_shape` | 0 | `crates/vector-locus-geometry/src/path.rs:574` | - |  |
 | `insert_anchor_on_line_keeps_shape` | 0 | `crates/vector-locus-geometry/src/path.rs:563` | - |  |
 | `insert_before_edit` | 5 | `crates/discourse-academic-tex/src/review/ai_repair.rs:128` | - |  |
-| `impl BindMap::insert_buf` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:885` | - |  |
+| `impl BindMap::insert_buf` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:888` | - |  |
 | `insert_entries` | 2 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:297` | - |  |
 | `insert_entry` | 2 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:306` | - |  |
-| `impl BindMap::insert_image` | 4 | `crates/vector-compute-renderer/src/wgpu_engine.rs:924` | - |  |
-| `insert_tone` | 4 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:474` | - |  |
+| `impl BindMap::insert_image` | 4 | `crates/vector-compute-renderer/src/etalon_engine.rs:927` | - |  |
+| `insert_tone` | 4 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:473` | - |  |
+| `inspect_and_verify_emf_v4_bundle` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:73` | - | Inspect and verify both the canonical 4-mode EMF v4 container (`0x0100, 0x0101, 0x0103, 0x0107`) |
+| `inspect_and_verify_qac_v1_bundle` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:264` | - | Inspect and verify both the canonical 4-mode QAC v1 container (`0x0100, 0x0101, 0x0102, 0x0104`) |
+| `inspect_and_verify_qac_v1_bytes` | 1 | `crates/asset-production-vibe/src/sound.rs:510` | - |  |
 | `impl AssetHost<'_>::inspect_engine_telemetry` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:98` | - |  |
 | `impl ChangeDag::inspect_post_merge_conflicts` | 2 | `crates/kinetics-schedule-cpm/src/change_dag.rs:269` | - |  |
 | `int` | 1 | `crates/chronicle-broadcast-containers/src/matroska/ebml.rs:126` | - | Big-endian two's-complement signed integer of 0..=8 bytes. |
@@ -3635,7 +3766,7 @@ Every function/method found in the codebase, alphabetical.
 | `int_of` | 2 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:173` | - |  |
 | `integ_euler_10` | 2 | `crates/vector-compute-shaders/shader/flatten.wgsl:165` | physics |  |
 | `integ_euler_10` | 2 | `crates/vector-compute-shaders/src/cpu/euler.rs:258` | physics | Integrate Euler spiral. |
-| `integer` | 2 | `crates/asset-production-vibe/src/lib.rs:511` | - |  |
+| `integer` | 2 | `crates/asset-production-vibe/src/lib.rs:532` | - |  |
 | `impl EbuR128Meter::integrated_lufs` | 1 | `crates/acoustics-daw-session/src/dsp/meter.rs:99` | - | Computes the gated integrated loudness in LUFS (-70 LUFS absolute gate, -10 LU relative gate). |
 | `integrated_lufs_bs1770` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:8` | - | ITU-R BS.1770-4 / EBU R128 gated integrated LUFS. |
 | `intensity` | 3 | `crates/radiance-color-grading/src/scopes/paint.rs:7` | - |  |
@@ -3654,6 +3785,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::interpolate_keyframes` | 2 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:246` | - |  |
 | `impl AssetHost<'_>::interpolate_motor_fti` | 2 | `crates/asset-production-vibe/src/kinetics_sim/motor_xpbd_space.rs:12` | physics, numerics | PGA MotorFTI Screw-Linear Interpolation (ScLERP) between physics ticks and render frames. |
 | `impl GpxTracklog::interpolate_position` | 3 | `crates/radiance-camera-raw/src/metadata.rs:67` | - | Interpolates GPS location at `time` (seconds since epoch) with a maximum gap limit. |
+| `interpretation` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:13` | - |  |
+| `intersect` | 3 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:495` | - |  |
 | `impl SampleRange::intersect` | 2 | `crates/audio-timebase/src/rate.rs:111` | - |  |
 | `intersect` | 3 | `crates/manifold-bim-csg/src/csg.rs:384` | - | Intersects two solids. |
 | `impl Bvh::intersect` | 3 | `crates/surface-pbr-studio/src/bvh.rs:63` | computational geometry, 3d | Finds the closest ray-mesh intersection. |
@@ -3679,6 +3812,7 @@ Every function/method found in the codebase, alphabetical.
 | `invalid_and_unsupported_samples_preserve_preview_and_journal` | 0 | `crates/terrain-brushes/src/adaptation_tests.rs:110` | - |  |
 | `invalid_assemblies_and_expanded_output_budget_fail_without_mutating_inputs` | 0 | `crates/profile-authoring/provenance/original-spatial-tests.rs:132` | - |  |
 | `invalid_assemblies_and_expanded_output_budget_fail_without_mutating_inputs` | 0 | `crates/profile-authoring/src/tests.rs:234` | - |  |
+| `invalid_masked_cells_stay_absent_through_cached_lookup` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/projection_tests.rs:220` | - |  |
 | `invalid_pending_frame_count` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:6` | - |  |
 | `invalid_rates_and_zero_denominators_do_not_panic` | 0 | `crates/timeline-editing/src/timebase.rs:254` | - |  |
 | `impl NQuin48::invariant` | 3 | `crates/color-transforms/src/ontology.rs:27` | - |  |
@@ -3702,8 +3836,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Bsp::invert` | 1 | `crates/manifold-bim-csg/src/csg.rs:309` | - |  |
 | `impl AscCdl::invert` | 3 | `crates/radiance-color-grading/src/grade.rs:166` | - | Exact inverse of ASC CDL (within clamped range). |
 | `invert_table` | 2 | `crates/color-transforms/src/icc/curve.rs:151` | - |  |
-| `impl AssetHost<'_>::invoke` | 3 | `crates/asset-production-vibe/src/lib.rs:208` | - |  |
-| `impl AssetHost<'_>::invoke_inner` | 3 | `crates/asset-production-vibe/src/lib.rs:217` | - |  |
+| `impl AssetHost<'_>::invoke` | 3 | `crates/asset-production-vibe/src/lib.rs:220` | - |  |
+| `impl AssetHost<'_>::invoke_inner` | 3 | `crates/asset-production-vibe/src/lib.rs:230` | - |  |
 | `ipmt` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:93` | - |  |
 | `ipmt_calc` | 6 | `crates/chronicle-tabular-engine/src/functions/financial.rs:37` | - |  |
 | `irr` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:290` | - |  |
@@ -3838,6 +3972,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl CellRef::is_valid` | 1 | `crates/chronicle-tabular-engine/src/core/addr.rs:29` | - |  |
 | `impl Spline::is_valid` | 1 | `crates/drafting-geometry/src/spline.rs:163` | - |  |
 | `impl NQuin48::is_valid` | 1 | `crates/layout-presentation-deck/src/ontology.rs:29` | - |  |
+| `is_validity_mask_entry` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:93` | - |  |
 | `impl MepGeom::is_vertical` | 1 | `crates/manifold-bim-csg/src/parametric.rs:317` | - |  |
 | `is_video_fourcc` | 1 | `crates/media-isobmff/src/codec.rs:838` | - |  |
 | `is_vowel` | 1 | `crates/vector-glyph-shaping/src/hyphen.rs:91` | - |  |
@@ -3883,7 +4018,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Unit::key` | 1 | `crates/vector-locus-geometry/src/units.rs:122` | - | Canonical key name. |
 | `key` | 3 | `crates/vector-radiance-trace/src/quantize.rs:159` | - |  |
 | `impl Parser<'_>::keyword` | 1 | `crates/manifold-bim-csg/src/step.rs:176` | - |  |
-| `impl Artifact::kind` | 1 | `crates/asset-production-vibe/src/lib.rs:105` | - |  |
+| `impl Artifact::kind` | 1 | `crates/asset-production-vibe/src/lib.rs:113` | - |  |
 | `impl Set::kind` | 1 | `crates/chronicle-broadcast-containers/src/mxf/meta.rs:75` | - |  |
 | `impl MbState::kind_is_skip` | 1 | `crates/video-h264-codec/src/picture.rs:85` | - |  |
 | `kinds` | 1 | `crates/discourse-academic-tex/src/texparse/lex.rs:148` | - |  |
@@ -3902,7 +4037,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Matrix::kr_kb` | 1 | `crates/color-transforms/src/lib.rs:39` | - | (Kr, Kb) luma coefficients. |
 | `impl Matrix::kr_kb` | 1 | `crates/radiance-color-grading/src/matrix.rs:24` | - | (Kr, Kb) luma coefficients. |
 | `kraft` | 1 | `crates/video-h264-codec/src/cavlc.rs:187` | - |  |
-| `impl AssetHost<'_>::kriging_variogram_morphometry` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:237` | - | 141: `hypermedia.geodesy.kriging_variogram_morphometry` |
+| `impl AssetHost<'_>::kriging_variogram_morphometry` | 2 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:248` | - | 141: `hypermedia.geodesy.kriging_variogram_morphometry` |
 | `impl Edge::l` | 2 | `crates/video-h264-codec/src/intra.rs:28` | - | p[-1, y] for y >= -1 |
 | `lab` | 0 | `crates/color-transforms/src/icc/builtin.rs:176` | - |  |
 | `lab_f` | 1 | `crates/color-transforms/src/icc/math.rs:124` | - |  |
@@ -3932,6 +4067,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl PbrChannel::label` | 1 | `crates/surface-pbr-studio/src/material.rs:47` | - |  |
 | `impl Unit::label` | 1 | `crates/vector-locus-geometry/src/units.rs:63` | - |  |
 | `label` | 3 | `crates/vector-radiance-trace/src/contour.rs:51` | 2d | 4-connected component labels (`u32::MAX` outside) and per-component pixel counts. |
+| `label_is_glyph_geometry_and_respects_its_box` | 0 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:122` | - |  |
 | `lace` | 2 | `crates/media-ogg/src/tests.rs:22` | - |  |
 | `impl ElasticIsotropic::lame_lambda` | 1 | `crates/kinetics-continuum-multiphysics/src/fem/constitutive.rs:25` | - | First Lamé parameter lambda = E * nu / ((1 + nu) * (1 - 2*nu)). |
 | `lanczos_eigensolver` | 5 | `crates/kinetics-continuum-multiphysics/src/solver/lanczos.rs:15` | - | Shift-and-invert Lanczos iteration to extract lowest eigenvalues of K * x = lambda * M * x. |
@@ -3946,6 +4082,7 @@ Every function/method found in the codebase, alphabetical.
 | `laplacian_edge_rgba8` | 3 | `crates/raster-spatial-operators/src/convolve.rs:378` | graph | Laplacian 2D second-derivative edge detector for RGBA8 buffer. |
 | `laplacian_smooth_step` | 4 | `crates/kinetics-continuum-multiphysics/src/mesh/quality.rs:51` | graph | Laplacian smoothing step for interior node positions given neighbor adjacency. |
 | `large_coordinates_keep_nearby_parabolas_distinct` | 0 | `crates/raster-selection-morphology/src/distance/tests.rs:47` | - |  |
+| `large_exact_epochs_and_shared_bounds_do_not_round_or_shift_wrap` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/clock_tests.rs:34` | - |  |
 | `large_finite_vec3_has_finite_length_and_unit_direction` | 0 | `crates/drafting-geometry/src/vec.rs:220` | 3d |  |
 | `large_offsets_use_co64_and_largesize_mdat` | 0 | `crates/media-isobmff/tests/roundtrip.rs:167` | - |  |
 | `last_char` | 1 | `crates/vector-hybrid-shaders/src/minify.rs:291` | - | Returns the last character of a known non-empty source section. |
@@ -3973,8 +4110,8 @@ Every function/method found in the codebase, alphabetical.
 | `layer_requests` | 0 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:266` | - |  |
 | `impl WebGlResources::layer_texture` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1318` | - |  |
 | `impl Scheduler<'a, 'p>::layer_texture_parity` | 2 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:565` | - | Select the texture group for a recorded layer depth. |
-| `impl GpuResources::layer_view` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1059` | - |  |
-| `impl GpuResources::layer_views` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1055` | - |  |
+| `impl GpuResources::layer_view` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1059` | - |  |
+| `impl GpuResources::layer_views` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1055` | - |  |
 | `impl SceneCase::layer_with` | 5 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:43` | 2d |  |
 | `impl ProgramConfig::layout` | 1 | `crates/audio-aac-codec/src/config.rs:125` | - | Elements in output channel order (front, side, back, LFE). |
 | `impl AudioSpecificConfig::layout` | 1 | `crates/audio-aac-codec/src/config.rs:265` | - | Elements in output channel order. |
@@ -3985,7 +4122,7 @@ Every function/method found in the codebase, alphabetical.
 | `layout_equation` | 2 | `crates/layout-paged-typesetter/src/equation/layout.rs:63` | - |  |
 | `layout_kinetics_domain_composable_artifacts_and_handles` | 0 | `crates/asset-production-vibe/src/kinetics_fem_garment_blocks.rs:325` | - |  |
 | `layout_mtext` | 2 | `crates/locus-parametric-solver/src/typography/mtext.rs:169` | - | Layout an MTEXT string into positioned lines and strokes. |
-| `impl AssetHost<'_>::layout_op` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:42` | - |  |
+| `impl AssetHost<'_>::layout_op` | 3 | `crates/asset-production-vibe/src/layout_ops/mod.rs:43` | - |  |
 | `layout_stroke_line` | 4 | `crates/locus-parametric-solver/src/typography/stroke.rs:158` | - |  |
 | `layout_text_on_path` | 3 | `crates/vector-glyph-shaping/src/layout.rs:205` | - | Lay out characters along a sequence of 2D curve points. |
 | `lbl` | 1 | `crates/discourse-academic-tex/src/catalog.rs:60` | - |  |
@@ -4038,6 +4175,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Vec2::length` | 1 | `crates/vector-compute-shaders/src/cpu/util.rs:89` | - |  |
 | `impl PathData::length` | 1 | `crates/vector-locus-geometry/src/path.rs:497` | - | Total length of all segments. |
 | `impl Run::length` | 1 | `crates/vector-radiance-trace/src/centerline.rs:265` | - |  |
+| `impl ArticulatedVertebrateSegment::length_m` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:81` | - | Segment length in metres. |
+| `impl BotanicalMetamerSegment::length_m` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:240` | - |  |
 | `length_of_square` | 0 | `crates/vector-locus-geometry/src/path.rs:614` | - |  |
 | `length_prefixed` | 1 | `crates/video-h264-preview/src/synth.rs:105` | - |  |
 | `length_prefixed_nals` | 2 | `crates/bitstream-codec/src/lib.rs:308` | - | Split a length-prefixed sample (AVCC/HVCC, `length_size` 1/2/4 bytes) into NAL units. |
@@ -4053,7 +4192,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Vec2::lerp` | 3 | `crates/surface-pbr-studio/src/math.rs:44` | - |  |
 | `impl Vec3::lerp` | 3 | `crates/surface-pbr-studio/src/math.rs:162` | - |  |
 | `lerp_f32` | 3 | `crates/vector-skia-render-adapter/src/scene.rs:599` | - |  |
-| `lerp_rgba` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:285` | - |  |
+| `lerp_rgba` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:224` | - |  |
 | `lerp_rgba` | 3 | `crates/layout-presentation-deck/src/morph/interpolate.rs:28` | - |  |
 | `letters_to_col` | 1 | `crates/chronicle-tabular-engine/src/core/addr.rs:115` | - | `A` -> 0, `xfd` -> 16383. `None` for empty, non-letters or beyond `XFD`. |
 | `impl Waveform::level` | 3 | `crates/radiance-color-grading/src/scopes/mod.rs:265` | - |  |
@@ -4089,6 +4228,7 @@ Every function/method found in the codebase, alphabetical.
 | `line_intersections` | 0 | `crates/drafting-geometry/src/tests.rs:87` | - |  |
 | `line_line` | 2 | `crates/drafting-geometry/src/intersect.rs:17` | computational geometry, 2d | Intersection of two finite segments. |
 | `line_line_infinite` | 4 | `crates/drafting-geometry/src/intersect.rs:4` | computational geometry, 2d | Intersection of two infinite lines through (a1,a2) and (b1,b2), with parameters on each. |
+| `impl ttf_parser::OutlineBuilder for Outline<'_>::line_to` | 3 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:108` | - |  |
 | `impl OutlinePen for BezPathOutline::line_to` | 3 | `crates/vector-compute-renderer/src/scene.rs:1080` | - |  |
 | `linear_burn_f32` | 2 | `crates/raster-blend-operators/src/lib.rs:289` | numerics | HDRI Linear Burn: `backdrop + source - 1.0`. |
 | `linear_burn_rgb` | 2 | `crates/raster-blend-operators/src/lib.rs:367` | numerics |  |
@@ -4115,13 +4255,13 @@ Every function/method found in the codebase, alphabetical.
 | `link_stages` | 4 | `crates/color-transforms/src/icc/transform.rs:160` | - |  |
 | `lint` | 2 | `crates/vector-hybrid-shaders/src/lint/mod.rs:26` | 3d | Runs every WGSL shader lint over `module` and panics with a single aggregated |
 | `lint_source` | 1 | `crates/vector-hybrid-shaders/src/lint/no_dynamic_indexing.rs:48` | - |  |
-| `list` | 1 | `crates/asset-production-vibe/src/lib.rs:529` | - |  |
+| `list` | 1 | `crates/asset-production-vibe/src/lib.rs:550` | - |  |
 | `impl Parser<'_>::list` | 2 | `crates/manifold-bim-csg/src/step.rs:306` | - |  |
 | `impl References::list` | 2 | `crates/multimodal-synthesis-schema/src/references.rs:122` | - |  |
 | `impl References::list_mut` | 2 | `crates/multimodal-synthesis-schema/src/references.rs:130` | - |  |
 | `impl Tok::literal_text` | 1 | `crates/chronicle-tabular-engine/src/numfmt/parse.rs:40` | - |  |
-| `live` | 1 | `crates/video-h264-preview/src/lib.rs:391` | - |  |
-| `impl AssetHost<'_>::living_world_anatomy_op` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:290` | physics, 3d, semantics | Categorical operations dispatch for Wave 12 Living-World anatomy, fauna rigging, |
+| `live` | 1 | `crates/video-h264-preview/src/lib.rs:392` | - |  |
+| `impl AssetHost<'_>::living_world_anatomy_op` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:292` | physics, 3d, semantics | Categorical operations dispatch for Wave 12 Living-World anatomy, fauna rigging, |
 | `ln` | 1 | `crates/chronicle-tabular-engine/src/functions/math.rs:70` | - |  |
 | `trait Scalar::ln` | 1 | `crates/kinetics-garment-draping/src/math.rs:243` | - |  |
 | `impl Scalar for f64::ln` | 1 | `crates/kinetics-garment-draping/src/math.rs:260` | - |  |
@@ -4139,7 +4279,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl XEl::local` | 1 | `crates/chronicle-office-codecs/src/xml/dom.rs:46` | - |  |
 | `local_name` | 1 | `crates/chronicle-office-codecs/src/xml/dom.rs:18` | - |  |
 | `impl Clut::locate` | 3 | `crates/color-transforms/src/icc/clut.rs:63` | - |  |
-| `locked_dt_frame_rate` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:414` | - |  |
+| `locked_dt_frame_rate` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:409` | - |  |
 | `impl AssetHost<'_>::locus_bishop_rmf_cyclic` | 2 | `crates/asset-production-vibe/src/locus_generative/rmf_geodesic.rs:41` | - | Cyclic double-reflection Bishop rotation-minimizing frame (RMF) generator along a 3D path. |
 | `impl AssetHost<'_>::locus_boolean` | 2 | `crates/asset-production-vibe/src/locus_ops.rs:138` | - |  |
 | `impl AssetHost<'_>::locus_ext` | 3 | `crates/asset-production-vibe/src/locus_ops.rs:7` | - |  |
@@ -4155,7 +4295,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::locus_trim` | 2 | `crates/asset-production-vibe/src/locus_generative/fillet_resample_trim.rs:459` | numerics | Extract a sub-curve from normalized arc length [start, end] with exact linear interpolation. |
 | `locus_warp_live_corners_90deg_setback_not_l_vs_c` | 0 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:768` | - |  |
 | `locus_warp_print_density_svg_path_roundtrip` | 0 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:703` | - |  |
-| `loft_points3` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:889` | - |  |
+| `loft_caps_close_with_opposite_edge_winding_for_linear_and_cubic` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1514` | graph, numerics |  |
+| `loft_points3` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1139` | - |  |
 | `trait Block::log` | 3 | `crates/kinetics-block-simulation/src/block.rs:69` | - |  |
 | `impl Block for Scope::log` | 3 | `crates/kinetics-block-simulation/src/blocks/sinks.rs:54` | - |  |
 | `impl Block for ToWorkspace::log` | 3 | `crates/kinetics-block-simulation/src/blocks/sinks.rs:101` | - |  |
@@ -4181,6 +4322,7 @@ Every function/method found in the codebase, alphabetical.
 | `looks_like_doi` | 1 | `crates/discourse-academic-tex/src/bibliography/identifiers.rs:48` | - |  |
 | `impl DecodeTable::lookup` | 2 | `crates/color-transforms/src/transform.rs:97` | - |  |
 | `impl DecodeTable::lookup` | 2 | `crates/radiance-color-grading/src/transform.rs:163` | - |  |
+| `impl GridAtTime<'a>::lookup_work` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:255` | - |  |
 | `lower` | 1 | `crates/chronicle-tabular-engine/src/functions/text.rs:83` | - |  |
 | `lowpass` | 3 | `crates/audio-aac-codec/tests/common/mod.rs:252` | - | Windowed-sinc (Blackman, 401 taps) low-pass at `fc` Hz, zero-phase (delay-compensated). |
 | `lpc_analysis_filter` | 4 | `crates/audio-opus-codec/src/silk/mod.rs:494` | - |  |
@@ -4206,6 +4348,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl GradientRampCache::luts_size` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:106` | - | Get the size of the packed luts. |
 | `m` | 2 | `crates/vector-compute-renderer/src/scene.rs:881` | - |  |
 | `m44_from_affine` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1286` | - |  |
+| `magnitude_brightness` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:328` | - | exponential colormap of \|E\| V/m; exposure has units m/V. Overflow in |
+| `magnitude_slice_and_dda_are_explicit_nonblack_derivatives` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/projection_tests.rs:3` | - |  |
 | `main` | 0 | `checks/consumer-smoke/src/main.rs:6` | - |  |
 | `main` | 0 | `crates/audio-device-cpal/build.rs:5` | - |  |
 | `main` | 0 | `crates/audio-device-cpal/examples/android.rs:13` | - |  |
@@ -4215,7 +4359,7 @@ Every function/method found in the codebase, alphabetical.
 | `main` | 0 | `crates/audio-device-cpal/examples/record_wav.rs:34` | - |  |
 | `main` | 0 | `crates/audio-device-cpal/examples/synth_tones.rs:15` | - |  |
 | `main` | 1 | `crates/gpu-command-profiler/examples/compute_shader.wgsl:34` | 3d |  |
-| `main` | 0 | `crates/gpu-command-profiler/examples/demo.rs:422` | - |  |
+| `main` | 0 | `crates/gpu-command-profiler/examples/demo.rs:424` | - |  |
 | `main` | 0 | `crates/raster-layer-mask-adapter/examples/edit_existing_layer_mask.rs:4` | - |  |
 | `main` | 0 | `crates/raster-selection-morphology/examples/modify_selection.rs:3` | - |  |
 | `main` | 0 | `crates/terrain-brushes/examples/local-stroke.rs:4` | - |  |
@@ -4261,16 +4405,17 @@ Every function/method found in the codebase, alphabetical.
 | `make_sample` | 7 | `crates/terrain-brushes/provenance/original-cow_delta_undo.rs:364` | - |  |
 | `make_sample` | 7 | `crates/terrain-brushes/src/lib.rs:530` | - |  |
 | `make_stream` | 2 | `crates/audio-device-cpal/examples/synth_tones.rs:130` | - |  |
-| `make_test_host` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:704` | - |  |
+| `make_test_host` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:790` | - |  |
 | `make_test_host` | 3 | `crates/asset-production-vibe/src/locus_generative/mod.rs:44` | - |  |
-| `make_test_host` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:701` | - |  |
+| `make_test_host` | 2 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:720` | - |  |
 | `make_test_host` | 3 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:361` | - |  |
-| `make_test_host` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1165` | - |  |
+| `make_test_host` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1495` | - |  |
 | `make_test_host` | 3 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:183` | - |  |
 | `make_test_host` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:373` | - |  |
 | `malformed_files_are_empty_not_fatal` | 0 | `crates/discourse-academic-tex/src/review/snippets.rs:220` | - |  |
-| `malformed_final_slice_is_not_presented` | 0 | `crates/video-h264-preview/src/lib.rs:713` | - |  |
-| `malformed_nals_refuse_parameter_sets_and_sp_slices` | 0 | `crates/video-h264-preview/src/lib.rs:750` | - |  |
+| `malformed_final_slice_is_not_presented` | 0 | `crates/video-h264-preview/src/lib.rs:714` | - |  |
+| `malformed_nals_refuse_parameter_sets_and_sp_slices` | 0 | `crates/video-h264-preview/src/lib.rs:751` | - |  |
+| `malformed_payload_and_admission_budgets_fail_before_cached_use` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/model_tests.rs:45` | - |  |
 | `malformed_profiles_and_primitive_budgets_are_rejected` | 0 | `crates/profile-authoring/provenance/original-spatial-tests.rs:151` | - |  |
 | `malformed_profiles_and_primitive_budgets_are_rejected` | 0 | `crates/profile-authoring/src/tests.rs:254` | - |  |
 | `malformed_profiles_are_rejected` | 0 | `crates/profile-authoring/src/tests.rs:43` | - |  |
@@ -4279,32 +4424,32 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::manifold_bevel` | 2 | `crates/asset-production-vibe/src/manifold_topology/radial_bevel_inset.rs:452` | - |  |
 | `impl AssetHost<'_>::manifold_bisect_plane` | 2 | `crates/asset-production-vibe/src/manifold_topology/solidify_bisect_subdivide.rs:83` | - |  |
 | `impl AssetHost<'_>::manifold_boolean_3d` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:41` | - |  |
-| `impl AssetHost<'_>::manifold_compile_10d_pbr` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:546` | - |  |
+| `impl AssetHost<'_>::manifold_compile_10d_pbr` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:595` | - |  |
 | `impl AssetHost<'_>::manifold_evaluate_field` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/fields_instances.rs:12` | - |  |
 | `impl AssetHost<'_>::manifold_ext` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:17` | - |  |
 | `impl AssetHost<'_>::manifold_fields_sdf_op` | 3 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:166` | - | Dispatch entrypoint for Wave 7 Manifold Lazy Fields, SDF Bricks, Instancing & Botany. |
 | `impl AssetHost<'_>::manifold_fspm_vascular_grow` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/sdf_botany.rs:278` | - |  |
-| `impl AssetHost<'_>::manifold_import_mesh` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:267` | computational geometry |  |
+| `impl AssetHost<'_>::manifold_import_mesh` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:287` | computational geometry |  |
 | `impl AssetHost<'_>::manifold_inset` | 2 | `crates/asset-production-vibe/src/manifold_topology/radial_bevel_inset.rs:597` | - |  |
-| `impl AssetHost<'_>::manifold_instance_on_points` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/fields_instances.rs:267` | - |  |
-| `impl AssetHost<'_>::manifold_loft` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:447` | - |  |
+| `impl AssetHost<'_>::manifold_instance_on_points` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/fields_instances.rs:422` | - |  |
+| `impl AssetHost<'_>::manifold_loft` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:496` | - |  |
 | `impl AssetHost<'_>::manifold_mesh_to_sdf_brick` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:237` | computational geometry |  |
-| `impl AssetHost<'_>::manifold_parse_dxf` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:416` | - |  |
-| `impl AssetHost<'_>::manifold_project_dxf` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:306` | - |  |
+| `impl AssetHost<'_>::manifold_parse_dxf` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:465` | - |  |
+| `impl AssetHost<'_>::manifold_project_dxf` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:355` | - |  |
 | `impl AssetHost<'_>::manifold_radial_euler` | 2 | `crates/asset-production-vibe/src/manifold_topology/radial_bevel_inset.rs:98` | physics |  |
-| `impl AssetHost<'_>::manifold_realize_instances` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/fields_instances.rs:398` | - |  |
+| `impl AssetHost<'_>::manifold_realize_instances` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/fields_instances.rs:553` | - |  |
 | `impl AssetHost<'_>::manifold_sdf_brick_to_mesh` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/sdf_botany.rs:16` | computational geometry |  |
-| `impl AssetHost<'_>::manifold_simplify` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:107` | - |  |
-| `impl AssetHost<'_>::manifold_simplify_anisotropic` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:231` | - |  |
-| `impl AssetHost<'_>::manifold_simplify_decimate` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:147` | - |  |
-| `impl AssetHost<'_>::manifold_simplify_remesh` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:187` | - |  |
+| `impl AssetHost<'_>::manifold_simplify` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:127` | - |  |
+| `impl AssetHost<'_>::manifold_simplify_anisotropic` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:253` | - |  |
+| `impl AssetHost<'_>::manifold_simplify_decimate` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:169` | - |  |
+| `impl AssetHost<'_>::manifold_simplify_remesh` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:209` | - |  |
 | `impl AssetHost<'_>::manifold_solidify` | 2 | `crates/asset-production-vibe/src/manifold_topology/solidify_bisect_subdivide.rs:13` | - |  |
 | `impl AssetHost<'_>::manifold_subdivide_catmull_clark` | 2 | `crates/asset-production-vibe/src/manifold_topology/solidify_bisect_subdivide.rs:296` | - |  |
 | `impl AssetHost<'_>::manifold_topology_op` | 3 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:139` | - | Dispatch manifold topology morphisms. |
 | `impl GpuProfiler::manual_owning_scope` | 3 | `crates/gpu-command-profiler/src/profiler.rs:204` | - | Starts a new **manually closed** profiler scope that takes ownership of the passed encoder or rendering/compute pass. |
 | `impl Expr::map` | 2 | `crates/chronicle-tabular-engine/src/formula/ast.rs:190` | - |  |
 | `impl Matrix::map` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:123` | - |  |
-| `impl DebugDownloads<'a>::map` | 3 | `crates/vector-compute-renderer/src/lib.rs:794` | - |  |
+| `impl DebugDownloads<'a>::map` | 3 | `crates/vector-compute-renderer/src/lib.rs:805` | - |  |
 | `impl Track::map` | 3 | `crates/vector-surface-brush/src/track.rs:148` | 3d | The point at arc length `s`, offset `d` along the left normal. |
 | `map_draw_tag` | 1 | `crates/vector-compute-shaders/shader/shared/drawtag.wgsl:47` | - |  |
 | `impl DistortTransform::map_inverse` | 7 | `crates/raster-spatial-operators/src/distort.rs:72` | - | Maps destination coordinate `(dst_x, dst_y)` back to source coordinate `Option<(src_x, src_y)>`. |
@@ -4315,7 +4460,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Homography::map_rect_bbox` | 2 | `crates/vector-locus-geometry/src/projective.rs:109` | computational geometry, 2d | The bounding box of the image of `r`. |
 | `map_transfer_function` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:645` | - |  |
 | `marching_squares_contours` | 3 | `crates/geodesy-spatial-analysis/src/morphometry.rs:227` | - | Extracts contour polylines from a DEM grid at a specified interval using the Marching Squares algorithm. |
-| `impl Renderer::mark_override_image_dirty` | 2 | `crates/vector-compute-renderer/src/lib.rs:555` | - | Marks `image` as dirty in the atlas cache, so its override texture will be recopied on |
+| `impl Renderer::mark_override_image_dirty` | 2 | `crates/vector-compute-renderer/src/lib.rs:564` | - | Marks `image` as dirty in the atlas cache, so its override texture will be recopied on |
 | `impl GradientRampCache::mark_synced` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:121` | - | Mark the luts as synced. |
 | `impl Presentation::master_for_slide` | 2 | `crates/layout-presentation-deck/src/model/master.rs:135` | - |  |
 | `master_ph` | 2 | `crates/layout-presentation-deck/src/model/resolve.rs:84` | - |  |
@@ -4326,9 +4471,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl SmartRule::matches` | 2 | `crates/radiance-camera-raw/src/metadata.rs:219` | - |  |
 | `matches_brute_force_for_every_small_mask` | 0 | `crates/raster-selection-morphology/src/distance/tests.rs:20` | physics |  |
 | `matches_ffmpeg_decoder` | 0 | `crates/audio-aac-codec/tests/decoder_oracle.rs:52` | - |  |
-| `impl BindMap::materialize_cpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:913` | - |  |
-| `impl TransientBindMap<'a>::materialize_external_image_for_render_pass` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1073` | - |  |
-| `impl TransientBindMap<'a>::materialize_gpu_buf_for_indirect` | 6 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1057` | - |  |
+| `impl BindMap::materialize_cpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:916` | - |  |
+| `impl TransientBindMap<'a>::materialize_external_image_for_render_pass` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:1077` | - |  |
+| `impl TransientBindMap<'a>::materialize_gpu_buf_for_indirect` | 6 | `crates/vector-compute-renderer/src/etalon_engine.rs:1061` | - |  |
 | `math` | 3 | `crates/discourse-academic-tex/src/typeset.rs:485` | - | Typeset a math fragment to positioned items. |
 | `math_shift_and_brackets` | 0 | `crates/discourse-academic-tex/src/texparse/lex.rs:183` | - |  |
 | `impl Matrix::matmul` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:190` | - |  |
@@ -4356,19 +4501,19 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::max_sfb` | 3 | `crates/audio-aac-codec/src/encoder/mod.rs:349` | - |  |
 | `impl MepCategory::may_stand` | 1 | `crates/manifold-bim-csg/src/parametric.rs:260` | - |  |
 | `impl SurfaceRenderer<'s>::maybe_blit_and_present` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:306` | - | Present the texture to the surface. If there is an intermediate texture, this first blits |
+| `impl Programs::maybe_create_atlas_textures` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2350` | - | Create any newly allocated atlas textures. |
 | `impl WebGlPrograms::maybe_create_atlas_textures` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1670` | - | Create any newly allocated atlas textures. |
-| `impl Programs::maybe_create_atlas_textures` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2347` | - | Create any newly allocated atlas textures. |
 | `maybe_premul_alpha` | 2 | `crates/vector-compute-shaders/shader/fine.wgsl:853` | 2d |  |
+| `impl Programs::maybe_resize_alphas_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2207` | - | Update the alpha texture size if needed. |
 | `impl WebGlPrograms::maybe_resize_alphas_tex` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1782` | - | Grow the alpha texture if needed. |
-| `impl Programs::maybe_resize_alphas_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2204` | - | Update the alpha texture size if needed. |
+| `impl Programs::maybe_resize_encoded_paints_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2242` | - | Update the encoded paints texture size if needed. |
 | `impl WebGlPrograms::maybe_resize_encoded_paints_tex` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1814` | - | Grow the encoded paints texture if needed. |
-| `impl Programs::maybe_resize_encoded_paints_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2239` | - | Update the encoded paints texture size if needed. |
 | `impl WebGlPrograms::maybe_resize_filter_data_tex` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1686` | - | Grow the filter data texture if needed. |
-| `impl Programs::maybe_resize_filter_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2165` | - |  |
+| `impl Programs::maybe_resize_filter_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2168` | - |  |
+| `impl Programs::maybe_resize_gradient_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2285` | - | Update the gradient texture size if needed. |
 | `impl WebGlPrograms::maybe_resize_gradient_tex` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1848` | - | Grow the gradient texture if needed. |
-| `impl Programs::maybe_resize_gradient_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2282` | - | Update the gradient texture size if needed. |
+| `impl Programs::maybe_update_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2323` | - | Update config buffer if dimensions changed. |
 | `impl WebGlPrograms::maybe_update_config_buffer` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1884` | - | Update config buffer if dimensions changed. |
-| `impl Programs::maybe_update_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2320` | - | Update config buffer if dimensions changed. |
 | `maybe_warn_about_webgl_feature_conflict` | 0 | `crates/vector-hybrid-renderer/src/render/common.rs:704` | - |  |
 | `maybe_warn_about_webgl_feature_conflict` | 0 | `crates/vector-hybrid-renderer/src/render/common.rs:722` | - |  |
 | `impl SliceDecoder<'a>::mb` | 1 | `crates/video-h264-codec/src/slicedec.rs:397` | - |  |
@@ -4389,8 +4534,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Bin::mean` | 1 | `crates/vector-radiance-trace/src/quantize.rs:149` | - |  |
 | `impl Body::mean_radius_m` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:145` | - |  |
 | `mean_size` | 1 | `crates/vector-locus-pathops/src/effects/util.rs:44` | 2d |  |
-| `mean_triangle_edge_length` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:923` | graph |  |
-| `impl LightTreeNode::measure` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:156` | - |  |
+| `mean_triangle_edge_length` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1253` | graph |  |
+| `impl LightTreeNode::measure` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:157` | - |  |
 | `measure_cell_text` | 2 | `crates/layout-paged-typesetter/src/table_layout/measure.rs:112` | - |  |
 | `measure_table_columns` | 2 | `crates/layout-paged-typesetter/src/table_layout/measure.rs:54` | - | Measures the (min_width, max_width) for each column in points. |
 | `measured_joint_without_an_assertion_id_is_rejected` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:559` | - |  |
@@ -4402,7 +4547,7 @@ Every function/method found in the codebase, alphabetical.
 | `membrane` | 3 | `crates/kinetics-garment-draping/src/energy.rs:64` | - | Nonlinear orthotropic membrane energy on a single triangle. |
 | `membrane_element` | 3 | `crates/kinetics-garment-draping/src/energy.rs:116` | - |  |
 | `mep_run_classification` | 0 | `crates/manifold-bim-csg/src/parametric.rs:359` | - |  |
-| `impl LightTreeMeasure::merge` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:53` | - |  |
+| `impl LightTreeMeasure::merge` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:54` | - |  |
 | `impl RoundBindings::merge` | 2 | `crates/vector-hybrid-renderer/src/target.rs:205` | - | Try to merge this binding with the other one. |
 | `merge_hdr` | 4 | `crates/radiance-camera-raw/src/fusion.rs:35` | - | Multi-exposure bracket HDR radiance map fusion with motion deghosting. |
 | `merge_pair` | 3 | `crates/vector-locus-pathops/src/pathops/edit.rs:242` | - |  |
@@ -4410,10 +4555,13 @@ Every function/method found in the codebase, alphabetical.
 | `merge_remote_idempotent` | 0 | `crates/kinetics-schedule-cpm/src/change_dag.rs:353` | - |  |
 | `impl AssetHost<'_>::mesh` | 2 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:94` | computational geometry | Retrieve a reference to a `Mesh` artifact from a production handle. |
 | `mesh` | 2 | `crates/profile-authoring/src/geometry.rs:52` | computational geometry |  |
-| `impl AssetHost<'_>::mesh_budget` | 3 | `crates/asset-production-vibe/src/geometry.rs:313` | computational geometry |  |
-| `mesh_golden_checksum` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1454` | computational geometry |  |
+| `impl AssetHost<'_>::mesh_budget` | 3 | `crates/asset-production-vibe/src/geometry.rs:320` | computational geometry |  |
+| `mesh_golden_checksum` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1906` | computational geometry |  |
 | `impl SigVal::meta` | 1 | `crates/kinetics-block-simulation/src/signal.rs:122` | - |  |
-| `metadata_names_in_pixel_payload_do_not_reject_valid_video` | 0 | `crates/video-h264-preview/src/lib.rs:509` | 2d |  |
+| `metadata_cost` | 4 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:12` | graph | Walk borrowed input first. Account strings/keys at worst-case JSON escaping, |
+| `metadata_json` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:31` | - |  |
+| `metadata_names_in_pixel_payload_do_not_reject_valid_video` | 0 | `crates/video-h264-preview/src/lib.rs:510` | 2d |  |
+| `metadata_output_bound` | 2 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:51` | - | Serializing to a counter allocates no JSON buffer. Maximal three-digit digest |
 | `metadata_qt_and_ilst` | 0 | `crates/media-isobmff/src/demux.rs:1020` | - |  |
 | `impl MaterialPreset::metal` | 3 | `crates/surface-pbr-studio/src/material.rs:90` | - |  |
 | `impl TempoMap::meter_at_tick` | 2 | `crates/audio-timebase/src/tempo.rs:213` | - | Active meter at `tick`. |
@@ -4426,6 +4574,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Segment::mid` | 1 | `crates/drafting-geometry/src/curve.rs:338` | 2d |  |
 | `impl Vec2::mid` | 2 | `crates/drafting-geometry/src/vec.rs:68` | 2d |  |
 | `impl Arc::mid_point` | 1 | `crates/drafting-geometry/src/curve.rs:77` | 2d |  |
+| `impl ArticulatedVertebrateSegment::midpoint_m` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:72` | - | Segment midpoint in local frame metres. |
+| `impl BotanicalMetamerSegment::midpoint_m` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:232` | - |  |
 | `min` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:276` | - |  |
 | `impl Vec2::min` | 2 | `crates/drafting-geometry/src/vec.rs:82` | 2d |  |
 | `impl Vec3::min` | 2 | `crates/surface-pbr-studio/src/math.rs:144` | - |  |
@@ -4443,7 +4593,7 @@ Every function/method found in the codebase, alphabetical.
 | `mirror` | 2 | `crates/color-transforms/src/icc/curve.rs:90` | - |  |
 | `impl Mat3::mirror` | 2 | `crates/drafting-geometry/src/mat.rs:43` | 2d | Reflection across the line through `p1`, `p2`. |
 | `impl Vec2::mirror` | 3 | `crates/drafting-geometry/src/vec.rs:89` | 2d | Mirror across the infinite line through `a` and `b`. |
-| `mirror_joint` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:464` | - |  |
+| `mirror_joint_for_binding` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:473` | - |  |
 | `mirror_matrix` | 0 | `crates/drafting-geometry/src/tests.rs:25` | numerics |  |
 | `missing_layer_mask_means_full_coverage_and_returns_replacement_bytes` | 0 | `crates/raster-layer-mask-adapter/src/tests.rs:20` | - |  |
 | `mitc4_shear_strains` | 5 | `crates/kinetics-continuum-multiphysics/src/fem/structural.rs:88` | graph | MITC4 (Mixed Interpolation of Tensorial Components) 4-node shell element. |
@@ -4474,14 +4624,15 @@ Every function/method found in the codebase, alphabetical.
 | `morphisms_json` | 1 | `crates/asset-production-vibe/src/ontology/mod.rs:346` | semantics | Serializes morphisms filtered by optional `category` (`synth.ontology.morphisms`). |
 | `mosaic` | 3 | `crates/vector-radiance-trace/src/mosaic.rs:7` | - | Average colour (straight RGBA) of each of `cols` x `rows` tiles covering `img`, row by row. |
 | `motion_bs` | 2 | `crates/video-h264-codec/src/deblock.rs:39` | - |  |
-| `motor_axis_angle` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:38` | - |  |
+| `motor_axis_angle` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:36` | - |  |
 | `impl GeodesicRuler::move_point` | 3 | `crates/drafting-geometry/src/geodesic_ruler.rs:182` | - |  |
+| `impl ttf_parser::OutlineBuilder for Outline<'_>::move_to` | 3 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:107` | - |  |
 | `impl OutlinePen for BezPathOutline::move_to` | 3 | `crates/vector-compute-renderer/src/scene.rs:1076` | - |  |
 | `movie_duration` | 2 | `crates/media-isobmff/src/mux.rs:173` | - |  |
-| `movie_inspection_and_random_access_h264` | 0 | `crates/video-h264-preview/src/lib.rs:786` | - |  |
-| `movie_prores_playback` | 0 | `crates/video-h264-preview/src/lib.rs:804` | - |  |
-| `mp4_box` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:597` | - |  |
-| `mp4_full_box` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:606` | - |  |
+| `movie_inspection_and_random_access_h264` | 0 | `crates/video-h264-preview/src/lib.rs:787` | - |  |
+| `movie_prores_playback` | 0 | `crates/video-h264-preview/src/lib.rs:805` | - |  |
+| `mp4_box` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:592` | - |  |
+| `mp4_full_box` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:601` | - |  |
 | `mspdi_and_xer_export` | 0 | `crates/kinetics-schedule-cpm/src/format.rs:777` | - |  |
 | `mth` | 1 | `crates/discourse-academic-tex/src/catalog.rs:75` | - |  |
 | `impl Mul<T> for SampleRate::mul` | 2 | `crates/audio-device-cpal/src/lib.rs:204` | - |  |
@@ -4516,6 +4667,7 @@ Every function/method found in the codebase, alphabetical.
 | `mutated_ffmpeg_fixtures_never_panic` | 0 | `crates/media-isobmff/tests/fuzz.rs:142` | - |  |
 | `mutated_synthetic_files_never_panic` | 0 | `crates/media-isobmff/tests/fuzz.rs:134` | - |  |
 | `impl AssetHost<'_>::mux_mp4` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:29` | - |  |
+| `muxed_media_timing_is_exact_at_integer_and_ntsc_rates` | 0 | `crates/asset-production-vibe/src/chronicle_ops.rs:871` | - |  |
 | `mv_far` | 2 | `crates/video-h264-codec/src/deblock.rs:34` | - |  |
 | `impl SliceDecoder<'a>::mvp` | 8 | `crates/video-h264-codec/src/slicedec.rs:490` | - | Luma motion vector prediction (8.4.1.3). `shape`: 1 = 16x8, 2 = 8x16, 0 = other. |
 | `impl GpuFilterData::n_decimations` | 1 | `crates/vector-hybrid-renderer/src/filter.rs:331` | - | Returns the number of decimation levels encoded in the header. |
@@ -4549,9 +4701,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl Block for Integrator::n_states` | 1 | `crates/kinetics-block-simulation/src/blocks/continuous.rs:52` | - |  |
 | `impl Block for PidController::n_states` | 1 | `crates/kinetics-block-simulation/src/blocks/continuous.rs:187` | - |  |
 | `impl Block for TransferFcn::n_states` | 1 | `crates/kinetics-block-simulation/src/blocks/continuous.rs:282` | - |  |
-| `nal` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:464` | - |  |
+| `nal` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:459` | - |  |
 | `nal` | 3 | `crates/video-h264-codec/src/synth_tests.rs:15` | - |  |
-| `nal` | 2 | `crates/video-h264-preview/src/lib.rs:484` | - |  |
+| `nal` | 2 | `crates/video-h264-preview/src/lib.rs:485` | - |  |
 | `nal_body` | 3 | `crates/video-h264-preview/src/synth.rs:20` | - |  |
 | `impl Decoder::nal_length_size` | 1 | `crates/video-h264-codec/src/decoder.rs:216` | - | Length of NAL length prefixes (from avcC), or None for Annex-B input. |
 | `impl HevcConfig::nalus_of` | 2 | `crates/media-isobmff/src/codec.rs:412` | - |  |
@@ -4649,10 +4801,11 @@ Every function/method found in the codebase, alphabetical.
 | `impl PdcMixEngine::new` | 0 | `crates/acoustics-daw-session/src/mix_session/mod.rs:127` | - |  |
 | `impl CamelotKey::new` | 2 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:14` | - |  |
 | `impl ZipArchiveWriter::new` | 0 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:49` | - |  |
-| `impl SubpathBuilder<'a>::new` | 4 | `crates/asset-production-vibe/src/glyph/mod.rs:148` | - |  |
+| `impl GridAtTime<'a>::new` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:67` | - |  |
+| `impl SubpathBuilder<'a>::new` | 4 | `crates/asset-production-vibe/src/glyph/mod.rs:149` | - |  |
 | `impl Dsu::new` | 1 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:97` | - |  |
 | `impl RuleSpec::new` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:91` | - |  |
-| `impl WhitegumMeshBuilder::new` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:37` | - |  |
+| `impl WhitegumMeshBuilder::new` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:40` | - |  |
 | `impl Decoder::new` | 1 | `crates/audio-aac-codec/src/decoder.rs:58` | - | Create a decoder from an `AudioSpecificConfig`. |
 | `impl Encoder::new` | 1 | `crates/audio-aac-codec/src/encoder/mod.rs:143` | - |  |
 | `impl BandModel::new` | 3 | `crates/audio-aac-codec/src/encoder/psy.rs:34` | - |  |
@@ -4783,10 +4936,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl SpatialGraph::new` | 0 | `crates/geodesy-spatial-analysis/src/network_topology.rs:40` | - |  |
 | `impl GfxState::new` | 1 | `crates/gpu-command-profiler/examples/demo.rs:76` | - |  |
 | `impl GpuProfiler::new` | 2 | `crates/gpu-command-profiler/src/profiler.rs:58` | - | Creates a new Profiler object. |
-| `impl QueryPool::new` | 2 | `crates/gpu-command-profiler/src/profiler.rs:860` | - |  |
+| `impl QueryPool::new` | 2 | `crates/gpu-command-profiler/src/profiler.rs:862` | - |  |
 | `impl AlphaConvertBlitter::new` | 3 | `crates/gpu-device-context/src/alpha_blitter.rs:90` | - | Create a blitter that applies `conversion` and writes to a target |
 | `impl BufferRenderer::new` | 3 | `crates/gpu-device-context/src/buffer_renderer.rs:36` | - | Creates a new render surface for the specified window and dimensions. |
-| `impl WGPUContext::new` | 0 | `crates/gpu-device-context/src/lib.rs:116` | - |  |
+| `impl EtalonContext::new` | 0 | `crates/gpu-device-context/src/lib.rs:124` | - |  |
 | `impl SurfaceRenderer<'s>::new` | 4 | `crates/gpu-device-context/src/surface_renderer.rs:145` | - | Creates a new render surface for the specified window and dimensions. |
 | `impl Integrator::new` | 1 | `crates/kinetics-block-simulation/src/blocks/continuous.rs:15` | - |  |
 | `impl Derivative::new` | 1 | `crates/kinetics-block-simulation/src/blocks/continuous.rs:81` | - |  |
@@ -4887,10 +5040,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl SphericalAdjustment::new` | 3 | `crates/multimodal-synthesis-schema/src/stage.rs:14` | - |  |
 | `impl Queue::new` | 7 | `crates/pcm-device-output/src/queue.rs:31` | - |  |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::new` | 3 | `crates/pixel-buffer-output/src/builder.rs:50` | physics, 2d | Create a builder that can be finalized into a [`Pixels`] pixel buffer. |
-| `impl SurfaceTexture<W>::new` | 3 | `crates/pixel-buffer-output/src/lib.rs:192` | - | Create a logical texture for a window surface. |
-| `impl Pixels<'win>::new` | 3 | `crates/pixel-buffer-output/src/lib.rs:250` | 2d | Create a pixel buffer instance with default options. |
+| `impl SurfaceTexture<W>::new` | 3 | `crates/pixel-buffer-output/src/lib.rs:187` | - | Create a logical texture for a window surface. |
+| `impl Pixels<'win>::new` | 3 | `crates/pixel-buffer-output/src/lib.rs:245` | 2d | Create a pixel buffer instance with default options. |
 | `impl ScalingRenderer::new` | 8 | `crates/pixel-buffer-output/src/renderers.rs:23` | - |  |
-| `impl ScalingMatrix::new` | 3 | `crates/pixel-buffer-output/src/renderers.rs:317` | - |  |
+| `impl ScalingMatrix::new` | 3 | `crates/pixel-buffer-output/src/renderers.rs:325` | - |  |
 | `impl PixelsRendererOptions::new` | 0 | `crates/pixel-window-render-adapter/src/lib.rs:42` | - |  |
 | `impl PixelsWindowRenderer<Renderer>::new` | 0 | `crates/pixel-window-render-adapter/src/lib.rs:91` | - |  |
 | `impl GpxTracklog::new` | 0 | `crates/radiance-camera-raw/src/metadata.rs:57` | - |  |
@@ -4929,15 +5082,15 @@ Every function/method found in the codebase, alphabetical.
 | `impl DebugRenderer::new` | 3 | `crates/vector-compute-renderer/src/debug/renderer.rs:29` | - |  |
 | `impl LinepointsUniforms::new` | 2 | `crates/vector-compute-renderer/src/debug/renderer.rs:355` | - |  |
 | `impl LineEndpoint::new` | 2 | `crates/vector-compute-renderer/src/debug/validate.rs:23` | - |  |
-| `impl Renderer::new` | 2 | `crates/vector-compute-renderer/src/lib.rs:434` | - | Creates a new renderer for the specified device. |
+| `impl EtalonEngine::new` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:144` | - |  |
+| `impl TransientBindMap<'a>::new` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:1045` | - | Create new transient bind map, seeded from external resources |
+| `impl Renderer::new` | 2 | `crates/vector-compute-renderer/src/lib.rs:442` | - | Creates a new renderer for the specified device. |
 | `impl BufferProxy::new` | 2 | `crates/vector-compute-renderer/src/recording.rs:236` | - |  |
 | `impl ImageProxy::new` | 3 | `crates/vector-compute-renderer/src/recording.rs:263` | - |  |
 | `impl Render::new` | 0 | `crates/vector-compute-renderer/src/render.rs:121` | - |  |
 | `impl Scene::new` | 0 | `crates/vector-compute-renderer/src/scene.rs:54` | - | Creates a new scene. |
 | `impl DrawGlyphs<'a>::new` | 2 | `crates/vector-compute-renderer/src/scene.rs:477` | - | Creates a new builder for encoding a glyph run for the specified |
 | `impl RenderContext::new` | 0 | `crates/vector-compute-renderer/src/util.rs:32` | - |  |
-| `impl WgpuEngine::new` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:144` | - |  |
-| `impl TransientBindMap<'a>::new` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1041` | - | Create new transient bind map, seeded from external resources |
 | `impl CargoWarningAdapter<W>::new` | 1 | `crates/vector-compute-shaders/build.rs:184` | - |  |
 | `impl Error::new` | 3 | `crates/vector-compute-shaders/src/compile/mod.rs:57` | - |  |
 | `impl ShaderInfo::new` | 3 | `crates/vector-compute-shaders/src/compile/mod.rs:92` | - |  |
@@ -4965,15 +5118,15 @@ Every function/method found in the codebase, alphabetical.
 | `impl GradientRampCache::new` | 2 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:58` | - | Create a new gradient ramp cache with the specified retained count. |
 | `impl PaintResolver<'a>::new` | 2 | `crates/vector-hybrid-renderer/src/paint.rs:81` | - |  |
 | `impl ScratchTexture<T>::new` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:104` | - |  |
+| `impl TextureBindings::new` | 0 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:96` | - | Create an empty binding map. |
+| `impl Renderer::new` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:161` | - | Creates a new renderer and its persistent resources. |
+| `impl StripBufferArena::new` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:970` | - |  |
+| `impl Programs::new` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1087` | - |  |
 | `impl WebGlTextureBindings::new` | 0 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:181` | - | Create an empty binding map. |
 | `impl WebGlRenderer::new` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:234` | 3d, 2d | Creates a new WebGL2 renderer and its persistent resources. |
 | `impl PendingShaderProgram::new` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1365` | 3d |  |
 | `impl PendingWebGlPrograms::new` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1471` | - | Starts compiling all programs before performing any blocking status queries. |
 | `impl Resource<T>::new` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:36` | - |  |
-| `impl TextureBindings::new` | 0 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:96` | - | Create an empty binding map. |
-| `impl Renderer::new` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:161` | - | Creates a new renderer and its persistent resources. |
-| `impl StripBufferArena::new` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:970` | - |  |
-| `impl Programs::new` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1087` | - |  |
 | `impl Resources::new` | 1 | `crates/vector-hybrid-renderer/src/resources.rs:26` | - |  |
 | `impl Scene::new` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:232` | - | Create a new render context with the given width and height in pixels. |
 | `impl Atlases::new` | 1 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:34` | - |  |
@@ -5031,14 +5184,14 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::new` | 3 | `crates/video-prores-codec/src/encode.rs:56` | - |  |
 | `impl Frame::new` | 5 | `crates/video-prores-codec/src/types.rs:171` | - | A black (video-range) frame with the given geometry. |
 | `impl WallAxis::new_arc` | 3 | `crates/manifold-bim-csg/src/parametric.rs:70` | - |  |
-| `impl Pixels<'win>::new_async` | 3 | `crates/pixel-buffer-output/src/lib.rs:281` | 2d | Asynchronously create a pixel buffer instance with default options. |
+| `impl Pixels<'win>::new_async` | 3 | `crates/pixel-buffer-output/src/lib.rs:276` | 2d | Asynchronously create a pixel buffer instance with default options. |
 | `impl ResourceProxy::new_buf` | 2 | `crates/vector-compute-renderer/src/recording.rs:275` | - |  |
 | `impl AcroFormField::new_checkbox` | 4 | `crates/discourse-pdf-compliance/src/forms/model.rs:61` | 2d |  |
 | `impl Device::new_device` | 4 | `crates/audio-device-cpal/src/host/jack/device.rs:38` | - |  |
 | `impl RenderContext::new_device` | 2 | `crates/vector-compute-renderer/src/util.rs:162` | - | Creates a compatible device handle id. |
 | `impl MepGeom::new_duct` | 4 | `crates/manifold-bim-csg/src/parametric.rs:300` | - |  |
 | `impl PbrLayer::new_fill` | 4 | `crates/surface-pbr-studio/src/compose.rs:58` | - |  |
-| `impl DeviceHandle::new_from_compatible_surface` | 4 | `crates/gpu-device-context/src/lib.rs:33` | - | Creates a `DeviceHandle` with `Device` that's compatible with the specified `Surface` |
+| `impl DeviceHandle::new_from_compatible_surface` | 4 | `crates/gpu-device-context/src/lib.rs:41` | - | Creates a `DeviceHandle` with `Device` that's compatible with the specified `Surface` |
 | `impl ResourceProxy::new_image` | 3 | `crates/vector-compute-renderer/src/recording.rs:279` | - |  |
 | `impl Stream::new_input` | 4 | `crates/audio-device-cpal/src/host/alsa/mod.rs:913` | - |  |
 | `impl Stream::new_input` | 4 | `crates/audio-device-cpal/src/host/jack/stream.rs:26` | - |  |
@@ -5051,8 +5204,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl MepGeom::new_pipe` | 3 | `crates/manifold-bim-csg/src/parametric.rs:290` | - |  |
 | `impl RecordedDraw::new_rect` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:72` | 2d |  |
 | `impl AcroFormField::new_text` | 3 | `crates/discourse-pdf-compliance/src/forms/model.rs:47` | 2d |  |
+| `impl Renderer::new_with` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:166` | - | Creates a new renderer and its persistent resources with specific settings. |
 | `impl WebGlRenderer::new_with` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:243` | 2d | Creates a new WebGL2 renderer and its persistent resources with specific settings. |
-| `impl Renderer::new_with` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:166` | - | Creates a new renderer and its persistent resources with specific settings. |
 | `impl Scene::new_with` | 3 | `crates/vector-hybrid-renderer/src/scene.rs:241` | - | Create a new render context with a specific SIMD level. |
 | `impl CowTerrainTileGrid::new_with_neighborhood_sampling` | 4 | `crates/terrain-brushes/src/lib.rs:190` | - | Explicitly select neighbourhood semantics for new work or known-version replay. |
 | `impl GpuProfiler::new_with_tracy_client` | 4 | `crates/gpu-command-profiler/src/profiler.rs:92` | - | Creates a new profiler and connects to a running Tracy client. |
@@ -5094,7 +5247,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl GridDivision::next_line` | 5 | `crates/audio-timebase/src/grid.rs:185` | - | The first grid line strictly after `line`. |
 | `impl Decoder::next_random` | 1 | `crates/audio-aac-codec/src/decoder.rs:444` | - |  |
 | `impl Oscillator::next_sample` | 1 | `crates/acoustics-daw-session/src/dsp/osc.rs:48` | - | Generates the next output sample and advances phase. |
-| `impl GpuProfiler::next_scope_tree_handle` | 1 | `crates/gpu-command-profiler/src/profiler.rs:558` | - |  |
+| `impl GpuProfiler::next_scope_tree_handle` | 1 | `crates/gpu-command-profiler/src/profiler.rs:560` | - |  |
 | `impl XorShift64::next_u64` | 1 | `crates/kinetics-schedule-cpm/src/schedule.rs:636` | - |  |
 | `impl Rng::next_u64` | 1 | `crates/vector-surface-brush/src/track.rs:188` | - |  |
 | `impl SttsCursor<'_>::next_value` | 1 | `crates/media-isobmff/src/demux.rs:603` | - |  |
@@ -5112,7 +5265,7 @@ Every function/method found in the codebase, alphabetical.
 | `no_worse` | 2 | `crates/vector-radiance-trace/src/fit.rs:280` | - |  |
 | `impl ProtoNetwork::node` | 2 | `crates/layout-nodegraph-compiler/src/compiler/proto.rs:41` | graph |  |
 | `impl Bsp::node` | 1 | `crates/manifold-bim-csg/src/csg.rs:203` | graph |  |
-| `impl LightTreeNode::node_and_leaf_count` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:163` | graph |  |
+| `impl LightTreeNode::node_and_leaf_count` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:164` | graph |  |
 | `impl ElementType::node_count` | 1 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:21` | graph |  |
 | `impl Bvh::node_count` | 1 | `crates/surface-pbr-studio/src/bvh.rs:54` | graph |  |
 | `impl ProtoNetwork::node_mut` | 2 | `crates/layout-nodegraph-compiler/src/compiler/proto.rs:45` | graph |  |
@@ -5139,7 +5292,7 @@ Every function/method found in the codebase, alphabetical.
 | `norm_s_dist` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:91` | - |  |
 | `impl Complex32::norm_sq` | 1 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:42` | - |  |
 | `norm_title` | 1 | `crates/discourse-academic-tex/src/bibliography/import.rs:75` | - | Normalized title for duplicate detection. |
-| `normal` | 2 | `crates/profile-authoring/src/frames.rs:46` | 3d |  |
+| `normal` | 2 | `crates/profile-authoring/src/frames.rs:49` | 3d |  |
 | `normal` | 1 | `crates/vector-surface-brush/src/track.rs:29` | 3d, 2d | Left-hand normal in y-down document space (for a path running +x it points +y). |
 | `normal_at` | 2 | `crates/vector-locus-pathops/src/effects/distort.rs:14` | 3d, 2d |  |
 | `impl AccountClass::normal_balance_is_debit` | 1 | `crates/chronicle-fiduciary-ledger/src/accounts.rs:18` | 3d |  |
@@ -5183,7 +5336,7 @@ Every function/method found in the codebase, alphabetical.
 | `npm` | 2 | `crates/color-transforms/src/spaces.rs:78` | numerics | Normalised primary matrix (SMPTE RP 177). |
 | `npm` | 2 | `crates/radiance-color-grading/src/spaces.rs:79` | numerics | Normalised primary matrix (SMPTE RP 177). |
 | `npv` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:218` | - |  |
-| `num` | 1 | `crates/asset-production-vibe/src/lib.rs:498` | - |  |
+| `num` | 1 | `crates/asset-production-vibe/src/lib.rs:519` | - |  |
 | `num` | 2 | `crates/chronicle-tabular-engine/src/functions/util.rs:8` | - |  |
 | `num` | 3 | `crates/kinetics-block-simulation/src/blocks/params.rs:15` | - |  |
 | `num` | 3 | `crates/vector-locus-pathops/src/effects/util.rs:6` | - |  |
@@ -5195,7 +5348,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Dpb<F>::num_refs` | 1 | `crates/video-h264-codec/src/dpb.rs:69` | - |  |
 | `impl IcsInfo::num_swb` | 2 | `crates/audio-aac-codec/src/ics.rs:61` | - | Number of bands for this window length (`num_swb`). |
 | `impl IcsInfo::num_windows` | 1 | `crates/audio-aac-codec/src/ics.rs:53` | - |  |
-| `number` | 3 | `crates/asset-production-vibe/src/lib.rs:518` | - |  |
+| `number` | 3 | `crates/asset-production-vibe/src/lib.rs:539` | - |  |
 | `number` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:145` | - |  |
 | `impl Value::number` | 1 | `crates/chronicle-tabular-engine/src/core/value.rs:147` | - |  |
 | `impl Parser<'_>::number` | 1 | `crates/locus-parametric-solver/src/solver/expr.rs:133` | - |  |
@@ -5251,8 +5404,8 @@ Every function/method found in the codebase, alphabetical.
 | `op_rank` | 1 | `crates/discourse-academic-tex/src/review/ai_repair.rs:209` | - |  |
 | `impl MorphFrame::opacity_of` | 2 | `crates/layout-presentation-deck/src/morph/transition.rs:37` | - |  |
 | `impl Rgba8::opaque` | 1 | `crates/media-test-support/src/golden.rs:34` | - |  |
+| `impl Backend for RendererContext<'_>::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3101` | - |  |
 | `impl Backend for WebGlRendererContext<'_>::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3241` | - |  |
-| `impl Backend for RendererContext<'_>::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3098` | - |  |
 | `trait Backend::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:27` | - | Execute the opaque pass against the root target with the given strips. If this method is |
 | `impl Backend for Recorder::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:230` | - |  |
 | `opaque_reverse_rebases_texture_runs` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:852` | - |  |
@@ -5261,6 +5414,8 @@ Every function/method found in the codebase, alphabetical.
 | `opaque_routing` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:979` | - |  |
 | `impl ScheduledCase::opaque_x` | 1 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:206` | - |  |
 | `impl RuleKind::opcode` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:48` | - |  |
+| `impl CurrentDocument<'a>::open` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:184` | - |  |
+| `open` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/tests.rs:32` | - |  |
 | `impl DeviceHandles::open` | 1 | `crates/audio-device-cpal/src/host/alsa/mod.rs:188` | - | Create `DeviceHandles` for `name` and try to open a handle for both |
 | `impl XmlWriter::open` | 3 | `crates/chronicle-timeline-interchange/src/xml.rs:91` | - |  |
 | `open` | 1 | `crates/media-isobmff/src/demux.rs:256` | - | Parse an MP4/MOV file. Only box headers, `ftyp`, `moov` and `moof` boxes are read. |
@@ -5280,15 +5435,14 @@ Every function/method found in the codebase, alphabetical.
 | `opt` | 1 | `crates/discourse-academic-tex/src/catalog.rs:57` | - |  |
 | `opt_arg` | 2 | `crates/discourse-academic-tex/src/texparse/structure.rs:302` | - |  |
 | `opt_num` | 3 | `crates/chronicle-tabular-engine/src/functions/util.rs:13` | - |  |
-| `opt_point3` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:52` | - |  |
+| `opt_point3` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:54` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/discourse_chronicle_fiduciary.rs:5` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/glyph_knuth_plass.rs:6` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:6` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:11` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:6` | - |  |
 | `opt_str` | 3 | `crates/asset-production-vibe/src/surface_pbr_brush.rs:5` | - |  |
-| `opt_string` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:45` | - |  |
-| `impl AssetHost<'_>::optical_nm_to_audio_hz` | 2 | `crates/asset-production-vibe/src/sound.rs:7` | - | Heterodyne optical wavelength onto A4 (532 nm → 440 Hz) so the field is hearable. |
+| `opt_string` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:47` | - |  |
 | `impl Pipeline::optimize` | 1 | `crates/color-transforms/src/icc/pipeline.rs:170` | - |  |
 | `optional_point3` | 3 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:357` | - |  |
 | `optional_point3` | 3 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:48` | - |  |
@@ -5361,8 +5515,8 @@ Every function/method found in the codebase, alphabetical.
 | `overlapping_separate_lines` | 0 | `crates/drafting-geometry/src/region.rs:415` | - |  |
 | `impl SampleRange::overlaps` | 2 | `crates/audio-timebase/src/rate.rs:108` | - |  |
 | `overlaps` | 2 | `crates/vector-locus-pathops/src/three_d/visibility.rs:63` | 2d |  |
-| `impl Renderer::override_image` | 3 | `crates/vector-compute-renderer/src/lib.rs:538` | - | Overwrite `image` with `texture`. |
-| `impl WGPUContext::override_limits` | 1 | `crates/gpu-device-context/src/lib.rs:145` | - |  |
+| `impl Renderer::override_image` | 3 | `crates/vector-compute-renderer/src/lib.rs:547` | - | Overwrite `image` with `texture`. |
+| `impl EtalonContext::override_limits` | 1 | `crates/gpu-device-context/src/lib.rs:153` | - |  |
 | `impl Reader<'a>::overrun` | 1 | `crates/chronicle-broadcast-containers/src/dnx/bits.rs:58` | - |  |
 | `impl Cabac<'a>::overrun` | 1 | `crates/video-h264-codec/src/cabac.rs:142` | - | True when the reader has run past the end of the data (corrupt stream). |
 | `impl Reader<'a>::overrun` | 1 | `crates/video-prores-codec/src/bits.rs:62` | - |  |
@@ -5377,10 +5531,10 @@ Every function/method found in the codebase, alphabetical.
 | `p_mb_type` | 1 | `crates/video-h264-codec/src/mbtypes.rs:101` | - | P-slice mb_type 0..=4 (5.. are intra, handled by the caller). |
 | `p_normalize` | 1 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:62` | - |  |
 | `p_scale` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:38` | - |  |
-| `p_skip` | 0 | `crates/video-h264-preview/src/lib.rs:559` | - |  |
+| `p_skip` | 0 | `crates/video-h264-preview/src/lib.rs:560` | - |  |
 | `p_slice_ref_count_overflow_is_error_not_panic_or_wrapped_zero` | 0 | `crates/video-h264-codec/src/slice.rs:442` | - |  |
 | `p_slice_rejects_oversized_ref_mod_and_mmco_differences` | 0 | `crates/video-h264-codec/src/slice.rs:407` | - |  |
-| `p_slice_uses_prior_reference_when_range_starts_after_idr` | 0 | `crates/video-h264-preview/src/lib.rs:733` | - |  |
+| `p_slice_uses_prior_reference_when_range_starts_after_idr` | 0 | `crates/video-h264-preview/src/lib.rs:734` | - |  |
 | `p_sub` | 2 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:28` | - |  |
 | `p_sub_mb_type` | 1 | `crates/video-h264-codec/src/mbtypes.rs:159` | - |  |
 | `impl PaintResolver<'a>::pack` | 2 | `crates/vector-hybrid-renderer/src/paint.rs:96` | - |  |
@@ -5396,11 +5550,11 @@ Every function/method found in the codebase, alphabetical.
 | `pack_mix` | 1 | `crates/vector-hybrid-renderer/src/blend.rs:144` | - |  |
 | `impl AssetHost<'_>::pack_msdf_font_atlas` | 2 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:335` | - |  |
 | `pack_msdf_font_atlas_metrics_map_em_box_and_two_produces_match` | 0 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:580` | - |  |
-| `impl AssetHost<'_>::pack_nine_slice` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:260` | - |  |
+| `impl AssetHost<'_>::pack_nine_slice` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:377` | - |  |
 | `pack_opacity` | 1 | `crates/vector-hybrid-renderer/src/util.rs:107` | - |  |
-| `impl AssetHost<'_>::pack_pbr_set` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:366` | - |  |
+| `impl AssetHost<'_>::pack_pbr_set` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:483` | - |  |
 | `pack_radial_kind_and_swapped` | 2 | `crates/vector-hybrid-renderer/src/render/common.rs:651` | - | Pack radial gradient `kind` and `f_is_swapped` into a single u32. |
-| `impl AssetHost<'_>::pack_sprite_sheet` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:112` | 2d |  |
+| `impl AssetHost<'_>::pack_sprite_sheet` | 2 | `crates/asset-production-vibe/src/graphics_pack.rs:149` | 2d |  |
 | `pack_texture_width_and_extend_mode` | 2 | `crates/vector-hybrid-renderer/src/render/common.rs:638` | - | Pack `extend_mode` and `texture_width` into a single u32. |
 | `pack_tint` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:690` | - | Pack an optional [`Tint`](vello_common::paint::Tint) into a (`tint_color_u32`, `tint_mode_u32`) pair for the GPU. |
 | `pack_u16_pair` | 2 | `crates/vector-hybrid-renderer/src/util.rs:99` | - |  |
@@ -5421,12 +5575,12 @@ Every function/method found in the codebase, alphabetical.
 | `page_selection` | 0 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:297` | - |  |
 | `page_stream` | 1 | `crates/discourse-academic-tex/src/texpdf.rs:459` | - |  |
 | `impl Typesetter::paginate` | 3 | `crates/layout-paged-typesetter/src/pagination/flow.rs:76` | 2d | Paginates paragraphs into pages. |
-| `paint` | 1 | `crates/asset-production-vibe/src/graphics.rs:492` | - |  |
+| `paint` | 1 | `crates/asset-production-vibe/src/graphics.rs:497` | - |  |
 | `impl Scene::paint` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:788` | - | Get the current paint. |
 | `impl Scene::paint_has_area` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:316` | - | Whether drawing with the current paint can produce any pixels. |
 | `paint_stroke` | 4 | `crates/surface-pbr-studio/src/paint.rs:142` | - | Paints an interpolated stroke along a path. |
 | `impl Scene::paint_transform_has_area` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:311` | 2d | Whether the effective paint transform maps paint space onto a non-zero area. |
-| `pair_kerning` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:118` | - | Pair kerning adjustment in normalized em units. |
+| `pair_kerning` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:119` | - | Pair kerning adjustment in normalized em units. |
 | `impl VbapPanner<'a>::pan` | 4 | `crates/acoustics-daw-session/src/dsp/pan.rs:95` | - | Computes speaker gains for a sound source at (azimuth_deg, elevation_deg). |
 | `panic_after_play_attempt_poison_is_retained` | 0 | `crates/pcm-device-output/src/device_slot_tests.rs:43` | - |  |
 | `par_rows` | 4 | `crates/raster-layer-mask-adapter/provenance/morphology-lib-after.rs:177` | - |  |
@@ -5449,6 +5603,7 @@ Every function/method found in the codebase, alphabetical.
 | `parents` | 2 | `crates/layout-presentation-deck/src/model/resolve.rs:94` | - | Layout and master placeholders a shape inherits from. |
 | `impl CamelotKey::parse` | 1 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:27` | - |  |
 | `impl Axis::parse` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:61` | - |  |
+| `parse` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/portable_bind.rs:32` | - |  |
 | `impl RuleKind::parse` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:38` | - |  |
 | `impl ProgramConfig::parse` | 1 | `crates/audio-aac-codec/src/config.rs:44` | - |  |
 | `impl AudioSpecificConfig::parse` | 1 | `crates/audio-aac-codec/src/config.rs:204` | - |  |
@@ -5524,13 +5679,13 @@ Every function/method found in the codebase, alphabetical.
 | `parse_and_roundtrip_tags` | 0 | `crates/vector-glyph-shaping/src/features.rs:127` | - |  |
 | `impl Parser::parse_arg` | 1 | `crates/layout-paged-typesetter/src/equation/latex.rs:152` | - |  |
 | `parse_asc` | 1 | `crates/media-isobmff/src/codec.rs:583` | - | Decode (audio object type, sampling frequency, channel configuration) from an AudioSpecificConfig. |
-| `parse_ascii_dxf` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1023` | - |  |
+| `parse_ascii_dxf` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1353` | - |  |
 | `parse_ase` | 1 | `crates/color-transforms/src/palette/ase.rs:60` | - |  |
 | `parse_attrs` | 2 | `crates/chronicle-timeline-interchange/src/xml.rs:274` | - |  |
 | `parse_bib` | 1 | `crates/discourse-academic-tex/src/texparse/bib.rs:48` | - | Parse a `.bib` source string. Always returns a file object; problems land in `issues`. |
 | `parse_box_header` | 1 | `crates/media-isobmff/src/bytes.rs:157` | - | Parse a box header from `buf` (needs up to 32 bytes; fewer if available). |
 | `parse_brush_properties` | 2 | `crates/surface-pbr-studio/src/probrush.rs:93` | - | Parses clean-room brush settings from key-value pairs. |
-| `parse_brush_strokes` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:27` | - |  |
+| `parse_brush_strokes` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:63` | - |  |
 | `parse_btrt` | 1 | `crates/media-isobmff/src/codec.rs:1106` | - |  |
 | `parse_cell_reference` | 1 | `crates/chronicle-tabular-engine/src/formula/parser.rs:248` | - |  |
 | `parse_claim_basis` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:106` | - |  |
@@ -5556,13 +5711,14 @@ Every function/method found in the codebase, alphabetical.
 | `parse_ebml_header` | 2 | `crates/chronicle-broadcast-containers/src/matroska/demux.rs:68` | - |  |
 | `parse_edl` | 2 | `crates/chronicle-timeline-interchange/src/interchange/edl.rs:11` | - | Parse a CMX 3600 EDL document into a TimelineSequence. |
 | `parse_element` | 2 | `crates/chronicle-office-codecs/src/xml/dom.rs:260` | - |  |
+| `impl AssetHost<'_>::parse_emf_current` | 2 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:209` | - |  |
 | `parse_end_mismatch` | 1 | `crates/discourse-academic-tex/src/review/ai_repair.rs:239` | - |  |
 | `parse_esds` | 1 | `crates/media-isobmff/src/codec.rs:1134` | - |  |
 | `parse_exception` | 1 | `crates/vector-glyph-shaping/src/hyphen.rs:58` | - |  |
 | `impl Parser<'a>::parse_expression` | 1 | `crates/layout-nodegraph-compiler/src/math_parser/parser.rs:30` | - |  |
 | `parse_family0_and_roundtrip` | 0 | `crates/audio-opus-codec/src/header.rs:137` | - |  |
 | `parse_family1_51` | 0 | `crates/audio-opus-codec/src/header.rs:151` | - |  |
-| `parse_fauna_archetype` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:331` | - |  |
+| `parse_fauna_archetype` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:333` | - |  |
 | `parse_fcp7_xml` | 1 | `crates/chronicle-timeline-interchange/src/interchange/fcp7.rs:10` | - | Parse FCP7 XML text into a TimelineSequence. |
 | `parse_fcpxml` | 1 | `crates/chronicle-timeline-interchange/src/interchange/fcpxml.rs:43` | - | Parse an FCPXML document string into a TimelineSequence. |
 | `parse_fcpxml_time` | 1 | `crates/chronicle-timeline-interchange/src/interchange/fcpxml.rs:10` | - | Parse an FCPXML time string (`"1001/24000s"`, `"5s"`, `"0s"`, `"3.5s"`) into a `Tick`. |
@@ -5575,6 +5731,7 @@ Every function/method found in the codebase, alphabetical.
 | `parse_gpl` | 1 | `crates/color-transforms/src/palette/gpl.rs:19` | - |  |
 | `parse_grd` | 1 | `crates/color-transforms/src/palette/grd.rs:35` | - | Parses a `.grd` binary stream. |
 | `impl Parser::parse_group` | 1 | `crates/layout-paged-typesetter/src/equation/latex.rs:278` | - |  |
+| `parse_heightfield` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:30` | - |  |
 | `parse_hex` | 1 | `crates/color-transforms/src/lib.rs:301` | - | Parse `#rrggbb` / `#rrggbbaa` into 0..1 floats. |
 | `parse_hex` | 1 | `crates/radiance-color-grading/src/matrix.rs:405` | - | Parse `#rrggbb` / `#rrggbbaa` into 0..1 floats. |
 | `parse_hrd` | 1 | `crates/video-h264-codec/src/params.rs:157` | - |  |
@@ -5589,7 +5746,7 @@ Every function/method found in the codebase, alphabetical.
 | `parse_iso8601_duration_days` | 1 | `crates/kinetics-schedule-cpm/src/format.rs:437` | - |  |
 | `parse_iso_date` | 1 | `crates/chronicle-tabular-engine/src/core/parse.rs:161` | - |  |
 | `parse_joint` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:180` | - |  |
-| `parse_joint` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:430` | - |  |
+| `parse_joint` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:436` | - |  |
 | `parse_joint_rom` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:321` | - | Parses the spec's optional `joints` list. Returns an empty list when absent. |
 | `parse_kml` | 1 | `crates/locus-geospatial-codecs/src/formats/kml.rs:15` | - | Parses KML XML text into a collection of Placemarks without external parser crates. |
 | `parse_kml_geometry` | 1 | `crates/locus-geospatial-codecs/src/formats/kml.rs:62` | - |  |
@@ -5601,7 +5758,7 @@ Every function/method found in the codebase, alphabetical.
 | `parse_las_points` | 3 | `crates/locus-geospatial-codecs/src/formats/lidar.rs:104` | - | Decodes points from LAS bytes according to the header. |
 | `parse_latex` | 1 | `crates/chronicle-office-codecs/src/document/latex.rs:177` | - | Simple parser for LaTeX `.tex` documents into `FlowDoc`. |
 | `parse_latex` | 1 | `crates/layout-paged-typesetter/src/equation/latex.rs:5` | - |  |
-| `parse_layer` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:417` | - |  |
+| `parse_layer` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:423` | - |  |
 | `parse_linear` | 1 | `crates/layout-paged-typesetter/src/equation/linear.rs:5` | numerics |  |
 | `parse_list` | 3 | `crates/discourse-academic-tex/src/typeset.rs:198` | - |  |
 | `parse_list` | 1 | `crates/vector-glyph-shaping/src/hyphen.rs:31` | - |  |
@@ -5610,7 +5767,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Parser::parse_logical_or` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:179` | - |  |
 | `parse_lottie` | 1 | `crates/kinetics-motion-compositor/src/lottie/mod.rs:12` | - | Parse a Lottie JSON document string. |
 | `parse_lut` | 2 | `crates/color-transforms/src/icc/profile.rs:508` | - |  |
-| `parse_m64` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:728` | - |  |
+| `parse_m64` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:814` | - |  |
 | `parse_markdown` | 1 | `crates/chronicle-office-codecs/src/document/markdown.rs:10` | - | Parse a Markdown string into a `FlowDoc`. |
 | `impl Parser::parse_matrix_literal` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:338` | numerics |  |
 | `parse_mcc` | 1 | `crates/chronicle-timeline-interchange/src/captions/mcc.rs:10` | - |  |
@@ -5644,8 +5801,8 @@ Every function/method found in the codebase, alphabetical.
 | `parse_profile` | 1 | `crates/color-transforms/src/icc/profile.rs:327` | - |  |
 | `parse_range` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/joint_rom.rs:158` | - |  |
 | `impl Parser::parse_range` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:218` | - |  |
-| `impl AssetHost<'_>::parse_render_inputs` | 3 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:410` | - |  |
-| `parse_rgba_raw` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:496` | - |  |
+| `impl AssetHost<'_>::parse_render_inputs` | 3 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:360` | - |  |
+| `parse_rgba_raw` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:511` | - |  |
 | `parse_rom_property` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/corpus_values.rs:105` | semantics |  |
 | `parse_rtf` | 1 | `crates/chronicle-office-codecs/src/document/rtf.rs:129` | - | Simple parser for RTF 1.5 files into `FlowDoc`. |
 | `parse_rule` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:169` | - |  |
@@ -5656,7 +5813,6 @@ Every function/method found in the codebase, alphabetical.
 | `parse_scratch_dsl` | 1 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:181` | - | Parses a turntable scratch pattern string into beats of actions (e.g. "AEA.AEA."). |
 | `parse_script` | 3 | `crates/discourse-academic-tex/src/typeset.rs:288` | - |  |
 | `impl Parser::parse_script_target` | 1 | `crates/layout-paged-typesetter/src/equation/latex.rs:294` | - |  |
-| `parse_sealed_emf` | 1 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:655` | - | QualiaDB `parse` admits CRC-only files; untrusted paths require a writer Bao seal. |
 | `parse_sections` | 1 | `crates/chronicle-tabular-engine/src/numfmt/parse.rs:89` | - |  |
 | `parse_segment` | 2 | `crates/chronicle-broadcast-containers/src/matroska/demux.rs:88` | - |  |
 | `impl Packet<'a>::parse_self_delimited` | 1 | `crates/audio-opus-codec/src/packet.rs:123` | - | Parses a self-delimited packet (RFC 6716 Appendix B, used for all but the last stream of |
@@ -5670,7 +5826,7 @@ Every function/method found in the codebase, alphabetical.
 | `parse_stray_end` | 1 | `crates/discourse-academic-tex/src/review/ai_repair.rs:246` | - |  |
 | `parse_structure` | 1 | `crates/discourse-academic-tex/src/texparse/structure.rs:73` | - | Lex `src` and extract its structure. Always succeeds — malformed input lands in `issues`. |
 | `parse_surface_block` | 1 | `crates/locus-geospatial-codecs/src/formats/landxml.rs:103` | - |  |
-| `parse_theme_record` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:187` | - |  |
+| `parse_theme_record` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:188` | - |  |
 | `parse_time_only` | 1 | `crates/chronicle-tabular-engine/src/core/parse.rs:190` | - |  |
 | `parse_timecode` | 2 | `crates/chronicle-timeline-interchange/src/time.rs:142` | - | Parse a timecode string (`HH:MM:SS:FF` or `HH:MM:SS;FF`) into frame count. |
 | `parse_timestamp` | 1 | `crates/chronicle-broadcast-containers/src/mpegts/pes.rs:16` | - |  |
@@ -5679,6 +5835,7 @@ Every function/method found in the codebase, alphabetical.
 | `parse_tracks` | 2 | `crates/chronicle-broadcast-containers/src/matroska/demux.rs:133` | - |  |
 | `parse_trak` | 4 | `crates/media-isobmff/src/demux.rs:411` | - |  |
 | `parse_transfer` | 1 | `crates/asset-production-vibe/src/radiance_color.rs:45` | - |  |
+| `parse_transfer` | 1 | `crates/asset-production-vibe/src/radiance_precision.rs:110` | - |  |
 | `parse_ts_packet` | 1 | `crates/chronicle-broadcast-containers/src/mpegts/ts.rs:23` | - | Parse a single 188-byte TS packet. |
 | `parse_udta` | 2 | `crates/media-isobmff/src/demux.rs:941` | - |  |
 | `impl Parser::parse_unary` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:277` | - |  |
@@ -5688,8 +5845,8 @@ Every function/method found in the codebase, alphabetical.
 | `parse_us_date` | 1 | `crates/chronicle-tabular-engine/src/core/parse.rs:174` | - |  |
 | `parse_variants` | 0 | `crates/audio-timebase/src/timecode.rs:323` | - |  |
 | `parse_various_formats` | 0 | `crates/audio-timebase/src/transport.rs:259` | - |  |
-| `parse_vec2` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:476` | 2d |  |
-| `parse_vec3` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:484` | 3d |  |
+| `parse_vec2` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:491` | 2d |  |
+| `parse_vec3` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:499` | 3d |  |
 | `parse_vertex_uvs` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:163` | computational geometry, 3d | Vertex-aligned UVs from a list, unwrap record, or named profile (island outline |
 | `parse_vtt` | 1 | `crates/chronicle-timeline-interchange/src/captions/vtt.rs:10` | - |  |
 | `parse_vtt_timing_line` | 1 | `crates/chronicle-timeline-interchange/src/captions/vtt.rs:81` | - |  |
@@ -5763,7 +5920,7 @@ Every function/method found in the codebase, alphabetical.
 | `pcm_name_matches` | 2 | `crates/media-isobmff/tests/oracle_demux.rs:9` | - |  |
 | `pcm_picture` | 5 | `crates/video-h264-preview/src/synth.rs:67` | - |  |
 | `impl Profile::pcs_to_device` | 2 | `crates/color-transforms/src/icc/profile.rs:260` | - |  |
-| `peak` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:482` | - |  |
+| `peak` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:481` | - |  |
 | `impl LogCurve::peak_linear` | 1 | `crates/color-transforms/src/log.rs:101` | numerics | Scene-linear value of the maximum signal (code 1023), used as the source peak for tone |
 | `impl HdrMetadata::peak_nits` | 1 | `crates/color-transforms/src/lib.rs:127` | 2d | The content's peak for tone mapping: MaxCLL when signalled (the brightest pixel actually |
 | `impl HdrMetadata::peak_nits` | 1 | `crates/radiance-color-grading/src/matrix.rs:127` | - | The content peak for tone mapping. |
@@ -5779,6 +5936,7 @@ Every function/method found in the codebase, alphabetical.
 | `pegtop_light_f32` | 2 | `crates/raster-blend-operators/src/lib.rs:310` | - | HDRI Pegtop Soft Light approximation. |
 | `pegtop_light_rgb` | 2 | `crates/raster-blend-operators/src/lib.rs:379` | - |  |
 | `pending_status` | 2 | `crates/multimodal-synthesis-schema/src/job_feed.rs:48` | - | Computes estimated progress percentage (0..=99) and a human-readable remaining time label. |
+| `per_vertex_isotropic_metrics` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1213` | 3d |  |
 | `percent_decode` | 1 | `crates/discourse-academic-tex/src/bibliography/identifiers.rs:28` | - |  |
 | `perfect_cube_scaled_jacobian_is_one` | 0 | `crates/kinetics-continuum-multiphysics/src/mesh/quality.rs:93` | - |  |
 | `impl Vec2::perp` | 1 | `crates/drafting-geometry/src/vec.rs:55` | 2d | Rotated 90° counter-clockwise. |
@@ -5807,6 +5965,7 @@ Every function/method found in the codebase, alphabetical.
 | `plain_text_words_chars_lines` | 0 | `crates/discourse-academic-tex/src/texparse/stats.rs:149` | - |  |
 | `plan_reinit` | 0 | `crates/vector-hybrid-renderer/src/filter.rs:784` | - |  |
 | `planar_to_rgba` | 10 | `crates/video-h264-preview/src/convert.rs:57` | numerics | Planar 8-bit Y'CbCr with chroma subsampled by `cx` horizontally and `cy` vertically |
+| `planck_spectral_radiance_w_sr_m3` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:311` | - | Evaluates Planck spectral radiance $B_\lambda(\lambda, T)$ in $\text{W}\cdot\text{sr}^{-1}\cdot\text{m}^{-2}\cdot\text{m}^{-1}$. |
 | `plane` | 3 | `crates/video-h264-codec/src/inter.rs:435` | - |  |
 | `plane_allocator` | 0 | `crates/video-h264-codec/src/picture.rs:285` | - |  |
 | `plane_offsets` | 0 | `crates/vector-locus-geometry/src/perspective.rs:299` | - |  |
@@ -5833,14 +5992,15 @@ Every function/method found in the codebase, alphabetical.
 | `pmt` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:47` | - |  |
 | `pmt_calc` | 5 | `crates/chronicle-tabular-engine/src/functions/financial.rs:13` | - |  |
 | `png_bytes` | 3 | `crates/asset-production-vibe/src/operations_catalog.rs:1043` | - |  |
-| `impl AssetHost<'_>::png_or_encode` | 3 | `crates/asset-production-vibe/src/graphics_pack.rs:104` | - |  |
+| `impl AssetHost<'_>::png_or_encode` | 3 | `crates/asset-production-vibe/src/graphics_pack.rs:141` | - |  |
 | `png_round_trip_rgb_and_rgba` | 0 | `crates/media-test-support/src/golden.rs:292` | - |  |
 | `pns_matches_ffmpeg` | 0 | `crates/audio-aac-codec/tests/decoder_oracle.rs:93` | - | PNS output is random by design, and ffmpeg's encoder does not emit it: build noise-substituted |
 | `impl RefPic::poc` | 1 | `crates/video-h264-codec/src/picture.rs:328` | - |  |
 | `poc_delta` | 2 | `crates/video-h264-codec/src/slicedec.rs:266` | - | H.264 temporal weighting uses clipped POC distances; widen before |
 | `poc_overflow_is_rejected_and_normal_values_survive` | 0 | `crates/video-h264-codec/src/slice.rs:422` | 3d |  |
 | `poc_type1_reordering` | 0 | `crates/video-h264-codec/src/synth_tests.rs:532` | - | POC type 1: non-reference pictures are displayed before the preceding reference picture. |
-| `point` | 1 | `crates/asset-production-vibe/src/graphics.rs:485` | - |  |
+| `point` | 1 | `crates/asset-production-vibe/src/graphics.rs:490` | - |  |
+| `impl Outline<'_>::point` | 3 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:102` | - |  |
 | `impl SampleRange::point` | 1 | `crates/audio-timebase/src/rate.rs:96` | - |  |
 | `impl GeodesicRuler::point` | 2 | `crates/drafting-geometry/src/geodesic_ruler.rs:173` | - |  |
 | `impl Model::point` | 3 | `crates/locus-parametric-solver/src/solver/model.rs:195` | 2d |  |
@@ -5859,8 +6019,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl Patterns::points` | 2 | `crates/layout-paged-typesetter/src/hyphenation/liang.rs:70` | - | Break points (character indices where a hyphen may be inserted before that char) |
 | `impl Profile::points` | 2 | `crates/profile-authoring/src/profile.rs:94` | - |  |
 | `impl Unit::points` | 1 | `crates/vector-locus-geometry/src/units.rs:36` | - | Points per unit. |
-| `points2` | 2 | `crates/asset-production-vibe/src/geometry.rs:354` | - |  |
-| `points3` | 2 | `crates/asset-production-vibe/src/geometry.rs:365` | - |  |
+| `points2` | 2 | `crates/asset-production-vibe/src/geometry.rs:385` | - |  |
+| `points3` | 2 | `crates/asset-production-vibe/src/geometry.rs:396` | - |  |
 | `points_and_nearest_distances_along_a_path` | 0 | `crates/vector-locus-geometry/src/arc.rs:84` | - |  |
 | `points_conversion` | 0 | `crates/vector-locus-geometry/src/units.rs:193` | - |  |
 | `poisson_dist` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:128` | - |  |
@@ -5900,10 +6060,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl DrawSink for Scene::pop_layer` | 1 | `crates/vector-hybrid-renderer/src/text.rs:197` | - |  |
 | `impl PaintScene for SkiaScenePainter<'_>::pop_layer` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:475` | - |  |
 | `impl ColorPainter for DrawColorGlyphs<'_>::pop_transform` | 1 | `crates/vector-compute-renderer/src/scene.rs:955` | - |  |
+| `portable_authored_bind_seals_bilateral_weights_and_twenty_one_joints` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/portable_bind.rs:105` | - |  |
 | `impl Parser::pos` | 1 | `crates/chronicle-tabular-engine/src/formula/parser.rs:51` | - |  |
 | `impl Parser::pos` | 1 | `crates/discourse-academic-tex/src/texparse/bib.rs:90` | - |  |
 | `impl BitReader<'a>::position` | 1 | `crates/bitstream-codec/src/lib.rs:48` | - | Bit position from the start. |
 | `positions_are_one_based` | 0 | `crates/discourse-academic-tex/src/texparse/lex.rs:176` | - |  |
+| `positive_negative_fractional_epochs_are_exact_euclidean_rationals` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/clock_tests.rs:12` | - |  |
 | `impl RevenueSchedule::post_due_entries` | 3 | `crates/chronicle-fiduciary-ledger/src/revrec.rs:97` | - | Recognises all unposted periods due on or before `as_of_date` by posting to `ledger`. |
 | `impl JournalLedger::post_journal` | 6 | `crates/chronicle-fiduciary-ledger/src/journal.rs:100` | - | Post a balanced journal entry. Fails closed on imbalance, lock dates, or missing accounts. |
 | `impl NQuin48::postcondition` | 3 | `crates/color-transforms/src/ontology.rs:23` | - |  |
@@ -5916,7 +6078,7 @@ Every function/method found in the codebase, alphabetical.
 | `ppmt` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:103` | - |  |
 | `impl HevcConfig::pps` | 1 | `crates/media-isobmff/src/codec.rs:421` | - |  |
 | `pps` | 2 | `crates/video-h264-codec/src/synth_tests.rs:64` | - |  |
-| `pps` | 0 | `crates/video-h264-preview/src/lib.rs:498` | - |  |
+| `pps` | 0 | `crates/video-h264-preview/src/lib.rs:499` | - |  |
 | `pps` | 0 | `crates/video-h264-preview/src/synth.rs:46` | - |  |
 | `pq_and_hlg_reference_white` | 0 | `crates/color-transforms/src/transform.rs:387` | - |  |
 | `pq_eotf` | 1 | `crates/color-transforms/src/lib.rs:214` | - | SMPTE ST 2084 EOTF, output normalised to 10 000 nits = 1.0. |
@@ -5952,24 +6114,25 @@ Every function/method found in the codebase, alphabetical.
 | `premultiply` | 0 | `crates/vector-cpu-render-adapter/src/image_convert.rs:72` | - |  |
 | `premultiply_bgra_opaque` | 0 | `crates/vector-cpu-render-adapter/src/image_convert.rs:82` | - |  |
 | `impl DeviceOutput::prepare` | 6 | `crates/pcm-device-output/src/device.rs:63` | - | `live` is called on the native device worker, NEVER inside the realtime |
+| `impl Programs::prepare` | 9 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2140` | - | Prepare GPU buffers for rendering, given alphas. |
 | `impl WebGlPrograms::prepare` | 9 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1575` | - | Prepare resources for rendering. |
-| `impl Programs::prepare` | 9 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2137` | - | Prepare GPU buffers for rendering, given alphas. |
 | `impl SkiaBackend for MetalBackend::prepare` | 1 | `crates/vector-skia-render-adapter/src/metal.rs:107` | - |  |
 | `impl SkiaBackend for OpenGLBackend::prepare` | 1 | `crates/vector-skia-render-adapter/src/opengl.rs:212` | - |  |
 | `impl SkiaBackend for VulkanBackend::prepare` | 1 | `crates/vector-skia-render-adapter/src/vulkan.rs:416` | - |  |
 | `trait SkiaBackend::prepare` | 1 | `crates/vector-skia-render-adapter/src/window_renderer.rs:12` | - |  |
+| `impl AssetHost<'_>::prepare_geometry_edit` | 3 | `crates/asset-production-vibe/src/mesh_edit_policy.rs:16` | - |  |
+| `impl Renderer::prepare_gpu_encoded_paints` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:668` | - |  |
 | `impl WebGlRenderer::prepare_gpu_encoded_paints` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:870` | - |  |
-| `impl Renderer::prepare_gpu_encoded_paints` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:668` | - |  |
 | `impl VulkanBackend::prepare_intermediate_surface` | 1 | `crates/vector-skia-render-adapter/src/vulkan.rs:240` | - | Prepares a Skia-allocated intermediate surface. |
+| `impl Programs::prepare_intermediate_textures` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1800` | - |  |
 | `impl WebGlPrograms::prepare_intermediate_textures` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1607` | - |  |
-| `impl Programs::prepare_intermediate_textures` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1797` | - |  |
 | `prepare_slice` | 4 | `crates/video-prores-codec/src/encode.rs:291` | - |  |
 | `prepare_stream` | 3 | `crates/pcm-device-output/src/device.rs:234` | - |  |
 | `impl VulkanBackend::prepare_swapchain_surface` | 2 | `crates/vector-skia-render-adapter/src/vulkan.rs:281` | - | Prepares a Skia surface that wraps the raw Vulkan swapchain image. |
 | `impl Out::prepend` | 2 | `crates/chronicle-tabular-engine/src/numfmt/render.rs:17` | - |  |
 | `preprocess` | 4 | `crates/vector-compute-shaders/src/compile/preprocess.rs:37` | 3d |  |
-| `impl PixelsBuilder<'req, 'dev, 'win, W>::present_mode` | 2 | `crates/pixel-buffer-output/src/builder.rs:142` | - | Optimistically set the `wgpu` present mode. |
-| `impl Pixels<'win>::present_mode` | 1 | `crates/pixel-buffer-output/src/lib.rs:458` | - | Get the `wgpu` present mode. |
+| `impl PixelsBuilder<'req, 'dev, 'win, W>::present_mode` | 2 | `crates/pixel-buffer-output/src/builder.rs:142` | - | Optimistically set the `etalon` present mode. |
+| `impl Pixels<'win>::present_mode` | 1 | `crates/pixel-buffer-output/src/lib.rs:453` | - | Get the `etalon` present mode. |
 | `presentation_duration` | 2 | `crates/media-isobmff/src/mux.rs:190` | - |  |
 | `impl Track::presentation_pts` | 2 | `crates/media-isobmff/src/demux.rs:154` | - | Presentation (edit-adjusted) pts of sample `i`. |
 | `impl PerspectiveGrid::preset` | 2 | `crates/vector-locus-geometry/src/perspective.rs:115` | computational geometry, 2d | Preset for `kind` (1, 2, or 3) fitted to a bounding box. |
@@ -6005,7 +6168,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl BiquadFilter::process_buffer` | 2 | `crates/acoustics-daw-session/src/dsp/biquad.rs:180` | - |  |
 | `process_commands` | 1 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:222` | - |  |
 | `process_commands_and_await_signal` | 2 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:392` | - |  |
-| `impl GpuProfiler::process_finished_frame` | 2 | `crates/gpu-command-profiler/src/profiler.rs:493` | - | Checks if all timer queries for the oldest pending finished frame are done and returns that snapshot if any. |
+| `impl GpuProfiler::process_finished_frame` | 2 | `crates/gpu-command-profiler/src/profiler.rs:495` | - | Checks if all timer queries for the oldest pending finished frame are done and returns that snapshot if any. |
 | `process_frame` | 3 | `crates/audio-device-cpal/examples/synth_tones.rs:176` | - |  |
 | `process_input` | 5 | `crates/audio-device-cpal/src/host/alsa/mod.rs:783` | - |  |
 | `process_input` | 4 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:425` | - |  |
@@ -6024,23 +6187,31 @@ Every function/method found in the codebase, alphabetical.
 | `impl FdnReverb::process_sample` | 2 | `crates/acoustics-daw-session/src/dsp/plugins.rs:282` | - |  |
 | `impl SubtractiveSynth::process_sample` | 1 | `crates/acoustics-daw-session/src/dsp/plugins.rs:350` | - |  |
 | `impl TruePeakMeter::process_samples` | 2 | `crates/acoustics-daw-session/src/dsp/meter.rs:150` | - | Feeds samples and updates the max inter-sample true-peak value. |
-| `impl GpuProfiler::process_timings_recursive` | 3 | `crates/gpu-command-profiler/src/profiler.rs:740` | - |  |
-| `impl AssetHost<'_>::produce_locked_dt_maps` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:185` | - | Locked-dt ProRes + OTIO + Matroska + fiduciary hash-chain maps. |
+| `impl GpuProfiler::process_timings_recursive` | 3 | `crates/gpu-command-profiler/src/profiler.rs:742` | - |  |
+| `produce_botanical_emf_qac_vibe_bundle` | 4 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge.rs:125` | - | Produce, round-trip verify, and admit a botanical FSPM metamer EMF v4 + QAC v1 bundle into |
+| `produce_botanical_emf_v4` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:412` | - | Produce deterministic canonical EMF v4 (`0x0100, 0x0101, 0x0103, 0x0107`) and companion |
+| `produce_botanical_qac_v1` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:394` | - | Produce deterministic QAC v1 containers (`0x0100, 0x0101, 0x0102, 0x0104`) from a |
+| `impl AssetHost<'_>::produce_locked_dt_maps` | 4 | `crates/asset-production-vibe/src/chronicle_ops.rs:180` | - | Locked-dt ProRes + OTIO + Matroska + fiduciary hash-chain maps. |
+| `produce_qac_v1_from_pcm` | 5 | `crates/asset-production-vibe/src/sound.rs:295` | - |  |
 | `produce_safe_container_svg` | 4 | `crates/asset-production-vibe/src/discourse_docs/mod.rs:191` | - | Display-referred sRGB SVG card. Binary containers are never inlined as executable payloads. |
 | `produce_svg` | 4 | `crates/asset-production-vibe/src/glyph_knuth_plass.rs:416` | - |  |
-| `impl AssetHost<'_>::produce_wifi_csi_vitals_aoa` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:489` | 3d | 802.11 CSI → sanitized phase, contactless vitals, MUSIC AoA, camera-free receipt. |
+| `produce_vertebrate_emf_qac_vibe_bundle` | 4 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge.rs:70` | - | Produce, round-trip verify, and admit a vertebrate EMF v4 + QAC v1 bundle into `AssetHost`, |
+| `produce_vertebrate_emf_v4` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:244` | - | Produce deterministic canonical EMF v4 (`0x0100, 0x0101, 0x0103, 0x0107`) and companion |
+| `produce_vertebrate_qac_v1` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:322` | - | Produce deterministic QAC v1 containers (`0x0100, 0x0101, 0x0102, 0x0104`) from an |
+| `impl AssetHost<'_>::produce_wifi_csi_vitals_aoa` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:30` | 3d | 802.11 CSI → sanitized phase, contactless vitals, MUSIC AoA, camera-free receipt. |
 | `product` | 1 | `crates/chronicle-tabular-engine/src/functions/math.rs:12` | - |  |
 | `impl Parser<'_>::product` | 1 | `crates/locus-parametric-solver/src/solver/expr.rs:85` | - |  |
-| `impl AssetHost<'_>::profile` | 2 | `crates/asset-production-vibe/src/geometry.rs:288` | - |  |
+| `impl AssetHost<'_>::profile` | 2 | `crates/asset-production-vibe/src/geometry.rs:295` | - |  |
 | `impl Builtin::profile` | 1 | `crates/color-transforms/src/icc/builtin.rs:77` | - |  |
 | `profile_from_path` | 1 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:195` | - |  |
 | `profile_sweep` | 4 | `crates/profile-authoring/src/geometry.rs:82` | computational geometry | A metric profile swept along a finite 3-D axis. Concave end caps reuse the |
 | `progress_and_eta_calculation` | 0 | `crates/multimodal-synthesis-schema/src/job_feed.rs:94` | - |  |
 | `impl Line::project` | 2 | `crates/drafting-geometry/src/curve.rs:39` | 2d | Foot of the perpendicular on the infinite line. |
 | `impl AssetHost<'_>::project_diegetic_surface` | 2 | `crates/asset-production-vibe/src/glyph_layout_diegetic/diegetic_input.rs:8` | - |  |
-| `impl AssetHost<'_>::project_metamer_nullspace` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:373` | - | Exposes Etalon's 41-band spectral metamer fiber decomposition: |
-| `impl AssetHost<'_>::project_ui_svg` | 2 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:258` | - | Projects the resolved layout into a standalone SVG vector resource with scoped CSS tokens. |
+| `impl AssetHost<'_>::project_metamer_nullspace` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:348` | - | Exposes Etalon's 41-band spectral metamer fiber decomposition: |
+| `impl AssetHost<'_>::project_ui_svg` | 2 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:223` | - | Projects the resolved layout into a standalone SVG vector resource with scoped CSS tokens. |
 | `project_video_container` | 1 | `crates/video-h264-preview/src/lib.rs:105` | 3d | Select one video track without changing source bytes or moving media. For a |
+| `projection_metadata` | 7 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:331` | 3d |  |
 | `propagate_clipping_mask_alpha` | 2 | `crates/raster-layer-mask-adapter/src/masks.rs:86` | - | Propagates clipping mask base alpha onto a clipped layer's alpha buffer. |
 | `property_listener_handler_shim` | 4 | `crates/audio-device-cpal/src/host/coreaudio/macos/property_listener.rs:76` | - | Callback used to call user-provided closure as a property listener. |
 | `prophoto_rgb` | 0 | `crates/color-transforms/src/icc/builtin.rs:95` | - |  |
@@ -6054,7 +6225,7 @@ Every function/method found in the codebase, alphabetical.
 | `prune_dead_nodes` | 1 | `crates/layout-nodegraph-compiler/src/compiler/cse.rs:153` | - | Dead-code elimination: |
 | `pseudo_permute` | 3 | `crates/kinetics-motion-compositor/src/typography/selectors.rs:175` | - |  |
 | `pseudo_rand` | 3 | `crates/raster-layer-mask-adapter/src/brush.rs:157` | - |  |
-| `impl SubpathBuilder<'a>::pt` | 3 | `crates/asset-production-vibe/src/glyph/mod.rs:153` | - |  |
+| `impl SubpathBuilder<'a>::pt` | 3 | `crates/asset-production-vibe/src/glyph/mod.rs:154` | - |  |
 | `impl GroupReader<'r, 'a>::pt` | 2 | `crates/drafting-geometry/src/dxf_reader.rs:166` | - |  |
 | `pt_from` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1337` | - |  |
 | `impl Frame::publish` | 3 | `crates/video-h264-codec/src/picture.rs:155` | - | Publish MB row `r` (ignored if already published). |
@@ -6097,6 +6268,7 @@ Every function/method found in the codebase, alphabetical.
 | `push_dep` | 4 | `crates/discourse-academic-tex/src/texparse/graph.rs:202` | - |  |
 | `impl DrawBuilder<'a, T>::push_draw` | 4 | `crates/vector-hybrid-renderer/src/draw.rs:145` | - |  |
 | `impl Scheduler<'a, 'p>::push_draws` | 4 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:570` | - | Append a recorded draw range to the next compatible draw pass for the target. |
+| `push_envelope` | 3 | `crates/asset-production-vibe/src/electromagnetics_current/sonification.rs:15` | - |  |
 | `impl vello_common::probe::ProbeRenderer for Scene::push_filter_layer` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/probe.rs:342` | - |  |
 | `impl Scene::push_filter_layer` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:726` | - | Push a new filter layer. |
 | `impl Round::push_filter_op` | 4 | `crates/vector-hybrid-renderer/src/schedule/round.rs:253` | - |  |
@@ -6115,7 +6287,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Scene::push_layer_inner` | 5 | `crates/vector-compute-renderer/src/scene.rs:190` | - | Helper for logic shared between [`Self::push_layer`] and [`Self::push_luminance_mask_layer`] |
 | `impl Scene::push_luminance_mask_layer` | 5 | `crates/vector-compute-renderer/src/scene.rs:146` | - | Pushes a new layer clipped by the specified shape and treated like a luminance |
 | `impl Scene::push_mask_layer` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:721` | - | Push a new mask layer. |
-| `push_nquin_48` | 10 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:575` | semantics | Packs a single 48-byte Super-Quin (`NQuin`: `subject`, `predicate`, `object`, `context`, |
+| `push_nquin_48` | 10 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:573` | semantics | Packs a single 48-byte Super-Quin (`NQuin`: `subject`, `predicate`, `object`, `context`, |
 | `impl Scene::push_opacity_layer` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:712` | - | Push a new opacity layer. |
 | `impl DrawBuilder<'a, T>::push_opaque` | 3 | `crates/vector-hybrid-renderer/src/draw.rs:159` | - |  |
 | `impl FlowDoc::push_para` | 2 | `crates/chronicle-office-codecs/src/flow/model.rs:134` | - |  |
@@ -6152,6 +6324,8 @@ Every function/method found in the codebase, alphabetical.
 | `pvq_v` | 2 | `crates/audio-opus-codec/src/celt/rate.rs:47` | - | PVQ codebook size V(N, K) as u128 (saturating far above 2^32). |
 | `impl Shaper::pyramid` | 2 | `crates/terrain-erosion-solvers/src/thermal_shaper.rs:225` | - |  |
 | `q_hash` | 1 | `crates/surface-layered-codecs/src/ontology.rs:44` | - |  |
+| `qac_inspection_to_vibe_value` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:519` | - | Convert a `QacV1InspectionReport` into a deterministic `vibe::Value::Record`. |
+| `qac_stft_fft_size` | 1 | `crates/asset-production-vibe/src/sound.rs:171` | numerics |  |
 | `qfactors` | 2 | `crates/video-prores-codec/src/decode.rs:242` | numerics | Dequantisation factors (matrix x scale) for a slice. |
 | `impl SliceHeader::qp` | 2 | `crates/video-h264-codec/src/slice.rs:146` | - |  |
 | `qpc` | 0 | `crates/video-h264-codec/src/tables.rs:170` | - |  |
@@ -6159,6 +6333,7 @@ Every function/method found in the codebase, alphabetical.
 | `qscale` | 1 | `crates/video-prores-codec/src/tables.rs:96` | - | Quantisation scale for a slice `quantization_index` (1..=224). |
 | `qscale_mapping` | 0 | `crates/video-prores-codec/src/tables.rs:140` | - |  |
 | `qt_pcm` | 2 | `crates/media-isobmff/src/codec.rs:1068` | - |  |
+| `impl ttf_parser::OutlineBuilder for Outline<'_>::quad_to` | 5 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:109` | - |  |
 | `impl OutlinePen for BezPathOutline::quad_to` | 5 | `crates/vector-compute-renderer/src/scene.rs:1084` | - |  |
 | `quality_label` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:574` | - |  |
 | `quant_all_bands` | 19 | `crates/audio-opus-codec/src/celt/bands.rs:664` | - | Decodes all band shapes (`quant_all_bands`, decoder side). |
@@ -6172,35 +6347,37 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::quantise_all` | 2 | `crates/audio-aac-codec/src/encoder/mod.rs:602` | - |  |
 | `quantise_all` | 3 | `crates/video-prores-codec/src/encode.rs:320` | - |  |
 | `quantise_channel` | 2 | `crates/audio-aac-codec/src/encoder/quant.rs:155` | - | Quantise one channel at rate-distortion multiplier `lambda` and select sections. |
+| `quantize` | 1 | `crates/asset-production-vibe/src/radiance_precision.rs:108` | - |  |
 | `quantize` | 2 | `crates/vector-radiance-trace/src/quantize.rs:21` | - | Reduce `img` to a palette according to `params.mode`. |
 | `quantize_pga_motor` | 4 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:13` | - | Quantizes an 8-float PGA motor state (position [x,y,z], rotation [qx,qy,qz,qw], sequence, entity_id) |
 | `quat_from_to` | 2 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:390` | - |  |
-| `impl AssetHost<'_>::query_anatomical_ontology_pin` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:195` | 3d, semantics | Queries the closest canonical anatomical ontology pin (`CANONICAL_ANATOMICAL_PINS`, `32` pins) |
+| `impl AssetHost<'_>::query_anatomical_ontology_pin` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:286` | 3d, semantics | Queries the closest canonical anatomical ontology pin (`CANONICAL_ANATOMICAL_PINS`, `32` pins) |
 | `impl AssetHost<'_>::query_direct_space` | 2 | `crates/asset-production-vibe/src/kinetics_sim/motor_xpbd_space.rs:277` | - | Synchronous DirectSpaceState spatial queries over split Static/Dynamic BVH. |
 | `impl BufferRenderer::queue` | 1 | `crates/gpu-device-context/src/buffer_renderer.rs:67` | - |  |
 | `impl SurfaceRenderer<'s>::queue` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:212` | - |  |
 | `queue` | 0 | `crates/pcm-device-output/src/queue_tests.rs:40` | - |  |
-| `impl Pixels<'win>::queue` | 1 | `crates/pixel-buffer-output/src/lib.rs:745` | - | Provides access to the internal [`wgpu::Queue`]. |
+| `impl Pixels<'win>::queue` | 1 | `crates/pixel-buffer-output/src/lib.rs:740` | - | Provides access to the internal [`etalon::Queue`]. |
 | `quicktime_mpeg_audio_entries` | 0 | `crates/media-isobmff/src/codec.rs:1651` | - | QuickTime's `.mp2` entry (what ffmpeg writes for MP2 in MOV) is MPEG audio, as `.mp3` is, |
 | `quote_sheet` | 1 | `crates/chronicle-tabular-engine/src/formula/printer.rs:25` | - |  |
 | `impl Parser::quoted` | 2 | `crates/discourse-academic-tex/src/texparse/bib.rs:334` | - |  |
 | `quoted_values_and_comments` | 0 | `crates/discourse-academic-tex/src/texparse/bib.rs:461` | - |  |
+| `r` | 4 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:48` | - |  |
 | `r_at` | 2 | `crates/locus-parametric-solver/src/solver/residual.rs:121` | - |  |
 | `r_at_self` | 2 | `crates/locus-parametric-solver/src/solver/residual.rs:499` | - |  |
 | `rad` | 1 | `crates/drafting-geometry/src/lib.rs:66` | - |  |
 | `rad_to_deg` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:1006` | - |  |
 | `impl J2Plasticity::radial_return` | 3 | `crates/kinetics-continuum-multiphysics/src/fem/constitutive.rs:178` | - | Classical radial return algorithm: updates stress, backstress, and equivalent plastic strain. |
 | `impl AssetHost<'_>::radiance_apply_lut` | 2 | `crates/asset-production-vibe/src/radiance_color.rs:185` | - |  |
-| `impl AssetHost<'_>::radiance_build_light_tree` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:492` | 3d | 5. Hierarchical light tree bounding-cone clustering and direct lighting preview |
+| `impl AssetHost<'_>::radiance_build_light_tree` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:538` | 3d | 5. Hierarchical light tree bounding-cone clustering and direct lighting preview |
 | `impl AssetHost<'_>::radiance_color_op` | 3 | `crates/asset-production-vibe/src/radiance_color.rs:59` | - |  |
-| `impl AssetHost<'_>::radiance_compositor_gi_op` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:68` | - |  |
-| `impl AssetHost<'_>::radiance_convert_transfer` | 2 | `crates/asset-production-vibe/src/radiance_color.rs:385` | - |  |
+| `impl AssetHost<'_>::radiance_compositor_gi_op` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:69` | - |  |
+| `impl AssetHost<'_>::radiance_convert_transfer` | 2 | `crates/asset-production-vibe/src/radiance_color.rs:386` | - |  |
 | `impl AssetHost<'_>::radiance_decode_cryptomatte_q42` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/filters_cryptomatte.rs:234` | - | 2. Cryptomatte Q42 ID coverage matte extraction and isolated compositing |
 | `impl AssetHost<'_>::radiance_filter_kuwahara_anisotropic` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/filters_cryptomatte.rs:10` | graph | 1. Anisotropic Kuwahara structure-tensor edge-preserving filter |
 | `impl AssetHost<'_>::radiance_grade_color` | 2 | `crates/asset-production-vibe/src/radiance_color.rs:252` | - |  |
 | `impl AssetHost<'_>::radiance_modify_mask` | 2 | `crates/asset-production-vibe/src/radiance_color.rs:75` | - |  |
 | `impl AssetHost<'_>::radiance_photo_op` | 3 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:10` | - |  |
-| `impl AssetHost<'_>::radiance_solve_sdfgi_froxel` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:282` | numerics | 4. Cascaded SDFGI irradiance probes and 3D froxel atmospheric scattering |
+| `impl AssetHost<'_>::radiance_solve_sdfgi_froxel` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/sdfgi_light_tree.rs:283` | numerics | 4. Cascaded SDFGI irradiance probes and 3D froxel atmospheric scattering |
 | `impl AssetHost<'_>::radiance_vector_motion_blur` | 2 | `crates/asset-production-vibe/src/radiance_compositor_gi/filters_cryptomatte.rs:311` | - | 3. Vector motion blur line-integral convolution with Hann shutter window |
 | `radii_stop_at_half_the_shorter_side_per_corner` | 0 | `crates/vector-locus-geometry/src/corners.rs:222` | - |  |
 | `impl Bounds::radius` | 1 | `crates/surface-pbr-studio/src/math.rs:339` | - |  |
@@ -6240,7 +6417,8 @@ Every function/method found in the codebase, alphabetical.
 | `ray_intersect_aabb` | 3 | `crates/asset-production-vibe/src/kinetics_sim/motor_xpbd_space.rs:456` | computational geometry, 3d |  |
 | `ray_intersects_triangle` | 5 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:129` | computational geometry, 3d | Möller-Trumbore ray-triangle intersection test returning true if ray (origin, dir) intersects. |
 | `ray_triangle` | 4 | `crates/surface-pbr-studio/src/math.rs:349` | computational geometry, 3d | Möller–Trumbore ray-triangle intersection (hits both front and back faces). |
-| `impl AssetHost<'_>::raymarch_vox0_dda` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:25` | - | Raymarches a 3D `.10d` `Vox0DagNode` / `.emf` volumetric brick lattice using exact |
+| `impl AssetHost<'_>::raymarch_current_emf` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/raymarch_host.rs:4` | - |  |
+| `impl AssetHost<'_>::raymarch_vox0_dda` | 2 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:23` | - | Raymarches a 3D `.10d` `Vox0DagNode` / `.emf` volumetric brick lattice using exact |
 | `impl BitWriter::rbsp_trailing` | 1 | `crates/bitstream-codec/src/lib.rs:229` | - | `rbsp_trailing_bits()`: a one bit then zeros to alignment. |
 | `rdp` | 2 | `crates/vector-locus-pathops/src/pathops/edit.rs:144` | - |  |
 | `rdp_points` | 2 | `crates/vector-radiance-trace/src/fit.rs:360` | - |  |
@@ -6293,6 +6471,7 @@ Every function/method found in the codebase, alphabetical.
 | `read_id` | 1 | `crates/chronicle-broadcast-containers/src/matroska/ebml.rs:55` | - | Decode an element ID (marker bits retained). |
 | `read_image` | 1 | `crates/vector-compute-shaders/shader/fine.wgsl:804` | - |  |
 | `read_lin_grad` | 1 | `crates/vector-compute-shaders/shader/fine.wgsl:758` | - |  |
+| `read_memory_bound` | 3 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:18` | - |  |
 | `read_neighboring_segment` | 1 | `crates/vector-compute-shaders/shader/flatten.wgsl:810` | - |  |
 | `read_neighboring_segment` | 4 | `crates/vector-compute-shaders/src/cpu/flatten.rs:637` | - |  |
 | `impl OggFile::read_packet` | 4 | `crates/media-ogg/src/lib.rs:364` | - | The bytes of packet `i` of stream `s`. |
@@ -6324,9 +6503,10 @@ Every function/method found in the codebase, alphabetical.
 | `impl WkbReader<'a>::read_u8` | 1 | `crates/locus-geospatial-codecs/src/wkb.rs:23` | - |  |
 | `impl BitReader<'a>::read_ue` | 1 | `crates/bitstream-codec/src/lib.rs:121` | - | Unsigned Exp-Golomb `ue(v)`. |
 | `read_ue_plus` | 2 | `crates/video-h264-codec/src/params.rs:7` | - |  |
-| `read_uv01_atlas` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:833` | - |  |
+| `read_uv01_atlas` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1083` | - |  |
 | `read_varint` | 2 | `crates/locus-geospatial-codecs/src/tiles/pmtiles.rs:164` | - | Decodes varint from byte stream. |
 | `read_vint` | 1 | `crates/chronicle-broadcast-containers/src/matroska/ebml.rs:29` | - | Decode an unsigned VINT. Returns `(value, length, all_ones)`. |
+| `read_work_bound` | 3 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:33` | graph | Conservative logical cold budget, not a measured cycle or monetary estimate. |
 | `read_zip_entries` | 1 | `crates/surface-layered-codecs/src/xcf_ora.rs:361` | - | Minimal pure-Rust ZIP local file record parser for stored (uncompressed) or raw members. |
 | `impl Unit::readout` | 2 | `crates/vector-locus-geometry/src/units.rs:144` | - |  |
 | `reads_bits` | 0 | `crates/bitstream-codec/src/lib.rs:347` | - |  |
@@ -6343,12 +6523,12 @@ Every function/method found in the codebase, alphabetical.
 | `recognition_posting_lifecycle` | 0 | `crates/chronicle-fiduciary-ledger/src/revrec.rs:166` | - |  |
 | `recognize` | 1 | `crates/vector-locus-geometry/src/recognize.rs:231` | - | Recognise a freehand stroke. |
 | `recognize_shape` | 1 | `crates/vector-locus-geometry/src/recognize.rs:303` | - | Alias for [`recognize`]. |
-| `impl Pixels<'win>::reconfigure_surface` | 1 | `crates/pixel-buffer-output/src/lib.rs:619` | - | Reconfigure the surface. |
+| `impl Pixels<'win>::reconfigure_surface` | 1 | `crates/pixel-buffer-output/src/lib.rs:614` | - | Reconfigure the surface. |
 | `impl SliceDecoder<'a>::reconstruct_inter_residual` | 1 | `crates/video-h264-codec/src/slicedec.rs:1045` | - | Add the residual of an inter MB (prediction already written). |
 | `impl SliceDecoder<'a>::reconstruct_intra` | 1 | `crates/video-h264-codec/src/slicedec.rs:995` | - | Reconstruct an intra MB (prediction + residual) after its syntax has been parsed. |
-| `record` | 1 | `crates/asset-production-vibe/src/lib.rs:481` | - |  |
+| `record` | 1 | `crates/asset-production-vibe/src/lib.rs:502` | - |  |
 | `impl GeodesicRuler::record` | 2 | `crates/drafting-geometry/src/geodesic_ruler.rs:209` | - |  |
-| `record` | 2 | `crates/profile-authoring/src/frames.rs:25` | 3d |  |
+| `record` | 2 | `crates/profile-authoring/src/frames.rs:28` | 3d |  |
 | `impl CatalogJournal::record_action` | 2 | `crates/radiance-camera-raw/src/metadata.rs:181` | - |  |
 | `impl ChangeDag::record_command` | 5 | `crates/kinetics-schedule-cpm/src/change_dag.rs:192` | - |  |
 | `impl Render::record_fine` | 3 | `crates/vector-compute-renderer/src/render.rs:560` | - | Run fine rasterization assuming the coarse phase succeeded. |
@@ -6401,11 +6581,12 @@ Every function/method found in the codebase, alphabetical.
 | `region` | 2 | `crates/vector-hybrid-renderer/src/schedule/round.rs:555` | - |  |
 | `regions` | 3 | `crates/audio-aac-codec/src/tns.rs:155` | - | Filter region `[start, end)` of every TNS filter of window `w`, in spectrum lines of that window. |
 | `regions` | 1 | `crates/vector-locus-pathops/src/pathops/pathfinder.rs:158` | - | Extract all distinct planar faces / regions covered by the shapes. |
-| `impl Renderer::register_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:574` | economics | Register a [`wgpu::Texture`] with Vello, to allow drawing GPU-resident data. |
+| `impl Renderer::register_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:583` | economics | Register a [`etalon::Texture`] with Vello, to allow drawing GPU-resident data. |
 | `impl LayerSamplePlacement::regular` | 1 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:884` | - |  |
 | `rejects_bad_values` | 0 | `crates/audio-timebase/src/tempo.rs:429` | - |  |
 | `rejects_dynamic_indexing_in_entry_point` | 0 | `crates/vector-hybrid-shaders/src/lint/no_dynamic_indexing.rs:92` | - |  |
 | `rejects_dynamic_indexing_in_helper_function` | 0 | `crates/vector-hybrid-shaders/src/lint/no_dynamic_indexing.rs:74` | - |  |
+| `rejects_ellipsoid_placeholders_and_invalid_anatomical_or_botanical_inputs` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/tests.rs:236` | - |  |
 | `rejects_garbage` | 0 | `crates/audio-opus-codec/src/header.rs:161` | - |  |
 | `rejects_helper_function_returning_struct` | 0 | `crates/vector-hybrid-shaders/src/lint/no_structs_in_fragment.rs:330` | - |  |
 | `rejects_no_moov_and_cmov` | 0 | `crates/media-isobmff/src/demux.rs:1009` | - |  |
@@ -6416,15 +6597,15 @@ Every function/method found in the codebase, alphabetical.
 | `relative_time_formatting` | 0 | `crates/multimodal-synthesis-schema/src/job_feed.rs:118` | - |  |
 | `impl Cursor::release` | 3 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:114` | - | Mark the given allocation as ready to release in the given round. |
 | `impl CapturedBuffers::release_buffers` | 2 | `crates/vector-compute-renderer/src/render.rs:77` | - |  |
-| `impl Renderer::reload_shaders` | 2 | `crates/vector-compute-renderer/src/lib.rs:610` | - | Reload the shaders. This should only be used during `vello` development |
+| `impl Renderer::reload_shaders` | 2 | `crates/vector-compute-renderer/src/lib.rs:619` | - | Reload the shaders. This should only be used during `vello` development |
 | `impl Cur<'a>::remaining` | 1 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:151` | - |  |
 | `impl WkbReader<'a>::remaining` | 1 | `crates/locus-geospatial-codecs/src/wkb.rs:19` | - |  |
 | `impl Cur<'a>::remaining` | 1 | `crates/media-isobmff/src/bytes.rs:74` | - |  |
 | `impl RevenueSchedule::remaining_unrecognized` | 1 | `crates/chronicle-fiduciary-ledger/src/revrec.rs:137` | - | Returns the remaining unrecognized deferred revenue balance. |
 | `impl AudioObjectPropertyListener::remove` | 1 | `crates/audio-device-cpal/src/host/coreaudio/macos/property_listener.rs:49` | - | Explicitly remove the property listener. |
 | `impl References::remove` | 2 | `crates/multimodal-synthesis-schema/src/references.rs:162` | - |  |
+| `impl TextureBindings::remove` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:135` | - | Remove a texture binding. |
 | `impl WebGlTextureBindings::remove` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:213` | - | Remove a texture binding. |
-| `impl TextureBindings::remove` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:135` | - | Remove a texture binding. |
 | `impl Project::remove_dependency` | 3 | `crates/kinetics-schedule-cpm/src/model.rs:611` | - |  |
 | `impl AudioObjectPropertyListener::remove_inner` | 1 | `crates/audio-device-cpal/src/host/coreaudio/macos/property_listener.rs:53` | - |  |
 | `impl GradientRampCache::remove_lru_entries` | 3 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:152` | - | Identify and remove the LRU cache entries. |
@@ -6441,25 +6622,26 @@ Every function/method found in the codebase, alphabetical.
 | `rename_optional` | 2 | `crates/vector-hybrid-shaders/src/minify.rs:166` | - | Replaces an optional Naga IR declaration name with the next short name, leaving unnamed |
 | `impl AssetHost<'_>::render` | 2 | `crates/asset-production-vibe/src/raster.rs:252` | - |  |
 | `impl Queue::render` | 2 | `crates/pcm-device-output/src/queue.rs:127` | - | All slot storage is retained: no allocation/deallocation or source lookup |
-| `impl Pixels<'win>::render` | 1 | `crates/pixel-buffer-output/src/lib.rs:498` | 2d | Draw this pixel buffer to the configured [`SurfaceTexture`]. |
-| `impl ScalingRenderer::render` | 3 | `crates/pixel-buffer-output/src/renderers.rs:251` | 2d | Draw the pixel buffer to the render target. |
+| `impl Pixels<'win>::render` | 1 | `crates/pixel-buffer-output/src/lib.rs:493` | 2d | Draw this pixel buffer to the configured [`SurfaceTexture`]. |
+| `impl ScalingRenderer::render` | 3 | `crates/pixel-buffer-output/src/renderers.rs:255` | 2d | Draw the pixel buffer to the render target. |
 | `impl WindowRenderer for PixelsWindowRenderer<Renderer>::render` | 2 | `crates/pixel-window-render-adapter/src/lib.rs:209` | - |  |
 | `impl DebugRenderer::render` | 8 | `crates/vector-compute-renderer/src/debug/renderer.rs:210` | - |  |
 | `impl ImageRenderer for VelloCpuImageRenderer::render` | 3 | `crates/vector-cpu-render-adapter/src/image_renderer.rs:46` | - |  |
 | `impl ImageRenderer for VelloImageRenderer::render` | 3 | `crates/vector-gpu-render-adapter/src/image_renderer.rs:88` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::render` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:438` | - |  |
 | `impl WindowRenderer for VelloHybridWindowRenderer::render` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:470` | - |  |
+| `impl Renderer::render` | 11 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:253` | - | Render `scene`. |
 | `impl WebGlRenderer::render` | 10 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:437` | - | Render `scene` using WebGL2 |
-| `impl Renderer::render` | 11 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:253` | - | Render `scene`. |
 | `impl ImageRenderer for SkiaImageRenderer::render` | 3 | `crates/vector-skia-render-adapter/src/image_renderer.rs:80` | - |  |
 | `impl WindowRenderer for SkiaWindowRenderer::render` | 2 | `crates/vector-skia-render-adapter/src/window_renderer.rs:166` | - |  |
 | `render` | 2 | `crates/video-h264-codec/src/synth_tests.rs:353` | - | Expected cropped planes of a picture made of PCM blocks (`None` = copy from `reference`). |
 | `render_anatomical_blueprint_svg` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:497` | computational geometry | Renders a vector orthographic & anatomical callout blueprint SVG from a 3D mesh. |
 | `render_animated_cinema_frames` | 6 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:27` | 3d | Renders an N-frame animated 3D cinema sequence (`160x112` H.264 macroblock-aligned) combining |
 | `impl PdcMixEngine::render_block` | 4 | `crates/acoustics-daw-session/src/mix_session/mod.rs:134` | - | Renders a block of audio (left, right) for the session at `start_sample` with exact latency alignment. |
-| `impl AssetHost<'_>::render_chart_svg` | 2 | `crates/asset-production-vibe/src/discourse_docs/pdf_chart.rs:27` | - |  |
+| `impl AssetHost<'_>::render_chart_svg` | 2 | `crates/asset-production-vibe/src/discourse_docs/pdf_chart.rs:26` | - |  |
 | `render_cinema_rgba_frame_at` | 10 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:58` | - |  |
 | `render_clip` | 3 | `crates/vector-cpu-render-adapter/src/scene.rs:229` | - |  |
+| `impl AssetHost<'_>::render_current_emf_slice` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:224` | - |  |
 | `render_date` | 3 | `crates/chronicle-tabular-engine/src/numfmt/render.rs:46` | - |  |
 | `impl GlyphRunBackend<'a> for GpuGlyphRunBackend<'a>::render_decoration` | 8 | `crates/vector-hybrid-renderer/src/text.rs:294` | - |  |
 | `impl Render::render_encoding_coarse` | 7 | `crates/vector-compute-renderer/src/render.rs:135` | - | Prepare a recording for the coarse rasterization phase. |
@@ -6469,30 +6651,31 @@ Every function/method found in the codebase, alphabetical.
 | `render_general` | 3 | `crates/chronicle-tabular-engine/src/numfmt/render.rs:34` | - |  |
 | `impl GpuGlyphRunBackend<'a>::render_glyphs` | 4 | `crates/vector-hybrid-renderer/src/text.rs:226` | - |  |
 | `render_hero_rgba_frame` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:16` | - | Renders a 256x256 RGBA studio hero frame suitable for downstream Radiance / CDL / MaterialX morphisms. |
-| `render_macro_behavior_cinema_frames` | 7 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:766` | computational geometry | Renders an N-frame animated 3D cinema sequence driven by a `BehaviorMacro` and `SubElementHooks`. |
+| `render_macro_behavior_cinema_frames` | 7 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:764` | computational geometry | Renders an N-frame animated 3D cinema sequence driven by a `BehaviorMacro` and `SubElementHooks`. |
 | `render_number` | 2 | `crates/chronicle-tabular-engine/src/numfmt/render.rs:109` | - |  |
 | `render_panel` | 15 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:286` | - |  |
 | `impl GpuProfilerQuery::render_pass_timestamp_writes` | 1 | `crates/gpu-command-profiler/src/profiler_query.rs:74` | - | Use the reserved query for render pass timestamp writes if any. |
+| `render_raymarch` | 7 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:392` | 3d | DDA alpha-composites a magnitude PALETTE. It is not absorption, radiative |
+| `impl Renderer::render_scene` | 13 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:407` | - | Shared render pipeline: prepares GPU resources, runs the scheduler against |
 | `impl WebGlRenderer::render_scene` | 8 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:601` | - | Shared render pipeline: prepares GPU resources, runs the scheduler, and |
-| `impl Renderer::render_scene` | 13 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:407` | - | Shared render pipeline: prepares GPU resources, runs the scheduler against |
 | `impl VelloHybridRendererOptions::render_settings` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:109` | - |  |
-| `impl AssetHost<'_>::render_spectral_slice` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:328` | - | Renders a 2D spectral preview slice from an EMF-64 volume container to straight-alpha RGBA8. |
+| `render_slice` | 7 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:345` | - |  |
 | `render_svg` | 3 | `crates/vector-hybrid-renderer/examples/render_to_file.rs:176` | - |  |
 | `render_text` | 2 | `crates/chronicle-tabular-engine/src/numfmt/render.rs:22` | - |  |
 | `impl ScreenBuffer::render_text` | 1 | `crates/chronicle-timeline-interchange/src/captions/cea608.rs:175` | - |  |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::render_texture_format` | 2 | `crates/pixel-buffer-output/src/builder.rs:170` | 3d | Set the render texture format. |
-| `impl Pixels<'win>::render_texture_format` | 1 | `crates/pixel-buffer-output/src/lib.rs:773` | - | Get the render texture format. |
+| `impl Pixels<'win>::render_texture_format` | 1 | `crates/pixel-buffer-output/src/lib.rs:768` | - | Get the render texture format. |
+| `impl Renderer::render_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:340` | - | Render a `scene` directly into an atlas layer. |
 | `impl WebGlRenderer::render_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:517` | - | Render a `scene` directly into an atlas layer. |
-| `impl Renderer::render_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:340` | - | Render a `scene` directly into an atlas layer. |
-| `impl Renderer::render_to_texture` | 6 | `crates/vector-compute-renderer/src/lib.rs:476` | - | Renders a scene to the target texture. |
-| `impl Renderer::render_to_texture_async` | 7 | `crates/vector-compute-renderer/src/lib.rs:644` | - |  |
-| `impl Renderer::render_to_texture_async_internal` | 6 | `crates/vector-compute-renderer/src/lib.rs:719` | - |  |
+| `impl Renderer::render_to_texture` | 6 | `crates/vector-compute-renderer/src/lib.rs:485` | - | Renders a scene to the target texture. |
+| `impl Renderer::render_to_texture_async` | 7 | `crates/vector-compute-renderer/src/lib.rs:655` | - |  |
+| `impl Renderer::render_to_texture_async_internal` | 6 | `crates/vector-compute-renderer/src/lib.rs:730` | - |  |
 | `impl ImageRenderer for VelloCpuImageRenderer::render_to_vec` | 3 | `crates/vector-cpu-render-adapter/src/image_renderer.rs:72` | - |  |
 | `impl ImageRenderer for VelloImageRenderer::render_to_vec` | 3 | `crates/vector-gpu-render-adapter/src/image_renderer.rs:78` | - |  |
 | `impl ImageRenderer for SkiaImageRenderer::render_to_vec` | 3 | `crates/vector-skia-render-adapter/src/image_renderer.rs:48` | - |  |
 | `render_turnaround_sheet_png` | 4 | `crates/asset-production-vibe/src/living_world_anatomy/turntable_render.rs:171` | - | Renders a 3-panel (`900x420`) RGBA8 turnaround sheet PNG (`Side Profile`, `3/4 Hero`, `Front`). |
 | `impl AssetHost<'_>::render_ui_sheet` | 2 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:13` | - | Renders the resolved layout into a straight-alpha RGBA8 raster artifact. |
-| `impl Pixels<'win>::render_with` | 2 | `crates/pixel-buffer-output/src/lib.rs:547` | 2d | Draw this pixel buffer to the configured [`SurfaceTexture`] using a custom user-provided |
+| `impl Pixels<'win>::render_with` | 2 | `crates/pixel-buffer-output/src/lib.rs:542` | 2d | Draw this pixel buffer to the configured [`SurfaceTexture`] using a custom user-provided |
 | `impl RenderContext for VelloScenePainter<'_, '_>::renderer_specific_context` | 1 | `crates/vector-gpu-render-adapter/src/scene.rs:47` | - |  |
 | `impl RenderContext for VelloWindowRenderer::renderer_specific_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:227` | - |  |
 | `impl RenderContext for VelloHybridScenePainter<'_>::renderer_specific_context` | 1 | `crates/vector-hybrid-render-adapter/src/scene.rs:189` | - |  |
@@ -6502,9 +6685,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl Enc::renorm` | 2 | `crates/video-h264-codec/src/synth_tests.rs:233` | - |  |
 | `renormalise_vector` | 2 | `crates/audio-opus-codec/src/celt/bands.rs:126` | - |  |
 | `reorder_visual` | 1 | `crates/vector-glyph-shaping/src/bidi.rs:137` | - | Reorder run indices from logical reading order into visual left-to-right display order. |
-| `reordered_b_skip` | 0 | `crates/video-h264-preview/src/lib.rs:583` | - |  |
-| `reordered_pcm` | 4 | `crates/video-h264-preview/src/lib.rs:576` | - |  |
-| `reordered_sps` | 0 | `crates/video-h264-preview/src/lib.rs:565` | - |  |
+| `reordered_b_skip` | 0 | `crates/video-h264-preview/src/lib.rs:584` | - |  |
+| `reordered_pcm` | 4 | `crates/video-h264-preview/src/lib.rs:577` | - |  |
+| `reordered_sps` | 0 | `crates/video-h264-preview/src/lib.rs:566` | - |  |
 | `impl Project::repair_counters` | 1 | `crates/kinetics-schedule-cpm/src/model.rs:541` | - |  |
 | `impl ProfileDoc::replace` | 4 | `crates/profile-authoring/src/profile.rs:53` | - | Pure successor, never a second document store or undo journal. |
 | `replay_failure_cancels_all_prior_samples_and_does_not_advance_id` | 0 | `crates/terrain-brushes/src/adaptation_tests.rs:181` | - |  |
@@ -6518,10 +6701,11 @@ Every function/method found in the codebase, alphabetical.
 | `impl DeviceOutput::request` | 2 | `crates/pcm-device-output/src/device.rs:177` | - |  |
 | `request` | 3 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:254` | - |  |
 | `request` | 2 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:152` | - |  |
-| `impl PixelsBuilder<'req, 'dev, 'win, W>::request_adapter_options` | 2 | `crates/pixel-buffer-output/src/builder.rs:73` | - | Add options for requesting a [`wgpu::Adapter`]. |
+| `impl PixelsBuilder<'req, 'dev, 'win, W>::request_adapter_options` | 2 | `crates/pixel-buffer-output/src/builder.rs:73` | - | Add options for requesting a [`etalon::Adapter`]. |
+| `require_legacy_visible_projection` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:218` | 3d | Explicit slice/raymarch operations are a derived human-visible preview only. |
 | `impl Atlases::require_scratch_texture` | 1 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:84` | - |  |
 | `impl Cursor::require_scratch_texture` | 1 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:47` | - | Indicate that access to the scratch texture is required. |
-| `required` | 2 | `crates/asset-production-vibe/src/lib.rs:488` | - |  |
+| `required` | 2 | `crates/asset-production-vibe/src/lib.rs:509` | - |  |
 | `required_bits` | 3 | `crates/audio-opus-codec/src/celt/rate.rs:197` | - | Bits (1/2^frac units, rounded up) needed for each K in `0..=maxk` for dimension `n`. |
 | `impl FilterContext::required_filter_data_height` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:659` | - | Calculate the required height for the filter data texture. |
 | `impl LayersConfig::required_intermediate_texture_size` | 2 | `crates/vector-hybrid-renderer/src/render/common.rs:166` | - |  |
@@ -6535,14 +6719,14 @@ Every function/method found in the codebase, alphabetical.
 | `resample_rgba8` | 6 | `crates/raster-spatial-operators/src/resample.rs:176` | - | Resample an RGBA8 buffer to new target dimensions. |
 | `rescale` | 3 | `crates/media-isobmff/src/demux.rs:404` | - |  |
 | `rescale` | 3 | `crates/media-isobmff/src/mux.rs:145` | - |  |
-| `impl GpuProfiler::reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:629` | - |  |
+| `impl GpuProfiler::reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:631` | - |  |
 | `impl BiquadFilter::reset` | 1 | `crates/acoustics-daw-session/src/dsp/biquad.rs:160` | - |  |
 | `impl Decoder::reset` | 1 | `crates/audio-aac-codec/src/decoder.rs:114` | - | Clear the overlap state (e.g. after a seek). |
 | `impl CeltDecoder::reset` | 1 | `crates/audio-opus-codec/src/celt/mod.rs:99` | - | `OPUS_RESET_STATE`. |
 | `impl StreamDecoder::reset` | 1 | `crates/audio-opus-codec/src/decoder.rs:87` | - | `OPUS_RESET_STATE`. |
 | `impl Decoder::reset` | 1 | `crates/audio-opus-codec/src/multistream.rs:80` | - |  |
 | `impl SilkDecoder::reset` | 1 | `crates/audio-opus-codec/src/silk/mod.rs:678` | - |  |
-| `impl QueryPool::reset` | 1 | `crates/gpu-command-profiler/src/profiler.rs:888` | - |  |
+| `impl QueryPool::reset` | 1 | `crates/gpu-command-profiler/src/profiler.rs:890` | - |  |
 | `impl Scene::reset` | 1 | `crates/vector-compute-renderer/src/scene.rs:59` | - | Removes all content from the scene. |
 | `impl ImageRenderer for VelloCpuImageRenderer::reset` | 1 | `crates/vector-cpu-render-adapter/src/image_renderer.rs:42` | - |  |
 | `impl PaintScene for VelloCpuScenePainter::reset` | 1 | `crates/vector-cpu-render-adapter/src/scene.rs:69` | - |  |
@@ -6554,7 +6738,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl ImageRenderer for SkiaImageRenderer::reset` | 1 | `crates/vector-skia-render-adapter/src/image_renderer.rs:46` | - |  |
 | `impl PaintScene for SkiaScenePainter<'_>::reset` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:424` | - |  |
 | `impl PicState::reset` | 2 | `crates/video-h264-codec/src/slicedec.rs:88` | - | Reuse the buffers of a finished picture of the same size for a new frame. |
-| `impl GpuProfiler::reset_and_cache_unused_query_pools` | 2 | `crates/gpu-command-profiler/src/profiler.rs:570` | - |  |
+| `impl GpuProfiler::reset_and_cache_unused_query_pools` | 2 | `crates/gpu-command-profiler/src/profiler.rs:572` | - |  |
 | `impl Scene::reset_and_resize` | 3 | `crates/vector-hybrid-renderer/src/scene.rs:849` | - | Reset the scene and update its size. |
 | `reset_and_resize_updates_scene_size` | 0 | `crates/vector-hybrid-renderer/src/scene.rs:953` | - |  |
 | `impl Scene::reset_filter_effect` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:826` | - | Reset the current filter effect. |
@@ -6570,12 +6754,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl SliceDecoder<'a>::residual_cavlc` | 3 | `crates/video-h264-codec/src/slicedec.rs:1391` | - |  |
 | `impl BufferRenderer::resize` | 3 | `crates/gpu-device-context/src/buffer_renderer.rs:79` | - |  |
 | `impl SurfaceRenderer<'s>::resize` | 3 | `crates/gpu-device-context/src/surface_renderer.rs:217` | - | Resizes the surface to the new dimensions. |
-| `impl ScalingRenderer::resize` | 4 | `crates/pixel-buffer-output/src/renderers.rs:295` | - |  |
+| `impl ScalingRenderer::resize` | 4 | `crates/pixel-buffer-output/src/renderers.rs:303` | - |  |
 | `impl ImageRenderer for VelloCpuImageRenderer::resize` | 3 | `crates/vector-cpu-render-adapter/src/image_renderer.rs:38` | - |  |
 | `impl ImageRenderer for VelloImageRenderer::resize` | 3 | `crates/vector-gpu-render-adapter/src/image_renderer.rs:70` | - |  |
 | `impl ImageRenderer for SkiaImageRenderer::resize` | 3 | `crates/vector-skia-render-adapter/src/image_renderer.rs:37` | - |  |
-| `impl Pixels<'win>::resize_buffer` | 3 | `crates/pixel-buffer-output/src/lib.rs:363` | 2d | Resize the pixel buffer and zero its contents. |
-| `impl Pixels<'win>::resize_surface` | 3 | `crates/pixel-buffer-output/src/lib.rs:408` | 2d | Resize the surface upon which the pixel buffer texture is rendered. |
+| `impl Pixels<'win>::resize_buffer` | 3 | `crates/pixel-buffer-output/src/lib.rs:358` | 2d | Resize the pixel buffer and zero its contents. |
+| `impl Pixels<'win>::resize_surface` | 3 | `crates/pixel-buffer-output/src/lib.rs:403` | 2d | Resize the surface upon which the pixel buffer texture is rendered. |
 | `impl RenderContext::resize_surface` | 4 | `crates/vector-compute-renderer/src/util.rs:119` | - | Resizes the surface to the new dimensions. |
 | `resolution_is_hd` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:570` | - |  |
 | `resolution_label` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:555` | - |  |
@@ -6584,10 +6768,12 @@ Every function/method found in the codebase, alphabetical.
 | `impl ColorRef::resolve` | 2 | `crates/layout-presentation-deck/src/model/types.rs:179` | - |  |
 | `impl ModelInfo::resolve` | 3 | `crates/multimodal-synthesis-schema/src/catalog.rs:153` | - |  |
 | `resolve_bidi_runs` | 2 | `crates/vector-glyph-shaping/src/bidi.rs:70` | - | Resolve paragraph direction and decompose text into directional runs. |
-| `resolve_color` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:512` | - |  |
+| `impl AssetHost<'_>::resolve_bound_10d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:269` | - |  |
+| `resolve_color` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/portable_scaffold.rs:527` | - |  |
 | `resolve_corpus` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/corpus_values.rs:24` | - |  |
 | `impl ModelInfo::resolve_duration` | 3 | `crates/multimodal-synthesis-schema/src/catalog.rs:183` | - |  |
-| `impl AssetHost<'_>::resolve_emf_bytes` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:636` | - | Resolves container bytes from retained inputs or workspace encoded resources. |
+| `impl AssetHost<'_>::resolve_emf_bytes` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:197` | - |  |
+| `impl AssetHost<'_>::resolve_emf_bytes_for` | 3 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:203` | - | Fixed backing is already included by peak admission; add exactly one |
 | `resolve_fill` | 2 | `crates/layout-presentation-deck/src/model/resolve.rs:127` | - | Effective fill of a shape after placeholder resolution. |
 | `resolve_input` | 2 | `crates/vector-skia-render-adapter/src/scene.rs:607` | - |  |
 | `resolve_line` | 2 | `crates/layout-presentation-deck/src/model/resolve.rs:146` | - | Effective line/border of a shape after placeholder resolution. |
@@ -6618,6 +6804,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Block for Sine::resolve_out` | 3 | `crates/kinetics-block-simulation/src/blocks/sources.rs:118` | - |  |
 | `impl Block for Ramp::resolve_out` | 3 | `crates/kinetics-block-simulation/src/blocks/sources.rs:162` | - |  |
 | `impl Block for Clock::resolve_out` | 3 | `crates/kinetics-block-simulation/src/blocks/sources.rs:202` | - |  |
+| `impl AssetHost<'_>::resolve_qac_bytes` | 2 | `crates/asset-production-vibe/src/sound.rs:152` | - |  |
 | `impl GpuProfiler::resolve_queries` | 2 | `crates/gpu-command-profiler/src/profiler.rs:345` | - | Puts query resolve commands in the encoder for all unresolved, pending queries of the active profiler frame. |
 | `resolve_rules` | 5 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec.rs:120` | - | Resolves the `rules` argument into a validated `Q42LOGIC` container, appending `derived` |
 | `impl LayerSamplePlacement::resolve_sample_region` | 2 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:898` | - |  |
@@ -6638,7 +6825,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl WindowRenderer for VelloWindowRenderer::resume` | 5 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:258` | - |  |
 | `impl WindowRenderer for VelloHybridWindowRenderer::resume` | 5 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:263` | - |  |
 | `impl WindowRenderer for SkiaWindowRenderer::resume` | 5 | `crates/vector-skia-render-adapter/src/window_renderer.rs:115` | - |  |
-| `impl ApplicationHandler<()> for State::resumed` | 2 | `crates/gpu-command-profiler/examples/demo.rs:181` | - |  |
+| `impl ApplicationHandler<()> for State::resumed` | 2 | `crates/gpu-command-profiler/examples/demo.rs:182` | - |  |
 | `impl Anchor::retract` | 1 | `crates/vector-locus-geometry/src/path.rs:165` | - | Remove both handles (convert to a sharp corner). |
 | `reuse_vec` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:246` | - |  |
 | `reversals` | 2 | `crates/vector-locus-geometry/src/recognize.rs:220` | - |  |
@@ -6663,10 +6850,11 @@ Every function/method found in the codebase, alphabetical.
 | `rgb_to_ycbcr` | 4 | `crates/radiance-color-grading/src/matrix.rs:151` | numerics | Convert non-linear R'G'B' (nominal 0..1) to normalized Y'CbCr. |
 | `rgb_view` | 1 | `crates/asset-production-vibe/src/raster.rs:339` | - |  |
 | `impl AssetHost<'_>::rgba` | 2 | `crates/asset-production-vibe/src/graphics.rs:84` | - |  |
-| `rgba709` | 2 | `crates/video-h264-preview/src/lib.rs:451` | - |  |
+| `impl AssetHost<'_>::rgba16` | 2 | `crates/asset-production-vibe/src/radiance_precision.rs:25` | - |  |
+| `rgba709` | 2 | `crates/video-h264-preview/src/lib.rs:452` | - |  |
 | `rgba8` | 3 | `crates/radiance-color-grading/src/scopes/tests.rs:6` | - |  |
-| `rgba_css` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:65` | - |  |
-| `rgba_to_prores` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:429` | - |  |
+| `rgba_css` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:66` | - |  |
+| `rgba_to_prores` | 1 | `crates/asset-production-vibe/src/chronicle_ops.rs:424` | - |  |
 | `ri` | 4 | `crates/chronicle-broadcast-containers/src/dnx/tables.rs:87` | - |  |
 | `ri_frame_size` | 4 | `crates/chronicle-broadcast-containers/src/dnx/tables.rs:124` | - |  |
 | `impl AssetHost<'_>::rig_biomechanical_archetype` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:28` | - | Constructs and steps the 18-joint PGA `Motor` fauna skeletal rig (`FaunaSkeletalRig10d`), |
@@ -6713,6 +6901,7 @@ Every function/method found in the codebase, alphabetical.
 | `round_order` | 0 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:343` | - |  |
 | `round_order_case` | 0 | `crates/vector-hybrid-renderer/src/schedule/execute.rs:306` | - |  |
 | `round_trip_random_bins` | 0 | `crates/video-h264-codec/src/cabac.rs:304` | - |  |
+| `round_trip_structural_and_semantic_inspection_and_vibe_adapter` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/tests.rs:107` | semantics |  |
 | `round_up` | 1 | `crates/vector-compute-shaders/shader/flatten.wgsl:678` | - |  |
 | `rounded_profile_edit_changes_real_geometry_and_rejects_stale_revision` | 0 | `crates/profile-authoring/src/tests.rs:150` | - |  |
 | `rounded_rect` | 4 | `crates/profile-authoring/src/lib.rs:39` | 2d |  |
@@ -6723,7 +6912,7 @@ Every function/method found in the codebase, alphabetical.
 | `roundtrip_and_delay` | 0 | `crates/audio-aac-codec/tests/robustness.rs:137` | - |  |
 | `roundtrip_every_curve` | 0 | `crates/color-transforms/src/log.rs:270` | - |  |
 | `roundtrip_mixed_symbols` | 0 | `crates/audio-opus-codec/src/range.rs:420` | - |  |
-| `impl AssetHost<'_>::route_bus_dag` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:11` | - |  |
+| `impl AssetHost<'_>::route_bus_dag` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:10` | - |  |
 | `impl AssetHost<'_>::route_input_action` | 2 | `crates/asset-production-vibe/src/glyph_layout_diegetic/diegetic_input.rs:217` | - |  |
 | `routes_files_by_extension` | 0 | `crates/multimodal-synthesis-schema/src/references.rs:184` | - |  |
 | `impl Frame::row` | 2 | `crates/video-h264-codec/src/picture.rs:165` | - | MB row `r`, waiting until it has been published. |
@@ -6741,6 +6930,8 @@ Every function/method found in the codebase, alphabetical.
 | `rule_pack_reproduces_legacy_hardcoded_packs` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:106` | - |  |
 | `rule_pack_validation_rejects_corruption` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:124` | - |  |
 | `impl Unit::ruler_step` | 2 | `crates/vector-locus-geometry/src/units.rs:79` | - | The rulers' label step at `zoom` (screen pixels per point), in this unit. |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::rules` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:48` | - |  |
+| `impl DomainRegistry for QacV1CueRegistry::rules` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:113` | - |  |
 | `rules_value_parsing_fails_closed` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:144` | - |  |
 | `run` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:91` | - |  |
 | `impl Fft::run` | 3 | `crates/audio-aac-codec/src/mdct.rs:28` | - |  |
@@ -6756,8 +6947,8 @@ Every function/method found in the codebase, alphabetical.
 | `run_job` | 4 | `crates/video-h264-codec/src/decoder.rs:506` | - | Decode all slices of one picture and publish its rows. |
 | `run_monte_carlo` | 3 | `crates/kinetics-schedule-cpm/src/schedule.rs:663` | - |  |
 | `run_output` | 3 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:347` | - |  |
-| `impl WgpuEngine::run_recording` | 8 | `crates/vector-compute-renderer/src/wgpu_engine.rs:380` | - |  |
-| `run_sector_physics_verification_step` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:72` | physics | Runs a deterministic 3D XPBD + analytical SDF + 2-way continuum bridge + 4-wheel rover suspension |
+| `impl EtalonEngine::run_recording` | 8 | `crates/vector-compute-renderer/src/etalon_engine.rs:381` | - |  |
+| `run_sector_physics_verification_step` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:74` | physics | Runs a deterministic 3D XPBD + analytical SDF + 2-way continuum bridge + 4-wheel rover suspension |
 | `run_states` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:687` | - |  |
 | `s` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:18` | - |  |
 | `impl GroupReader<'r, 'a>::s` | 2 | `crates/drafting-geometry/src/dxf_reader.rs:157` | - |  |
@@ -6767,6 +6958,7 @@ Every function/method found in the codebase, alphabetical.
 | `safe_identifier` | 1 | `crates/surface-pbr-studio/src/materialx.rs:42` | - |  |
 | `safe_inverse` | 1 | `crates/surface-pbr-studio/src/bvh.rs:120` | - |  |
 | `safe_url` | 1 | `crates/layout-presentation-deck/src/timeline/show.rs:16` | - |  |
+| `impl GridAtTime<'a>::sample` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:258` | - |  |
 | `impl Encoder::sample` | 3 | `crates/audio-aac-codec/src/encoder/mod.rs:313` | - |  |
 | `impl Clut::sample` | 3 | `crates/color-transforms/src/icc/clut.rs:42` | graph | Builds a table by sampling `f` at every node (inputs normalised to `[0, 1]`). |
 | `impl Colormap::sample` | 2 | `crates/discourse-scientific-matlang/src/plot.rs:26` | - |  |
@@ -6796,7 +6988,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl RasterImage::sample_nearest` | 3 | `crates/surface-pbr-studio/src/raster.rs:56` | - |  |
 | `sample_pressure` | 2 | `crates/vector-surface-brush/src/calligraphic.rs:87` | - |  |
 | `sample_pressure` | 2 | `crates/vector-surface-brush/src/scatter.rs:111` | - |  |
-| `impl AssetHost<'_>::sample_procedural_field` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:320` | - |  |
+| `impl AssetHost<'_>::sample_procedural_field` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:330` | - |  |
 | `sample_program_builds_and_tracks_costs` | 0 | `crates/kinetics-schedule-cpm/src/model.rs:865` | - |  |
 | `impl Decoder::sample_rate` | 1 | `crates/audio-aac-codec/src/decoder.rs:96` | - |  |
 | `impl jack::NotificationHandler for JackNotificationHandler::sample_rate` | 3 | `crates/audio-device-cpal/src/host/jack/stream.rs:443` | - |  |
@@ -6812,13 +7004,14 @@ Every function/method found in the codebase, alphabetical.
 | `sample_rgba8` | 7 | `crates/raster-spatial-operators/src/distort.rs:334` | - |  |
 | `impl SampleFormat::sample_size` | 1 | `crates/audio-device-cpal/src/samples_formats.rs:55` | - | Returns the size in bytes of a sample of this format. |
 | `sample_strategy` | 0 | `crates/media-isobmff/tests/roundtrip.rs:15` | - |  |
-| `sample_tables_reject_hostile_counts_before_mp4_parser` | 0 | `crates/video-h264-preview/src/lib.rs:698` | - |  |
+| `sample_tables_reject_hostile_counts_before_mp4_parser` | 0 | `crates/video-h264-preview/src/lib.rs:699` | - |  |
 | `trait Block::sample_time` | 1 | `crates/kinetics-block-simulation/src/block.rs:73` | - |  |
 | `impl Block for UnitDelay::sample_time` | 1 | `crates/kinetics-block-simulation/src/blocks/discrete.rs:53` | - |  |
 | `impl Block for ZeroOrderHold::sample_time` | 1 | `crates/kinetics-block-simulation/src/blocks/discrete.rs:108` | - |  |
 | `impl XorShift64::sample_triangular` | 4 | `crates/kinetics-schedule-cpm/src/schedule.rs:649` | - |  |
 | `sample_virtual_rgba32f` | 6 | `crates/raster-spatial-operators/src/distort.rs:289` | - |  |
 | `sample_virtual_rgba8` | 6 | `crates/raster-spatial-operators/src/distort.rs:244` | - |  |
+| `sampled_spectrum_stride` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:174` | - | Compute the 64-byte aligned stride for Mode `0x0103` (`sampled_spectrum_v1`) with `bin_count` f64 bins. |
 | `impl SampleRate::samples` | 2 | `crates/audio-timebase/src/rate.rs:70` | - | Convert real seconds to samples, rounded to nearest and saturated. |
 | `samples_along` | 2 | `crates/vector-surface-brush/src/calligraphic.rs:168` | 2d |  |
 | `impl TempoMap::samples_at_bar_beat` | 3 | `crates/audio-timebase/src/tempo.rs:352` | - | Sample index at musical `BarBeat`. |
@@ -6887,7 +7080,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Atlases::scratch_texture` | 1 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:42` | - |  |
 | `impl Cursor::scratch_texture` | 1 | `crates/vector-hybrid-renderer/src/schedule/cursor.rs:42` | - | Whether access to the scratch texture has been requested. |
 | `impl ScheduledCase::scratch_texture` | 1 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:156` | - |  |
-| `impl GpuResources::scratch_view` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1065` | - |  |
+| `impl GpuResources::scratch_view` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1065` | - |  |
 | `screen` | 2 | `crates/raster-blend-operators/src/lib.rs:455` | - |  |
 | `screen` | 2 | `crates/vector-compute-shaders/shader/shared/blend.wgsl:24` | 3d |  |
 | `scribble` | 3 | `crates/vector-locus-pathops/src/effects/scribble.rs:32` | 2d | Scribble: generates zigzag hatching across a shape. |
@@ -6896,19 +7089,23 @@ Every function/method found in the codebase, alphabetical.
 | `scripts` | 6 | `crates/discourse-academic-tex/src/typeset.rs:452` | - |  |
 | `scripts_and_frac` | 0 | `crates/discourse-academic-tex/src/typeset.rs:525` | - |  |
 | `scrub` | 1 | `crates/discourse-academic-tex/src/bibliography/identifiers.rs:24` | - |  |
-| `impl AssetHost<'_>::sculpt_terrain` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:325` | - |  |
-| `sculpt_tile` | 5 | `crates/asset-production-vibe/src/geodesy_ops.rs:104` | - |  |
+| `sculpt_erosion_and_m64_share_physical_samples` | 0 | `crates/asset-production-vibe/src/geodesy_ops.rs:825` | - |  |
+| `impl AssetHost<'_>::sculpt_terrain` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:358` | - |  |
+| `sculpt_tile` | 5 | `crates/asset-production-vibe/src/geodesy_ops.rs:140` | - |  |
 | `sdiv` | 2 | `crates/audio-opus-codec/src/celt/bands.rs:243` | - | C-style truncating signed division. |
 | `sdr_in_hdr_keeps_values_and_display_tone_maps` | 0 | `crates/color-transforms/src/transform.rs:466` | - |  |
 | `sdr_is_the_srgb_signal` | 0 | `crates/color-transforms/src/grade.rs:130` | - |  |
 | `seal_ik_pose_skl1_10d` | 4 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:469` | - | Bind-pose triangle + 3-joint SKL1 attached into a sealed `.10d`. |
 | `seal_mesh_10d_with_slim_uvs` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:310` | computational geometry | Seal SLIM TEXCOORD_0 into a QualiaDB `.10d` so unwrap feeds `compile_10d_pbr`. |
-| `seal_whitegum_organ_10d` | 8 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:882` | - |  |
+| `seal_whitegum_organ_10d` | 8 | `crates/asset-production-vibe/src/living_world_anatomy/whitegum_canopy.rs:821` | - |  |
+| `sealed_leaf_keeps_opaque_lamina_and_translucent_tissue_draws_separate` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_visual_tests.rs:10` | - |  |
+| `sealed_v2` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:152` | - |  |
 | `seam_carve_rgba32f` | 5 | `crates/raster-spatial-operators/src/seam_carve.rs:50` | 2d | Carve seams from an RGBA32F buffer (`[f32]`, 4 values per pixel). |
 | `seam_carve_rgba8` | 5 | `crates/raster-spatial-operators/src/seam_carve.rs:13` | - | Carve seams from an RGBA8 buffer to achieve target dimensions. |
 | `search_link` | 2 | `crates/vector-compute-shaders/shader/clip_leaf.wgsl:37` | - |  |
 | `search_sf` | 3 | `crates/audio-aac-codec/src/encoder/quant.rs:119` | - | Largest scalefactor whose distortion stays within `allowed`. |
 | `second_unit_offset` | 2 | `crates/chronicle-broadcast-containers/src/dnx/decode.rs:134` | - |  |
+| `seconds` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/clock_tests.rs:2` | - |  |
 | `impl SampleRate::seconds` | 2 | `crates/audio-timebase/src/rate.rs:65` | - | Convert samples to real seconds. |
 | `seconds_round_trip` | 0 | `crates/audio-timebase/src/rate.rs:136` | - |  |
 | `seed` | 1 | `crates/vector-locus-pathops/src/effects/util.rs:36` | - |  |
@@ -6929,14 +7126,15 @@ Every function/method found in the codebase, alphabetical.
 | `impl Track::segments` | 1 | `crates/vector-surface-brush/src/track.rs:92` | - |  |
 | `segs_to_subpath` | 2 | `crates/vector-locus-pathops/src/pathops/edit.rs:56` | - |  |
 | `segs_to_subpath` | 2 | `crates/vector-radiance-trace/src/fit.rs:245` | - |  |
-| `impl Shader::select` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:79` | - |  |
+| `impl Shader::select` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:79` | - |  |
 | `selected_operators_are_bit_equal_around_edges_midpoint_and_extremes` | 0 | `crates/raster-blend-operators/src/migration_oracle.rs:89` | - |  |
 | `selected_operators_are_bit_equal_to_source_on_normalized_grid` | 0 | `crates/raster-blend-operators/src/migration_oracle.rs:69` | - |  |
-| `selected_p_frame_without_prior_idr_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:740` | - |  |
+| `selected_p_frame_without_prior_idr_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:741` | - |  |
 | `selected_pixels_stay_at_zero_past_coordinate_4096` | 0 | `crates/raster-selection-morphology/src/distance/tests.rs:66` | - |  |
+| `selected_time_slice` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:226` | - | Time slice zero is valid; the generic positive count parser cannot be used. |
 | `selection_modifiers_keep_fractional_coverage` | 0 | `crates/raster-selection-morphology/src/distance/tests.rs:82` | - |  |
 | `self_delimited` | 0 | `crates/audio-opus-codec/src/packet.rs:326` | - |  |
-| `self_verify_m64` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:146` | - |  |
+| `self_verify_m64` | 3 | `crates/asset-production-vibe/src/geodesy_ops.rs:182` | - |  |
 | `impl VariogramParams::semivariance` | 2 | `crates/geodesy-spatial-analysis/src/kriging.rs:40` | - | Evaluates semivariance $\gamma(h)$ for lag distance $h$. |
 | `impl JackNotificationHandler::send_error` | 2 | `crates/audio-device-cpal/src/host/jack/stream.rs:429` | - |  |
 | `sep` | 3 | `crates/discourse-academic-tex/src/typeset.rs:179` | - | Space (in fractions of `size`) between adjacent atoms. |
@@ -6995,13 +7193,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl RasterImage::set_pixel` | 4 | `crates/surface-pbr-studio/src/raster.rs:46` | 2d |  |
 | `set_plane_allocator` | 1 | `crates/video-h264-codec/src/picture.rs:281` | - | Where output planes come from: an empty buffer with room for the given number of samples. |
 | `impl SurfaceRenderer<'s>::set_present_mode` | 2 | `crates/gpu-device-context/src/surface_renderer.rs:234` | - |  |
-| `impl Pixels<'win>::set_present_mode` | 2 | `crates/pixel-buffer-output/src/lib.rs:466` | - | Set the `wgpu` present mode. |
+| `impl Pixels<'win>::set_present_mode` | 2 | `crates/pixel-buffer-output/src/lib.rs:461` | - | Set the `etalon` present mode. |
 | `impl RenderContext::set_present_mode` | 3 | `crates/vector-compute-renderer/src/util.rs:130` | - |  |
 | `set_sample_rate` | 2 | `crates/audio-device-cpal/src/host/coreaudio/macos/mod.rs:733` | - | Attempt to set the device sample rate to the provided rate. |
 | `set_sat` | 2 | `crates/raster-blend-operators/src/lib.rs:501` | - |  |
 | `set_sat` | 2 | `crates/vector-compute-shaders/shader/shared/blend.wgsl:117` | 3d |  |
 | `set_sat_inner` | 4 | `crates/vector-compute-shaders/shader/shared/blend.wgsl:101` | - |  |
-| `impl Pixels<'win>::set_scaling_mode` | 2 | `crates/pixel-buffer-output/src/lib.rs:325` | 2d | Set the scaling mode. |
+| `impl Pixels<'win>::set_scaling_mode` | 2 | `crates/pixel-buffer-output/src/lib.rs:320` | 2d | Set the scaling mode. |
 | `impl WindowRenderer for PixelsWindowRenderer<Renderer>::set_size` | 3 | `crates/pixel-window-render-adapter/src/lib.rs:195` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::set_size` | 3 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:432` | - |  |
 | `impl WindowRenderer for VelloHybridWindowRenderer::set_size` | 3 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:450` | - |  |
@@ -7040,6 +7238,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Decoder::sf_index` | 1 | `crates/audio-aac-codec/src/decoder.rs:121` | - |  |
 | `sgn` | 1 | `crates/locus-parametric-solver/src/solver/residual.rs:111` | - |  |
 | `sha256_compress` | 2 | `crates/discourse-pdf-compliance/src/sign/digest.rs:65` | - |  |
+| `sha256_hex` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_envelope.rs:380` | - |  |
 | `sha256_hex` | 1 | `crates/asset-production-vibe/src/operations_catalog.rs:1060` | - |  |
 | `sha256_slices` | 1 | `crates/discourse-pdf-compliance/src/sign/digest.rs:6` | - | Computes SHA-256 hash over an array of byte slices (e.g. non-contiguous ByteRange segments). |
 | `shader_dir` | 0 | `crates/vector-compute-shaders/src/compile/mod.rs:272` | 3d |  |
@@ -7059,6 +7258,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::shape_harfbuzz_bidi` | 2 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:161` | - |  |
 | `shape_harfbuzz_bidi_mixed_and_rtl_numbers_l2` | 0 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:550` | - |  |
 | `shape_hex8` | 3 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:118` | graph | Trilinear 8-node hexahedron (Hex8) shape functions in [-1, 1]^3. |
+| `shape_labels` | 3 | `crates/asset-production-vibe/src/layout_ops/label_outline.rs:15` | - |  |
 | `shape_quad4` | 2 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:69` | graph | Bilinear 4-node quadrilateral (Quad4) shape functions in [-1, 1]^2. |
 | `shape_quad8` | 2 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:89` | graph | Serendipity 8-node quadrilateral (Quad8) shape functions in [-1, 1]^2. |
 | `shape_tet4` | 3 | `crates/kinetics-continuum-multiphysics/src/fem/shape.rs:107` | graph, numerics | Linear 4-node tetrahedron (Tet4) shape functions in volume coordinates (xi, eta, zeta). |
@@ -7103,6 +7303,7 @@ Every function/method found in the codebase, alphabetical.
 | `signed` | 2 | `crates/asset-production-vibe/src/graphics.rs:76` | - |  |
 | `impl SubPath::signed_area` | 1 | `crates/vector-locus-geometry/src/path.rs:243` | - | Signed area, closing an open subpath with a line: positive when it runs clockwise on |
 | `signed_unit_conversion_keeps_source_truncation_distinct_from_floor` | 0 | `crates/timeline-editing/src/timebase.rs:240` | - |  |
+| `signed_zero_pcm_preservation_round_trip` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/tests.rs:219` | - |  |
 | `impl OpusHead::simple` | 1 | `crates/audio-opus-codec/src/header.rs:28` | - | A family-0 configuration for plain mono/stereo streams (no header present). |
 | `impl Decoder::simple` | 2 | `crates/audio-opus-codec/src/multistream.rs:29` | - | Creates a decoder for plain mono/stereo packets without a header. |
 | `simple` | 1 | `crates/video-h264-codec/src/cavlc.rs:73` | - |  |
@@ -7113,7 +7314,7 @@ Every function/method found in the codebase, alphabetical.
 | `simplify` | 2 | `crates/vector-locus-pathops/src/pathops/edit.rs:33` | - | Simplify with default corner threshold (30°). |
 | `simplify_freehand` | 2 | `crates/vector-locus-geometry/src/recognize.rs:91` | - | Alias for [`simplify`] for freehand strokes. |
 | `simplify_freehand_test` | 0 | `crates/vector-locus-geometry/src/recognize.rs:374` | - |  |
-| `impl AssetHost<'_>::simplify_mesh_buffers` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:134` | computational geometry |  |
+| `impl AssetHost<'_>::simplify_mesh_buffers` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:156` | computational geometry |  |
 | `simplify_with` | 2 | `crates/vector-locus-pathops/src/pathops/edit.rs:85` | - | Least-squares Bézier refit keeping corners sharper than the threshold. |
 | `simplify_with` | 2 | `crates/vector-radiance-trace/src/fit.rs:297` | - |  |
 | `impl AssetHost<'_>::simulate_causal_block_diagram` | 2 | `crates/asset-production-vibe/src/kinetics_fem_garment_blocks.rs:209` | physics | 137: `hypermedia.kinetics.simulate_causal_block_diagram` (`kinetics-block-simulation` + `kinetics-motion-compositor`) |
@@ -7133,7 +7334,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Lut1d::size` | 1 | `crates/color-transforms/src/lut.rs:31` | - |  |
 | `impl BufferRenderer::size` | 1 | `crates/gpu-device-context/src/buffer_renderer.rs:71` | - |  |
 | `impl Lut1d::size` | 1 | `crates/radiance-color-grading/src/lut.rs:26` | - |  |
-| `impl ResourcePool::size_class` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1003` | - | Quantize a size up to the nearest size class. |
+| `impl ResourcePool::size_class` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:1007` | - | Quantize a size up to the nearest size class. |
 | `impl Iterator for Devices::size_hint` | 1 | `crates/audio-device-cpal/src/host/wasapi/device.rs:910` | - |  |
 | `impl GpuEncodedPaint::size_texels` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:497` | - | Number of `RGBA32Uint` texels occupied by this paint. |
 | `skeletonize_mask` | 3 | `crates/raster-selection-morphology/src/grayscale.rs:281` | 2d, graph | Topological skeletonization via the Zhang-Suen thinning algorithm. |
@@ -7159,6 +7360,7 @@ Every function/method found in the codebase, alphabetical.
 | `slice_widths` | 0 | `crates/video-prores-codec/src/header.rs:231` | - |  |
 | `impl RangedSlice<'a, T>::slices` | 1 | `crates/vector-hybrid-renderer/src/util.rs:194` | - |  |
 | `impl Dpb<F>::sliding_window` | 4 | `crates/video-h264-codec/src/dpb.rs:110` | - | Sliding window marking (8.2.5.3). |
+| `slim_preserves_imported_normals_and_material_and_rebuilds_tangents` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:553` | - |  |
 | `sln` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:388` | - |  |
 | `slog3_decode` | 1 | `crates/color-transforms/src/log.rs:134` | - |  |
 | `slog3_decode` | 1 | `crates/radiance-color-grading/src/log.rs:130` | - |  |
@@ -7177,7 +7379,7 @@ Every function/method found in the codebase, alphabetical.
 | `smooth_noise_2d` | 3 | `crates/kinetics-motion-compositor/src/typography/wiggly.rs:44` | - | 2D coherent gradient noise. |
 | `smooth_points` | 1 | `crates/vector-locus-pathops/src/effects/util.rs:40` | - |  |
 | `smoothing_uses_one_input_snapshot_and_preserves_sequential_samples` | 0 | `crates/terrain-brushes/src/adaptation_tests.rs:12` | - |  |
-| `smoothstep` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:54` | - |  |
+| `smoothstep` | 3 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:55` | - |  |
 | `smulwb` | 2 | `crates/audio-opus-codec/src/silk/lpc.rs:9` | - |  |
 | `smulww` | 2 | `crates/audio-opus-codec/src/silk/lpc.rs:17` | - |  |
 | `impl GridDivision::snap` | 5 | `crates/audio-timebase/src/grid.rs:144` | - | Snap `pos` to the nearest grid line. |
@@ -7191,6 +7393,7 @@ Every function/method found in the codebase, alphabetical.
 | `snap_to_lines` | 2 | `crates/vector-radiance-trace/src/fit.rs:188` | - | Retract the handles of curves that stay within `tol` of their chord. |
 | `impl SpatialGraph::snap_to_nearest_node` | 3 | `crates/geodesy-spatial-analysis/src/network_topology.rs:66` | graph |  |
 | `impl Unit::snap_to_ruler_tick` | 3 | `crates/vector-locus-geometry/src/units.rs:87` | - | Snap `v` (points) to the nearest ruler tick at `zoom`. |
+| `snapshot` | 4 | `crates/asset-production-vibe/src/electromagnetics_current/clock.rs:76` | - |  |
 | `sniff` | 1 | `crates/discourse-academic-tex/src/bibliography/import.rs:19` | - | Sniff source format: JSON openers -> CSL-JSON, `TY  -` tagged lines -> RIS. |
 | `sniff` | 1 | `crates/media-ogg/src/lib.rs:91` | - | The capture pattern at the start of a file. |
 | `sniff_delimiter` | 1 | `crates/chronicle-office-codecs/src/spreadsheet/csv.rs:23` | - | Sniff the most likely delimiter based on counts in the first line. |
@@ -7202,7 +7405,7 @@ Every function/method found in the codebase, alphabetical.
 | `soft_light_rgb` | 2 | `crates/raster-blend-operators/src/lib.rs:383` | - |  |
 | `solid` | 3 | `crates/radiance-color-grading/src/scopes/tests.rs:17` | - |  |
 | `solid` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:639` | - |  |
-| `solid_frame` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:839` | - |  |
+| `solid_frame` | 2 | `crates/asset-production-vibe/src/chronicle_ops.rs:834` | - |  |
 | `solid_rgba` | 7 | `crates/asset-production-vibe/src/operations_catalog.rs:1018` | - |  |
 | `impl Matrix::solve` | 2 | `crates/discourse-scientific-matlang/src/matrix.rs:294` | numerics |  |
 | `solve` | 2 | `crates/drafting-geometry/src/spline.rs:274` | numerics | Gaussian elimination with partial pivoting. |
@@ -7224,29 +7427,31 @@ Every function/method found in the codebase, alphabetical.
 | `solve_system` | 4 | `crates/locus-parametric-solver/src/solver/conflict.rs:109` | numerics | Solve the constraint system on the given model entities. |
 | `impl AssetHost<'_>::solve_two_bone_ik` | 2 | `crates/asset-production-vibe/src/kinetics_ops/ik_keyframes.rs:22` | numerics |  |
 | `solve_u` | 5 | `crates/kinetics-motion-compositor/src/keyframe/bezier.rs:16` | numerics | Solve `bez(x0, x1, x2, x3, u) = x` for parameter `u` in [0, 1] using Newton-Raphson with bisection fallback. |
-| `impl AssetHost<'_>::sonify_emf_field` | 5 | `crates/asset-production-vibe/src/sound.rs:16` | - | Field-derived mono PCM: irradiance envelope in sealed chunk/cell order (no HashMap). |
+| `sonify` | 6 | `crates/asset-production-vibe/src/electromagnetics_current/sonification.rs:35` | - |  |
+| `impl AssetHost<'_>::sonify_current_emf` | 6 | `crates/asset-production-vibe/src/electromagnetics_current/sound_host.rs:4` | - |  |
 | `sort` | 1 | `crates/chronicle-tabular-engine/src/functions/dynamic.rs:159` | - |  |
 | `sort_compare` | 3 | `crates/chronicle-tabular-engine/src/core/value.rs:254` | - |  |
-| `impl AssetHost<'_>::sound` | 3 | `crates/asset-production-vibe/src/sound.rs:90` | - |  |
+| `impl AssetHost<'_>::sound` | 3 | `crates/asset-production-vibe/src/sound.rs:4` | - |  |
 | `source_border_zero_radius_and_mask_length_refusal_are_preserved` | 0 | `crates/raster-layer-mask-adapter/src/tests.rs:28` | - |  |
 | `source_hash` | 1 | `crates/discourse-academic-tex/src/review/ai_repair.rs:217` | - |  |
 | `impl SGlyph::space_glyph` | 1 | `crates/vector-glyph-shaping/src/composer.rs:37` | - |  |
+| `impl GridAtTime<'a>::spacing_m` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:252` | - |  |
 | `span` | 2 | `crates/vector-compute-shaders/shader/fine.wgsl:113` | - |  |
 | `span` | 2 | `crates/vector-compute-shaders/shader/path_count.wgsl:36` | - |  |
 | `span` | 2 | `crates/vector-compute-shaders/shader/path_tiling.wgsl:29` | - |  |
 | `span` | 2 | `crates/vector-compute-shaders/src/cpu/util.rs:196` | - |  |
 | `span_alignment_preserves_center_start_end_custom_and_odd_frame_rules` | 0 | `crates/timeline-editing/src/transition.rs:289` | - |  |
+| `sparse_missing_and_valid_zero_cells_remain_distinct` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/projection_tests.rs:110` | numerics |  |
 | `impl SliceDecoder<'a>::spatial_direct_base` | 1 | `crates/video-h264-codec/src/slicedec.rs:575` | - | Spatial direct: MB-level reference indices, predicted mvs and directZeroPrediction (8.4.1.2.2). |
-| `impl AssetHost<'_>::spatialize_pga_zone` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:339` | - |  |
-| `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:30` | - | Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask |
+| `impl AssetHost<'_>::spatialize_pga_zone` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:338` | - |  |
+| `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:30` | - | Drive the etalon init future. On wasm32 we spawn it onto the JS microtask |
 | `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:35` | - |  |
-| `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:28` | - | Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask |
+| `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:28` | - | Drive the etalon init future. On wasm32 we spawn it onto the JS microtask |
 | `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:33` | - |  |
 | `species_model_id` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec.rs:86` | - | The model id for rule packs: the spec's `species_id`, otherwise `fallback`. |
 | `specific_properties` | 0 | `crates/media-isobmff/tests/oracle_demux.rs:247` | - |  |
 | `spectral_roundtrip_every_book` | 0 | `crates/audio-aac-codec/src/huffman.rs:263` | - |  |
 | `spectral_wavelength_to_rgb` | 1 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:87` | - | CIE 1931 / Bruton piecewise spectral-to-sRGB mapping for wavelength in nanometers. |
-| `spectral_wavelength_to_rgb` | 1 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:692` | numerics | CIE 1931 / Bruton piecewise spectral-to-sRGB mapping for wavelength in nanometers. |
 | `speech` | 3 | `crates/audio-aac-codec/tests/common/mod.rs:50` | - | Speech-like: glottal pulse train (gliding pitch) through three resonant formant filters with a |
 | `sphere` | 4 | `crates/profile-authoring/src/geometry.rs:201` | computational geometry |  |
 | `trait Host::spill_range` | 3 | `crates/chronicle-tabular-engine/src/calc/eval.rs:42` | - |  |
@@ -7278,11 +7483,11 @@ Every function/method found in the codebase, alphabetical.
 | `splitter_splits_large_rect_into_five_parts` | 0 | `crates/vector-hybrid-renderer/src/rect.rs:265` | 2d |  |
 | `impl HevcConfig::sps` | 1 | `crates/media-isobmff/src/codec.rs:418` | - |  |
 | `sps` | 4 | `crates/video-h264-codec/src/synth_tests.rs:30` | - |  |
-| `sps` | 0 | `crates/video-h264-preview/src/lib.rs:485` | - |  |
+| `sps` | 0 | `crates/video-h264-preview/src/lib.rs:486` | - |  |
 | `sps` | 2 | `crates/video-h264-preview/src/synth.rs:26` | - |  |
 | `sps_crop_offsets_refuse_overflow_without_panicking_and_keep_valid_crop` | 0 | `crates/video-h264-codec/src/params.rs:737` | - |  |
-| `sps_for_params` | 2 | `crates/video-h264-preview/src/lib.rs:487` | - |  |
-| `sps_for_width` | 1 | `crates/video-h264-preview/src/lib.rs:486` | - |  |
+| `sps_for_params` | 2 | `crates/video-h264-preview/src/lib.rs:488` | - |  |
+| `sps_for_width` | 1 | `crates/video-h264-preview/src/lib.rs:487` | - |  |
 | `sqrt` | 1 | `crates/chronicle-tabular-engine/src/functions/math.rs:57` | - |  |
 | `trait Scalar::sqrt` | 1 | `crates/kinetics-garment-draping/src/math.rs:242` | - |  |
 | `impl Scalar for f64::sqrt` | 1 | `crates/kinetics-garment-draping/src/math.rs:256` | - |  |
@@ -7293,12 +7498,12 @@ Every function/method found in the codebase, alphabetical.
 | `square` | 2 | `crates/raster-selection-morphology/src/tests.rs:6` | - |  |
 | `square` | 0 | `crates/vector-locus-geometry/src/path.rs:514` | - |  |
 | `square_bounds_and_area` | 0 | `crates/vector-locus-geometry/src/path.rs:532` | - |  |
-| `square_ring` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1247` | - |  |
+| `square_ring` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1695` | - |  |
 | `square_ring` | 2 | `crates/asset-production-vibe/src/operations_catalog.rs:326` | - |  |
 | `square_to` | 2 | `crates/vector-locus-geometry/src/corners.rs:118` | 2d | The unit direction square to unit `a`, on `b`'s side. |
 | `impl Oscillator::square_wave` | 1 | `crates/audio-device-cpal/examples/synth_tones.rs:71` | - |  |
 | `srgb` | 0 | `crates/color-transforms/src/icc/builtin.rs:83` | - |  |
-| `srgb_curve` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:439` | - |  |
+| `srgb_curve` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:449` | - |  |
 | `srgb_to_linear` | 1 | `crates/color-transforms/src/lib.rs:183` | numerics | sRGB electro-optical transfer (encoded â†’ linear). |
 | `srgb_to_linear` | 1 | `crates/radiance-color-grading/src/matrix.rs:259` | numerics |  |
 | `srgb_to_linear_f32` | 1 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:126` | numerics |  |
@@ -7327,7 +7532,8 @@ Every function/method found in the codebase, alphabetical.
 | `start_tangent` | 1 | `crates/vector-radiance-trace/src/fit.rs:407` | 2d |  |
 | `impl Decoder::stat` | 2 | `crates/video-h264-codec/src/decoder.rs:273` | - |  |
 | `impl Parser::statement` | 1 | `crates/discourse-scientific-matlang/src/interpreter/parser.rs:46` | - |  |
-| `impl VibeNamespaceProvider for HypermediaOntologyProvider::static_ontology_nquins` | 1 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:263` | semantics |  |
+| `static_import_refuses_unpreserved_extensions_and_duplicate_documents` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1569` | - |  |
+| `impl VibeNamespaceProvider for HypermediaOntologyProvider::static_ontology_nquins` | 1 | `crates/asset-production-vibe/src/ontology/vibe_descriptors.rs:412` | semantics |  |
 | `impl Encoder::stats` | 1 | `crates/audio-aac-codec/src/encoder/mod.rs:256` | - |  |
 | `impl Decoder::stats` | 1 | `crates/video-h264-codec/src/decoder.rs:269` | - | Statistics accumulated so far (macroblock counts include finished pictures only). |
 | `impl DeviceOutput::status` | 1 | `crates/pcm-device-output/src/device.rs:218` | - |  |
@@ -7343,9 +7549,9 @@ Every function/method found in the codebase, alphabetical.
 | `impl AssetHost<'_>::step_island_xpbd` | 2 | `crates/asset-production-vibe/src/kinetics_sim/motor_xpbd_space.rs:78` | - | ID-sorted deterministic Island-Parallel XPBD rigid-body simulation. |
 | `step_layout` | 1 | `crates/vector-hybrid-renderer/src/filter.rs:738` | - |  |
 | `impl FilterPassPlan::step_mut` | 2 | `crates/vector-hybrid-renderer/src/filter.rs:476` | - |  |
-| `step_real` | 1 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:657` | - |  |
+| `step_real` | 1 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:676` | - |  |
 | `impl GridDivision::step_samples` | 5 | `crates/audio-timebase/src/grid.rs:122` | - | Step size in samples at position `at`. |
-| `impl AssetHost<'_>::step_sector_continuum_3d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:265` | - | Runs the 3D XPBD + analytical SDF + 2-way continuum bridge + 4-wheel rover suspension |
+| `impl AssetHost<'_>::step_sector_continuum_3d` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:356` | - | Runs the 3D XPBD + analytical SDF + 2-way continuum bridge + 4-wheel rover suspension |
 | `impl AssetHost<'_>::step_simulation_zone` | 2 | `crates/asset-production-vibe/src/kinetics_sim/nav_nla_zones.rs:307` | - | Double-buffered Simulation / Repeat Zone iterative divergence-free curl flow. |
 | `step_string` | 1 | `crates/manifold-bim-csg/src/ifc.rs:9` | - | Formats a string as an ISO 10303-21 STEP string literal with Unicode escapes. |
 | `steps` | 4 | `crates/radiance-color-grading/src/scopes/mod.rs:171` | - |  |
@@ -7355,7 +7561,7 @@ Every function/method found in the codebase, alphabetical.
 | `stereo_merge` | 3 | `crates/audio-opus-codec/src/celt/bands.rs:637` | - |  |
 | `stereo_ms_to_lr` | 6 | `crates/audio-opus-codec/src/silk/mod.rs:615` | - |  |
 | `stereo_pan_gains` | 2 | `crates/acoustics-daw-session/src/dsp/pan.rs:17` | - | Computes left and right channel gains for a given pan position (-1.0 hard left .. +1.0 hard right). |
-| `still_has_nontrivial_pixel` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:680` | 2d |  |
+| `still_has_nontrivial_pixel` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:770` | 2d |  |
 | `stitch_panorama` | 5 | `crates/radiance-camera-raw/src/fusion.rs:109` | 3d | Multi-band Burt-Adelson pyramid blending for multi-image panorama stitching. |
 | `stitch_segments_into_lines` | 1 | `crates/geodesy-spatial-analysis/src/morphometry.rs:346` | - |  |
 | `impl DeviceOutput::stop` | 1 | `crates/pcm-device-output/src/device.rs:196` | - |  |
@@ -7368,18 +7574,19 @@ Every function/method found in the codebase, alphabetical.
 | `storage_reuse` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:858` | - |  |
 | `store` | 8 | `crates/chronicle-broadcast-containers/src/dnx/decode.rs:520` | - |  |
 | `store` | 0 | `crates/vector-glyph-shaping/src/hyphen.rs:24` | - |  |
-| `impl AssetHost<'_>::store_layout_rgba` | 4 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:486` | - |  |
+| `impl AssetHost<'_>::store_layout_rgba` | 4 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:436` | - |  |
 | `impl AssetHost<'_>::store_locus_profile` | 2 | `crates/asset-production-vibe/src/locus_ops.rs:228` | - |  |
-| `impl AssetHost<'_>::store_mesh` | 3 | `crates/asset-production-vibe/src/geometry.rs:319` | computational geometry |  |
+| `impl AssetHost<'_>::store_mesh` | 3 | `crates/asset-production-vibe/src/geometry.rs:326` | computational geometry |  |
 | `impl AssetHost<'_>::store_mesh_artifact` | 3 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:102` | computational geometry | Store a new `Mesh` artifact after bounding coordinates and computing bounding box. |
 | `impl AssetHost<'_>::store_mesh_positions` | 3 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:197` | computational geometry | Stores a 3D Mesh artifact validating budgets and finite bounds. |
 | `impl Dpb<F>::store_picture` | 8 | `crates/video-h264-codec/src/dpb.rs:332` | - | Reference marking for the just-decoded picture and insertion into the DPB with output bumping. |
-| `impl AssetHost<'_>::store_profile` | 2 | `crates/asset-production-vibe/src/geometry.rs:294` | - |  |
+| `impl AssetHost<'_>::store_profile` | 2 | `crates/asset-production-vibe/src/geometry.rs:301` | - |  |
 | `impl SliceDecoder<'a>::store_qp` | 1 | `crates/video-h264-codec/src/slicedec.rs:1099` | - |  |
 | `store_quad_mesh` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:387` | computational geometry |  |
 | `store_quad_sheet` | 1 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:209` | - |  |
-| `store_raw_mesh` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:459` | computational geometry |  |
-| `impl AssetHost<'_>::store_rgba` | 4 | `crates/asset-production-vibe/src/graphics.rs:90` | - |  |
+| `store_raw_mesh` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:519` | computational geometry |  |
+| `impl AssetHost<'_>::store_rgba` | 4 | `crates/asset-production-vibe/src/graphics.rs:91` | - |  |
+| `impl AssetHost<'_>::store_rgba16` | 5 | `crates/asset-production-vibe/src/radiance_precision.rs:14` | - |  |
 | `store_test_cube` | 1 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:375` | - |  |
 | `store_test_mesh` | 1 | `crates/asset-production-vibe/src/locus_generative/mod.rs:64` | computational geometry |  |
 | `store_test_profile` | 2 | `crates/asset-production-vibe/src/locus_generative/mod.rs:58` | - |  |
@@ -7387,6 +7594,7 @@ Every function/method found in the codebase, alphabetical.
 | `store_tetrahedron_mesh` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:410` | computational geometry |  |
 | `store_u16be_as_u8` | 2 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:27` | - |  |
 | `stored_code` | 1 | `crates/layout-paged-typesetter/src/citations/zotero_fields.rs:19` | - |  |
+| `stored_physics_has_no_visible_rf_or_gamma_band_gate` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/model_tests.rs:30` | physics |  |
 | `story` | 1 | `crates/vector-glyph-shaping/src/thread.rs:32` | - | Join all frame slices back into the full story text. |
 | `impl WallAxis::straight` | 2 | `crates/manifold-bim-csg/src/parametric.rs:62` | - |  |
 | `straight_detection` | 0 | `crates/vector-locus-pathops/src/pathops/fit.rs:237` | - |  |
@@ -7399,7 +7607,7 @@ Every function/method found in the codebase, alphabetical.
 | `stream` | 2 | `crates/discourse-academic-tex/src/texpdf.rs:413` | - |  |
 | `impl LbmGrid3D::stream` | 1 | `crates/kinetics-continuum-multiphysics/src/lbm/d3q19.rs:151` | - | Stream step with half-way bounce-back on solid boundaries. |
 | `stream_config_from_asbd` | 1 | `crates/audio-device-cpal/src/host/coreaudio/ios/mod.rs:426` | - |  |
-| `stream_delivers_more_than_32_frames_and_sink_can_stop` | 0 | `crates/video-h264-preview/src/lib.rs:680` | - |  |
+| `stream_delivers_more_than_32_frames_and_sink_can_stop` | 0 | `crates/video-h264-preview/src/lib.rs:681` | - |  |
 | `stream_instant` | 1 | `crates/audio-device-cpal/src/host/oboe/convert.rs:18` | - |  |
 | `stream_instant` | 1 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:556` | - | Use the stream's `IAudioClock` to produce the current stream instant. |
 | `impl OggFile::stream_of` | 2 | `crates/media-ogg/src/lib.rs:360` | - | The first stream of `codec`. |
@@ -7414,15 +7622,14 @@ Every function/method found in the codebase, alphabetical.
 | `string` | 3 | `crates/kinetics-block-simulation/src/blocks/params.rs:45` | - |  |
 | `impl Parser<'_>::string` | 1 | `crates/manifold-bim-csg/src/step.rs:223` | - |  |
 | `strings_and_concat` | 0 | `crates/discourse-academic-tex/src/texparse/bib.rs:446` | - |  |
-| `strip_emf_bao_keep_crc` | 1 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:971` | - |  |
-| `strip_occupancy_bao_keep_dir_crc` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:1095` | - |  |
+| `strip_occupancy_bao_keep_dir_crc` | 1 | `crates/asset-production-vibe/src/geodesy_ops.rs:1216` | - |  |
 | `strip_parity` | 1 | `crates/chronicle-timeline-interchange/src/captions/cea608.rs:16` | - | Verify and strip odd parity bit from a byte. |
+| `impl RendererContext<'_>::strip_pass_inner` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2671` | - | Render the strips to the specified render target. |
 | `impl WebGlRendererContext<'_>::strip_pass_inner` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2750` | - | Render strips to the specified render target. |
-| `impl RendererContext<'_>::strip_pass_inner` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2668` | - | Render the strips to the specified render target. |
 | `strip_xs` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:668` | - |  |
 | `stripes_give_one_path_per_stripe` | 0 | `crates/vector-radiance-trace/src/tests.rs:75` | - |  |
 | `impl OpaqueDraw::strips` | 1 | `crates/vector-hybrid-renderer/src/draw.rs:102` | - |  |
-| `impl SubpathBuilder<'a>::stroke` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:157` | - |  |
+| `impl SubpathBuilder<'a>::stroke` | 2 | `crates/asset-production-vibe/src/glyph/mod.rs:158` | - |  |
 | `impl Scene::stroke` | 6 | `crates/vector-compute-renderer/src/scene.rs:327` | - | Strokes a shape using the specified style and brush. |
 | `impl PaintScene for VelloCpuScenePainter::stroke` | 6 | `crates/vector-cpu-render-adapter/src/scene.rs:116` | - |  |
 | `impl PaintScene for VelloScenePainter<'_, '_>::stroke` | 6 | `crates/vector-gpu-render-adapter/src/scene.rs:90` | - |  |
@@ -7521,12 +7728,12 @@ Every function/method found in the codebase, alphabetical.
 | `supports_input` | 1 | `crates/audio-device-cpal/src/traits.rs:62` | - |  |
 | `supports_output` | 1 | `crates/audio-device-cpal/src/traits.rs:76` | - |  |
 | `impl ModelInfo::supports_reference_mode` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:163` | - |  |
-| `impl AssetHost<'_>::surface` | 2 | `crates/asset-production-vibe/src/graphics.rs:386` | - |  |
+| `impl AssetHost<'_>::surface` | 2 | `crates/asset-production-vibe/src/graphics.rs:391` | - |  |
 | `impl Series::surface` | 3 | `crates/discourse-scientific-matlang/src/plot.rs:107` | - |  |
 | `impl AssetHost<'_>::surface_bsdf_uv_op` | 3 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:340` | - | Categorical operations dispatch for surface BSDF, UV, and procedural field synthesis. |
 | `surface_gradient` | 5 | `crates/geodesy-spatial-analysis/src/morphometry.rs:67` | - | Computes the surface gradient $(dz/dx, dz/dy)$ at a cell in metres per metre. |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::surface_texture_format` | 2 | `crates/pixel-buffer-output/src/builder.rs:187` | 2d | Set the surface texture format. |
-| `impl Pixels<'win>::surface_texture_format` | 1 | `crates/pixel-buffer-output/src/lib.rs:765` | - | Get the surface texture format. |
+| `impl Pixels<'win>::surface_texture_format` | 1 | `crates/pixel-buffer-output/src/lib.rs:760` | - | Get the surface texture format. |
 | `impl WindowRenderer for PixelsWindowRenderer<Renderer>::suspend` | 1 | `crates/pixel-window-render-adapter/src/lib.rs:191` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::suspend` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:422` | - |  |
 | `impl WindowRenderer for VelloHybridWindowRenderer::suspend` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:446` | - |  |
@@ -7557,17 +7764,18 @@ Every function/method found in the codebase, alphabetical.
 | `impl Track::sync_sample_before` | 2 | `crates/media-isobmff/src/demux.rs:171` | - | The closest sync sample at or before `index` (decode order); 0 if there is none. |
 | `impl Mp4File::sync_sample_before` | 3 | `crates/media-isobmff/src/demux.rs:236` | - |  |
 | `impl Track::sync_samples` | 1 | `crates/media-isobmff/src/demux.rs:176` | - | Indices of all sync samples. |
-| `impl AssetHost<'_>::sync_spatial_motors` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:322` | - |  |
-| `impl AssetHost<'_>::synchronize_companion_frustum` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:303` | 3d | Generates a multi-projector conical dome frustum cluster (`rows * cols` `ConicalDomeWedge`s) |
+| `impl AssetHost<'_>::sync_spatial_motors` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:327` | - |  |
+| `impl AssetHost<'_>::synchronize_companion_frustum` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:394` | 3d | Generates a multi-projector conical dome frustum cluster (`rows * cols` `ConicalDomeWedge`s) |
 | `synth` | 3 | `crates/audio-aac-codec/src/decoder.rs:495` | - | Inverse MDCT, windowing and overlap-add (§4.6.18), output scaled to ±1.0 full scale. |
 | `synth_cmyk` | 1 | `crates/color-transforms/src/icc/synth.rs:45` | - |  |
+| `synth_tone` | 2 | `crates/asset-production-vibe/src/acoustics_ops.rs:347` | - |  |
 | `impl CeltDecoder::synthesis` | 9 | `crates/audio-opus-codec/src/celt/mod.rs:384` | - | Denormalisation + IMDCT into the decode memory (`celt_synthesis`). |
 | `impl RfSkeletalPose::synthesize_standing` | 4 | `crates/electromagnetics-rf-sensing/src/densepose.rs:72` | - | Generates a normalized human skeletal pose centered at (center_x, center_depth, height_z). |
-| `synthetic_av_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:620` | - |  |
+| `synthetic_av_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:621` | - |  |
 | `synthetic_files` | 0 | `crates/media-isobmff/tests/fuzz.rs:22` | - |  |
-| `synthetic_gop` | 0 | `crates/video-h264-preview/src/lib.rs:690` | - |  |
-| `synthetic_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:613` | - |  |
-| `synthetic_reordered` | 0 | `crates/video-h264-preview/src/lib.rs:589` | - |  |
+| `synthetic_gop` | 0 | `crates/video-h264-preview/src/lib.rs:691` | - |  |
+| `synthetic_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:614` | - |  |
+| `synthetic_reordered` | 0 | `crates/video-h264-preview/src/lib.rs:590` | - |  |
 | `system_time_to_stream_instant` | 1 | `crates/audio-device-cpal/src/host/asio/stream.rs:611` | - | Asio retrieves system time via `timeGetTime` which returns the time in milliseconds. |
 | `impl Edge::t` | 2 | `crates/video-h264-codec/src/intra.rs:23` | - | p[x, -1] for x >= -1 |
 | `t_dist` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:222` | - |  |
@@ -7585,7 +7793,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Scene::take_current_state` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:883` | - | Take current rendering state and reset the existing state to its default. |
 | `impl Decoder::take_error` | 1 | `crates/video-h264-codec/src/decoder.rs:281` | - | First error reported by a decoding job since the last call (also returned by |
 | `impl GradientRampCache::take_luts` | 1 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:126` | - | Take ownership of the luts, leaving an empty vector in its place. |
-| `impl RendererContext<'_>::take_root_load_op` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2615` | - |  |
+| `impl RendererContext<'_>::take_root_load_op` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2618` | - |  |
 | `impl Segment::tangent` | 2 | `crates/drafting-geometry/src/curve.rs:387` | 2d | Tangent direction (unit) at parameter t. |
 | `impl WallAxis::tangent` | 2 | `crates/manifold-bim-csg/src/parametric.rs:97` | - |  |
 | `tangent` | 2 | `crates/vector-locus-geometry/src/bez.rs:40` | 2d | Unit tangent of `s` at `t`, robust at ends where control points coincide with the end point. |
@@ -7627,12 +7835,14 @@ Every function/method found in the codebase, alphabetical.
 | `test_a11y_32_rules_and_report` | 0 | `crates/discourse-pdf-compliance/src/tests.rs:26` | - |  |
 | `test_abr_computed_and_sampled_parsing` | 0 | `crates/surface-layered-codecs/src/lib.rs:142` | - |  |
 | `test_aco_roundtrip` | 0 | `crates/color-transforms/src/lib.rs:418` | - |  |
-| `test_acoustics_bus_loudness_emf_sonic_objects` | 0 | `crates/asset-production-vibe/src/sound.rs:276` | - |  |
+| `test_acoustics_bus_loudness_emf_sonic_objects` | 0 | `crates/asset-production-vibe/src/sound.rs:765` | - |  |
 | `test_advect_m64_grid_divergence_reduction` | 0 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:333` | - |  |
 | `test_affine_identity` | 0 | `crates/raster-spatial-operators/src/distort.rs:461` | - |  |
 | `test_affinity_container_header_inspection` | 0 | `crates/surface-layered-codecs/src/lib.rs:171` | - |  |
 | `test_algebraic_loop_detection` | 0 | `crates/kinetics-block-simulation/src/lib.rs:101` | - |  |
 | `test_all_operators_pipeline_smoke` | 0 | `crates/raster-spatial-operators/src/lib.rs:34` | - |  |
+| `test_analyze_ebu_r128_camelot_daw_rejects_corrupt_or_non_qac_handle` | 0 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:483` | - |  |
+| `test_analyze_ebu_r128_camelot_daw_verifies_qac_canonical_and_preservation` | 0 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:412` | - |  |
 | `test_asc_cdl_apply_and_invert` | 0 | `crates/radiance-color-grading/src/lib.rs:68` | - |  |
 | `test_ase_roundtrip` | 0 | `crates/color-transforms/src/lib.rs:438` | - |  |
 | `test_audit_duplicates` | 0 | `crates/discourse-academic-tex/src/bibliography/audit.rs:164` | - |  |
@@ -7643,9 +7853,8 @@ Every function/method found in the codebase, alphabetical.
 | `test_bayer_demosaic_rggb` | 0 | `crates/radiance-camera-raw/src/lib.rs:44` | - |  |
 | `test_bezier_curve_and_arclength` | 0 | `crates/kinetics-garment-draping/src/lib.rs:141` | - |  |
 | `test_blend_if_ramps` | 0 | `crates/raster-layer-mask-adapter/src/tests.rs:75` | - |  |
-| `test_bruton_spectral_mapping_visible_and_false_color` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:752` | - |  |
-| `test_bsdf_and_brush_nontrivial_preview_pixels` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:779` | - |  |
-| `test_build_light_tree` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:294` | - |  |
+| `test_bsdf_and_brush_nontrivial_preview_pixels` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:869` | - |  |
+| `test_build_light_tree` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:415` | - |  |
 | `test_bvh_quad_intersection` | 0 | `crates/surface-pbr-studio/src/lib.rs:40` | computational geometry |  |
 | `test_cache_empty` | 0 | `crates/vector-hybrid-renderer/src/gradient_cache.rs:351` | - |  |
 | `test_camelot_harmony_relations` | 0 | `crates/acoustics-daw-session/src/lib.rs:86` | - |  |
@@ -7657,11 +7866,12 @@ Every function/method found in the codebase, alphabetical.
 | `test_coincident_and_tangent_solve` | 0 | `crates/locus-parametric-solver/src/tests.rs:98` | numerics |  |
 | `test_color_wheels_apply` | 0 | `crates/radiance-color-grading/src/lib.rs:84` | - |  |
 | `test_common_subexpression_elimination` | 0 | `crates/layout-nodegraph-compiler/src/tests.rs:134` | - |  |
-| `test_compile_bsdf_graph_all_closures` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:600` | graph |  |
-| `test_compile_bsdf_graph_ior_affects_preview` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:820` | graph |  |
-| `test_compile_verify_and_render_spectral_slice_roundtrip` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:773` | - |  |
+| `test_compile_botanical_organ_10d_emits_emf_qac_bundle` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:596` | - |  |
+| `test_compile_bsdf_graph_all_closures` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:690` | graph |  |
+| `test_compile_bsdf_graph_ior_affects_preview` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:910` | graph |  |
+| `test_compile_vertebrate_anatomy_10d_emits_emf_qac_bundle` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:623` | - |  |
 | `test_composite_subnetwork_inlining` | 0 | `crates/layout-nodegraph-compiler/src/tests.rs:74` | - |  |
-| `test_compute_mikktspace_tetrahedron` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:553` | - |  |
+| `test_compute_mikktspace_tetrahedron` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:585` | - |  |
 | `test_conflict_detection_fails_closed` | 0 | `crates/locus-parametric-solver/src/tests.rs:151` | - |  |
 | `test_constraints_propagation` | 0 | `crates/layout-box-autolayout/src/tests.rs:171` | - |  |
 | `test_corner_pin_homography` | 0 | `crates/kinetics-motion-compositor/src/lib.rs:109` | - |  |
@@ -7673,7 +7883,7 @@ Every function/method found in the codebase, alphabetical.
 | `test_cubic_bezier_solve_and_ease_progress` | 0 | `crates/kinetics-motion-compositor/src/lib.rs:45` | numerics |  |
 | `test_dag_recalculation_and_cycles` | 0 | `crates/chronicle-tabular-engine/tests/tabular_tests.rs:14` | - |  |
 | `test_dead_node_pruning` | 0 | `crates/layout-nodegraph-compiler/src/tests.rs:185` | graph |  |
-| `test_decode_cryptomatte_q42` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:164` | - |  |
+| `test_decode_cryptomatte_q42` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:165` | - |  |
 | `test_dem_slope_and_contours` | 0 | `crates/geodesy-spatial-analysis/src/lib.rs:88` | - |  |
 | `test_dense_linear_solver_and_rank` | 0 | `crates/locus-parametric-solver/src/tests.rs:19` | numerics |  |
 | `test_develop_photo_adjustments` | 0 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:286` | - |  |
@@ -7687,15 +7897,18 @@ Every function/method found in the codebase, alphabetical.
 | `test_drop_shadow_round_trip` | 0 | `crates/vector-hybrid-renderer/src/filter.rs:864` | - |  |
 | `test_dynamic_arrays_and_spill` | 0 | `crates/chronicle-tabular-engine/tests/tabular_tests.rs:87` | - |  |
 | `test_ebml_vint_roundtrip` | 0 | `crates/chronicle-broadcast-containers/src/lib.rs:62` | - |  |
-| `test_ebu_r128_loudness_object_not_floor` | 0 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:367` | - |  |
+| `test_ebu_r128_loudness_object_not_floor` | 0 | `crates/asset-production-vibe/src/acoustics_rf_kriging_cpm.rs:378` | - |  |
 | `test_ebu_r128_metering` | 0 | `crates/acoustics-daw-session/src/lib.rs:40` | - |  |
 | `test_edl_parsing_and_writing` | 0 | `crates/chronicle-timeline-interchange/src/lib.rs:61` | - |  |
-| `test_electromagnetics_csi_vitals_aoa_object_two_produces` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:1134` | - |  |
-| `test_electromagnetics_metamer_nullspace_produce_safe_map` | 0 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:548` | - |  |
+| `test_electromagnetics_csi_vitals_aoa_object_two_produces` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:252` | - |  |
+| `test_electromagnetics_metamer_nullspace_produce_safe_map` | 0 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/vox0_metamer.rs:518` | - |  |
+| `test_encode_aac_preserves_default_aac_and_rejects_unknown_format` | 0 | `crates/asset-production-vibe/src/acoustics_ops.rs:407` | - |  |
+| `test_encode_aac_qac_v1_canonical_and_metadata` | 0 | `crates/asset-production-vibe/src/acoustics_ops.rs:358` | - |  |
 | `test_encode_decode_roundtrip` | 0 | `crates/video-prores-codec/src/lib.rs:36` | - |  |
 | `test_encode_probe_decode_mov_roundtrip` | 0 | `crates/video-prores-codec/src/mov.rs:139` | - |  |
 | `test_equation_latex_and_unicode_math` | 0 | `crates/layout-paged-typesetter/tests/typesetter_tests.rs:4` | - |  |
-| `test_error_handling` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:360` | - |  |
+| `test_error_handling` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:481` | - |  |
+| `test_evaluate_field_clay_add_displaces_near_brush` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:439` | - |  |
 | `test_evaluate_field_lazy_chunking` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:405` | - |  |
 | `test_evaluate_nla_channelbag` | 0 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:388` | - |  |
 | `test_evaluate_nla_channelbag_two_produces_match` | 0 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:510` | - |  |
@@ -7705,13 +7918,13 @@ Every function/method found in the codebase, alphabetical.
 | `test_fcp7_xml_roundtrip` | 0 | `crates/chronicle-timeline-interchange/src/lib.rs:107` | - |  |
 | `test_fcpxml_roundtrip` | 0 | `crates/chronicle-timeline-interchange/src/lib.rs:134` | - |  |
 | `test_fill_distribution_with_clamping` | 0 | `crates/layout-box-autolayout/src/tests.rs:60` | - |  |
-| `test_filter_kuwahara_anisotropic` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:118` | - |  |
+| `test_filter_kuwahara_anisotropic` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:119` | - |  |
 | `test_financial_pmt_npv_xirr` | 0 | `crates/chronicle-tabular-engine/tests/tabular_tests.rs:42` | - |  |
 | `test_fit_size` | 0 | `crates/raster-spatial-operators/src/resample.rs:371` | - |  |
 | `test_flood_round_trip` | 0 | `crates/vector-hybrid-renderer/src/filter.rs:848` | - |  |
 | `test_forms_validation_flattening_and_xfdf` | 0 | `crates/discourse-pdf-compliance/src/tests.rs:157` | - |  |
 | `test_formula_parsing` | 0 | `crates/chronicle-tabular-engine/tests/tabular_tests.rs:6` | - |  |
-| `test_fspm_vascular_grow_botany` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:547` | - |  |
+| `test_fspm_vascular_grow_botany` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:616` | - |  |
 | `test_gamut_warning` | 0 | `crates/color-transforms/src/lib.rs:407` | - |  |
 | `test_gaussian_blur_conservation` | 0 | `crates/raster-spatial-operators/src/convolve.rs:428` | - |  |
 | `test_gaussian_blur_round_trip` | 0 | `crates/vector-hybrid-renderer/src/filter.rs:856` | - |  |
@@ -7719,15 +7932,17 @@ Every function/method found in the codebase, alphabetical.
 | `test_gpx_tracklog_interpolation_and_meridian_wrap` | 0 | `crates/radiance-camera-raw/src/lib.rs:141` | - |  |
 | `test_hdr_fusion_deghosting` | 0 | `crates/radiance-camera-raw/src/lib.rs:109` | - |  |
 | `test_horizontal_flex_basic` | 0 | `crates/layout-box-autolayout/src/tests.rs:16` | - |  |
+| `test_host` | 2 | `crates/asset-production-vibe/src/acoustics_ops.rs:337` | - |  |
 | `test_host` | 2 | `crates/asset-production-vibe/src/glyph/shaping_svg.rs:566` | - |  |
 | `test_host` | 2 | `crates/asset-production-vibe/src/glyph_knuth_plass.rs:317` | - |  |
 | `test_host` | 2 | `crates/asset-production-vibe/src/glyph_layout_diegetic/bidi_msdf.rs:539` | - |  |
+| `test_host` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/botanical_vertebrate_10d.rs:557` | - |  |
 | `test_html_codecs` | 0 | `crates/chronicle-office-codecs/tests/codecs_tests.rs:63` | - |  |
 | `test_hug_container_sizing` | 0 | `crates/layout-box-autolayout/src/tests.rs:40` | - |  |
 | `test_icc_transform_roundtrip` | 0 | `crates/color-transforms/src/lib.rs:369` | - |  |
 | `test_identity_convolution` | 0 | `crates/raster-spatial-operators/src/convolve.rs:418` | - |  |
 | `test_inspect_engine_telemetry` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:366` | - |  |
-| `test_instance_on_points_and_realize` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:506` | - |  |
+| `test_instance_on_points_and_realize` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:575` | - |  |
 | `test_integrator_simulation` | 0 | `crates/kinetics-block-simulation/src/lib.rs:66` | physics |  |
 | `test_interpolate_keyframes` | 0 | `crates/asset-production-vibe/src/kinetics_ops/mod.rs:145` | - |  |
 | `test_interpolate_motor_fti_sclerp` | 0 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:164` | - |  |
@@ -7745,10 +7960,10 @@ Every function/method found in the codebase, alphabetical.
 | `test_latex_codecs` | 0 | `crates/chronicle-office-codecs/tests/codecs_tests.rs:94` | - |  |
 | `test_layer_rgba8_conversion` | 0 | `crates/surface-layered-codecs/src/psd/tests.rs:36` | - |  |
 | `test_layer_stack_composition` | 0 | `crates/surface-pbr-studio/src/lib.rs:100` | - |  |
-| `test_layout_box_tree_flex_grid_nonoverlapping` | 0 | `crates/asset-production-vibe/src/layout_ops/mod.rs:407` | - |  |
+| `test_layout_box_tree_flex_grid_nonoverlapping` | 0 | `crates/asset-production-vibe/src/layout_ops/mod.rs:408` | - |  |
 | `test_layout_diegetic_projection_invertible` | 0 | `crates/asset-production-vibe/src/glyph_layout_diegetic/diegetic_input.rs:439` | 3d |  |
 | `test_layout_flex_grid_exact_fill_and_fr` | 0 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:477` | - |  |
-| `test_layout_framlock_crc32c` | 0 | `crates/asset-production-vibe/src/layout_ops/mod.rs:505` | - |  |
+| `test_layout_framlock_crc32c` | 0 | `crates/asset-production-vibe/src/layout_ops/mod.rs:506` | - |  |
 | `test_layout_paged_foliation_monotonic_pages` | 0 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:506` | - |  |
 | `test_liang_hyphenation` | 0 | `crates/layout-paged-typesetter/tests/typesetter_tests.rs:24` | - |  |
 | `test_line` | 0 | `crates/vector-surface-brush/src/lib.rs:130` | - |  |
@@ -7769,21 +7984,23 @@ Every function/method found in the codebase, alphabetical.
 | `test_m_code_evaluation` | 0 | `crates/discourse-scientific-matlang/src/lib.rs:89` | - |  |
 | `test_manifold_bevel` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:525` | - |  |
 | `test_manifold_bisect_plane` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:591` | - |  |
-| `test_manifold_boolean_3d_golden_checksum` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1569` | - |  |
-| `test_manifold_boolean_3d_production_union_difference` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1332` | - |  |
-| `test_manifold_compile_bim_ifc4_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:819` | - |  |
+| `test_manifold_boolean_3d_production_union_difference` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1780` | - |  |
+| `test_manifold_boolean_3d_union_volume_and_independent_replay` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:2102` | - |  |
+| `test_manifold_compile_bim_ifc4_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:859` | - |  |
 | `test_manifold_inset` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:547` | - |  |
-| `test_manifold_loft_linear_remains_ruled_cubic_bends` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1257` | numerics |  |
-| `test_manifold_loft_nurbs_optional_keeps_linear_cubic` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1616` | numerics |  |
-| `test_manifold_project_dxf_mesh_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1380` | computational geometry |  |
-| `test_manifold_simplify_decimate_default_qem` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1478` | - |  |
-| `test_manifold_simplify_remesh_and_anisotropic_small_mesh` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1514` | computational geometry |  |
+| `test_manifold_loft_linear_remains_ruled_cubic_bends` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1705` | numerics |  |
+| `test_manifold_loft_nurbs_optional_keeps_linear_cubic` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:2163` | numerics |  |
+| `test_manifold_project_dxf_mesh_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1832` | computational geometry |  |
+| `test_manifold_simplify_anisotropic_indefinite_metric_errors` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:2072` | - |  |
+| `test_manifold_simplify_anisotropic_target_edge_differs` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:2021` | graph |  |
+| `test_manifold_simplify_decimate_default_qem` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1930` | - |  |
+| `test_manifold_simplify_remesh_and_anisotropic_small_mesh` | 0 | `crates/asset-production-vibe/src/manifold_ops.rs:1966` | computational geometry |  |
 | `test_manifold_solidify` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:569` | - |  |
 | `test_manifold_subdivide_catmull_clark` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:622` | - |  |
 | `test_manifold_subdivide_catmull_clark_produce_safe_and_rounds` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:653` | - |  |
 | `test_manifold_subdivide_catmull_clark_rejects_oob_triangle` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:716` | - |  |
-| `test_manifold_sweep_assembly_linear_and_cubic` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:719` | numerics |  |
-| `test_manifold_sweep_cubic_densify_caps_at_4096` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:773` | - |  |
+| `test_manifold_sweep_assembly_linear_and_cubic` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:759` | numerics |  |
+| `test_manifold_sweep_cubic_densify_caps_at_4096` | 0 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:813` | - |  |
 | `test_markdown_codecs` | 0 | `crates/chronicle-office-codecs/tests/codecs_tests.rs:35` | - |  |
 | `test_mask_density_and_feathering` | 0 | `crates/raster-layer-mask-adapter/src/tests.rs:51` | - |  |
 | `test_materialx_export` | 0 | `crates/surface-pbr-studio/src/lib.rs:123` | - |  |
@@ -7792,7 +8009,7 @@ Every function/method found in the codebase, alphabetical.
 | `test_matrix_slicing` | 0 | `crates/discourse-scientific-matlang/src/lib.rs:73` | numerics |  |
 | `test_matroska_mux_demux_roundtrip` | 0 | `crates/chronicle-broadcast-containers/src/lib.rs:73` | - |  |
 | `test_membrane_and_bending_energy` | 0 | `crates/kinetics-garment-draping/src/lib.rs:50` | - |  |
-| `test_mesh_to_sdf_brick_and_dual_contouring_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:439` | computational geometry |  |
+| `test_mesh_to_sdf_brick_and_dual_contouring_roundtrip` | 0 | `crates/asset-production-vibe/src/manifold_fields_sdf/mod.rs:508` | computational geometry |  |
 | `test_morph_matching_and_interpolation` | 0 | `crates/layout-presentation-deck/tests/deck_tests.rs:50` | - |  |
 | `test_motion_path_spline` | 0 | `crates/layout-presentation-deck/tests/deck_tests.rs:82` | - |  |
 | `test_mpegts_packet_and_psi` | 0 | `crates/chronicle-broadcast-containers/src/lib.rs:137` | - |  |
@@ -7854,26 +8071,25 @@ Every function/method found in the codebase, alphabetical.
 | `test_radial_euler_jfke_fails_closed_on_boundary_edge` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:502` | physics, graph |  |
 | `test_radial_euler_jfke_fan_diagonals_not_edge_zero` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:445` | physics, graph |  |
 | `test_radial_euler_jfke_tetrahedron_quad_cycle_and_m64_shell` | 0 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:379` | physics |  |
-| `test_radiance_2k_lattice_and_named_1024_profile` | 0 | `crates/asset-production-vibe/src/graphics.rs:784` | - |  |
+| `test_radiance_2k_lattice_and_named_1024_profile` | 0 | `crates/asset-production-vibe/src/graphics.rs:789` | - |  |
 | `test_radiance_cdl_scopes_nontrivial_pixel` | 0 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:414` | 2d |  |
 | `test_radiance_cdl_scopes_profile_admit_and_charge` | 0 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:476` | - |  |
-| `test_radiance_png_16bit_be_high_byte` | 0 | `crates/asset-production-vibe/src/graphics.rs:823` | - |  |
-| `test_radiance_png_psd_lattice_roundtrip_nontrivial` | 0 | `crates/asset-production-vibe/src/graphics.rs:695` | - |  |
+| `test_radiance_png_16bit_be_high_byte` | 0 | `crates/asset-production-vibe/src/graphics.rs:828` | - |  |
+| `test_radiance_png_psd_lattice_roundtrip_nontrivial` | 0 | `crates/asset-production-vibe/src/graphics.rs:700` | - |  |
 | `test_radiance_raw_hdr_nontrivial_pixel` | 0 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:384` | 2d |  |
 | `test_radiance_raw_hdr_profile_refuses_outside_lattice` | 0 | `crates/asset-production-vibe/src/radiance_raw_cdl_trace.rs:445` | - |  |
 | `test_raymarch_vox0_dda_procedural` | 0 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:191` | - |  |
 | `test_raymarch_vox0_dda_sealed_emf_non_black` | 0 | `crates/asset-production-vibe/src/electromagnetics_geodesy_ext/mod.rs:233` | - |  |
 | `test_redaction_pii_and_zero_residue` | 0 | `crates/discourse-pdf-compliance/src/tests.rs:87` | - |  |
-| `test_render_spectral_slice_default_exposure_non_black` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:908` | - |  |
-| `test_render_spectral_slice_tampered_emf_fails_closed` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:936` | - |  |
 | `test_resample_uniform_conservation` | 0 | `crates/raster-spatial-operators/src/resample.rs:345` | - |  |
+| `test_rig_biomechanical_archetype_emits_emf_qac_bundle` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/rig_ontology_continuum_frustum.rs:479` | - |  |
 | `test_ris_conversion` | 0 | `crates/discourse-academic-tex/src/bibliography/import.rs:296` | - |  |
 | `test_route_bus_dag_3_buses` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:189` | - |  |
 | `test_route_bus_dag_cycle_detection` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:275` | - |  |
-| `test_route_bus_dag_master_is_non_silent_object` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:490` | - |  |
+| `test_route_bus_dag_master_is_non_silent_object` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:489` | - |  |
 | `test_route_input_action_stages` | 0 | `crates/asset-production-vibe/src/glyph_layout_diegetic/mod.rs:181` | - |  |
 | `test_rtf_codecs` | 0 | `crates/chronicle-office-codecs/tests/codecs_tests.rs:75` | - |  |
-| `test_sample_procedural_field_all_bases` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:655` | - |  |
+| `test_sample_procedural_field_all_bases` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:745` | - |  |
 | `test_seam_carve_both_axes` | 0 | `crates/raster-spatial-operators/src/seam_carve.rs:361` | - |  |
 | `test_seam_carve_flat_region_dropped_first` | 0 | `crates/raster-spatial-operators/src/seam_carve.rs:318` | - |  |
 | `test_seam_carve_identity` | 0 | `crates/raster-spatial-operators/src/seam_carve.rs:350` | - |  |
@@ -7883,16 +8099,19 @@ Every function/method found in the codebase, alphabetical.
 | `test_smart_rule_evaluation` | 0 | `crates/radiance-camera-raw/src/lib.rs:196` | - |  |
 | `test_sniff` | 0 | `crates/discourse-academic-tex/src/bibliography/import.rs:290` | - |  |
 | `test_sobel_edge_detection` | 0 | `crates/raster-spatial-operators/src/convolve.rs:438` | graph |  |
-| `test_solve_sdfgi_froxel` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:248` | numerics |  |
+| `test_solve_sdfgi_froxel` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:249` | numerics |  |
+| `test_solve_sdfgi_froxel_backend_cpu` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:298` | numerics |  |
+| `test_solve_sdfgi_froxel_backend_gpu` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:325` | numerics |  |
+| `test_solve_sdfgi_froxel_unknown_arg_fail_closed` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:394` | numerics |  |
+| `test_solve_sdfgi_froxel_unknown_backend` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:373` | numerics |  |
 | `test_solve_two_bone_ik_reachable` | 0 | `crates/asset-production-vibe/src/kinetics_ops/mod.rs:58` | numerics |  |
 | `test_solve_two_bone_ik_skl1_10d_two_produces_match` | 0 | `crates/asset-production-vibe/src/kinetics_ops/mod.rs:262` | numerics |  |
 | `test_solve_two_bone_ik_unreachable` | 0 | `crates/asset-production-vibe/src/kinetics_ops/mod.rs:115` | numerics |  |
 | `test_spaces_gamut_matrix` | 0 | `crates/radiance-color-grading/src/lib.rs:117` | numerics |  |
 | `test_spatial_arc_length_table` | 0 | `crates/kinetics-motion-compositor/src/lib.rs:56` | - |  |
 | `test_spatialize_pga_zone` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:312` | - |  |
-| `test_spatialize_pga_zone_inverse_distance_object` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:542` | - |  |
+| `test_spatialize_pga_zone_inverse_distance_object` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:541` | - |  |
 | `test_spec` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:26` | - |  |
-| `test_spectral_display_irradiance_visible_for_compiled_amplitude` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:1099` | - |  |
 | `test_srgb_roundtrip` | 0 | `crates/asset-production-vibe/src/radiance_photo/mod.rs:174` | - |  |
 | `test_srt_roundtrip` | 0 | `crates/chronicle-timeline-interchange/src/lib.rs:161` | - |  |
 | `test_step_island_xpbd_area_override` | 0 | `crates/asset-production-vibe/src/kinetics_sim/mod.rs:257` | - |  |
@@ -7914,11 +8133,10 @@ Every function/method found in the codebase, alphabetical.
 | `test_unknown_op` | 0 | `crates/asset-production-vibe/src/locus_generative/mod.rs:316` | - |  |
 | `test_unwrap_slim_mode_slim_default_and_atlas` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:482` | - |  |
 | `test_unwrap_slim_planar_quad` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:440` | - |  |
-| `test_unwrap_slim_uv_island_10d_roundtrip` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:685` | - |  |
+| `test_unwrap_slim_uv_island_10d_roundtrip` | 0 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:775` | - |  |
 | `test_vbap_panning` | 0 | `crates/acoustics-daw-session/src/lib.rs:59` | - |  |
 | `test_vbd_step_simulation` | 0 | `crates/kinetics-garment-draping/src/lib.rs:83` | - |  |
-| `test_vector_motion_blur` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:214` | - |  |
-| `test_verify_emf_refuses_crc_consistent_bao_omitted` | 0 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:992` | - |  |
+| `test_vector_motion_blur` | 0 | `crates/asset-production-vibe/src/radiance_compositor_gi/mod.rs:215` | - |  |
 | `test_verify_fiduciary_rid` | 0 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/mod.rs:390` | - |  |
 | `test_vital_signs_extraction` | 0 | `crates/electromagnetics-rf-sensing/src/lib.rs:52` | - |  |
 | `test_vtt_roundtrip` | 0 | `crates/chronicle-timeline-interchange/src/lib.rs:174` | - |  |
@@ -7939,7 +8157,7 @@ Every function/method found in the codebase, alphabetical.
 | `tetrahedral_matches_brute_force` | 0 | `crates/color-transforms/src/lut.rs:515` | physics |  |
 | `tex_directives` | 0 | `crates/discourse-academic-tex/src/texparse/magic.rs:134` | - |  |
 | `texels` | 0 | `crates/vector-hybrid-renderer/src/render/common.rs:468` | - |  |
-| `text` | 1 | `crates/asset-production-vibe/src/lib.rs:491` | - |  |
+| `text` | 1 | `crates/asset-production-vibe/src/lib.rs:512` | - |  |
 | `impl Value::text` | 1 | `crates/chronicle-tabular-engine/src/core/value.rs:151` | - |  |
 | `impl XmlWriter::text` | 3 | `crates/chronicle-timeline-interchange/src/xml.rs:118` | - |  |
 | `impl Page::text` | 6 | `crates/discourse-academic-tex/src/texpdf.rs:290` | - |  |
@@ -7953,7 +8171,7 @@ Every function/method found in the codebase, alphabetical.
 | `text_of` | 1 | `crates/layout-presentation-deck/src/morph/match_pairs.rs:7` | - |  |
 | `text_on_path_positions_glyphs` | 0 | `crates/vector-glyph-shaping/src/layout.rs:275` | - |  |
 | `textjoin` | 1 | `crates/chronicle-tabular-engine/src/functions/text.rs:14` | - |  |
-| `impl Pixels<'win>::texture` | 1 | `crates/pixel-buffer-output/src/lib.rs:752` | 2d | Provides access to the internal source [`wgpu::Texture`]. |
+| `impl Pixels<'win>::texture` | 1 | `crates/pixel-buffer-output/src/lib.rs:747` | 2d | Provides access to the internal source [`etalon::Texture`]. |
 | `impl IntermediateTextureAllocations::texture_count` | 1 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:243` | - | Return the total number of physical textures represented by these allocations. |
 | `impl PixelsBuilder<'req, 'dev, 'win, W>::texture_format` | 2 | `crates/pixel-buffer-output/src/builder.rs:155` | 2d | Set the texture format. |
 | `texture_format_size` | 1 | `crates/pixel-buffer-output/src/builder.rs:537` | - |  |
@@ -7964,8 +8182,8 @@ Every function/method found in the codebase, alphabetical.
 | `texture_runs` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:743` | - |  |
 | `texture_runs_coalesce_distinct_paints_for_same_texture` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:810` | - |  |
 | `texture_runs_include_atlas_images` | 0 | `crates/vector-hybrid-renderer/src/draw.rs:827` | - |  |
+| `impl RendererContext<'_>::texture_size` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2849` | - |  |
 | `impl WebGlRendererContext<'_>::texture_size` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2939` | - |  |
-| `impl RendererContext<'_>::texture_size` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2846` | - |  |
 | `impl Atlases::texture_size` | 1 | `crates/vector-hybrid-renderer/src/schedule/allocate.rs:46` | - |  |
 | `tf_decode` | 6 | `crates/audio-opus-codec/src/celt/mod.rs:564` | - |  |
 | `impl Mat3::then` | 2 | `crates/drafting-geometry/src/mat.rs:64` | - | Apply `self` first, then `o`. |
@@ -7981,6 +8199,7 @@ Every function/method found in the codebase, alphabetical.
 | `threedl_roundtrip_and_orientation` | 0 | `crates/color-transforms/src/lut.rs:601` | - |  |
 | `impl Movie::thumbnail_at` | 3 | `crates/video-h264-preview/src/movie.rs:353` | - |  |
 | `impl Movie::thumbnails` | 3 | `crates/video-h264-preview/src/movie.rs:391` | - |  |
+| `impl SampledField<'_>::tick` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/projection.rs:22` | - |  |
 | `impl Oscillator::tick` | 1 | `crates/audio-device-cpal/examples/synth_tones.rs:83` | - |  |
 | `impl TempoMap::tick_at_bar_beat` | 2 | `crates/audio-timebase/src/tempo.rs:338` | - | Musical `BarBeat` to absolute `tick`. |
 | `impl FrameRate::tick_of` | 2 | `crates/chronicle-timeline-interchange/src/time.rs:96` | - |  |
@@ -8008,12 +8227,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl Index::tiles` | 2 | `crates/vector-locus-pathops/src/three_d/visibility.rs:119` | 2d |  |
 | `time_ago` | 2 | `crates/multimodal-synthesis-schema/src/job_feed.rs:76` | - | Relative human-readable time formatting: "just now", "5 minutes ago", etc. |
 | `time_fraction` | 3 | `crates/chronicle-tabular-engine/src/core/date.rs:143` | - |  |
+| `time_slice` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:10` | - |  |
 | `timecode_and_prores` | 0 | `crates/media-isobmff/src/codec.rs:1680` | - |  |
 | `timespec_diff_nanos` | 2 | `crates/audio-device-cpal/src/host/alsa/mod.rs:900` | - |  |
 | `timespec_to_nanos` | 1 | `crates/audio-device-cpal/src/host/alsa/mod.rs:894` | - |  |
 | `impl InputCallbackInfo::timestamp` | 1 | `crates/audio-device-cpal/src/lib.rs:489` | - | The timestamp associated with the call to an input stream's data callback. |
 | `impl OutputCallbackInfo::timestamp` | 1 | `crates/audio-device-cpal/src/lib.rs:496` | - | The timestamp associated with the call to an output stream's data callback. |
-| `timestamp_query_support` | 3 | `crates/gpu-command-profiler/src/profiler.rs:542` | - | Returns true if a timestamp query is supported. |
+| `timestamp_query_support` | 3 | `crates/gpu-command-profiler/src/profiler.rs:544` | - | Returns true if a timestamp query is supported. |
 | `timoshenko_beam_3d` | 6 | `crates/kinetics-continuum-multiphysics/src/fem/structural.rs:9` | graph, numerics | 3D Timoshenko beam element stiffness matrix (12x12 for 2 nodes with 6 DOFs per node). |
 | `timoshenko_beam_symmetry` | 0 | `crates/kinetics-continuum-multiphysics/src/fem/structural.rs:160` | - |  |
 | `tiny_circle_secants_and_separated_circles` | 0 | `crates/drafting-geometry/src/tests.rs:113` | - |  |
@@ -8056,6 +8276,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Lut::to_cube` | 1 | `crates/radiance-color-grading/src/lut.rs:326` | - | Serialize to `.cube` format string. |
 | `impl Value::to_display_string` | 1 | `crates/chronicle-tabular-engine/src/core/value.rs:179` | - |  |
 | `to_docx_package` | 1 | `crates/chronicle-office-codecs/src/wordprocessing/docx.rs:10` | - | Serialize a `FlowDoc` into an OpenXML `.docx` ZIP package. |
+| `impl ImageFormat::to_etalon` | 1 | `crates/vector-compute-renderer/src/recording.rs:245` | - |  |
 | `to_f32` | 1 | `crates/color-transforms/src/spaces.rs:121` | - |  |
 | `to_f32` | 1 | `crates/radiance-color-grading/src/spaces.rs:172` | - |  |
 | `to_f64` | 1 | `crates/chronicle-tabular-engine/src/functions/util.rs:20` | - |  |
@@ -8097,7 +8318,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl AafDocument::to_sequence` | 1 | `crates/chronicle-timeline-interchange/src/interchange/aaf.rs:158` | - | Convert this AAF Document model into a TimelineSequence. |
 | `to_signed` | 1 | `crates/video-prores-codec/src/decode.rs:357` | - |  |
 | `to_sk_color_channel` | 1 | `crates/vector-skia-render-adapter/src/scene.rs:906` | - | Convert an anyrender displacement-map [`ColorChannel`] to the corresponding Skia channel. |
-| `impl SubElementHooks::to_small_llm_json` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:391` | - | Formats the compact ~22-token JSON command packet that a small (0.5B–4B) LLM emits. |
+| `impl SubElementHooks::to_small_llm_json` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:389` | - | Formats the compact ~22-token JSON command packet that a small (0.5B–4B) LLM emits. |
 | `to_stream_instant` | 1 | `crates/audio-device-cpal/src/host/oboe/convert.rs:11` | - |  |
 | `impl CamelotKey::to_string` | 1 | `crates/acoustics-daw-session/src/music_intelligence/mod.rs:23` | - |  |
 | `impl FourCc::to_string_lossy` | 1 | `crates/media-isobmff/src/bytes.rs:19` | - | Lossy string form; `©` (0xA9) is mapped to U+00A9, other non-printables to `?`. |
@@ -8110,7 +8331,6 @@ Every function/method found in the codebase, alphabetical.
 | `impl PsdVersion::to_u16` | 1 | `crates/surface-layered-codecs/src/psd/mod.rs:37` | - |  |
 | `impl Tick::to_units_floor` | 2 | `crates/timeline-editing/src/timebase.rs:60` | - | Convert to units at `per_second`, rounded down (unlike `from_units`, |
 | `impl Evaluator<'h>::to_value` | 2 | `crates/chronicle-tabular-engine/src/calc/eval.rs:153` | - |  |
-| `impl ImageFormat::to_wgpu` | 1 | `crates/vector-compute-renderer/src/recording.rs:245` | - |  |
 | `to_xlsx_package` | 1 | `crates/chronicle-office-codecs/src/spreadsheet/xlsx.rs:36` | - | Serialize an `XlsxWorkbook` into an OpenXML `.xlsx` ZIP package. |
 | `impl XEl::to_xml_string` | 1 | `crates/chronicle-office-codecs/src/xml/dom.rs:127` | - |  |
 | `impl Gamut::to_xyz` | 1 | `crates/color-transforms/src/spaces.rs:67` | - | RGB → CIE XYZ (normalised so white Y = 1). |
@@ -8129,6 +8349,7 @@ Every function/method found in the codebase, alphabetical.
 | `tool_or_skip` | 3 | `crates/media-test-support/src/oracle.rs:107` | - |  |
 | `topological_sort` | 1 | `crates/kinetics-schedule-cpm/src/schedule.rs:53` | graph | Topologically sort task indices, returning [`SchedError::CycleDetected`] if any cycle exists. |
 | `topological_sort` | 1 | `crates/layout-nodegraph-compiler/src/compiler/pipeline.rs:110` | graph |  |
+| `topology_postcondition_requires_closed_opposite_edge_pairs` | 0 | `crates/asset-production-vibe/src/boolean_conforming.rs:63` | graph |  |
 | `torus` | 5 | `crates/profile-authoring/src/geometry.rs:230` | computational geometry |  |
 | `impl Grid::total` | 1 | `crates/radiance-color-grading/src/scopes/mod.rs:239` | - |  |
 | `impl ScheduledCase::total_clears` | 1 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:217` | - |  |
@@ -8154,7 +8375,9 @@ Every function/method found in the codebase, alphabetical.
 | `tracking_ligature_limits` | 0 | `crates/vector-glyph-shaping/src/features.rs:140` | - |  |
 | `tracks` | 2 | `crates/vector-surface-brush/src/track.rs:155` | - | Flatten `bp` into tracks (one per subpath) with `tol` accuracy. |
 | `impl AssetHost<'_>::transcode_geospatial_vector` | 2 | `crates/asset-production-vibe/src/locus_sketch_warp_geospatial.rs:483` | - | 122: `hypermedia.locus.transcode_geospatial_vector` (`locus-geospatial-codecs`) |
-| `transfer_nearest_vertex_colors` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:865` | 3d |  |
+| `transfer_name` | 1 | `crates/asset-production-vibe/src/radiance_precision.rs:109` | - |  |
+| `transfer_nearest_vertex_colors` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1115` | 3d |  |
+| `impl AssetHost<'_>::transfer_rgba16` | 2 | `crates/asset-production-vibe/src/radiance_precision.rs:89` | - |  |
 | `transfer_roundtrips` | 0 | `crates/color-transforms/src/lib.rs:345` | - |  |
 | `impl DrawGlyphs<'a>::transform` | 2 | `crates/vector-compute-renderer/src/scene.rs:506` | numerics | Sets the global transform. This is applied to all glyphs after the offset |
 | `impl Anchor::transform` | 2 | `crates/vector-locus-geometry/src/path.rs:133` | - |  |
@@ -8175,7 +8398,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Mat3::translate` | 1 | `crates/drafting-geometry/src/mat.rs:25` | 2d |  |
 | `translate` | 1 | `crates/vector-compute-shaders/src/compile/msl.rs:8` | 3d |  |
 | `impl Anchor::translate` | 2 | `crates/vector-locus-geometry/src/path.rs:136` | 2d |  |
-| `translated_cube` | 4 | `crates/asset-production-vibe/src/manifold_ops.rs:1215` | - |  |
+| `translated_cube` | 4 | `crates/asset-production-vibe/src/manifold_ops.rs:1663` | - |  |
 | `transport_position_snapshot` | 0 | `crates/audio-timebase/src/transport.rs:250` | - |  |
 | `transpose` | 1 | `crates/audio-opus-codec/src/celt/tables.rs:41` | - |  |
 | `impl Matrix::transpose` | 1 | `crates/discourse-scientific-matlang/src/matrix.rs:180` | - |  |
@@ -8214,7 +8437,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl RenderContext for VelloWindowRenderer::try_register_custom_resource` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:199` | - |  |
 | `impl RenderContext for VelloHybridScenePainter<'_>::try_register_custom_resource` | 2 | `crates/vector-hybrid-render-adapter/src/scene.rs:158` | - |  |
 | `impl RenderContext for VelloHybridWindowRenderer::try_register_custom_resource` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:210` | - |  |
-| `impl GpuProfiler::try_reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:591` | - |  |
+| `impl GpuProfiler::try_reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:593` | - |  |
 | `impl SupportedStreamConfigRange::try_with_sample_rate` | 2 | `crates/audio-device-cpal/src/lib.rs:648` | - | Retrieve a [`SupportedStreamConfig`] with the given sample rate and buffer size. |
 | `tsp_2opt_solver` | 1 | `crates/geodesy-spatial-analysis/src/network_topology.rs:207` | - | Traveling Salesperson Problem (TSP) solver using Nearest-Neighbor tour + 2-Opt heuristic optimization. |
 | `turn_deg` | 2 | `crates/vector-locus-pathops/src/pathops/edit.rs:71` | - |  |
@@ -8227,9 +8450,10 @@ Every function/method found in the codebase, alphabetical.
 | `two_clip_context` | 1 | `crates/timeline-editing/src/transition.rs:280` | - |  |
 | `two_colour_stripes_without_ignore_white_trace_both_colours` | 0 | `crates/vector-radiance-trace/src/tests.rs:93` | - |  |
 | `two_point_to_unit_line` | 2 | `crates/vector-compute-shaders/src/cpu/draw_leaf.rs:233` | 2d |  |
-| `two_slice_picture_decodes_and_changed_picture_identity_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:540` | - |  |
+| `two_slice_picture_decodes_and_changed_picture_identity_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:541` | - |  |
 | `type_aliases_work` | 0 | `crates/vector-locus-geometry/src/lib.rs:133` | - |  |
 | `type_name` | 2 | `crates/vector-hybrid-shaders/src/lint/no_structs_in_fragment.rs:204` | - |  |
+| `typed_metadata_json` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:41` | - |  |
 | `impl AssetHost<'_>::typeset_paged_foliation` | 2 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:195` | - | 133: `hypermedia.layout.typeset_paged_foliation` (`layout-paged-typesetter`) |
 | `impl Set::u` | 2 | `crates/chronicle-broadcast-containers/src/mxf/meta.rs:85` | - |  |
 | `impl Cur<'a>::u16` | 1 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:159` | - |  |
@@ -8243,11 +8467,13 @@ Every function/method found in the codebase, alphabetical.
 | `impl Cur<'a>::u32` | 1 | `crates/media-isobmff/src/bytes.rs:108` | - |  |
 | `impl BoxBuf::u32` | 2 | `crates/media-isobmff/src/bytes.rs:289` | - |  |
 | `u32_at` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:364` | - |  |
+| `u32_field` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:242` | - |  |
 | `u32_to_extended` | 1 | `crates/acoustics-daw-session/src/codecs/mod.rs:190` | - |  |
 | `impl Cur<'a>::u64` | 1 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:165` | - |  |
 | `impl Cur<'a>::u64` | 1 | `crates/media-isobmff/src/bytes.rs:114` | - |  |
 | `impl BoxBuf::u64` | 2 | `crates/media-isobmff/src/bytes.rs:295` | - |  |
 | `u64_at` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:368` | - |  |
+| `u64_field` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:586` | - |  |
 | `u64_field` | 2 | `crates/asset-production-vibe/src/operations_catalog.rs:1052` | - |  |
 | `impl Reader<'a>::u8` | 2 | `crates/color-transforms/src/icc/profile.rs:308` | - |  |
 | `impl Cur<'a>::u8` | 1 | `crates/media-isobmff/src/bytes.rs:95` | - |  |
@@ -8255,6 +8481,7 @@ Every function/method found in the codebase, alphabetical.
 | `u8_operators_behave_consistently` | 0 | `crates/raster-blend-operators/src/lib.rs:541` | - |  |
 | `u8_to_u16_lattice` | 1 | `crates/asset-production-vibe/src/graphics.rs:55` | - |  |
 | `impl ArcLengthTable::u_at_progress` | 2 | `crates/kinetics-motion-compositor/src/keyframe/spatial.rs:57` | - | Map arc-length progress fraction s in [0, 1] to Bézier parameter `u` in [0, 1]. |
+| `impl AssetHost<'_>::ui_label_outlines` | 4 | `crates/asset-production-vibe/src/layout_ops/sheet_render.rs:340` | - |  |
 | `impl RangeDecoder<'a>::uint` | 2 | `crates/audio-opus-codec/src/range.rs:190` | - | Decodes a uniformly distributed integer in `[0, ft)` (`ft >= 2`). |
 | `impl RangeEncoder::uint` | 3 | `crates/audio-opus-codec/src/range.rs:342` | - |  |
 | `uint` | 1 | `crates/chronicle-broadcast-containers/src/matroska/ebml.rs:121` | - | Big-endian unsigned integer of 0..=8 bytes. |
@@ -8296,8 +8523,10 @@ Every function/method found in the codebase, alphabetical.
 | `unit` | 1 | `crates/vector-surface-brush/src/track.rs:23` | 2d |  |
 | `impl Rng::unit` | 1 | `crates/vector-surface-brush/src/track.rs:196` | - | Uniform in [0, 1). |
 | `unit_2d` | 1 | `crates/manifold-bim-csg/src/parametric.rs:36` | - |  |
-| `unit_cube_mesh` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1183` | computational geometry |  |
-| `unit_icosphere_mesh` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1428` | computational geometry |  |
+| `impl ArticulatedVertebrateSegment::unit_axis` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:89` | - | Unit axis from proximal to distal joint. |
+| `impl BotanicalMetamerSegment::unit_axis` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:247` | - |  |
+| `unit_cube_mesh` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1631` | computational geometry |  |
+| `unit_icosphere_mesh` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:1880` | computational geometry |  |
 | `unit_named` | 0 | `crates/vector-locus-geometry/src/units.rs:218` | - |  |
 | `unite_all` | 1 | `crates/vector-locus-pathops/src/pathops/boolean.rs:537` | - | Execute N-ary union of all input paths. |
 | `unpack4x8unorm` | 1 | `crates/vector-compute-shaders/src/cpu/fine.rs:34` | - |  |
@@ -8309,15 +8538,15 @@ Every function/method found in the codebase, alphabetical.
 | `impl RenderContext for VelloWindowRenderer::unregister_resource` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:217` | - |  |
 | `impl RenderContext for VelloHybridScenePainter<'_>::unregister_resource` | 2 | `crates/vector-hybrid-render-adapter/src/scene.rs:185` | - |  |
 | `impl RenderContext for VelloHybridWindowRenderer::unregister_resource` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:241` | - |  |
-| `impl Renderer::unregister_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:603` | - | Unregister a [`wgpu::Texture`] that was registered with [`register_texture`](Self::register_texture). |
+| `impl Renderer::unregister_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:612` | - | Unregister a [`etalon::Texture`] that was registered with [`register_texture`](Self::register_texture). |
 | `unsharp_mask_rgba8` | 7 | `crates/raster-spatial-operators/src/convolve.rs:300` | - | Unsharp mask sharpening for RGBA8 buffer. |
 | `unsupported` | 1 | `crates/video-h264-codec/src/error.rs:26` | - |  |
 | `impl Parser<'_>::until` | 2 | `crates/manifold-bim-csg/src/step.rs:245` | - |  |
 | `unused_bindings_do_not_resolve_passes` | 0 | `crates/vector-hybrid-renderer/src/schedule/round.rs:619` | - |  |
-| `impl AssetHost<'_>::unwrap_atlas_parameterize` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:340` | - |  |
+| `impl AssetHost<'_>::unwrap_atlas_parameterize` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:374` | - |  |
 | `unwrap_phase` | 1 | `crates/electromagnetics-rf-sensing/src/csi_signal.rs:124` | - | Unwraps phase values along a sequence to remove 2pi phase wrap discontinuities. |
 | `impl AssetHost<'_>::unwrap_slim` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:21` | - |  |
-| `impl AssetHost<'_>::unwrap_slim_parameterize` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:34` | - |  |
+| `impl AssetHost<'_>::unwrap_slim_parameterize` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/slim_mikktspace.rs:35` | - |  |
 | `impl RangeDecoder<'a>::update` | 4 | `crates/audio-opus-codec/src/range.rs:128` | - | Consumes the symbol with cumulative range `[fl, fh)` of total `ft`. |
 | `impl FallDetector::update` | 3 | `crates/electromagnetics-rf-sensing/src/vitals.rs:162` | physics | Feeds max Doppler velocity (m/s) observed in the current frame and updates fall status. |
 | `trait Block::update` | 3 | `crates/kinetics-block-simulation/src/block.rs:65` | - |  |
@@ -8327,44 +8556,49 @@ Every function/method found in the codebase, alphabetical.
 | `impl RangeDecoder<'a>::update_bin` | 4 | `crates/audio-opus-codec/src/range.rs:138` | - | Like [`Self::update`] for a symbol decoded with [`Self::decode_bin`]. |
 | `impl JohnsonCookDamage::update_damage` | 6 | `crates/kinetics-continuum-multiphysics/src/explicit/damage.rs:43` | - | Update damage index D = sum(delta_eps_p / eps_f). Returns true if element is eroded (D >= 1.0). |
 | `impl Sim::update_discrete` | 2 | `crates/kinetics-block-simulation/src/sim.rs:156` | - |  |
+| `update_electric_summary` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/document.rs:120` | - |  |
 | `impl PocState::update_gap_frame` | 3 | `crates/video-h264-codec/src/slice.rs:578` | - | Account for a "non-existing" frame inferred by the frame_num gap process (8.2.5.2). |
-| `impl Programs::update_scratch_bind_groups` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1862` | - |  |
+| `impl Programs::update_scratch_bind_groups` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1865` | - |  |
 | `impl Recording::upload` | 3 | `crates/vector-compute-renderer/src/recording.rs:124` | - | Commands to upload the given data to a new buffer with the given name. |
+| `impl Programs::upload_alpha_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2377` | - | Upload alpha data to the texture. |
 | `impl WebGlPrograms::upload_alpha_texture` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1922` | - | Upload alpha data to the texture. |
-| `impl Programs::upload_alpha_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2374` | - | Upload alpha data to the texture. |
 | `impl WebGlPrograms::upload_blend_instances` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1757` | - |  |
 | `impl WebGlPrograms::upload_copy_instances` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1769` | - |  |
+| `impl Programs::upload_encoded_paints_texture` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2422` | - | Upload encoded paints to the texture. |
 | `impl WebGlPrograms::upload_encoded_paints_texture` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1956` | - | Upload encoded paints to the texture. |
-| `impl Programs::upload_encoded_paints_texture` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2419` | - | Upload encoded paints to the texture. |
 | `impl WebGlPrograms::upload_filter_data_texture` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1715` | - | Upload filter data to the texture. |
 | `impl WebGlPrograms::upload_filter_instances` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1741` | - |  |
-| `impl Programs::upload_filter_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2464` | - |  |
+| `impl Programs::upload_filter_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2467` | - |  |
+| `impl Programs::upload_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2502` | - | Upload gradient data to the texture. |
 | `impl WebGlPrograms::upload_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1983` | - | Upload gradient data to the texture. |
-| `impl Programs::upload_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2499` | - | Upload gradient data to the texture. |
-| `impl BindMapBuffer::upload_if_needed` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1020` | - |  |
+| `impl BindMapBuffer::upload_if_needed` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:1024` | - |  |
 | `impl Recording::upload_image` | 5 | `crates/vector-compute-renderer/src/recording.rs:142` | - | Commands to upload the given data to a new image with the given dimensions and format. |
 | `impl ImageManager<'a>::upload_image` | 2 | `crates/vector-hybrid-render-adapter/src/scene.rs:93` | - |  |
 | `impl WebGlImageManager<'a>::upload_image` | 2 | `crates/vector-hybrid-render-adapter/src/webgl_scene.rs:36` | - |  |
+| `impl Renderer::upload_image` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:519` | - | Upload image to cache and atlas in one step. Returns the `ImageId`. |
 | `impl WebGlRenderer::upload_image` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:720` | - | Upload image to cache and atlas in one step. Returns the `ImageId`. |
-| `impl Renderer::upload_image` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:519` | - | Upload image to cache and atlas in one step. Returns the `ImageId`. |
+| `impl Renderer::upload_image_with` | 7 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:537` | - |  |
 | `impl WebGlRenderer::upload_image_with` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:728` | - |  |
-| `impl Renderer::upload_image_with` | 7 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:537` | - |  |
 | `upload_layer_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2395` | - |  |
 | `upload_rgba32ui_rows` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3504` | - | Upload full rows of RGBA32UI data into immutable texture storage. |
+| `impl Programs::upload_strip_pair` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2545` | - | Uploads two strip slices (opaque then alpha) into the frame arena and |
 | `impl WebGlPrograms::upload_strip_pair` | 4 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2034` | - | Uploads two strip slices (opaque then alpha) into a single GPU buffer. |
-| `impl Programs::upload_strip_pair` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2542` | - | Uploads two strip slices (opaque then alpha) into the frame arena and |
 | `impl Recording::upload_uniform` | 3 | `crates/vector-compute-renderer/src/recording.rs:133` | - | Commands to upload the given data to a new buffer as a uniform with the given name. |
 | `impl RefMedia::uploading` | 2 | `crates/multimodal-synthesis-schema/src/references.rs:59` | - |  |
 | `upper` | 1 | `crates/chronicle-tabular-engine/src/functions/text.rs:78` | - |  |
 | `upsample` | 3 | `crates/terrain-erosion-solvers/src/thermal_shaper.rs:89` | - |  |
 | `upsample_sine_and_delay` | 0 | `crates/audio-opus-codec/src/silk/resampler.rs:176` | - |  |
 | `impl ViewFramebuffer::use_depth_buffer` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:1223` | - |  |
-| `impl WgpuEngine::use_parallel_initialisation` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:154` | - | Enable creating any remaining shaders in parallel |
+| `impl EtalonEngine::use_parallel_initialisation` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:154` | - | Enable creating any remaining shaders in parallel |
 | `impl Sheet::used_range` | 1 | `crates/chronicle-tabular-engine/src/calc/model.rs:116` | - |  |
 | `impl CalligraphicBrush::uses_pressure` | 1 | `crates/vector-surface-brush/src/calligraphic.rs:58` | - |  |
 | `utf16_of` | 1 | `crates/chronicle-broadcast-containers/src/mxf/klv.rs:218` | - |  |
+| `utf8_field` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/inspection.rs:594` | - |  |
+| `utf8_field` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:254` | - |  |
 | `uv_island_hull` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:202` | - | Monotone-chain hull of a SLIM UV island. Sorted, so iteration is produce-safe. |
 | `v3` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:22` | - |  |
+| `v3_admits_combined_owned_tracks_workspace_inputs_and_output_before_pcm_copy` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:114` | - |  |
+| `v3_metadata_aggregate_is_admitted_before_json_clone_or_typed_deserialization` | 0 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:139` | - |  |
 | `v_add` | 2 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:17` | - |  |
 | `v_cross` | 2 | `crates/asset-production-vibe/src/manifold_topology/mod.rs:37` | - |  |
 | `v_cross` | 2 | `crates/asset-production-vibe/src/surface_bsdf_uv/mod.rs:30` | - |  |
@@ -8383,6 +8617,8 @@ Every function/method found in the codebase, alphabetical.
 | `valid_config` | 2 | `crates/audio-device-cpal/src/host/webaudio/mod.rs:504` | - |  |
 | `valid_edit_returns_frame_exact_span_and_alignment` | 0 | `crates/timeline-editing/src/transition.rs:308` | - |  |
 | `valid_name` | 1 | `crates/locus-parametric-solver/src/solver/expr.rs:46` | - |  |
+| `impl VertebrateAnatomicalRig::validate` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:337` | - | Validates the articulated vertebrate rig against its backing `SpeciesCorpus`. |
+| `impl BotanicalMetamerRig::validate` | 2 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:576` | graph | Validates the botanical FSPM metamer rig against its `SpeciesCorpus`, |
 | `impl ByteRange::validate` | 2 | `crates/discourse-pdf-compliance/src/sign/pades.rs:25` | - | Verifies that the ByteRange covers the file cleanly without overlaps, |
 | `impl GpuProfilerSettings::validate` | 1 | `crates/gpu-command-profiler/src/profiler_settings.rs:50` | - |  |
 | `impl IntermediateTextureRequirements::validate` | 3 | `crates/vector-hybrid-renderer/src/schedule/mod.rs:251` | - | Validate that satisfying these requirements from the backend's existing allocations stays |
@@ -8391,24 +8627,35 @@ Every function/method found in the codebase, alphabetical.
 | `validate` | 1 | `crates/vector-hybrid-shaders/src/compile.rs:109` | - |  |
 | `validate` | 1 | `crates/vector-hybrid-shaders/src/minify.rs:175` | - | Validates the renamed module and produces the metadata required by Naga's writer. |
 | `impl PerspectiveGrid::validate` | 1 | `crates/vector-locus-geometry/src/perspective.rs:165` | - |  |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::validate_block` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:56` | - |  |
+| `impl DomainRegistry for QacV1CueRegistry::validate_block` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/qac_v1_producer.rs:134` | - |  |
+| `validate_constitutive` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/compile_host.rs:69` | - |  |
+| `validate_dipoles` | 1 | `crates/asset-production-vibe/src/electromagnetics_current/compile_host.rs:3` | - |  |
 | `validate_field` | 2 | `crates/discourse-pdf-compliance/src/forms/validation.rs:86` | - |  |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::validate_grid_frame` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:64` | - |  |
+| `validate_imported_glb_extensions` | 2 | `crates/asset-production-vibe/src/manifold_ops.rs:1050` | - |  |
+| `validate_imported_glb_features` | 1 | `crates/asset-production-vibe/src/manifold_ops.rs:996` | - |  |
 | `validate_line_soup` | 1 | `crates/vector-compute-renderer/src/debug/validate.rs:47` | - |  |
-| `validate_offsets` | 3 | `crates/video-h264-preview/src/lib.rs:346` | - |  |
-| `validate_picture_headers` | 4 | `crates/video-h264-preview/src/lib.rs:431` | - | Match the codec's own primary-picture boundary test before it can create |
+| `validate_offsets` | 3 | `crates/video-h264-preview/src/lib.rs:347` | - |  |
+| `validate_picture_headers` | 4 | `crates/video-h264-preview/src/lib.rs:432` | - | Match the codec's own primary-picture boundary test before it can create |
 | `validate_q42_logic` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:374` | - | Validates a `Q42LOGIC` container: magic, version, length, per-kind counts, payload digest and |
 | `validate_resource_texture_size` | 3 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:2345` | - | Validate that a resource texture fits within its configured dimension limit. |
-| `validate_results` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:64` | - |  |
-| `validate_results_unordered` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:87` | - |  |
+| `validate_results` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:65` | - |  |
+| `validate_results_unordered` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:88` | - |  |
 | `validate_rule_citation` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/rule_pack.rs:121` | - |  |
 | `impl CowTerrainTileGrid::validate_sample` | 1 | `crates/terrain-brushes/adaptation/grid-impl.rs:93` | - |  |
 | `impl CowTerrainTileGrid::validate_sample` | 1 | `crates/terrain-brushes/src/lib.rs:274` | - |  |
 | `validate_self_contained_data` | 1 | `crates/media-isobmff/src/demux.rs:558` | - | Narrow local-file profile; no external URLs, aliases, extra entries or duplicate tables. |
-| `validate_sizes` | 5 | `crates/video-h264-preview/src/lib.rs:378` | - |  |
+| `validate_sizes` | 5 | `crates/video-h264-preview/src/lib.rs:379` | - |  |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::validate_spatial_entry` | 4 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:72` | - |  |
+| `validate_spectral_wavelengths` | 1 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/rig_metamer.rs:291` | - |  |
 | `validate_tags` | 1 | `crates/media-ogg/src/strict_opus.rs:17` | - |  |
 | `validate_track` | 1 | `crates/media-isobmff/src/mux.rs:490` | - |  |
+| `impl DomainRegistry for EmfV4AnatomyRegistry::validate_units` | 3 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/emf_v4_producer.rs:81` | - |  |
 | `validator_accepts_bound_work` | 0 | `crates/vector-hybrid-renderer/src/schedule/round.rs:661` | - |  |
 | `validator_rejects_unbound_clear` | 0 | `crates/vector-hybrid-renderer/src/schedule/round.rs:692` | - |  |
 | `validator_rejects_unbound_layer_pass` | 0 | `crates/vector-hybrid-renderer/src/schedule/round.rs:679` | - |  |
+| `value` | 1 | `crates/asset-production-vibe/src/electromagnetics_v3/tests.rs:4` | - |  |
 | `impl Sheet::value` | 2 | `crates/chronicle-tabular-engine/src/calc/model.rs:100` | - |  |
 | `impl Parser::value` | 1 | `crates/discourse-academic-tex/src/texparse/bib.rs:285` | - |  |
 | `trait Scalar::value` | 1 | `crates/kinetics-garment-draping/src/math.rs:241` | - |  |
@@ -8423,35 +8670,38 @@ Every function/method found in the codebase, alphabetical.
 | `vbr_quality_scale` | 0 | `crates/audio-aac-codec/tests/encoder_oracle.rs:249` | - |  |
 | `vdb` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:442` | - |  |
 | `vec` | 3 | `crates/kinetics-block-simulation/src/blocks/params.rs:25` | - |  |
-| `vec3` | 3 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:714` | 3d |  |
-| `vec3` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1179` | 3d |  |
+| `vec3` | 3 | `crates/asset-production-vibe/src/manifold_assembly_bim_erosion.rs:733` | 3d |  |
+| `vec3` | 3 | `crates/asset-production-vibe/src/manifold_ops.rs:1509` | 3d |  |
 | `vec3` | 3 | `crates/asset-production-vibe/src/operations_catalog.rs:322` | 3d |  |
 | `vec_len` | 1 | `crates/kinetics-continuum-multiphysics/src/mesh/quality.rs:84` | - |  |
 | `vec_sub` | 2 | `crates/kinetics-continuum-multiphysics/src/mesh/quality.rs:80` | - |  |
-| `vector` | 1 | `crates/asset-production-vibe/src/lib.rs:550` | - |  |
-| `impl AssetHost<'_>::vector_render` | 2 | `crates/asset-production-vibe/src/graphics.rs:517` | - |  |
+| `vector` | 1 | `crates/asset-production-vibe/src/lib.rs:571` | - |  |
+| `impl AssetHost<'_>::vector_render` | 2 | `crates/asset-production-vibe/src/graphics.rs:522` | - |  |
 | `vectorised_transforms_match_reference` | 0 | `crates/video-h264-codec/src/transform.rs:208` | - |  |
 | `vectorscope` | 4 | `crates/radiance-color-grading/src/scopes/paint.rs:58` | - |  |
 | `vectorscope_hls` | 2 | `crates/radiance-color-grading/src/scopes/mod.rs:499` | - |  |
 | `vectorscope_yuv` | 2 | `crates/radiance-color-grading/src/scopes/mod.rs:475` | - |  |
 | `impl PrivacyWitnessReceipt::verify` | 1 | `crates/electromagnetics-rf-sensing/src/densepose.rs:158` | - | Verifies the cryptographic witness receipt integrity and human-rights compliance guarantee. |
+| `verify_and_consume_v4_resource` | 4 | `crates/asset-production-vibe/src/electromagnetics_current/host_tests.rs:156` | - |  |
 | `impl FiduciaryAuditTrail::verify_chain` | 1 | `crates/chronicle-fiduciary-ledger/src/audit.rs:122` | - | Validates the complete cryptographic hash chain from genesis to head. |
-| `impl AssetHost<'_>::verify_emf` | 2 | `crates/asset-production-vibe/src/electromagnetics_ops.rs:277` | - | Parses and cryptographically verifies the Q42EMF64 container, |
+| `impl AssetHost<'_>::verify_emf_current` | 2 | `crates/asset-production-vibe/src/electromagnetics_current/read_host.rs:59` | - |  |
 | `impl AssetHost<'_>::verify_fiduciary_rid` | 2 | `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:205` | - |  |
-| `impl AssetHost<'_>::verify_m64` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:637` | - |  |
+| `impl AssetHost<'_>::verify_m64` | 2 | `crates/asset-production-vibe/src/geodesy_ops.rs:712` | - |  |
 | `verify_pades_byte_range` | 3 | `crates/discourse-pdf-compliance/src/sign/pades.rs:77` | - | Verifies that a signed document's byte range digest matches the signed content. |
 | `impl OntologicalTriple::verify_parity` | 1 | `crates/chronicle-tabular-engine/src/ontology.rs:32` | - |  |
 | `impl OntologicalTriple::verify_parity` | 1 | `crates/layout-paged-typesetter/src/ontology.rs:31` | - |  |
 | `impl NQuin48::verify_parity` | 1 | `crates/surface-layered-codecs/src/ontology.rs:39` | - |  |
+| `verify_qac_chunk_samples` | 5 | `crates/asset-production-vibe/src/sound.rs:418` | - |  |
 | `verify_rfc3161_timestamp` | 2 | `crates/discourse-pdf-compliance/src/sign/timestamp.rs:25` | - |  |
 | `verify_zero_residue` | 2 | `crates/discourse-pdf-compliance/src/redact/verifier.rs:50` | - | Zero-residue verification pass: |
+| `vertebrate_emf_v4_and_qac_v1_double_produce_byte_and_digest_equality` | 0 | `crates/asset-production-vibe/src/emf_qac_anatomy_bridge/tests.rs:18` | - |  |
 | `vertebrate_op_accepts_cbor_ld_spec_input` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:414` | - |  |
 | `vertebrate_op_accepts_validated_q42_input` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:247` | - |  |
 | `vertebrate_op_appends_joint_rules` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:394` | - |  |
 | `vertebrate_op_compiles_vibescript_spec_with_rules` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:208` | - |  |
 | `vertebrate_op_default_rules_use_spec_species_id` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:227` | - |  |
 | `vertebrate_op_rejects_non_vibescript_specs` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:273` | - |  |
-| `impl GpuStrip::vertex_attributes` | 0 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1074` | 3d | Vertex attributes for the strip |
+| `impl GpuStrip::vertex_attributes` | 0 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1074` | 3d | Vertex attributes for the strip |
 | `impl Mesh::vertex_count` | 1 | `crates/surface-pbr-studio/src/mesh.rs:31` | 3d |  |
 | `impl Padding::vertical` | 1 | `crates/layout-box-autolayout/src/types.rs:142` | - |  |
 | `vibe_record_to_json` | 1 | `crates/asset-production-vibe/src/living_world_anatomy/corpus_values.rs:92` | - |  |
@@ -8459,8 +8709,8 @@ Every function/method found in the codebase, alphabetical.
 | `impl SampleEntry::video` | 4 | `crates/media-isobmff/src/codec.rs:1228` | - | Convenience constructor for a video entry. |
 | `impl Track::video` | 1 | `crates/media-isobmff/src/demux.rs:129` | - |  |
 | `video_page_models` | 1 | `crates/multimodal-synthesis-schema/src/catalog.rs:501` | - |  |
-| `video_projects_combined_av_without_changing_source_or_offsets` | 0 | `crates/video-h264-preview/src/lib.rs:662` | - |  |
-| `video_requires_local_data_reference_and_entry_binding` | 0 | `crates/video-h264-preview/src/lib.rs:674` | - |  |
+| `video_projects_combined_av_without_changing_source_or_offsets` | 0 | `crates/video-h264-preview/src/lib.rs:663` | - |  |
+| `video_requires_local_data_reference_and_entry_binding` | 0 | `crates/video-h264-preview/src/lib.rs:675` | - |  |
 | `impl ScheduledCase::views` | 1 | `crates/vector-hybrid-renderer/src/schedule/test_support.rs:163` | - |  |
 | `vincenty_wgs84_km` | 2 | `crates/drafting-geometry/src/geodesic_ruler.rs:55` | - | Vincenty inverse geodesic calculation on the WGS84 ellipsoid. |
 | `vint_len` | 1 | `crates/chronicle-broadcast-containers/src/matroska/ebml.rs:4` | - |  |
@@ -8494,7 +8744,8 @@ Every function/method found in the codebase, alphabetical.
 | `vtu_xml_structure_test` | 0 | `crates/kinetics-continuum-multiphysics/src/interchange/vtk.rs:82` | - |  |
 | `impl Frame::wait_complete` | 1 | `crates/video-h264-codec/src/picture.rs:177` | - | Wait until the whole frame is available. |
 | `wait_for_handle_signal` | 1 | `crates/audio-device-cpal/src/host/wasapi/stream.rs:286` | - |  |
-| `impl std::task::Wake for NullWake::wake` | 1 | `crates/vector-compute-renderer/src/util.rs:250` | - |  |
+| `impl Wake for ThreadWake::wake` | 1 | `crates/asset-production-vibe/src/radiance_compositor_gi/gpu_gi.rs:314` | - |  |
+| `impl std::task::Wake for NullWake::wake` | 1 | `crates/vector-compute-renderer/src/util.rs:253` | - |  |
 | `impl TriggerSender::wakeup` | 1 | `crates/audio-device-cpal/src/host/alsa/mod.rs:140` | - |  |
 | `impl Expr::walk` | 2 | `crates/chronicle-tabular-engine/src/formula/ast.rs:172` | - |  |
 | `walk` | 6 | `crates/video-h264-preview/src/lib.rs:204` | - |  |
@@ -8505,11 +8756,11 @@ Every function/method found in the codebase, alphabetical.
 | `warp_path_transforms_rectangle` | 0 | `crates/vector-locus-pathops/src/effects/warp.rs:173` | - |  |
 | `warp_point` | 6 | `crates/vector-locus-pathops/src/effects/warp.rs:59` | - | The warp map on normalized coordinates (x, y) in [-1, 1]^2: |
 | `wav_spec_from_config` | 1 | `crates/audio-device-cpal/examples/record_wav.rs:153` | - |  |
-| `wave12_living_world_morphisms_roundtrip` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:366` | - |  |
+| `wave12_living_world_morphisms_roundtrip` | 0 | `crates/asset-production-vibe/src/living_world_anatomy/mod.rs:464` | - |  |
 | `wave13_domain_extension_morphisms_roundtrip` | 0 | `crates/asset-production-vibe/src/domain_extensions.rs:94` | - |  |
 | `waveform` | 3 | `crates/radiance-color-grading/src/scopes/mod.rs:309` | - |  |
 | `waveform_reference` | 1 | `crates/radiance-color-grading/src/scopes/paint.rs:54` | - |  |
-| `wavelength_to_srgb` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:418` | - |  |
+| `wavelength_to_srgb` | 1 | `crates/asset-production-vibe/src/surface_bsdf_uv/bsdf_procedural.rs:428` | - |  |
 | `impl Task::wbs_depth` | 1 | `crates/kinetics-schedule-cpm/src/model.rs:353` | - |  |
 | `webgl_error_name` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/probe.rs:253` | - |  |
 | `weibull_dist` | 1 | `crates/chronicle-tabular-engine/src/functions/stat.rs:199` | - |  |
@@ -8520,7 +8771,6 @@ Every function/method found in the codebase, alphabetical.
 | `weighted_check` | 2 | `crates/video-h264-codec/src/synth_tests.rs:473` | - |  |
 | `weighted_store` | 8 | `crates/video-h264-codec/src/inter.rs:276` | - | Combine prediction(s) into `dst` (stride `ds`). `p0`/`p1` have stride `ps`. |
 | `weighting` | 0 | `crates/video-h264-codec/src/inter.rs:504` | - |  |
-| `impl PixelsBuilder<'req, 'dev, 'win, W>::wgpu_backend` | 2 | `crates/pixel-buffer-output/src/builder.rs:90` | - | Set which backends wgpu will attempt to use. |
 | `impl Sinusoidal::wgs84` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:423` | - |  |
 | `wgs84_direct` | 4 | `crates/geodesy-spatial-analysis/src/geodesy.rs:275` | - | WGS84 geodesic direct problem: computes destination (lat, lon) and arrival azimuth from start, azimuth, and distance. |
 | `wgs84_inverse` | 4 | `crates/geodesy-spatial-analysis/src/geodesy.rs:176` | - | WGS84 geodesic inverse problem: computes distance in metres and initial/final azimuths in degrees. |
@@ -8529,21 +8779,21 @@ Every function/method found in the codebase, alphabetical.
 | `impl Gamut::white_point` | 1 | `crates/radiance-color-grading/src/spaces.rs:52` | - |  |
 | `impl GeomRef::whole` | 1 | `crates/locus-parametric-solver/src/solver/model.rs:72` | - |  |
 | `wide_layers` | 0 | `crates/vector-hybrid-renderer/src/schedule/schedule_tests.rs:617` | - |  |
-| `wider_frame_number_sps_decodes_within_gap_budget` | 0 | `crates/video-h264-preview/src/lib.rs:532` | - |  |
+| `wider_frame_number_sps_decodes_within_gap_budget` | 0 | `crates/video-h264-preview/src/lib.rs:533` | - |  |
 | `impl RangeRef::width` | 1 | `crates/chronicle-tabular-engine/src/core/addr.rs:169` | - |  |
 | `impl Bounds2::width` | 1 | `crates/drafting-geometry/src/bounds.rs:49` | - |  |
 | `impl Extent::width` | 1 | `crates/geodesy-spatial-analysis/src/geodesy.rs:87` | - |  |
 | `impl SigVal::width` | 1 | `crates/kinetics-block-simulation/src/signal.rs:108` | - |  |
 | `impl PsdLayer::width` | 1 | `crates/surface-layered-codecs/src/psd/mod.rs:290` | - |  |
+| `trait AtlasWriter::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3291` | - | Get the width of the image. |
+| `impl AtlasWriter for Texture::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3310` | - |  |
+| `impl AtlasWriter for Pixmap::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3356` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3404` | - |  |
 | `trait WebGlAtlasWriter::width` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3308` | - | Get the width of the image. |
 | `impl WebGlAtlasWriter for Pixmap::width` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3325` | - |  |
 | `impl WebGlAtlasWriter for Arc<Pixmap>::width` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3368` | - |  |
 | `impl WebGlAtlasWriter for WebGlTexture::width` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3391` | - |  |
 | `impl WebGlAtlasWriter for WebGlTextureWithDimensions::width` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3444` | - |  |
-| `trait AtlasWriter::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3288` | - | Get the width of the image. |
-| `impl AtlasWriter for Texture::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3307` | - |  |
-| `impl AtlasWriter for Pixmap::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3353` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3401` | - |  |
 | `impl Scene::width` | 1 | `crates/vector-hybrid-renderer/src/scene.rs:873` | - | Get the width of the render context. |
 | `impl DrawSink for Scene::width` | 1 | `crates/vector-hybrid-renderer/src/text.rs:207` | - |  |
 | `impl Sps::width` | 1 | `crates/video-h264-codec/src/params.rs:454` | - | Decoded (uncropped) luma width. |
@@ -8552,9 +8802,9 @@ Every function/method found in the codebase, alphabetical.
 | `widths_array` | 1 | `crates/discourse-academic-tex/src/texpdf.rs:422` | - |  |
 | `wild` | 1 | `crates/color-transforms/src/lut.rs:509` | - |  |
 | `window` | 2 | `crates/audio-aac-codec/src/mdct.rs:201` | - | Rising half (length N/2) of the window of the given shape; `long` selects N = 2048, else N = 256. |
-| `impl ApplicationHandler<()> for State::window_event` | 4 | `crates/gpu-command-profiler/examples/demo.rs:200` | - |  |
+| `impl ApplicationHandler<()> for State::window_event` | 4 | `crates/gpu-command-profiler/examples/demo.rs:202` | - |  |
 | `impl FlexWarpMode::window_params` | 1 | `crates/acoustics-daw-session/src/elastic_warp/mod.rs:20` | - | Window size in seconds and maximum search tolerance fraction for WSOLA. |
-| `impl Pixels<'win>::window_pos_to_pixel` | 2 | `crates/pixel-buffer-output/src/lib.rs:677` | 2d | Calculate the pixel location from a physical location on the window, |
+| `impl Pixels<'win>::window_pos_to_pixel` | 2 | `crates/pixel-buffer-output/src/lib.rs:672` | 2d | Calculate the pixel location from a physical location on the window, |
 | `windows_err_to_cpal_err` | 1 | `crates/audio-device-cpal/src/host/wasapi/mod.rs:88` | - |  |
 | `windows_err_to_cpal_err_message` | 2 | `crates/audio-device-cpal/src/host/wasapi/mod.rs:92` | - |  |
 | `with_attached` | 1 | `crates/audio-device-cpal/src/host/oboe/android_media.rs:14` | - |  |
@@ -8565,7 +8815,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl Encoder::with_config` | 1 | `crates/video-prores-codec/src/encode.rs:60` | - |  |
 | `impl LayoutNode::with_constraints` | 3 | `crates/layout-box-autolayout/src/frame.rs:69` | - |  |
 | `impl JLine::with_desc` | 2 | `crates/chronicle-fiduciary-ledger/src/journal.rs:44` | - |  |
-| `impl WGPUContext::with_features_and_limits` | 2 | `crates/gpu-device-context/src/lib.rs:120` | - |  |
+| `impl EtalonContext::with_features_and_limits` | 2 | `crates/gpu-device-context/src/lib.rs:128` | - |  |
 | `with_field` | 3 | `crates/asset-production-vibe/src/living_world_anatomy/species_spec_tests.rs:292` | - |  |
 | `impl AutoLayoutFrame::with_gap` | 2 | `crates/layout-box-autolayout/src/frame.rs:135` | - |  |
 | `impl Anchor::with_handles` | 3 | `crates/vector-locus-geometry/src/path.rs:122` | - |  |
@@ -8581,7 +8831,7 @@ Every function/method found in the codebase, alphabetical.
 | `impl SkiaWindowRenderer::with_options` | 1 | `crates/vector-skia-render-adapter/src/window_renderer.rs:98` | - |  |
 | `impl PixelsWindowRenderer<Renderer>::with_options_and_renderer` | 2 | `crates/pixel-window-render-adapter/src/lib.rs:113` | - |  |
 | `impl Kernel2D::with_origin` | 5 | `crates/raster-spatial-operators/src/convolve.rs:28` | - |  |
-| `impl SubElementHooks::with_overrides` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:250` | - | Parses optional sub-element hook overrides from Vibe `Args` on top of `self`. |
+| `impl SubElementHooks::with_overrides` | 2 | `crates/asset-production-vibe/src/living_world_anatomy/behavioral_hooks.rs:248` | - | Parses optional sub-element hook overrides from Vibe `Args` on top of `self`. |
 | `impl AutoLayoutFrame::with_padding` | 2 | `crates/layout-box-autolayout/src/frame.rs:130` | - |  |
 | `impl Shape::with_paragraphs` | 2 | `crates/layout-presentation-deck/src/model/shape.rs:193` | - | One DrawingML paragraph per string so U+000A never lives in a single `a:t`. |
 | `impl GpuProfilerQuery::with_parent` | 2 | `crates/gpu-command-profiler/src/profiler_query.rs:106` | - | Makes this scope a child of the passed scope. |
@@ -8609,6 +8859,7 @@ Every function/method found in the codebase, alphabetical.
 | `workspace_root` | 0 | `crates/media-test-support/src/fixtures.rs:11` | - | The workspace root (the directory holding the top-level `Cargo.toml`). |
 | `wrap` | 1 | `crates/locus-parametric-solver/src/solver/residual.rs:115` | - |  |
 | `wrap_paragraph` | 4 | `crates/asset-production-vibe/src/glyph/shaping_svg.rs:38` | - | Greedy word-wrapping supporting manual newlines and bounded per-character breaking. |
+| `impl std::io::Write for Counter::write` | 2 | `crates/asset-production-vibe/src/electromagnetics_v3.rs:54` | - |  |
 | `impl ProgramConfig::write` | 2 | `crates/audio-aac-codec/src/config.rs:90` | - |  |
 | `impl AdtsHeader::write` | 5 | `crates/audio-aac-codec/src/config.rs:328` | - | Write a 7-byte header (no CRC) for a frame whose raw payload is `payload_len` bytes. |
 | `impl IcsInfo::write` | 2 | `crates/audio-aac-codec/src/ics.rs:101` | - |  |
@@ -8699,17 +8950,17 @@ Every function/method found in the codebase, alphabetical.
 | `impl fmt::Write for CargoWarningAdapter<W>::write_str` | 2 | `crates/vector-compute-shaders/build.rs:193` | - |  |
 | `write_time_range` | 3 | `crates/chronicle-timeline-interchange/src/interchange/otio.rs:135` | - |  |
 | `trait ProfilerCommandRecorder::write_timestamp` | 3 | `crates/gpu-command-profiler/src/profiler_command_recorder.rs:5` | - |  |
+| `impl Renderer::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:562` | 2d | Write pixel data to an existing atlas allocation. |
+| `trait AtlasWriter::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3296` | - | Write image data to an atlas texture at the specified offset. |
+| `impl AtlasWriter for Texture::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3318` | - |  |
+| `impl AtlasWriter for Pixmap::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3364` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3412` | - |  |
 | `impl WebGlRenderer::write_to_atlas` | 5 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:758` | 2d | Write pixel data to an existing atlas allocation. |
 | `trait WebGlAtlasWriter::write_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3313` | - | Write image data to an atlas texture at the specified offset. |
 | `impl WebGlAtlasWriter for Pixmap::write_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3333` | - |  |
 | `impl WebGlAtlasWriter for Arc<Pixmap>::write_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3376` | - |  |
 | `impl WebGlAtlasWriter for WebGlTexture::write_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3405` | - |  |
 | `impl WebGlAtlasWriter for WebGlTextureWithDimensions::write_to_atlas` | 6 | `crates/vector-hybrid-renderer/src/render/webgl/mod.rs:3452` | - |  |
-| `impl Renderer::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:562` | 2d | Write pixel data to an existing atlas allocation. |
-| `trait AtlasWriter::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3293` | - | Write image data to an atlas texture at the specified offset. |
-| `impl AtlasWriter for Texture::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3315` | - |  |
-| `impl AtlasWriter for Pixmap::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3361` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3409` | - |  |
 | `impl ZipPackage::write_to_bytes` | 1 | `crates/chronicle-office-codecs/src/zip/minizip.rs:76` | - | Serialize all contained files into a standard ZIP archive byte vector. |
 | `write_trak` | 6 | `crates/media-isobmff/src/mux.rs:220` | physics |  |
 | `write_ts_packet` | 6 | `crates/chronicle-broadcast-containers/src/mpegts/ts.rs:85` | - | Write a 188-byte TS packet into `out`. |
@@ -8725,7 +8976,7 @@ Every function/method found in the codebase, alphabetical.
 | `xirr` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:280` | - |  |
 | `xlookup` | 1 | `crates/chronicle-tabular-engine/src/functions/lookup.rs:65` | - |  |
 | `xml_escape` | 1 | `crates/asset-production-vibe/src/layout_autolayout_foliation_nodegraph.rs:13` | - |  |
-| `xml_escape` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:341` | - |  |
+| `xml_escape` | 1 | `crates/asset-production-vibe/src/layout_ops/mod.rs:342` | - |  |
 | `xml_escape` | 1 | `crates/discourse-pdf-compliance/src/forms/xfdf.rs:91` | - |  |
 | `xml_escape` | 1 | `crates/kinetics-schedule-cpm/src/format.rs:456` | - |  |
 | `xml_unescape` | 1 | `crates/discourse-pdf-compliance/src/forms/xfdf.rs:99` | - |  |
@@ -8746,6 +8997,7 @@ Every function/method found in the codebase, alphabetical.
 | `yes` | 0 | `crates/vector-locus-geometry/src/perspective.rs:57` | - |  |
 | `yield_maturity` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:513` | - |  |
 | `yielddisc` | 1 | `crates/chronicle-tabular-engine/src/functions/financial.rs:606` | - |  |
+| `zero_and_extreme_fields_are_not_invented_irradiance_or_missing_values` | 0 | `crates/asset-production-vibe/src/electromagnetics_current/projection_tests.rs:54` | - |  |
 | `zero_area_external_texture_rect_is_a_noop` | 0 | `crates/vector-hybrid-renderer/src/scene.rs:983` | 2d |  |
 | `zero_craft_names_in_canonical_categories_or_morphism_ids` | 0 | `crates/asset-production-vibe/src/ontology/tests.rs:32` | - |  |
 | `zero_radius_keeps_source_operation_behavior` | 0 | `crates/raster-selection-morphology/src/tests.rs:202` | - |  |

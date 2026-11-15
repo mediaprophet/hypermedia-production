@@ -198,7 +198,7 @@ pub fn decode_frame_into(data: &[u8], opts: &DecodeOptions, out: &mut Frame) -> 
     }
 
     let step = if interlaced { 2 } else { 1 };
-    let mut run_band = |(row, band): (usize, &mut Band), scratch: &mut Scratch| -> Result<()> {
+    let run_band = |(row, band): (usize, &mut Band), scratch: &mut Scratch| -> Result<()> {
         for (pi, (pic, widths)) in pics.iter().enumerate() {
             let mut mb_x = 0;
             for (k, &w) in widths.iter().enumerate() {

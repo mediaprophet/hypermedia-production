@@ -362,12 +362,31 @@ impl AssetHost<'_> {
     /// 124: `hypermedia.manifold.compile_bim_ifc4`
     /// (`manifold-bim-csg`)
     pub(crate) fn compile_bim_ifc4(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["project_name", "wall_length_m", "wall_height_m", "wall_thickness_m", "floor_to_floor_m"])?;
+        fields(
+            a,
+            &[
+                "project_name",
+                "wall_length_m",
+                "wall_height_m",
+                "wall_thickness_m",
+                "floor_to_floor_m",
+                "window_width_m",
+                "window_height_m",
+                "stair_width_m",
+                "riser_height_m",
+                "tread_depth_m",
+            ],
+        )?;
         let project_name = opt_str(a, "project_name", "Commons Civic Hall")?;
         let wall_length = number(a, "wall_length_m", 8.0)?;
         let wall_height = number(a, "wall_height_m", 3.2)?;
         let wall_thickness = number(a, "wall_thickness_m", 0.25)?;
         let floor_to_floor = number(a, "floor_to_floor_m", 3.2)?;
+        let window_width = number(a, "window_width_m", wall_length * 0.5)?.clamp(0.2, wall_length * 0.9);
+        let window_height = number(a, "window_height_m", wall_height * 0.45)?.clamp(0.2, wall_height * 0.9);
+        let stair_width = number(a, "stair_width_m", 1.2)?.clamp(0.6, 6.0);
+        let riser_height = number(a, "riser_height_m", 0.175)?.clamp(0.10, 0.25);
+        let tread_depth = number(a, "tread_depth_m", 0.28)?.clamp(0.18, 0.50);
 
         self.charge(512, 16384)?;
 
@@ -394,17 +413,19 @@ impl AssetHost<'_> {
         };
 
         let wall_solid = cuboid([0.0, 0.0, 0.0], [wall_length, wall_thickness, wall_height]);
+        let win_x0 = (wall_length - window_width) * 0.5;
+        let win_z0 = ((wall_height - window_height) * 0.45).max(0.1);
         let window_void = cuboid(
-            [wall_length * 0.25, -0.1, wall_height * 0.3],
-            [wall_length * 0.75, wall_thickness + 0.1, wall_height * 0.75],
+            [win_x0, -0.1, win_z0],
+            [win_x0 + window_width, wall_thickness + 0.1, (win_z0 + window_height).min(wall_height - 0.05)],
         );
         let mut meter = Meter::default();
         let csg_cut = subtract(&wall_solid, &window_void, &mut meter)
             .map_err(|e| format!("CSG subtract failed: {e}"))?;
         let net_volume_m3 = volume(&csg_cut).abs();
 
-        let total_risers = ((floor_to_floor / 0.175).round().max(2.0)) as u32;
-        let stair = generate_straight_stair([0.0, 0.0], 0.0, 1.2, 0.28, total_risers, 0.175, 0.0);
+        let total_risers = ((floor_to_floor / riser_height).round().max(2.0)) as u32;
+        let stair = generate_straight_stair([0.0, 0.0], 0.0, stair_width, tread_depth, total_risers, riser_height, 0.0);
 
         let mut vertices = Vec::with_capacity(csg_cut.len() * 3 + (total_risers as usize) * 36);
         let mut triangles = Vec::with_capacity(csg_cut.len() + (total_risers as usize) * 12);
@@ -418,12 +439,12 @@ impl AssetHost<'_> {
         if let Some(run) = stair.runs.first() {
             let risers = run.risers.max(1);
             for step_idx in 0..risers {
-                let x0 = run.start[0] + (step_idx as f64) * 0.28;
-                let x1 = x0 + 0.28;
+                let x0 = run.start[0] + (step_idx as f64) * tread_depth;
+                let x1 = x0 + tread_depth;
                 let y0 = wall_thickness + 0.2;
                 let y1 = y0 + stair.width;
-                let z0 = run.elevation_start + (step_idx as f64) * 0.175;
-                let z1 = z0 + 0.175;
+                let z0 = run.elevation_start + (step_idx as f64) * riser_height;
+                let z1 = z0 + riser_height;
                 for tri in cuboid([x0, y0, z0], [x1, y1, z1]) {
                     let base = vertices.len() as u32;
                     for p in tri {

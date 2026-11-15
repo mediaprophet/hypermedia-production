@@ -19,6 +19,11 @@ const GROUP_THRESHOLD: usize = 8;
 /// Audio models that require an existing audio reference track.
 const AUDIO_MODELS_REQUIRING_AUDIO_REF: [&str; 2] = ["suno_remix", "suno_sample"];
 
+/// Returns true if the given audio model ID requires an existing audio reference track.
+pub fn requires_audio_ref(model_id: &str) -> bool {
+    AUDIO_MODELS_REQUIRING_AUDIO_REF.contains(&model_id)
+}
+
 /// Musical keys for audio synthesis: value, label, short label.
 pub const MUSICAL_KEYS: [(&str, &str, &str); 13] = [
     ("auto", "Auto", "Auto"),

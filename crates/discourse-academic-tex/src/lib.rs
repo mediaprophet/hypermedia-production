@@ -36,7 +36,7 @@ mod tests {
         assert_eq!(structure.envs.len(), 1);
         assert_eq!(structure.envs[0].name, "document");
 
-        let stats = texparse::analyze_stats(tex);
+        let stats = texparse::analyze(tex);
         assert!(stats.words >= 2);
 
         let catalog_cmds = catalog();

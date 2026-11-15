@@ -27,18 +27,18 @@ preprocessing and GPU rendering:
 
 ## Feature Flags
 
-- `wgpu` (enabled by default): Enables the GPU rendering backend via wgpu and
+- `etalon` (enabled by default): Enables the GPU rendering backend via etalon and
 includes the required Vello GPU shaders.
-- `wgpu_default` (enabled by default): Enables wgpu with its default hardware
+- `etalon_default` (enabled by default): Enables etalon with its default hardware
 backends (such as Vulkan, Metal, and DX12).
 - `text` (enabled by default): Enables glyph rendering ([`Scene::glyph_run`]).
 - `webgl`: Enables the WebGL rendering backend for browser support, using GLSL
 shaders for compatibility.
 
-If you need to customize the set of enabled wgpu features, disable this crate's
-default features then enable its `wgpu` feature. You can then depend on wgpu
+If you need to customize the set of enabled etalon features, disable this crate's
+default features then enable its `etalon` feature. You can then depend on etalon
 directly, setting the specific features you require. Don't forget to also
-disable wgpu's default features.
+disable etalon's default features.
 
 ## Architecture
 
@@ -71,7 +71,7 @@ lifecycle and ownership of external resources through [`Resources`][].
 including glyph caching. Experimental APIs are identified in their method
 documentation.
 - Parts of the rendering pipeline are not yet fully optimized, particularly the
-wgpu backend, but also other aspects.
+etalon backend, but also other aspects.
 - Some failures panic instead of being reported through a user-facing error.
 
 With that said, we are continuously improving Vello GPU and will address these
@@ -275,6 +275,101 @@ rename._
 | `pack_tint` | 1 | `crates/vector-hybrid-renderer/src/render/common.rs:690` | - | Pack an optional [`Tint`](vello_common::paint::Tint) into a (`tint_color_u32`, `tint_mode_u32`) pair for the GPU. |
 | `maybe_warn_about_webgl_feature_conflict` | 0 | `crates/vector-hybrid-renderer/src/render/common.rs:704` | - |  |
 | `maybe_warn_about_webgl_feature_conflict` | 0 | `crates/vector-hybrid-renderer/src/render/common.rs:722` | - |  |
+| `impl TextureBindings::new` | 0 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:96` | - | Create an empty binding map. |
+| `impl TextureBindings::insert` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:121` | - | Insert or replace a texture binding. |
+| `impl TextureBindings::get` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:127` | - | Get a texture binding. |
+| `impl TextureBindings::remove` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:135` | - | Remove a texture binding. |
+| `impl Renderer::new` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:161` | - | Creates a new renderer and its persistent resources. |
+| `impl Renderer::new_with` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:166` | - | Creates a new renderer and its persistent resources with specific settings. |
+| `impl Renderer::create_depth_texture_view` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:216` | - | Creates a depth texture view compatible with [`render`](Self::render). |
+| `impl Renderer::render` | 11 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:253` | - | Render `scene`. |
+| `impl Renderer::render_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:340` | - | Render a `scene` directly into an atlas layer. |
+| `impl Renderer::current_allocations` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:393` | - |  |
+| `impl Renderer::render_scene` | 13 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:407` | - | Shared render pipeline: prepares GPU resources, runs the scheduler against |
+| `impl Renderer::upload_image` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:519` | - | Upload image to cache and atlas in one step. Returns the `ImageId`. |
+| `impl Renderer::upload_image_with` | 7 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:537` | - |  |
+| `impl Renderer::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:562` | 2d | Write pixel data to an existing atlas allocation. |
+| `impl Renderer::destroy_image` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:594` | - | Destroy an image from the cache and clear the allocated slot in the atlas. |
+| `impl Renderer::atlas_texture` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:617` | - | Returns an individual image atlas texture. |
+| `impl Renderer::clear_atlas_region` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:626` | - | Clear a specific region of the atlas texture. |
+| `impl Renderer::prepare_gpu_encoded_paints` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:668` | - |  |
+| `impl Renderer::encode_image_paint` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:721` | - |  |
+| `impl Renderer::encode_external_texture_paint` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:747` | - |  |
+| `impl Renderer::encode_gradient_paint` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:773` | - |  |
+| `impl Renderer::encode_blurred_rounded_rect_paint` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:844` | 2d |  |
+| `clear_atlas_region` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:863` | 2d |  |
+| `create_arena_buffer` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:960` | - |  |
+| `impl StripBufferArena::new` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:970` | - |  |
+| `impl StripBufferArena::begin_frame` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:978` | - |  |
+| `impl StripBufferArena::alloc` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:989` | - |  |
+| `impl GpuResources::layer_views` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1055` | - |  |
+| `impl GpuResources::layer_view` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1059` | - |  |
+| `impl GpuResources::scratch_view` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1065` | - |  |
+| `impl GpuStrip::vertex_attributes` | 0 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1074` | 3d | Vertex attributes for the strip |
+| `impl Programs::new` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1087` | - |  |
+| `impl Programs::create_intermediate_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1776` | - |  |
+| `impl Programs::prepare_intermediate_textures` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1800` | - |  |
+| `impl Programs::clear_layer_bind_group_caches` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1859` | - |  |
+| `impl Programs::update_scratch_bind_groups` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1865` | - |  |
+| `impl Programs::create_blend_layer_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1879` | - |  |
+| `impl Programs::create_copy_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1905` | - |  |
+| `impl Programs::create_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1920` | - |  |
+| `impl Programs::create_alphas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1942` | - |  |
+| `impl Programs::create_atlas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1959` | - |  |
+| `impl Programs::create_filter_data_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1979` | - |  |
+| `impl Programs::create_filter_base_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:1996` | - |  |
+| `impl Programs::create_placeholder_external_texture` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2011` | - |  |
+| `impl Programs::create_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2029` | - |  |
+| `impl Programs::create_encoded_paints_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2045` | - |  |
+| `impl Programs::create_encoded_paints_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2062` | - |  |
+| `impl Programs::create_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2077` | - |  |
+| `impl Programs::create_gradient_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2094` | - |  |
+| `impl Programs::create_strip_bind_group` | 5 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2109` | - |  |
+| `impl Programs::prepare` | 9 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2140` | - | Prepare GPU buffers for rendering, given alphas. |
+| `impl Programs::maybe_resize_filter_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2168` | - |  |
+| `impl Programs::maybe_resize_alphas_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2207` | - | Update the alpha texture size if needed. |
+| `impl Programs::maybe_resize_encoded_paints_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2242` | - | Update the encoded paints texture size if needed. |
+| `impl Programs::maybe_resize_gradient_tex` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2285` | - | Update the gradient texture size if needed. |
+| `impl Programs::maybe_update_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2323` | - | Update config buffer if dimensions changed. |
+| `impl Programs::maybe_create_atlas_textures` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2350` | - | Create any newly allocated atlas textures. |
+| `impl Programs::create_run_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2364` | - |  |
+| `impl Programs::upload_alpha_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2377` | - | Upload alpha data to the texture. |
+| `impl Programs::upload_encoded_paints_texture` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2422` | - | Upload encoded paints to the texture. |
+| `impl Programs::upload_filter_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2467` | - |  |
+| `impl Programs::upload_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2502` | - | Upload gradient data to the texture. |
+| `impl Programs::upload_strip_pair` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2545` | - | Uploads two strip slices (opaque then alpha) into the frame arena and |
+| `impl RendererContext<'_>::init_root_clear` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2596` | - |  |
+| `impl RendererContext<'_>::finish_root_clear` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2610` | - |  |
+| `impl RendererContext<'_>::take_root_load_op` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2618` | - |  |
+| `impl RendererContext<'_>::clear_full_target` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2622` | - |  |
+| `impl RendererContext<'_>::external_texture_bind_group_for_textures` | 2 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2641` | - |  |
+| `impl RendererContext<'_>::strip_pass_inner` | 6 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2671` | - | Render the strips to the specified render target. |
+| `impl RendererContext<'_>::texture_size` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2849` | - |  |
+| `impl RendererContext<'_>::blend_pass_inner` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2853` | - |  |
+| `impl RendererContext<'_>::filter_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:2948` | - |  |
+| `impl RendererContext<'_>::clear_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3013` | - |  |
+| `impl Backend for RendererContext<'_>::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3101` | - |  |
+| `impl Backend for RendererContext<'_>::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3117` | - |  |
+| `impl Backend for RendererContext<'_>::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3134` | - |  |
+| `impl Backend for RendererContext<'_>::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3145` | - |  |
+| `impl Backend for RendererContext<'_>::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3155` | - |  |
+| `encode_copy_pass` | 7 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3168` | - |  |
+| `encode_filter_pass` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3204` | - |  |
+| `create_filter_input_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3246` | - |  |
+| `create_filter_original_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3268` | - |  |
+| `trait AtlasWriter::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3291` | - | Get the width of the image. |
+| `trait AtlasWriter::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3293` | - | Get the height of the image. |
+| `trait AtlasWriter::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3296` | - | Write image data to an atlas texture at the specified offset. |
+| `impl AtlasWriter for Texture::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3310` | - |  |
+| `impl AtlasWriter for Texture::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3314` | - |  |
+| `impl AtlasWriter for Texture::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3318` | - |  |
+| `impl AtlasWriter for Pixmap::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3356` | - |  |
+| `impl AtlasWriter for Pixmap::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3360` | - |  |
+| `impl AtlasWriter for Pixmap::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3364` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::width` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3404` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::height` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3408` | - |  |
+| `impl AtlasWriter for Arc<Pixmap>::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3412` | - |  |
+| `clear_color` | 1 | `crates/vector-hybrid-renderer/src/render/etalon/mod.rs:3427` | - |  |
 | `trait WebGlResultExt::map_js_error` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/error.rs:178` | - | Attach the WebGL operation that produced this JavaScript result. |
 | `impl WebGlResultExt<T> for Result<T, JsValue>::map_js_error` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/error.rs:182` | - |  |
 | `impl fmt::Display for MessageSuffix<'_>::fmt` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/error.rs:193` | - |  |
@@ -440,101 +535,6 @@ rename._
 | `impl GlResource for WebGlFragmentShader::delete` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:180` | - |  |
 | `impl GlResource for WebGlVertexArrayObject::create` | 1 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:188` | - |  |
 | `impl GlResource for WebGlVertexArrayObject::delete` | 2 | `crates/vector-hybrid-renderer/src/render/webgl/resource.rs:192` | - |  |
-| `impl TextureBindings::new` | 0 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:96` | - | Create an empty binding map. |
-| `impl TextureBindings::insert` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:121` | - | Insert or replace a texture binding. |
-| `impl TextureBindings::get` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:127` | - | Get a texture binding. |
-| `impl TextureBindings::remove` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:135` | - | Remove a texture binding. |
-| `impl Renderer::new` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:161` | - | Creates a new renderer and its persistent resources. |
-| `impl Renderer::new_with` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:166` | - | Creates a new renderer and its persistent resources with specific settings. |
-| `impl Renderer::create_depth_texture_view` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:216` | - | Creates a depth texture view compatible with [`render`](Self::render). |
-| `impl Renderer::render` | 11 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:253` | - | Render `scene`. |
-| `impl Renderer::render_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:340` | - | Render a `scene` directly into an atlas layer. |
-| `impl Renderer::current_allocations` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:393` | - |  |
-| `impl Renderer::render_scene` | 13 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:407` | - | Shared render pipeline: prepares GPU resources, runs the scheduler against |
-| `impl Renderer::upload_image` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:519` | - | Upload image to cache and atlas in one step. Returns the `ImageId`. |
-| `impl Renderer::upload_image_with` | 7 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:537` | - |  |
-| `impl Renderer::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:562` | 2d | Write pixel data to an existing atlas allocation. |
-| `impl Renderer::destroy_image` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:594` | - | Destroy an image from the cache and clear the allocated slot in the atlas. |
-| `impl Renderer::atlas_texture` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:617` | - | Returns an individual image atlas texture. |
-| `impl Renderer::clear_atlas_region` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:626` | - | Clear a specific region of the atlas texture. |
-| `impl Renderer::prepare_gpu_encoded_paints` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:668` | - |  |
-| `impl Renderer::encode_image_paint` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:721` | - |  |
-| `impl Renderer::encode_external_texture_paint` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:747` | - |  |
-| `impl Renderer::encode_gradient_paint` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:773` | - |  |
-| `impl Renderer::encode_blurred_rounded_rect_paint` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:844` | 2d |  |
-| `clear_atlas_region` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:863` | 2d |  |
-| `create_arena_buffer` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:960` | - |  |
-| `impl StripBufferArena::new` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:970` | - |  |
-| `impl StripBufferArena::begin_frame` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:978` | - |  |
-| `impl StripBufferArena::alloc` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:989` | - |  |
-| `impl GpuResources::layer_views` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1055` | - |  |
-| `impl GpuResources::layer_view` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1059` | - |  |
-| `impl GpuResources::scratch_view` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1065` | - |  |
-| `impl GpuStrip::vertex_attributes` | 0 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1074` | 3d | Vertex attributes for the strip |
-| `impl Programs::new` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1087` | - |  |
-| `impl Programs::create_intermediate_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1774` | - |  |
-| `impl Programs::prepare_intermediate_textures` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1797` | - |  |
-| `impl Programs::clear_layer_bind_group_caches` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1856` | - |  |
-| `impl Programs::update_scratch_bind_groups` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1862` | - |  |
-| `impl Programs::create_blend_layer_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1876` | - |  |
-| `impl Programs::create_copy_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1902` | - |  |
-| `impl Programs::create_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1917` | - |  |
-| `impl Programs::create_alphas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1939` | - |  |
-| `impl Programs::create_atlas_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1956` | - |  |
-| `impl Programs::create_filter_data_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1976` | - |  |
-| `impl Programs::create_filter_base_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:1993` | - |  |
-| `impl Programs::create_placeholder_external_texture` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2008` | - |  |
-| `impl Programs::create_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2026` | - |  |
-| `impl Programs::create_encoded_paints_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2042` | - |  |
-| `impl Programs::create_encoded_paints_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2059` | - |  |
-| `impl Programs::create_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2074` | - |  |
-| `impl Programs::create_gradient_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2091` | - |  |
-| `impl Programs::create_strip_bind_group` | 5 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2106` | - |  |
-| `impl Programs::prepare` | 9 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2137` | - | Prepare GPU buffers for rendering, given alphas. |
-| `impl Programs::maybe_resize_filter_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2165` | - |  |
-| `impl Programs::maybe_resize_alphas_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2204` | - | Update the alpha texture size if needed. |
-| `impl Programs::maybe_resize_encoded_paints_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2239` | - | Update the encoded paints texture size if needed. |
-| `impl Programs::maybe_resize_gradient_tex` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2282` | - | Update the gradient texture size if needed. |
-| `impl Programs::maybe_update_config_buffer` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2320` | - | Update config buffer if dimensions changed. |
-| `impl Programs::maybe_create_atlas_textures` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2347` | - | Create any newly allocated atlas textures. |
-| `impl Programs::create_run_external_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2361` | - |  |
-| `impl Programs::upload_alpha_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2374` | - | Upload alpha data to the texture. |
-| `impl Programs::upload_encoded_paints_texture` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2419` | - | Upload encoded paints to the texture. |
-| `impl Programs::upload_filter_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2464` | - |  |
-| `impl Programs::upload_gradient_texture` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2499` | - | Upload gradient data to the texture. |
-| `impl Programs::upload_strip_pair` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2542` | - | Uploads two strip slices (opaque then alpha) into the frame arena and |
-| `impl RendererContext<'_>::init_root_clear` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2593` | - |  |
-| `impl RendererContext<'_>::finish_root_clear` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2607` | - |  |
-| `impl RendererContext<'_>::take_root_load_op` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2615` | - |  |
-| `impl RendererContext<'_>::clear_full_target` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2619` | - |  |
-| `impl RendererContext<'_>::external_texture_bind_group_for_textures` | 2 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2638` | - |  |
-| `impl RendererContext<'_>::strip_pass_inner` | 6 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2668` | - | Render the strips to the specified render target. |
-| `impl RendererContext<'_>::texture_size` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2846` | - |  |
-| `impl RendererContext<'_>::blend_pass_inner` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2850` | - |  |
-| `impl RendererContext<'_>::filter_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:2945` | - |  |
-| `impl RendererContext<'_>::clear_pass_inner` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3010` | - |  |
-| `impl Backend for RendererContext<'_>::opaque_draw_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3098` | - |  |
-| `impl Backend for RendererContext<'_>::draw_pass` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3114` | - |  |
-| `impl Backend for RendererContext<'_>::blend_pass` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3131` | - |  |
-| `impl Backend for RendererContext<'_>::filter_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3142` | - |  |
-| `impl Backend for RendererContext<'_>::clear_pass` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3152` | - |  |
-| `encode_copy_pass` | 7 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3165` | - |  |
-| `encode_filter_pass` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3201` | - |  |
-| `create_filter_input_bind_group` | 4 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3243` | - |  |
-| `create_filter_original_texture_bind_group` | 3 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3265` | - |  |
-| `trait AtlasWriter::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3288` | - | Get the width of the image. |
-| `trait AtlasWriter::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3290` | - | Get the height of the image. |
-| `trait AtlasWriter::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3293` | - | Write image data to an atlas texture at the specified offset. |
-| `impl AtlasWriter for Texture::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3307` | - |  |
-| `impl AtlasWriter for Texture::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3311` | - |  |
-| `impl AtlasWriter for Texture::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3315` | - |  |
-| `impl AtlasWriter for Pixmap::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3353` | - |  |
-| `impl AtlasWriter for Pixmap::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3357` | - |  |
-| `impl AtlasWriter for Pixmap::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3361` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::width` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3401` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::height` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3405` | - |  |
-| `impl AtlasWriter for Arc<Pixmap>::write_to_atlas` | 8 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3409` | - |  |
-| `clear_color` | 1 | `crates/vector-hybrid-renderer/src/render/wgpu/mod.rs:3424` | - |  |
 | `impl Resources::new` | 1 | `crates/vector-hybrid-renderer/src/resources.rs:26` | - |  |
 | `impl RecordedDraw::new_path` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:68` | - |  |
 | `impl RecordedDraw::new_rect` | 2 | `crates/vector-hybrid-renderer/src/scene.rs:72` | 2d |  |

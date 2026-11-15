@@ -52,6 +52,7 @@ static MANIFOLD_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[125].abi_descriptor,
     // The Qualia-owned species constructor declares ABI sub-id 2 (manifold).
     MORPHISMS[144].abi_descriptor,
+    MORPHISMS[148].abi_descriptor,
 ];
 static SURFACE_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[24].abi_descriptor,
@@ -132,6 +133,7 @@ static KINETICS_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[136].abi_descriptor,
     MORPHISMS[137].abi_descriptor,
     MORPHISMS[138].abi_descriptor,
+    MORPHISMS[149].abi_descriptor,
 ];
 static ACOUSTICS_FUNCS: &[FuncDescriptor] = &[
     MORPHISMS[14].abi_descriptor,
@@ -268,6 +270,138 @@ mod tests {
         for morphism in MORPHISMS {
             assert_eq!(descriptors.iter().filter(|d| d.stable_id == morphism.abi_descriptor.stable_id).count(), 1,
                 "descriptor must be bijective for {}", morphism.id);
+        }
+    }
+
+    #[test]
+    fn descriptor_contracts_and_arguments_expose_emf_v4_qac_v1_and_anatomy_parameters() {
+        assert_eq!(crate::OPERATIONS.len(), 150);
+        assert_eq!(MORPHISMS.len(), 150);
+
+        let category_total: usize = crate::ontology::CATEGORIES
+            .iter()
+            .map(|c| {
+                MORPHISMS
+                    .iter()
+                    .filter(|m| m.category == c.id)
+                    .count()
+            })
+            .sum();
+        // Sum of admitted morphisms across the 12 canonical categories (150 total).
+        assert_eq!(category_total, 150);
+        assert!(crate::ontology::resolve_morphism("qualia.species.assemble_corpus").is_some());
+
+        let provider_funcs: Vec<&FuncDescriptor> = HYPERMEDIA_PROVIDER_DESCRIPTOR
+            .sub_namespaces
+            .iter()
+            .flat_map(|ns| ns.functions)
+            .collect();
+        assert_eq!(provider_funcs.len(), 150);
+
+        let checks: &[(&str, &[&str], &[&str])] = &[
+            (
+                "hypermedia.electromagnetics.compile_emf",
+                &["dipoles", "constitutive"],
+                &["dipoles", "constitutive", "Q42EMF64 v4"],
+            ),
+            (
+                "hypermedia.electromagnetics.verify_emf",
+                &["emf"],
+                &["format_profile", "dipole_records", "constitutive_records", "max_e_magnitude_v_per_m"],
+            ),
+            (
+                "hypermedia.electromagnetics.render_spectral_slice",
+                &["emf", "axis", "slice_index", "time_slice"],
+                &["emf", "Q42EMF64"],
+            ),
+            (
+                "hypermedia.electromagnetics.raymarch_vox0_dda",
+                &["emf", "deflection_mass=0.0", "camera_position"],
+                &["deflection_mass=0.0"],
+            ),
+            (
+                "hypermedia.acoustics.synthesize_tone",
+                &["emf"],
+                &["emf"],
+            ),
+            (
+                "hypermedia.acoustics.encode_aac",
+                &["format", "qac", "species_id", "cue_profile"],
+                &["qac"],
+            ),
+            (
+                "hypermedia.acoustics.analyze_ebu_r128_camelot_daw",
+                &["audio", "qac"],
+                &["qac_v1_verification"],
+            ),
+            (
+                "hypermedia.manifold.compile_botanical_organ_10d",
+                &["stage", "emit_emf_qac"],
+                &["emit_emf_qac", "emf_canonical_handle", "emf_profile_handle", "qac_canonical_handle"],
+            ),
+            (
+                "hypermedia.manifold.compile_vertebrate_anatomy_10d",
+                &["emit_emf_qac"],
+                &["emit_emf_qac", "emf_canonical_handle", "emf_profile_handle", "qac_canonical_handle"],
+            ),
+            (
+                "hypermedia.kinetics.rig_biomechanical_archetype",
+                &["emit_emf_qac"],
+                &["emit_emf_qac", "emf_canonical_handle", "emf_profile_handle", "qac_canonical_handle"],
+            ),
+        ];
+
+        for (id, expected_args, expected_spec_needles) in checks {
+            let morphism = crate::ontology::resolve_morphism(id)
+                .unwrap_or_else(|| panic!("missing morphism {id}"));
+            let matched = provider_funcs
+                .iter()
+                .find(|d| d.stable_id == morphism.abi_descriptor.stable_id)
+                .unwrap_or_else(|| panic!("missing descriptor for {id}"));
+            assert_eq!(matched.name, morphism.morphism);
+            assert_eq!(
+                matched.contract.schema_hash,
+                morphism.abi_descriptor.contract.schema_hash,
+                "descriptor schema_hash mismatch for {id}"
+            );
+
+            let args = crate::arguments(id);
+            for needle in *expected_args {
+                assert!(
+                    args.contains(needle),
+                    "arguments({id}) missing '{needle}': {args}"
+                );
+            }
+
+            let blob = format!(
+                "{} | {} | {} | {}",
+                morphism.summary, morphism.domain, morphism.codomain, morphism.teleology
+            );
+            for needle in *expected_spec_needles {
+                assert!(
+                    blob.contains(needle),
+                    "morphism spec for {id} missing '{needle}': {blob}"
+                );
+            }
+        }
+
+        let catalogue = crate::catalogue();
+        let ops = catalogue["operations"]
+            .as_array()
+            .expect("catalogue operations array");
+        assert_eq!(ops.len(), 150);
+        for (id, expected_args, _) in checks {
+            let entry = ops
+                .iter()
+                .find(|op| op["id"] == *id)
+                .unwrap_or_else(|| panic!("catalogue() missing {id}"));
+            let args_json = entry["arguments"].as_str().unwrap_or("");
+            for needle in *expected_args {
+                assert!(
+                    args_json.contains(needle),
+                    "catalogue() arguments for {id} missing '{needle}': {args_json}"
+                );
+            }
         }
     }
 }

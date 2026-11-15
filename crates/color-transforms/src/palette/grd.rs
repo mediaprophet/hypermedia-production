@@ -125,7 +125,7 @@ pub fn write_grd(gradients: &[GrdGradient]) -> Result<Vec<u8>, PaletteError> {
     out.extend_from_slice(b"8BGR");
     out.extend_from_slice(&5u16.to_be_bytes()); // version 5
 
-    for (i, grad) in gradients.iter().enumerate() {
+    for grad in gradients {
         out.extend_from_slice(b"Grdn");
         let name_bytes = grad.name.as_bytes();
         out.extend_from_slice(&(name_bytes.len() as u32).to_be_bytes());

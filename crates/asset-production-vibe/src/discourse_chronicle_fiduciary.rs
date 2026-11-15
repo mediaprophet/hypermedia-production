@@ -14,14 +14,25 @@ impl AssetHost<'_> {
     /// (`discourse-academic-tex` + `discourse-pdf-compliance` + `discourse-scientific-matlang` + `multimodal-synthesis-schema`)
     pub(crate) fn audit_tex_pdf_ua_matlang(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["resource", "tex_source", "m_script", "redact_text"])?;
-        if let Some(v) = a.get("resource") {
-            let _ = self.workspace.get(v)?;
-        }
-        let tex_src = opt_str(
-            a,
-            "tex_source",
-            "\\documentclass{article}\n\\begin{document}\n\\section{Fiduciary Audit}\nEquation $E=mc^2$.\n\\end{document}\n",
-        )?;
+        let resource_tex = if let Some(v) = a.get("resource") {
+            match self.workspace.get(v)? {
+                Artifact::Encoded(res) => std::str::from_utf8(&res.bytes).ok().map(str::to_string),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        let tex_src = if a.contains_key("tex_source") {
+            opt_str(
+                a,
+                "tex_source",
+                "\\documentclass{article}\n\\begin{document}\n\\section{Fiduciary Audit}\nEquation $E=mc^2$.\n\\end{document}\n",
+            )?
+        } else if let Some(rt) = resource_tex {
+            rt
+        } else {
+            "\\documentclass{article}\n\\begin{document}\n\\section{Fiduciary Audit}\nEquation $E=mc^2$.\n\\end{document}\n".to_string()
+        };
         let m_script = opt_str(a, "m_script", "A = [4, 1; 1, 3]; d = det(A);")?;
         let redact_input = opt_str(a, "redact_text", "Contact: steward@example.org, SSN: 123-45-6789")?;
 
@@ -77,7 +88,7 @@ impl AssetHost<'_> {
         let redacted = apply_semantic_redaction(&redact_input, &ranges, '*');
         let zero_residue = verify_zero_residue(&redacted, &secrets);
 
-        let _ws = eval_m_code(&m_script).map_err(|e| format!("M-code eval failed: {e}"))?;
+        let ws = eval_m_code(&m_script).map_err(|e| format!("M-code eval failed: {e}"))?;
         let mat = Matrix::from_row_major(2, 2, &[4.0, 1.0, 1.0, 3.0]).map_err(|e| e.to_string())?;
         let (_u, s_mat, _v) = svd(&mat).map_err(|e| e.to_string())?;
         let sigma0 = s_mat.get(0, 0).unwrap_or(0.0);
@@ -149,6 +160,7 @@ impl AssetHost<'_> {
                 "zero_residue_verified": zero_residue.verified_clean,
             },
             "svd_singular_values": [sigma0, sigma1],
+            "matlang_var_count": ws.vars.len(),
             "splat_cost": {
                 "credits": splat_cost.credits,
             },

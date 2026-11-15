@@ -599,7 +599,10 @@ impl AssetHost<'_> {
             if fill.is_none() && stroke.is_none() {
                 return Err("Path requires fill or stroke".into());
             }
-            let _ = path.bounding_box();
+            let bbox = path.bounding_box();
+            if !bbox.width().is_finite() || !bbox.height().is_finite() {
+                return Err("Path bounding box is non-finite".into());
+            }
             draws.push(Draw {
                 path,
                 transform,

@@ -154,7 +154,7 @@ pub fn poisson_dist(args: &[Value]) -> R<Value> {
 // ---------------------------------------------------------------------------------------------
 
 pub fn gamma_ln(xx: f64) -> f64 {
-    let mut x = xx;
+    let x = xx;
     let mut y = xx;
     let mut tmp = x + 5.5;
     tmp -= (x + 0.5) * tmp.ln();

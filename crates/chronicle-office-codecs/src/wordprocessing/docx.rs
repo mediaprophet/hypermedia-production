@@ -3,7 +3,7 @@
 use crate::flow::model::{
     FlowBlock, FlowCell, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowPara, FlowRow, FlowTable,
 };
-use crate::xml::dom::{escape_xml, parse_xml, XEl, XNode};
+use crate::xml::dom::{escape_xml, parse_xml, XNode};
 use crate::zip::minizip::ZipPackage;
 
 /// Serialize a `FlowDoc` into an OpenXML `.docx` ZIP package.

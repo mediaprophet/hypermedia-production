@@ -37,51 +37,51 @@ Informed by open standards and Informatics Fiduciary guarantees under UDHR Artic
 | `check_top_level` | 1 | `crates/video-h264-preview/src/lib.rs:202` | - | Admission for the owning demuxer: reject fragmented/event/extended boxes |
 | `walk` | 6 | `crates/video-h264-preview/src/lib.rs:204` | - |  |
 | `decode_inner` | 6 | `crates/video-h264-preview/src/lib.rs:259` | - |  |
-| `validate_offsets` | 3 | `crates/video-h264-preview/src/lib.rs:346` | - |  |
-| `validate_sizes` | 5 | `crates/video-h264-preview/src/lib.rs:378` | - |  |
-| `live` | 1 | `crates/video-h264-preview/src/lib.rs:391` | - |  |
-| `check_sample` | 3 | `crates/video-h264-preview/src/lib.rs:396` | - | Reject in-band SPS/PPS changes, B/SP/SI slices and mixed IDR/non-IDR |
-| `validate_picture_headers` | 4 | `crates/video-h264-preview/src/lib.rs:431` | - | Match the codec's own primary-picture boundary test before it can create |
-| `rgba709` | 2 | `crates/video-h264-preview/src/lib.rs:451` | - |  |
-| `actual_gaps_are_budgeted_across_wrap_nonreference_and_mmco5` | 0 | `crates/video-h264-preview/src/lib.rs:471` | - |  |
-| `nal` | 2 | `crates/video-h264-preview/src/lib.rs:484` | - |  |
-| `sps` | 0 | `crates/video-h264-preview/src/lib.rs:485` | - |  |
-| `sps_for_width` | 1 | `crates/video-h264-preview/src/lib.rs:486` | - |  |
-| `sps_for_params` | 2 | `crates/video-h264-preview/src/lib.rs:487` | - |  |
-| `pps` | 0 | `crates/video-h264-preview/src/lib.rs:498` | - |  |
-| `idr` | 1 | `crates/video-h264-preview/src/lib.rs:503` | - |  |
-| `metadata_names_in_pixel_payload_do_not_reject_valid_video` | 0 | `crates/video-h264-preview/src/lib.rs:509` | 2d |  |
-| `idr_slice` | 3 | `crates/video-h264-preview/src/lib.rs:525` | - |  |
-| `idr_slice_bits` | 4 | `crates/video-h264-preview/src/lib.rs:526` | - |  |
-| `wider_frame_number_sps_decodes_within_gap_budget` | 0 | `crates/video-h264-preview/src/lib.rs:532` | - |  |
-| `two_slice_picture_decodes_and_changed_picture_identity_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:540` | - |  |
-| `p_skip` | 0 | `crates/video-h264-preview/src/lib.rs:559` | - |  |
-| `reordered_sps` | 0 | `crates/video-h264-preview/src/lib.rs:565` | - |  |
-| `reordered_pcm` | 4 | `crates/video-h264-preview/src/lib.rs:576` | - |  |
-| `reordered_b_skip` | 0 | `crates/video-h264-preview/src/lib.rs:583` | - |  |
-| `synthetic_reordered` | 0 | `crates/video-h264-preview/src/lib.rs:589` | - |  |
-| `b_frame_follows_composition_order_and_selection` | 0 | `crates/video-h264-preview/src/lib.rs:599` | - |  |
-| `inconsistent_composition_table_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:606` | - |  |
-| `synthetic_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:613` | - |  |
-| `synthetic_av_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:620` | - |  |
-| `add_synthetic_audio_edit` | 1 | `crates/video-h264-preview/src/lib.rs:630` | - |  |
-| `boxes` | 3 | `crates/video-h264-preview/src/lib.rs:633` | - |  |
-| `combined_audio_edit_preserves_video_timeline` | 0 | `crates/video-h264-preview/src/lib.rs:648` | - |  |
-| `video_projects_combined_av_without_changing_source_or_offsets` | 0 | `crates/video-h264-preview/src/lib.rs:662` | - |  |
-| `video_requires_local_data_reference_and_entry_binding` | 0 | `crates/video-h264-preview/src/lib.rs:674` | - |  |
-| `stream_delivers_more_than_32_frames_and_sink_can_stop` | 0 | `crates/video-h264-preview/src/lib.rs:680` | - |  |
-| `synthetic_gop` | 0 | `crates/video-h264-preview/src/lib.rs:690` | - |  |
-| `sample_tables_reject_hostile_counts_before_mp4_parser` | 0 | `crates/video-h264-preview/src/lib.rs:698` | - |  |
-| `malformed_final_slice_is_not_presented` | 0 | `crates/video-h264-preview/src/lib.rs:713` | - |  |
-| `actual_idr_samples_decode_to_different_srgb_frames` | 0 | `crates/video-h264-preview/src/lib.rs:728` | - |  |
-| `p_slice_uses_prior_reference_when_range_starts_after_idr` | 0 | `crates/video-h264-preview/src/lib.rs:733` | - |  |
-| `selected_p_frame_without_prior_idr_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:740` | - |  |
-| `malformed_nals_refuse_parameter_sets_and_sp_slices` | 0 | `crates/video-h264-preview/src/lib.rs:750` | - |  |
-| `declared_sample_sizes_cannot_trigger_unbounded_reads` | 0 | `crates/video-h264-preview/src/lib.rs:764` | - |  |
-| `hostile_nested_box_and_sample_size_are_refused_before_decode` | 0 | `crates/video-h264-preview/src/lib.rs:770` | - |  |
-| `container_and_cancellation_refuse_safely` | 0 | `crates/video-h264-preview/src/lib.rs:781` | - |  |
-| `movie_inspection_and_random_access_h264` | 0 | `crates/video-h264-preview/src/lib.rs:786` | - |  |
-| `movie_prores_playback` | 0 | `crates/video-h264-preview/src/lib.rs:804` | - |  |
+| `validate_offsets` | 3 | `crates/video-h264-preview/src/lib.rs:347` | - |  |
+| `validate_sizes` | 5 | `crates/video-h264-preview/src/lib.rs:379` | - |  |
+| `live` | 1 | `crates/video-h264-preview/src/lib.rs:392` | - |  |
+| `check_sample` | 3 | `crates/video-h264-preview/src/lib.rs:397` | - | Reject in-band SPS/PPS changes, B/SP/SI slices and mixed IDR/non-IDR |
+| `validate_picture_headers` | 4 | `crates/video-h264-preview/src/lib.rs:432` | - | Match the codec's own primary-picture boundary test before it can create |
+| `rgba709` | 2 | `crates/video-h264-preview/src/lib.rs:452` | - |  |
+| `actual_gaps_are_budgeted_across_wrap_nonreference_and_mmco5` | 0 | `crates/video-h264-preview/src/lib.rs:472` | - |  |
+| `nal` | 2 | `crates/video-h264-preview/src/lib.rs:485` | - |  |
+| `sps` | 0 | `crates/video-h264-preview/src/lib.rs:486` | - |  |
+| `sps_for_width` | 1 | `crates/video-h264-preview/src/lib.rs:487` | - |  |
+| `sps_for_params` | 2 | `crates/video-h264-preview/src/lib.rs:488` | - |  |
+| `pps` | 0 | `crates/video-h264-preview/src/lib.rs:499` | - |  |
+| `idr` | 1 | `crates/video-h264-preview/src/lib.rs:504` | - |  |
+| `metadata_names_in_pixel_payload_do_not_reject_valid_video` | 0 | `crates/video-h264-preview/src/lib.rs:510` | 2d |  |
+| `idr_slice` | 3 | `crates/video-h264-preview/src/lib.rs:526` | - |  |
+| `idr_slice_bits` | 4 | `crates/video-h264-preview/src/lib.rs:527` | - |  |
+| `wider_frame_number_sps_decodes_within_gap_budget` | 0 | `crates/video-h264-preview/src/lib.rs:533` | - |  |
+| `two_slice_picture_decodes_and_changed_picture_identity_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:541` | - |  |
+| `p_skip` | 0 | `crates/video-h264-preview/src/lib.rs:560` | - |  |
+| `reordered_sps` | 0 | `crates/video-h264-preview/src/lib.rs:566` | - |  |
+| `reordered_pcm` | 4 | `crates/video-h264-preview/src/lib.rs:577` | - |  |
+| `reordered_b_skip` | 0 | `crates/video-h264-preview/src/lib.rs:584` | - |  |
+| `synthetic_reordered` | 0 | `crates/video-h264-preview/src/lib.rs:590` | - |  |
+| `b_frame_follows_composition_order_and_selection` | 0 | `crates/video-h264-preview/src/lib.rs:600` | - |  |
+| `inconsistent_composition_table_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:607` | - |  |
+| `synthetic_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:614` | - |  |
+| `synthetic_av_mp4` | 0 | `crates/video-h264-preview/src/lib.rs:621` | - |  |
+| `add_synthetic_audio_edit` | 1 | `crates/video-h264-preview/src/lib.rs:631` | - |  |
+| `boxes` | 3 | `crates/video-h264-preview/src/lib.rs:634` | - |  |
+| `combined_audio_edit_preserves_video_timeline` | 0 | `crates/video-h264-preview/src/lib.rs:649` | - |  |
+| `video_projects_combined_av_without_changing_source_or_offsets` | 0 | `crates/video-h264-preview/src/lib.rs:663` | - |  |
+| `video_requires_local_data_reference_and_entry_binding` | 0 | `crates/video-h264-preview/src/lib.rs:675` | - |  |
+| `stream_delivers_more_than_32_frames_and_sink_can_stop` | 0 | `crates/video-h264-preview/src/lib.rs:681` | - |  |
+| `synthetic_gop` | 0 | `crates/video-h264-preview/src/lib.rs:691` | - |  |
+| `sample_tables_reject_hostile_counts_before_mp4_parser` | 0 | `crates/video-h264-preview/src/lib.rs:699` | - |  |
+| `malformed_final_slice_is_not_presented` | 0 | `crates/video-h264-preview/src/lib.rs:714` | - |  |
+| `actual_idr_samples_decode_to_different_srgb_frames` | 0 | `crates/video-h264-preview/src/lib.rs:729` | - |  |
+| `p_slice_uses_prior_reference_when_range_starts_after_idr` | 0 | `crates/video-h264-preview/src/lib.rs:734` | - |  |
+| `selected_p_frame_without_prior_idr_is_refused` | 0 | `crates/video-h264-preview/src/lib.rs:741` | - |  |
+| `malformed_nals_refuse_parameter_sets_and_sp_slices` | 0 | `crates/video-h264-preview/src/lib.rs:751` | - |  |
+| `declared_sample_sizes_cannot_trigger_unbounded_reads` | 0 | `crates/video-h264-preview/src/lib.rs:765` | - |  |
+| `hostile_nested_box_and_sample_size_are_refused_before_decode` | 0 | `crates/video-h264-preview/src/lib.rs:771` | - |  |
+| `container_and_cancellation_refuse_safely` | 0 | `crates/video-h264-preview/src/lib.rs:782` | - |  |
+| `movie_inspection_and_random_access_h264` | 0 | `crates/video-h264-preview/src/lib.rs:787` | - |  |
+| `movie_prores_playback` | 0 | `crates/video-h264-preview/src/lib.rs:805` | - |  |
 | `fit_size` | 4 | `crates/video-h264-preview/src/movie.rs:33` | - | The size that fits `w` x `h` inside `max_w` x `max_h`, keeping the aspect ratio (>= 1 px). |
 | `impl MovieInfo::display_aspect` | 1 | `crates/video-h264-preview/src/movie.rs:63` | - |  |
 | `impl Lru<K>::new` | 1 | `crates/video-h264-preview/src/movie.rs:92` | - |  |

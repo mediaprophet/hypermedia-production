@@ -5,7 +5,6 @@
 mod shaping_svg;
 mod stroke_table;
 
-#[allow(unused_imports)] // public glyph API; rust-audit indexes this re-export
 pub use shaping_svg::shape_glyph_run;
 
 use std::fmt::Write;
@@ -37,7 +36,6 @@ impl Default for FontMetrics {
 }
 
 /// A fully shaped, measured, and positioned vector glyph run.
-#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct ShapedGlyphRun {
     pub text: String,

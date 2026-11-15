@@ -12,6 +12,26 @@ pub(crate) struct Sonic {
     pub source_samples: usize,
     pub missing_samples: usize,
 }
+fn push_envelope(
+    e: [f64; 3],
+    envelope: &mut Vec<Envelope>,
+    max_log: &mut Option<f64>,
+) -> Result<(), String> {
+    let scale = e.iter().map(|x| x.abs()).fold(0.0, f64::max);
+    let sample = if scale == 0.0 {
+        Envelope::Zero
+    } else {
+        let e = e.map(|x| x / scale);
+        let log = scale.ln() + e[0].hypot(e[1]).hypot(e[2]).ln();
+        if !log.is_finite() {
+            return Err("Envelope log magnitude is not representable".into());
+        }
+        *max_log = Some(max_log.map_or(log, |max| max.max(log)));
+        Envelope::LogMagnitude(log)
+    };
+    envelope.push(sample);
+    Ok(())
+}
 pub(crate) fn sonify(
     document: &CurrentDocument<'_>,
     rate: u32,
@@ -43,36 +63,37 @@ pub(crate) fn sonify(
     let mut envelope = Vec::with_capacity(8192);
     let mut max_log = None::<f64>;
     let mut missing = 0;
-    'chunks: for chunk in document.chunks.iter().filter(|c| c.mode() == 0) {
+    'chunks: for chunk in document
+        .chunks
+        .iter()
+        .filter(|c| c.canonical_mode() == 0x0100)
+    {
         for index in 0..chunk.record_count() {
-            let sample = match chunk
+            match chunk
                 .field(index)
                 .map_err(|e| format!("Sonification field index: {e:?}"))?
             {
                 None => {
                     missing += 1;
-                    Envelope::Missing
+                    envelope.push(Envelope::Missing);
                 }
                 Some(record) => {
-                    let e = record.electric_v_per_m();
-                    let scale = e.iter().map(|x| x.abs()).fold(0.0, f64::max);
-                    if scale == 0.0 {
-                        Envelope::Zero
-                    } else {
-                        let e = e.map(|x| x / scale);
-                        let log = scale.ln() + e[0].hypot(e[1]).hypot(e[2]).ln();
-                        if !log.is_finite() {
-                            return Err("Envelope log magnitude is not representable".into());
-                        }
-                        max_log = Some(max_log.map_or(log, |max| max.max(log)));
-                        Envelope::LogMagnitude(log)
-                    }
+                    push_envelope(record.electric_v_per_m(), &mut envelope, &mut max_log)?;
                 }
-            };
-            envelope.push(sample);
+            }
             if envelope.len() == 8192 {
                 break 'chunks;
             }
+        }
+    }
+    if envelope.is_empty() && !document.wire_freeze_e_samples.is_empty() {
+        let len = document.wire_freeze_e_samples.len();
+        for i in 0..512 {
+            push_envelope(
+                document.wire_freeze_e_samples[i % len],
+                &mut envelope,
+                &mut max_log,
+            )?;
         }
     }
     if envelope.is_empty() || missing == envelope.len() {

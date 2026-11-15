@@ -4,7 +4,7 @@
 
 use vector_locus_geometry::{FillRule, PathData};
 
-use crate::pathops::boolean::{boolean, flatten_subpath, BoolOp};
+use crate::pathops::boolean::{boolean, BoolOp};
 
 /// A filled shape in a Pathfinder stack.
 #[derive(Clone, Debug, PartialEq)]
@@ -161,7 +161,7 @@ pub fn regions(shapes: &[Shape]) -> Vec<Region> {
     }
     let mut out = Vec::new();
     for (i, s) in shapes.iter().enumerate() {
-        let mut curr = s.path.clone();
+        let curr = s.path.clone();
         for (j, other) in shapes.iter().enumerate() {
             if i != j {
                 let inter = boolean(&curr, &other.path, BoolOp::Intersect);

@@ -19,7 +19,7 @@ mod pdf_chart;
 // ============================================================================
 
 /// Branchless IEEE 802.3 CRC-32 checksum (polynomial 0xEDB88320).
-#[allow(dead_code)] // kept as the STORE-zip integrity primitive for OpenXML parts
+#[cfg(test)] // kept as the STORE-zip integrity primitive for OpenXML parts
 pub(super) fn crc32_ieee(data: &[u8]) -> u32 {
     let mut crc = 0xFFFF_FFFFu32;
     for &byte in data {
@@ -32,19 +32,19 @@ pub(super) fn crc32_ieee(data: &[u8]) -> u32 {
     !crc
 }
 
-#[allow(dead_code)] // office codecs now emit DOCX/PPTX; writer remains for STORE zip maps
+#[cfg(test)] // office codecs now emit DOCX/PPTX; writer remains for STORE zip maps
 pub(super) struct ZipEntry {
     pub(super) name: String,
     pub(super) data: Vec<u8>,
 }
 
 /// Pure-Rust uncompressed (STORE method 0) ZIP writer with zero external dependencies.
-#[allow(dead_code)]
+#[cfg(test)]
 pub(super) struct ZipArchiveWriter {
     pub(super) entries: Vec<ZipEntry>,
 }
 
-#[allow(dead_code)]
+#[cfg(test)]
 impl ZipArchiveWriter {
     pub(super) fn new() -> Self {
         Self {
@@ -1233,7 +1233,16 @@ mod tests {
         assert!(html.contains("produce-safe m64 map"));
         assert!(
             !html.contains("Use the format's native preview tool for this resource."),
-            "e64 magic fallback must be presented as m64, not stubbed"
+            "e64 magic fallback must present as m64, not stubbed"
         );
+    }
+
+    #[test]
+    fn store_zip_writer_deterministic_crc() {
+        assert_eq!(crc32_ieee(b"123456789"), 0xCBF4_3926);
+        let mut zip = ZipArchiveWriter::new();
+        zip.add_file("manifest.txt", b"hypermedia".to_vec());
+        let bytes = zip.finish();
+        assert!(bytes.starts_with(&[0x50, 0x4b, 0x03, 0x04]));
     }
 }

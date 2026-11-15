@@ -168,7 +168,6 @@ pub fn export_minimal_building(
     // Wall geometry (swept solid)
     let p_start = writer.write_entity("IFCCARTESIANPOINT", "((0., 0.))");
     let p_x = writer.write_entity("IFCDIRECTION", "((1., 0.))");
-    let p_y = writer.write_entity("IFCDIRECTION", "((0., 1.))");
     let profile_placement = writer.write_entity("IFCAXIS2PLACEMENT2D", &format!("#{p_start}, #{p_x}"));
     let rect_profile = writer.write_entity(
         "IFCRECTANGLEPROFILEDEF",

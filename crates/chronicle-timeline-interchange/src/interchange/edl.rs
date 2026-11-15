@@ -5,7 +5,7 @@
 use std::fmt::Write as _;
 
 use crate::model::{TimelineClip, TimelineMarker, TimelineSequence, TimelineTrack, TrackKind};
-use crate::time::{FrameRate, Tick, format_timecode, parse_timecode};
+use crate::time::{FrameRate, format_timecode, parse_timecode};
 
 /// Parse a CMX 3600 EDL document into a TimelineSequence.
 pub fn parse_edl(text: &str, default_rate: FrameRate) -> Result<TimelineSequence, String> {
@@ -18,7 +18,6 @@ pub fn parse_edl(text: &str, default_rate: FrameRate) -> Result<TimelineSequence
 
     let mut current_clip_name = String::new();
     let mut current_source_file = String::new();
-    let mut drop_frame = false;
 
     for line in text.lines() {
         let line = line.trim();
@@ -33,7 +32,6 @@ pub fn parse_edl(text: &str, default_rate: FrameRate) -> Result<TimelineSequence
 
         if let Some(rest) = line.strip_prefix("FCM:") {
             if rest.contains("DROP") {
-                drop_frame = true;
                 seq.drop_frame = true;
             }
             continue;

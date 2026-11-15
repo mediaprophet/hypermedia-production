@@ -60,8 +60,7 @@ impl AssetHost<'_> {
         fields(args, &["emf"])?;
         let value = required(args, "emf")?;
         let plan = self.current_read_plan(value)?;
-        self.emf_peak_admit(plan.memory)?;
-        let bytes = self.emf_source_bytes(value)?.to_vec();
+        let bytes = self.resolve_emf_bytes(value)?;
         let document = CurrentDocument::open(
             &bytes,
             ReadLimits {
@@ -150,6 +149,36 @@ impl AssetHost<'_> {
             "spectrum_records".into(),
             Value::U64(document.summary.records[2]),
         );
+        result.insert(
+            "dipole_records".into(),
+            Value::U64(document.summary.dipole_records as u64),
+        );
+        result.insert(
+            "radiative_transfer_records".into(),
+            Value::U64(document.summary.radiative_transfer_records as u64),
+        );
+        result.insert(
+            "sh_coeff_records".into(),
+            Value::U64(document.summary.sh_coeff_records as u64),
+        );
+        result.insert(
+            "constitutive_records".into(),
+            Value::U64(document.summary.constitutive_records as u64),
+        );
+        result.insert(
+            "validity_mask_records".into(),
+            Value::U64(document.summary.validity_mask_records as u64),
+        );
+        result.insert(
+            "format_profile".into(),
+            Value::String(document.summary.format_profile.into()),
+        );
+        if let Some(lambda_m) = document.representative_wavelength_m {
+            result.insert("representative_wavelength_m".into(), Value::F64(lambda_m));
+        }
+        if let Some(sigma) = document.representative_sigma {
+            result.insert("representative_sigma".into(), Value::F64(sigma));
+        }
         result.insert(
             "valid_records".into(),
             Value::List(

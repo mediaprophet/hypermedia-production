@@ -194,9 +194,11 @@ impl AssetHost<'_> {
     /// 133: `hypermedia.layout.typeset_paged_foliation` (`layout-paged-typesetter`)
     pub(crate) fn typeset_paged_foliation(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["profile", "columns", "latex_formula", "paragraph_count"])?;
-        if let Some(pv) = a.get("profile") {
-            let _ = self.profile(pv)?;
-        }
+        let profile_vertex_count = if let Some(pv) = a.get("profile") {
+            Some(self.profile(pv)?.len())
+        } else {
+            None
+        };
         let columns = count(a, "columns", 2, 4)?;
         let formula = opt_str(a, "latex_formula", "\\frac{a+b}{c}")?;
         let para_count = count(a, "paragraph_count", 6, 64)?;
@@ -240,7 +242,7 @@ impl AssetHost<'_> {
             pages: None,
             doi: None,
         };
-        let _bib = Bibliography::generate(std::slice::from_ref(&item), CitationStyle::AuthorDate);
+        let bib = Bibliography::generate(std::slice::from_ref(&item), CitationStyle::AuthorDate);
         let cite = Citation { citation_id: "c1".into(), items: vec![item] };
         let inline_cite = cite.format(CitationStyle::AuthorDate, 1);
 
@@ -346,15 +348,28 @@ impl AssetHost<'_> {
             Value::Bool(footnote_in == footnote_out),
         );
         out.insert("column_count".into(), Value::I64(columns as i64));
+        out.insert(
+            "bibliography_count".into(),
+            Value::I64(bib.entries.len() as i64),
+        );
+        if let Some(vc) = profile_vertex_count {
+            out.insert("profile_vertex_count".into(), Value::I64(vc as i64));
+        }
         Ok(Value::Record(out))
     }
 
     /// 134: `hypermedia.layout.compile_dataflow_nodegraph` (`layout-nodegraph-compiler` + `layout-presentation-deck`)
     pub(crate) fn compile_dataflow_nodegraph(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["profile", "expression", "morph_progress"])?;
-        if let Some(pv) = a.get("profile") {
-            let _ = self.profile(pv)?;
-        }
+        let (c1, c2) = if let Some(pv) = a.get("profile") {
+            let pts = self.profile(pv)?;
+            (
+                pts.first().map(|p| p[0]).unwrap_or(10.0),
+                pts.get(1).map(|p| p[1]).unwrap_or(10.0),
+            )
+        } else {
+            (10.0, 10.0)
+        };
         let expr_str = opt_str(a, "expression", "2 * pi * 10")?;
         let morph_t = number(a, "morph_progress", 0.5)?;
 
@@ -374,7 +389,7 @@ impl AssetHost<'_> {
             n1,
             DocumentNode {
                 name: "ConstA".into(),
-                inputs: vec![NodeInput::Value { tagged_value: TaggedValue::F64(10.0), exposed: false }],
+                inputs: vec![NodeInput::Value { tagged_value: TaggedValue::F64(c1), exposed: false }],
                 implementation: NodeImplementation::ProtoNode("ConstF64".into()),
                 metadata: BTreeMap::new(),
             },
@@ -383,7 +398,7 @@ impl AssetHost<'_> {
             n2,
             DocumentNode {
                 name: "ConstA_Dup".into(),
-                inputs: vec![NodeInput::Value { tagged_value: TaggedValue::F64(10.0), exposed: false }],
+                inputs: vec![NodeInput::Value { tagged_value: TaggedValue::F64(c2), exposed: false }],
                 implementation: NodeImplementation::ProtoNode("ConstF64".into()),
                 metadata: BTreeMap::new(),
             },

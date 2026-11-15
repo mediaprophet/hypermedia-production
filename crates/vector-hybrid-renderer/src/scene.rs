@@ -996,11 +996,117 @@ mod tests {
     }
 
     #[cfg(feature = "text")]
+    fn minimal_test_ttf() -> alloc::vec::Vec<u8> {
+        use alloc::vec;
+        use alloc::vec::Vec;
+
+        fn push_table(
+            dir: &mut Vec<(u32, Vec<u8>)>,
+            tag: &[u8; 4],
+            data: Vec<u8>,
+        ) {
+            dir.push((u32::from_be_bytes(*tag), data));
+        }
+
+        // Glyph 0: empty contour (loca[0] == loca[1] == 0).
+        // Glyph 1: simple 4-point contour square (50,0)-(550,0)-(550,700)-(50,700).
+        let mut glyf = Vec::new();
+        glyf.extend_from_slice(&1i16.to_be_bytes()); // numberOfContours
+        glyf.extend_from_slice(&50i16.to_be_bytes()); // xMin
+        glyf.extend_from_slice(&0i16.to_be_bytes()); // yMin
+        glyf.extend_from_slice(&550i16.to_be_bytes()); // xMax
+        glyf.extend_from_slice(&700i16.to_be_bytes()); // yMax
+        glyf.extend_from_slice(&3u16.to_be_bytes()); // endPtsOfContours[0]
+        glyf.extend_from_slice(&0u16.to_be_bytes()); // instructionLength
+        glyf.extend_from_slice(&[0x01, 0x01, 0x01, 0x01]); // flags: on-curve, 16-bit deltas
+        for dx in [50i16, 500, 0, -500] {
+            glyf.extend_from_slice(&dx.to_be_bytes());
+        }
+        for dy in [0i16, 0, 700, 0] {
+            glyf.extend_from_slice(&dy.to_be_bytes());
+        }
+        let glyph1_len_words = (glyf.len() / 2) as u16;
+
+        let mut head = vec![0u8; 54];
+        head[0..2].copy_from_slice(&1u16.to_be_bytes()); // majorVersion
+        head[12..16].copy_from_slice(&0x5F0F_3CF5u32.to_be_bytes()); // magicNumber
+        head[18..20].copy_from_slice(&1000u16.to_be_bytes()); // unitsPerEm
+        head[40..42].copy_from_slice(&550i16.to_be_bytes()); // xMax
+        head[42..44].copy_from_slice(&700i16.to_be_bytes()); // yMax
+        head[46..48].copy_from_slice(&8u16.to_be_bytes()); // lowestRecPPEM
+
+        let mut hhea = vec![0u8; 36];
+        hhea[0..2].copy_from_slice(&1u16.to_be_bytes()); // majorVersion
+        hhea[4..6].copy_from_slice(&800i16.to_be_bytes()); // ascent
+        hhea[6..8].copy_from_slice(&(-200i16).to_be_bytes()); // descent
+        hhea[10..12].copy_from_slice(&600u16.to_be_bytes()); // advanceWidthMax
+        hhea[34..36].copy_from_slice(&2u16.to_be_bytes()); // numberOfHMetrics
+
+        let mut hmtx = Vec::with_capacity(8);
+        hmtx.extend_from_slice(&500u16.to_be_bytes());
+        hmtx.extend_from_slice(&0i16.to_be_bytes());
+        hmtx.extend_from_slice(&600u16.to_be_bytes());
+        hmtx.extend_from_slice(&50i16.to_be_bytes());
+
+        let mut loca = Vec::with_capacity(6);
+        loca.extend_from_slice(&0u16.to_be_bytes());
+        loca.extend_from_slice(&0u16.to_be_bytes());
+        loca.extend_from_slice(&glyph1_len_words.to_be_bytes());
+
+        let mut maxp = vec![0u8; 32];
+        maxp[0..4].copy_from_slice(&0x0001_0000u32.to_be_bytes()); // version 1.0
+        maxp[4..6].copy_from_slice(&2u16.to_be_bytes()); // numGlyphs
+        maxp[6..8].copy_from_slice(&4u16.to_be_bytes()); // maxPoints
+        maxp[8..10].copy_from_slice(&1u16.to_be_bytes()); // maxContours
+
+        let mut tables = Vec::new();
+        push_table(&mut tables, b"glyf", glyf);
+        push_table(&mut tables, b"head", head);
+        push_table(&mut tables, b"hhea", hhea);
+        push_table(&mut tables, b"hmtx", hmtx);
+        push_table(&mut tables, b"loca", loca);
+        push_table(&mut tables, b"maxp", maxp);
+        tables.sort_by_key(|(tag, _)| *tag);
+
+        let num_tables = tables.len() as u16;
+        let header_len = 12 + tables.len() * 16;
+        let mut out = Vec::with_capacity(header_len + 256);
+        out.extend_from_slice(&0x0001_0000u32.to_be_bytes());
+        out.extend_from_slice(&num_tables.to_be_bytes());
+        out.extend_from_slice(&64u16.to_be_bytes()); // searchRange
+        out.extend_from_slice(&2u16.to_be_bytes()); // entrySelector
+        out.extend_from_slice(&(num_tables * 16 - 64).to_be_bytes()); // rangeShift
+
+        let mut offset = header_len as u32;
+        let mut dir_records = Vec::with_capacity(tables.len());
+        for (tag, mut data) in tables {
+            let len = data.len() as u32;
+            while data.len() % 4 != 0 {
+                data.push(0);
+            }
+            let padded_len = data.len() as u32;
+            let checksum = data
+                .chunks_exact(4)
+                .fold(0u32, |acc, c| acc.wrapping_add(u32::from_be_bytes([c[0], c[1], c[2], c[3]])));
+            dir_records.push((tag, checksum, offset, len, data));
+            offset += padded_len;
+        }
+        for (tag, checksum, off, len, _) in &dir_records {
+            out.extend_from_slice(&tag.to_be_bytes());
+            out.extend_from_slice(&checksum.to_be_bytes());
+            out.extend_from_slice(&off.to_be_bytes());
+            out.extend_from_slice(&len.to_be_bytes());
+        }
+        for (_, _, _, _, data) in dir_records {
+            out.extend_from_slice(&data);
+        }
+        out
+    }
+
+    #[cfg(feature = "text")]
     #[test]
     fn glyph_atlas_resources_are_lazy() {
-        const ROBOTO_FONT: &[u8] = include_bytes!("../../assets/roboto/Roboto-Regular.ttf");
-
-        let font = FontData::new(Blob::new(Arc::new(ROBOTO_FONT)), 0);
+        let font = FontData::new(Blob::new(Arc::new(minimal_test_ttf())), 0);
         let glyphs = [Glyph {
             id: 1,
             x: 0.0,

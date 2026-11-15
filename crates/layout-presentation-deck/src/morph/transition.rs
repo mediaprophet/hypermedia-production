@@ -1,7 +1,7 @@
 //! Slide transition blending and morph frame generation.
 
 use crate::model::master::Slide;
-use crate::model::shape::{Shape, TransitionKind};
+use crate::model::shape::Shape;
 use crate::model::types::{ShapeId, Xfrm};
 use super::interpolate::{clamp, morph_xfrm};
 use super::match_pairs::morph_pairs;

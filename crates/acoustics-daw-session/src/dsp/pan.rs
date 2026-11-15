@@ -1,7 +1,7 @@
 //! Vector Base Amplitude Panning (VBAP) and stereo pan laws for surround and 3D immersive audio.
 
 use serde::{Deserialize, Serialize};
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f32::consts::FRAC_PI_4;
 
 /// Attenuation curve of a centered stereo signal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]

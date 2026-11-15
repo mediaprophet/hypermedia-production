@@ -1,8 +1,8 @@
 //! OpenXML SpreadsheetML (.xlsx) reader and writer.
 
-use crate::xml::dom::{escape_xml, parse_xml, XEl, XNode};
+use crate::xml::dom::{escape_xml, parse_xml};
 use crate::zip::minizip::ZipPackage;
-use chronicle_tabular_engine::core::addr::{col_to_letters, letters_to_col, parse_a1_prefix, CellRef};
+use chronicle_tabular_engine::core::addr::{col_to_letters, letters_to_col};
 
 /// Spreadsheet table data consisting of sheet name and 2D grid of string values.
 #[derive(Clone, Debug, Default, PartialEq)]

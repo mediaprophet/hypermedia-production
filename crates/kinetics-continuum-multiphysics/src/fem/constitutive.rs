@@ -260,10 +260,12 @@ mod tests {
         let (stress1, p_strain1, plastic1) = j2.radial_return([1e-4, 0.0, 0.0, 0.0, 0.0, 0.0], 0.0);
         assert!(!plastic1);
         assert_eq!(p_strain1, 0.0);
+        assert!(stress1[0] > 0.0);
 
         // Plastic strain
         let (stress2, p_strain2, plastic2) = j2.radial_return([5e-3, 0.0, 0.0, 0.0, 0.0, 0.0], 0.0);
         assert!(plastic2);
         assert!(p_strain2 > 0.0);
+        assert!(stress2[0] > stress1[0]);
     }
 }

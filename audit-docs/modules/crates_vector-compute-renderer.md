@@ -11,7 +11,7 @@
 
 
 _Vello is a compute-centric 2D graphics rendering engine written in Rust,
-using [`wgpu`].
+using [`etalon`].
 It efficiently draws large 2D scenes with interactive or near-interactive
 performance.
 
@@ -33,15 +33,15 @@ This means that Vello needs a GPU with support for compute shaders to run.
 ## Getting started
 
 Vello is meant to be integrated deep in UI render stacks.
-While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a wgpu context, which is a non-trivial task.
+While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a etalon context, which is a non-trivial task.
 
 To use Vello as the renderer for your PDF reader / GUI toolkit / etc, your code will have to look roughly like this:
 
 ```ignore
-// Initialize wgpu and get handles
+// Initialize etalon and get handles
 let (width, height) = ...;
-let device: wgpu::Device = ...;
-let queue: wgpu::Queue = ...;
+let device: etalon::Device = ...;
+let queue: etalon::Queue = ...;
 let mut renderer = Renderer::new(
 &device,
 RendererOptions {
@@ -68,7 +68,7 @@ scene.stroke(...);
 scene.pop_layer(...);
 
 let texture = device.create_texture(&...);
-// Render to a wgpu Texture
+// Render to a etalon Texture
 renderer
 .render_to_texture(
 &device,
@@ -84,7 +84,7 @@ antialiasing_method: AaConfig::Msaa16,
 )
 .expect("Failed to render to a texture");
 // Do things with surface texture, such as blitting it to the Surface using
-// wgpu::util::TextureBlitter.
+// etalon::util::TextureBlitter.
 ```
 
 See the [`research/examples/`](https://github.com/linebender/vello/tree/main/research/examples) folder to see how that code integrates with frameworks like winit.
@@ -109,20 +109,46 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 | `impl LineEndpoint::new` | 2 | `crates/vector-compute-renderer/src/debug/validate.rs:23` | - |  |
 | `impl fmt::Debug for LineEndpoint::fmt` | 2 | `crates/vector-compute-renderer/src/debug/validate.rs:38` | - |  |
 | `validate_line_soup` | 1 | `crates/vector-compute-renderer/src/debug/validate.rs:47` | - |  |
-| `impl AaSupport::all` | 0 | `crates/vector-compute-renderer/src/lib.rs:218` | 3d | Support every anti-aliasing method. |
-| `impl AaSupport::area_only` | 0 | `crates/vector-compute-renderer/src/lib.rs:229` | - | Support only [`AaConfig::Area`]. |
-| `impl FromIterator<AaConfig> for AaSupport::from_iter` | 1 | `crates/vector-compute-renderer/src/lib.rs:239` | - |  |
-| `impl Default for RendererOptions::default` | 0 | `crates/vector-compute-renderer/src/lib.rs:411` | - |  |
-| `impl Renderer::new` | 2 | `crates/vector-compute-renderer/src/lib.rs:434` | - | Creates a new renderer for the specified device. |
-| `impl Renderer::render_to_texture` | 6 | `crates/vector-compute-renderer/src/lib.rs:476` | - | Renders a scene to the target texture. |
-| `impl Renderer::override_image` | 3 | `crates/vector-compute-renderer/src/lib.rs:538` | - | Overwrite `image` with `texture`. |
-| `impl Renderer::mark_override_image_dirty` | 2 | `crates/vector-compute-renderer/src/lib.rs:555` | - | Marks `image` as dirty in the atlas cache, so its override texture will be recopied on |
-| `impl Renderer::register_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:574` | economics | Register a [`wgpu::Texture`] with Vello, to allow drawing GPU-resident data. |
-| `impl Renderer::unregister_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:603` | - | Unregister a [`wgpu::Texture`] that was registered with [`register_texture`](Self::register_texture). |
-| `impl Renderer::reload_shaders` | 2 | `crates/vector-compute-renderer/src/lib.rs:610` | - | Reload the shaders. This should only be used during `vello` development |
-| `impl Renderer::render_to_texture_async` | 7 | `crates/vector-compute-renderer/src/lib.rs:644` | - |  |
-| `impl Renderer::render_to_texture_async_internal` | 6 | `crates/vector-compute-renderer/src/lib.rs:719` | - |  |
-| `impl DebugDownloads<'a>::map` | 3 | `crates/vector-compute-renderer/src/lib.rs:794` | - |  |
+| `impl Shader::select` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:79` | - |  |
+| `impl EtalonEngine::new` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:144` | - |  |
+| `impl EtalonEngine::use_parallel_initialisation` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:154` | - | Enable creating any remaining shaders in parallel |
+| `impl EtalonEngine::build_shaders_if_needed` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:163` | - | Initialise (in parallel) any shaders which are yet to be created |
+| `impl EtalonEngine::add_compute_shader` | 6 | `crates/vector-compute-renderer/src/etalon_engine.rs:248` | 3d | Add a shader. |
+| `impl EtalonEngine::add_render_shader` | 10 | `crates/vector-compute-renderer/src/etalon_engine.rs:317` | 3d |  |
+| `impl EtalonEngine::run_recording` | 8 | `crates/vector-compute-renderer/src/etalon_engine.rs:381` | - |  |
+| `impl EtalonEngine::get_download` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:781` | - |  |
+| `impl EtalonEngine::free_download` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:785` | - |  |
+| `impl EtalonEngine::create_bind_group_layout_entries` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:789` | - |  |
+| `impl EtalonEngine::create_compute_pipeline` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:841` | - |  |
+| `impl BindMap::insert_buf` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:888` | - |  |
+| `impl BindMap::get_gpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:899` | - | Get a buffer, only if it's on GPU. |
+| `impl BindMap::get_cpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:909` | - | Get a CPU buffer. |
+| `impl BindMap::materialize_cpu_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:916` | - |  |
+| `impl BindMap::insert_image` | 4 | `crates/vector-compute-renderer/src/etalon_engine.rs:927` | - |  |
+| `impl BindMap::get_buf` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:931` | - |  |
+| `impl BindMap::get_or_create_image` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:935` | - |  |
+| `impl ResourcePool::get_buf` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:980` | - | Get a buffer from the pool or create one. |
+| `impl ResourcePool::size_class` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:1007` | - | Quantize a size up to the nearest size class. |
+| `impl BindMapBuffer::upload_if_needed` | 5 | `crates/vector-compute-renderer/src/etalon_engine.rs:1024` | - |  |
+| `impl TransientBindMap<'a>::new` | 1 | `crates/vector-compute-renderer/src/etalon_engine.rs:1045` | - | Create new transient bind map, seeded from external resources |
+| `impl TransientBindMap<'a>::materialize_gpu_buf_for_indirect` | 6 | `crates/vector-compute-renderer/src/etalon_engine.rs:1061` | - |  |
+| `impl TransientBindMap<'a>::materialize_external_image_for_render_pass` | 2 | `crates/vector-compute-renderer/src/etalon_engine.rs:1077` | - |  |
+| `impl TransientBindMap<'a>::create_bind_group` | 8 | `crates/vector-compute-renderer/src/etalon_engine.rs:1085` | - |  |
+| `impl TransientBindMap<'a>::create_cpu_resources` | 3 | `crates/vector-compute-renderer/src/etalon_engine.rs:1218` | - |  |
+| `impl AaSupport::all` | 0 | `crates/vector-compute-renderer/src/lib.rs:223` | 3d | Support every anti-aliasing method. |
+| `impl AaSupport::area_only` | 0 | `crates/vector-compute-renderer/src/lib.rs:234` | - | Support only [`AaConfig::Area`]. |
+| `impl FromIterator<AaConfig> for AaSupport::from_iter` | 1 | `crates/vector-compute-renderer/src/lib.rs:244` | - |  |
+| `impl Default for RendererOptions::default` | 0 | `crates/vector-compute-renderer/src/lib.rs:419` | - |  |
+| `impl Renderer::new` | 2 | `crates/vector-compute-renderer/src/lib.rs:442` | - | Creates a new renderer for the specified device. |
+| `impl Renderer::render_to_texture` | 6 | `crates/vector-compute-renderer/src/lib.rs:485` | - | Renders a scene to the target texture. |
+| `impl Renderer::override_image` | 3 | `crates/vector-compute-renderer/src/lib.rs:547` | - | Overwrite `image` with `texture`. |
+| `impl Renderer::mark_override_image_dirty` | 2 | `crates/vector-compute-renderer/src/lib.rs:564` | - | Marks `image` as dirty in the atlas cache, so its override texture will be recopied on |
+| `impl Renderer::register_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:583` | economics | Register a [`etalon::Texture`] with Vello, to allow drawing GPU-resident data. |
+| `impl Renderer::unregister_texture` | 2 | `crates/vector-compute-renderer/src/lib.rs:612` | - | Unregister a [`etalon::Texture`] that was registered with [`register_texture`](Self::register_texture). |
+| `impl Renderer::reload_shaders` | 2 | `crates/vector-compute-renderer/src/lib.rs:619` | - | Reload the shaders. This should only be used during `vello` development |
+| `impl Renderer::render_to_texture_async` | 7 | `crates/vector-compute-renderer/src/lib.rs:655` | - |  |
+| `impl Renderer::render_to_texture_async_internal` | 6 | `crates/vector-compute-renderer/src/lib.rs:730` | - |  |
+| `impl DebugDownloads<'a>::map` | 3 | `crates/vector-compute-renderer/src/lib.rs:805` | - |  |
 | `impl ResourceId::next` | 0 | `crates/vector-compute-renderer/src/recording.rs:16` | - |  |
 | `impl Recording::push` | 2 | `crates/vector-compute-renderer/src/recording.rs:118` | - | Appends a [`Command`] to the back of the [`Recording`]. |
 | `impl Recording::upload` | 3 | `crates/vector-compute-renderer/src/recording.rs:124` | - | Commands to upload the given data to a new buffer with the given name. |
@@ -139,8 +165,8 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 | `impl Recording::free_resource` | 2 | `crates/vector-compute-renderer/src/recording.rs:217` | - | Commands to free the given resource. |
 | `impl Recording::into_commands` | 1 | `crates/vector-compute-renderer/src/recording.rs:230` | - | Returns a [`Vec`] containing all the [`Command`]s in order. |
 | `impl BufferProxy::new` | 2 | `crates/vector-compute-renderer/src/recording.rs:236` | - |  |
-| `impl ImageFormat::to_wgpu` | 1 | `crates/vector-compute-renderer/src/recording.rs:245` | - |  |
-| `impl ImageFormat::from_wgpu` | 1 | `crates/vector-compute-renderer/src/recording.rs:253` | - |  |
+| `impl ImageFormat::to_etalon` | 1 | `crates/vector-compute-renderer/src/recording.rs:245` | - |  |
+| `impl ImageFormat::from_etalon` | 1 | `crates/vector-compute-renderer/src/recording.rs:253` | - |  |
 | `impl ImageProxy::new` | 3 | `crates/vector-compute-renderer/src/recording.rs:263` | - |  |
 | `impl ResourceProxy::new_buf` | 2 | `crates/vector-compute-renderer/src/recording.rs:275` | - |  |
 | `impl ResourceProxy::new_image` | 3 | `crates/vector-compute-renderer/src/recording.rs:279` | - |  |
@@ -224,34 +250,8 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 | `impl RenderContext::configure_surface` | 2 | `crates/vector-compute-renderer/src/util.rs:139` | - |  |
 | `impl RenderContext::device` | 2 | `crates/vector-compute-renderer/src/util.rs:145` | - | Finds or creates a compatible device handle id. |
 | `impl RenderContext::new_device` | 2 | `crates/vector-compute-renderer/src/util.rs:162` | - | Creates a compatible device handle id. |
-| `create_targets` | 3 | `crates/vector-compute-renderer/src/util.rs:196` | 3d | Vello uses a compute shader to render to the provided texture, which means that it can't bind the surface |
-| `impl DeviceHandle::adapter` | 1 | `crates/vector-compute-renderer/src/util.rs:217` | - | Returns the adapter associated with the device. |
-| `impl std::fmt::Debug for RenderSurface<'_>::fmt` | 2 | `crates/vector-compute-renderer/src/util.rs:234` | - |  |
-| `impl std::task::Wake for NullWake::wake` | 1 | `crates/vector-compute-renderer/src/util.rs:250` | - |  |
-| `block_on_wgpu` | 2 | `crates/vector-compute-renderer/src/util.rs:257` | - | Block on a future, polling the device as needed. |
-| `impl Shader::select` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:79` | - |  |
-| `impl WgpuEngine::new` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:144` | - |  |
-| `impl WgpuEngine::use_parallel_initialisation` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:154` | - | Enable creating any remaining shaders in parallel |
-| `impl WgpuEngine::build_shaders_if_needed` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:163` | - | Initialise (in parallel) any shaders which are yet to be created |
-| `impl WgpuEngine::add_compute_shader` | 6 | `crates/vector-compute-renderer/src/wgpu_engine.rs:248` | 3d | Add a shader. |
-| `impl WgpuEngine::add_render_shader` | 10 | `crates/vector-compute-renderer/src/wgpu_engine.rs:317` | 3d |  |
-| `impl WgpuEngine::run_recording` | 8 | `crates/vector-compute-renderer/src/wgpu_engine.rs:380` | - |  |
-| `impl WgpuEngine::get_download` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:779` | - |  |
-| `impl WgpuEngine::free_download` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:783` | - |  |
-| `impl WgpuEngine::create_bind_group_layout_entries` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:787` | - |  |
-| `impl WgpuEngine::create_compute_pipeline` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:839` | - |  |
-| `impl BindMap::insert_buf` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:885` | - |  |
-| `impl BindMap::get_gpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:896` | - | Get a buffer, only if it's on GPU. |
-| `impl BindMap::get_cpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:906` | - | Get a CPU buffer. |
-| `impl BindMap::materialize_cpu_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:913` | - |  |
-| `impl BindMap::insert_image` | 4 | `crates/vector-compute-renderer/src/wgpu_engine.rs:924` | - |  |
-| `impl BindMap::get_buf` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:928` | - |  |
-| `impl BindMap::get_or_create_image` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:932` | - |  |
-| `impl ResourcePool::get_buf` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:976` | - | Get a buffer from the pool or create one. |
-| `impl ResourcePool::size_class` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1003` | - | Quantize a size up to the nearest size class. |
-| `impl BindMapBuffer::upload_if_needed` | 5 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1020` | - |  |
-| `impl TransientBindMap<'a>::new` | 1 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1041` | - | Create new transient bind map, seeded from external resources |
-| `impl TransientBindMap<'a>::materialize_gpu_buf_for_indirect` | 6 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1057` | - |  |
-| `impl TransientBindMap<'a>::materialize_external_image_for_render_pass` | 2 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1073` | - |  |
-| `impl TransientBindMap<'a>::create_bind_group` | 8 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1081` | - |  |
-| `impl TransientBindMap<'a>::create_cpu_resources` | 3 | `crates/vector-compute-renderer/src/wgpu_engine.rs:1213` | - |  |
+| `create_targets` | 3 | `crates/vector-compute-renderer/src/util.rs:199` | 3d | Vello uses a compute shader to render to the provided texture, which means that it can't bind the surface |
+| `impl DeviceHandle::adapter` | 1 | `crates/vector-compute-renderer/src/util.rs:220` | - | Returns the adapter associated with the device. |
+| `impl std::fmt::Debug for RenderSurface<'_>::fmt` | 2 | `crates/vector-compute-renderer/src/util.rs:237` | - |  |
+| `impl std::task::Wake for NullWake::wake` | 1 | `crates/vector-compute-renderer/src/util.rs:253` | - |  |
+| `block_on_etalon` | 2 | `crates/vector-compute-renderer/src/util.rs:260` | - | Block on a future, polling the device as needed. |

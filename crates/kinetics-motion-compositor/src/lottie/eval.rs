@@ -2,7 +2,7 @@
 
 use serde_json::Value;
 
-use crate::lottie::schema::{LottieLayer, LottiePropMulti, LottiePropScalar, LottieTransform};
+use crate::lottie::schema::{LottieLayer, LottiePropMulti, LottiePropScalar};
 
 /// Evaluated 2D affine transform of a layer at a specific frame.
 #[derive(Clone, Copy, Debug, PartialEq)]

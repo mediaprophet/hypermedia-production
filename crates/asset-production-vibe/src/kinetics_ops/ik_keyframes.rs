@@ -57,7 +57,7 @@ impl AssetHost<'_> {
             - lower_length * lower_length)
             / (2.0 * upper_length * d_clamped))
             .clamp(-1.0, 1.0);
-        let _sin_alpha = (1.0 - cos_alpha * cos_alpha).max(0.0).sqrt();
+        let sin_alpha = (1.0 - cos_alpha * cos_alpha).max(0.0).sqrt();
 
         let u_dir = if d > 1e-9 {
             [rt[0] / d, rt[1] / d, rt[2] / d]
@@ -74,7 +74,7 @@ impl AssetHost<'_> {
         ];
         let proj_len = len_sq(p_proj).sqrt();
 
-        let _u_bend = if proj_len > 1e-6 {
+        let u_bend = if proj_len > 1e-6 {
             [p_proj[0] / proj_len, p_proj[1] / proj_len, p_proj[2] / proj_len]
         } else {
             let ref_axis = if u_dir[0].abs() < 0.9 {
@@ -85,11 +85,17 @@ impl AssetHost<'_> {
             normalize(cross(u_dir, ref_axis))
         };
 
-        let root_m = Motor::from_rotation_translation([1.0, 0.0, 0.0, 0.0], root);
-        let mid_m = Motor::from_rotation_translation(
-            [1.0, 0.0, 0.0, 0.0],
-            [root[0], root[1] + upper_length, root[2]],
+        let init_q = quat_from_to([0.0, 1.0, 0.0], u_dir);
+        let root_m = Motor::from_rotation_translation(
+            [init_q[3], init_q[0], init_q[1], init_q[2]],
+            root,
         );
+        let mid_pos = [
+            root[0] + upper_length * (cos_alpha * u_dir[0] + sin_alpha * u_bend[0]),
+            root[1] + upper_length * (cos_alpha * u_dir[1] + sin_alpha * u_bend[1]),
+            root[2] + upper_length * (cos_alpha * u_dir[2] + sin_alpha * u_bend[2]),
+        ];
+        let mid_m = Motor::from_rotation_translation([1.0, 0.0, 0.0, 0.0], mid_pos);
         let end_m = Motor::from_rotation_translation(
             [1.0, 0.0, 0.0, 0.0],
             [root[0], root[1] + upper_length + lower_length, root[2]],
@@ -386,7 +392,6 @@ fn normalize(a: [f64; 3]) -> [f64; 3] {
     }
 }
 
-#[allow(dead_code)]
 fn quat_from_to(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
     let u_from = normalize(from);
     let u_to = normalize(to);

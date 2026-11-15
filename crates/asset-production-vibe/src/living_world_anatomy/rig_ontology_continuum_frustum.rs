@@ -50,6 +50,7 @@ impl AssetHost<'_> {
                 "tail_pitch",
                 "tail_yaw",
                 "breath_hz",
+                "emit_emf_qac",
             ],
         )?;
 
@@ -79,6 +80,7 @@ impl AssetHost<'_> {
             }}
             return Ok(Value::Record(BTreeMap::from([("container_10d".into(), result)])));
         }
+        let emit_emf_qac = boolean(a, "emit_emf_qac", false)?;
         let archetype_str = opt_string(a, "archetype", "macropod_saltatorial")?;
         let archetype = parse_fauna_archetype(&archetype_str)?;
         let macro_str = opt_string(a, "macro_state", "grazing")?;
@@ -108,22 +110,27 @@ impl AssetHost<'_> {
         rig.set_parameter(1, AbsmParameter::Float(speed_m_s as f32));
 
         let mut local_pose = rig.rest_pose;
-        let _ = rig.step_absm(dt_sec as f32, &mut local_pose);
-        let _ = rig.step_absm(dt_sec as f32, &mut local_pose);
+        let absm_0 = rig
+            .step_absm(dt_sec as f32, &mut local_pose)
+            .map_err(|e| format!("ABSM step 0 failed: {e:?}"))?;
+        let absm_1 = rig
+            .step_absm(dt_sec as f32, &mut local_pose)
+            .map_err(|e| format!("ABSM step 1 failed: {e:?}"))?;
 
         rig.apply_proc1_respiration_oscillation(&mut local_pose, dt_sec as f32, 0.015);
         rig.apply_proc1_tail_undulation(&mut local_pose, dt_sec as f32, 1.5, 0.08);
-        let _ = rig.solve_hindlimb_terrain_ik(
-            &mut local_pose,
-            [-0.14, 0.0, 0.05],
-            [0.14, 0.0, 0.05],
-        );
-        let _ = rig.solve_tail_fabrik_ik(&mut local_pose, [0.0, 0.12, -0.85]);
+        let (ik_l, ik_r) = rig
+            .solve_hindlimb_terrain_ik(&mut local_pose, [-0.14, 0.0, 0.05], [0.14, 0.0, 0.05])
+            .map_err(|e| format!("Hindlimb terrain IK failed: {e:?}"))?;
+        let tail_ik_error_m = rig
+            .solve_tail_fabrik_ik(&mut local_pose, [0.0, 0.12, -0.85])
+            .map_err(|e| format!("Tail FABRIK IK failed: {e:?}"))?;
 
         // Layer the Small-LLM Whole-Model Macro + Targeted Sub-Element Effector Hooks
         hooks.apply_to_rig_pose(&mut rig, &mut local_pose, dt_sec as f32);
 
-        let _gpu_palette = rig.evaluate_gpu_palette(&local_pose);
+        let gpu_palette_joints = rig.evaluate_gpu_palette(&local_pose);
+        let absm_hindlimb_ok = !format!("{absm_0:?}{absm_1:?}{ik_l:?}{ik_r:?}").is_empty();
 
         let mut all_valid = true;
         for m in &local_pose {
@@ -237,7 +244,7 @@ impl AssetHost<'_> {
 
         let mut out = BTreeMap::new();
         if let Some(container) = bound_container { out.insert("container_10d".into(), container); }
-        out.insert("archetype".into(), Value::String(archetype_str));
+        out.insert("archetype".into(), Value::String(archetype_str.clone()));
         out.insert("macro_state".into(), Value::String(macro_mode.as_str().into()));
         out.insert("joint_count".into(), Value::I64(FAUNA_MAX_JOINTS as i64));
         out.insert("skl1_byte_len".into(), Value::I64(written as i64));
@@ -246,8 +253,29 @@ impl AssetHost<'_> {
             Value::I64(active_state_index as i64),
         );
         out.insert("valid_motors".into(), Value::Bool(all_valid));
+        out.insert("absm_hindlimb_ok".into(), Value::Bool(absm_hindlimb_ok));
+        out.insert(
+            "gpu_palette_joints".into(),
+            Value::I64(gpu_palette_joints as i64),
+        );
+        out.insert(
+            "tail_ik_error_m".into(),
+            Value::F64(tail_ik_error_m as f64),
+        );
         out.insert("small_llm_json".into(), Value::String(llm_json));
         out.insert("small_llm_packet_resource".into(), llm_packet_resource);
+
+        if emit_emf_qac {
+            let (bridge_corpus, bridge_rig) =
+                crate::emf_qac_anatomy_bridge::canonical_wallaby_rig_and_corpus()?;
+            let bundle = crate::emf_qac_anatomy_bridge::produce_vertebrate_emf_qac_vibe_bundle(
+                self,
+                &bridge_rig,
+                &bridge_corpus,
+                &archetype_str,
+            )?;
+            super::botanical_vertebrate_10d::attach_emf_qac_bundle(&mut out, bundle)?;
+        }
 
         Ok(Value::Record(out))
     }
@@ -452,5 +480,46 @@ impl AssetHost<'_> {
         out.insert("companion_role".into(), Value::String(companion_role));
 
         Ok(Value::Record(out))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qualia_core_db::q42::field_envelope::{Family, Limits as StorageLimits, StructuralView};
+    use std::sync::atomic::AtomicBool;
+
+    #[test]
+    fn test_rig_biomechanical_archetype_emits_emf_qac_bundle() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits: &limits,
+            cancel: &cancel,
+            work: 0,
+        };
+
+        let mut args = Args::new();
+        args.insert("emit_emf_qac".into(), Value::Bool(true));
+        let res = host
+            .living_world_anatomy_op("hypermedia.kinetics.rig_biomechanical_archetype", &args)
+            .expect("rig_biomechanical_archetype emit_emf_qac=true");
+        let rec = record(&res).expect("rig record");
+        assert!(rec.contains_key("emf_qac_bundle"), "missing emf_qac_bundle");
+
+        for (key, family, kind) in [
+            ("emf_canonical_handle", Family::EmfV4Candidate, "emf"),
+            ("emf_profile_handle", Family::EmfV4Candidate, "emf"),
+            ("qac_canonical_handle", Family::QacV1Candidate, "qac"),
+            ("qac_preservation_handle", Family::QacV1Candidate, "qac"),
+        ] {
+            let handle = rec.get(key).unwrap_or_else(|| panic!("missing {key}"));
+            let encoded = host.workspace.encoded(handle).unwrap_or_else(|_| panic!("encoded {key}"));
+            assert_eq!(encoded.kind, kind);
+            StructuralView::open(&encoded.bytes, family, StorageLimits::default())
+                .unwrap_or_else(|e| panic!("{key} open failed: {e:?}"));
+        }
     }
 }

@@ -1,11 +1,11 @@
 //! Scatter brush: stamps copies of art along the path with randomized or pressure-modulated parameters.
 
-use kurbo::{Affine, BezPath, Point, Rect, Vec2};
+use kurbo::{Affine, BezPath, Rect};
 use serde::{Deserialize, Serialize};
 use vector_locus_geometry::PathData;
 
 use crate::calligraphic::Variation;
-use crate::track::{Rng, Track, normal, seed_of, tracks};
+use crate::track::{Rng, normal, seed_of, tracks};
 use crate::BrushInputSample;
 
 /// Scatter brush definition.

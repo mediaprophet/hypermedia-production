@@ -2,11 +2,11 @@
 
 use std::f64::consts::FRAC_PI_2;
 
-use kurbo::{Affine, BezPath, PathEl, Point, Rect, Vec2};
+use kurbo::{Affine, BezPath, PathEl, Point, Rect};
 use serde::{Deserialize, Serialize};
 use vector_locus_geometry::{PathData, SubPath};
 
-use crate::track::{Track, tracks};
+use crate::track::tracks;
 
 /// The direction art runs in the brush definition.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,7 +60,7 @@ impl Default for ArtBrush {
 }
 
 pub fn default_arrow_art() -> PathData {
-    let mut sp = SubPath::polyline(
+    let sp = SubPath::polyline(
         &[
             Point::new(0.0, -10.0),
             Point::new(70.0, -10.0),
@@ -78,7 +78,7 @@ pub fn default_arrow_art() -> PathData {
 impl ArtBrush {
     pub fn expand(&self, bp: &BezPath, weight: f64) -> Vec<PathData> {
         let (oriented_art, b) = self.orient_art();
-        let (art_w, art_h) = (b.width().max(1.0), b.height().max(1.0));
+        let art_w = b.width().max(1.0);
         let art_mid_y = (b.y0 + b.y1) / 2.0;
 
         let mut out = Vec::new();

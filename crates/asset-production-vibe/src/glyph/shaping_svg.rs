@@ -241,6 +241,13 @@ impl AssetHost<'_> {
                 self.charge(t.len().max(1) * 8, t.len() * 16)?;
                 let run =
                     shape_glyph_run(t, font_size, line_height, tracking, max_width, 0.0, 0.0);
+                if run.text != t
+                    || !run.font_size.is_finite()
+                    || !run.line_height.is_finite()
+                    || !run.tracking.is_finite()
+                {
+                    return Err("Shaped glyph run metadata became invalid".into());
+                }
 
                 Ok(Value::Record(BTreeMap::from([
                     ("width".into(), Value::F64(run.width)),

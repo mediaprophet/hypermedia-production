@@ -2,7 +2,7 @@
 //!
 //! Provides deterministic frame-boundary snapping, overlap removal, and minimum duration enforcement.
 
-use crate::captions::{CaptionCue, CaptionDocument};
+use crate::captions::CaptionDocument;
 use crate::time::{FrameRate, Tick};
 
 /// Options for aligning caption cues to sequence video frames.

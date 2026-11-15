@@ -31,9 +31,10 @@ _Bounded metric profile authoring. Source, units and project history remain host
 | `preflight` | 2 | `crates/profile-authoring/src/assembly.rs:98` | - |  |
 | `compile_assembly` | 2 | `crates/profile-authoring/src/assembly.rs:164` | - |  |
 | `unit` | 1 | `crates/profile-authoring/src/frames.rs:9` | - |  |
-| `record` | 2 | `crates/profile-authoring/src/frames.rs:25` | 3d |  |
-| `normal` | 2 | `crates/profile-authoring/src/frames.rs:46` | 3d |  |
-| `face` | 3 | `crates/profile-authoring/src/frames.rs:57` | - |  |
+| `record` | 2 | `crates/profile-authoring/src/frames.rs:28` | 3d |  |
+| `normal` | 2 | `crates/profile-authoring/src/frames.rs:49` | 3d |  |
+| `face` | 3 | `crates/profile-authoring/src/frames.rs:60` | - |  |
+| `finite_small_triangle_has_unit_normal_and_degenerate_fails` | 0 | `crates/profile-authoring/src/frames.rs:71` | 3d |  |
 | `impl Default for GeometryLimits::default` | 0 | `crates/profile-authoring/src/geometry.rs:20` | - |  |
 | `impl GeometryLimits::admit` | 4 | `crates/profile-authoring/src/geometry.rs:31` | - |  |
 | `mesh` | 2 | `crates/profile-authoring/src/geometry.rs:52` | computational geometry |  |

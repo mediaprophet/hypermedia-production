@@ -1,7 +1,7 @@
 # hypermedia-production — capabilities
 
-Functional overview generated from source on 2026-11-10T12:07:10.5599269Z.
-903 source files, 8745 functions (2198 documented).
+Functional overview generated from source on 2026-11-15T03:55:25.1861484Z.
+939 source files, 8997 functions (2232 documented).
 
 > **GENERATED — do not edit.** Regenerate with `audit docs`.
 >
@@ -17,14 +17,14 @@ Functional overview generated from source on 2026-11-10T12:07:10.5599269Z.
 
 | domain | functions |
 |---|---|
-| 2d | 366 |
-| 3d | 173 |
-| computational geometry | 98 |
-| economics | 6 |
-| graph | 95 |
-| numerics | 171 |
-| physics | 37 |
-| semantics | 20 |
+| 2d | 369 |
+| 3d | 183 |
+| computational geometry | 101 |
+| economics | 7 |
+| graph | 102 |
+| numerics | 178 |
+| physics | 38 |
+| semantics | 23 |
 
 ## Modules
 
@@ -73,7 +73,7 @@ _Native audio codecs: pure-Rust AIFF/AIFF-C, FLAC encoder, RF64/BWF WAV, and Pea
 
 _54 undocumented functions — see `modules/crates_acoustics-daw-session.md`._
 
-### `crates/asset-production-vibe` — 814 functions (172 documented)
+### `crates/asset-production-vibe` — 1065 functions (206 documented)
 
 _Acoustics 32-Bus AudioServer mixing DAG & PGA spatializer,
 Discourse telemetry inspection & fiduciary RID verification,
@@ -84,12 +84,16 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 
 **2d**
 
+- `copy_autotile_gutter` (function) — Copy 1px wrap gutter after an opaque tile blit: right from the tile's left
 - `rasterize_uv_chart` (function) — Rasterize UV triangles into a still map so a non-trivial island pixel is observable.
 
 **3d**
 
+- `render_raymarch` (function) — DDA alpha-composites a magnitude PALETTE. It is not absorption, radiative
 - `advect_m64_grid` (method) — Solves divergence-free pressure projection via Jacobi Poisson iterations,
 - `produce_wifi_csi_vitals_aoa` (method) — 802.11 CSI → sanitized phase, contactless vitals, MUSIC AoA, camera-free receipt.
+- `require_legacy_visible_projection` (function) — Explicit slice/raymarch operations are a derived human-visible preview only.
+- `encode_polarimetric_ray_record` (function) — Encode one 128-byte Mode `0x0101` (`polarimetric_ray_v1`) record.
 - `query_anatomical_ontology_pin` (method) — Queries the closest canonical anatomical ontology pin (`CANONICAL_ANATOMICAL_PINS`, `32` pins)
 - `synchronize_companion_frustum` (method) — Generates a multi-projector conical dome frustum cluster (`rows * cols` `ConicalDomeWedge`s)
 - `render_animated_cinema_frames` (function) — Renders an N-frame animated 3D cinema sequence (`160x112` H.264 macroblock-aligned) combining
@@ -98,6 +102,7 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 
 **computational geometry**
 
+- `conforming_union` (function) — Caller must supply the existing mesh/work/byte budgets; no provider cap is raised.
 - `intersect_aabb` (function) — Ray-AABB intersection test returning entry and exit parameters `(t_min, t_max)`.
 - `render_macro_behavior_cinema_frames` (function) — Renders an N-frame animated 3D cinema sequence driven by a `BehaviorMacro` and `SubElementHooks`.
 - `compile_botanical_organ_10d` (method) — Compiles a 4-scale botanical `.10d` organ container (`Scale 1` whole organism, `Scale 2`
@@ -125,12 +130,13 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `acoustics_discourse_chronicle_ext_op` (method) — Categorical operations dispatch for acoustics, discourse, and chronicle extensions.
 - `acoustics_ext` (method) — Categorical operations dispatch for the `acoustics` category extensions.
 - `filter_biquad` (method) — Audio EQ Cookbook biquad IIR filter (lowpass, highpass, bandpass, notch, peaking).
-- `encode_aac` (method) — AAC-LC CBR audio encoding with ADTS framing.
+- `encode_aac` (method) — AAC-LC CBR audio encoding with ADTS framing, or canonical QAC v1 (`qac\0\0\0\0\0` v1)
 - `integrated_lufs_bs1770` (function) — ITU-R BS.1770-4 / EBU R128 gated integrated LUFS.
 - `schedule_cpm_evm_montecarlo` (method) — 138: `hypermedia.kinetics.schedule_cpm_evm_montecarlo`
 - `analyze_ebu_r128_camelot_daw` (method) — 139: `hypermedia.acoustics.analyze_ebu_r128_camelot_daw`
 - `kriging_variogram_morphometry` (method) — 141: `hypermedia.geodesy.kriging_variogram_morphometry`
 - `produce_locked_dt_maps` (method) — Locked-dt ProRes + OTIO + Matroska + fiduciary hash-chain maps.
+- `frame_rate` (function) — The shared timeline owner normalizes rational rates; reject invalid values
 - `audit_tex_pdf_ua_matlang` (method) — 142: `hypermedia.discourse.audit_tex_pdf_ua_matlang`
 - `recalculate_tabular_fiduciary_archive` (method) — 143: `hypermedia.chronicle.recalculate_tabular_fiduciary_archive`
 - `crc32_ieee` (function) — Branchless IEEE 802.3 CRC-32 checksum (polynomial 0xEDB88320).
@@ -141,6 +147,9 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `discourse_op` (method) — Categorical operations dispatch for the `discourse` category morphisms.
 - `review_gallery` (method) — CSP-locked gallery. Origin image/audio path is preserved; 10d/m64/emf/q42
 - `domain_extension_op` (method) — Dispatches Wave 13 domain extension morphisms (`120..=143`).
+- `emf_peak_admit` (method) — Conservative logical live-payload admission, including immutable sources.
+- `host_work_bound` (function) — Upper bound for the host charge before admission: selected payload work is
+- `magnitude_brightness` (function) — exponential colormap of |E| V/m; exposure has units m/V. Overflow in
 - `couple_continuum_xpbd` (method) — Evaluates Bekker / Mohr-Coulomb terramechanics pressure-sinkage, tractive shear stress,
 - `electromagnetics_geodesy_ext_op` (method) — Categorical operations dispatch for electromagnetics and geodesy extensions.
 - `spectral_wavelength_to_rgb` (function) — CIE 1931 / Bruton piecewise spectral-to-sRGB mapping for wavelength in nanometers.
@@ -149,11 +158,37 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `raymarch_vox0_dda` (method) — Raymarches a 3D `.10d` `Vox0DagNode` / `.emf` volumetric brick lattice using exact
 - `project_metamer_nullspace` (method) — Exposes Etalon's 41-band spectral metamer fiber decomposition:
 - `electromagnetics_op` (method) — Categorical operations dispatch for the `electromagnetics` category.
-- `compile_emf` (method) — Synthesizes a 3D wave-optical & electromagnetic field volume and seals it
-- `verify_emf` (method) — Parses and cryptographically verifies the Q42EMF64 container,
-- `render_spectral_slice` (method) — Renders a 2D spectral preview slice from an EMF-64 volume container to straight-alpha RGBA8.
-- `resolve_emf_bytes` (method) — Resolves container bytes from retained inputs or workspace encoded resources.
-- `parse_sealed_emf` (function) — QualiaDB `parse` admits CRC-only files; untrusted paths require a writer Bao seal.
+- `emf_source_bytes` (method) — Resolves container bytes from retained inputs or workspace encoded resources.
+- `resolve_emf_bytes_for` (method) — Fixed backing is already included by peak admission; add exactly one
+- `metadata_output_bound` (function) — Serializing to a counter allocates no JSON buffer. Maximal three-digit digest
+- `emf_peak_admit` (method) — This local admission includes fixed retained inputs and workspace payloads,
+- `emf_read_required` (method) — Borrowed envelope sizing only; the core reader remains the integrity owner.
+- `selected_time_slice` (function) — Time slice zero is valid; the generic positive count parser cannot be used.
+- `produce_vertebrate_emf_qac_vibe_bundle` (function) — Produce, round-trip verify, and admit a vertebrate EMF v4 + QAC v1 bundle into `AssetHost`,
+- `produce_botanical_emf_qac_vibe_bundle` (function) — Produce, round-trip verify, and admit a botanical FSPM metamer EMF v4 + QAC v1 bundle into
+- `encode_instantaneous_e_b_record` (function) — Encode one 128-byte Mode `0x0100` (`instantaneous_E_B_v1`) record.
+- `sampled_spectrum_stride` (function) — Compute the 64-byte aligned stride for Mode `0x0103` (`sampled_spectrum_v1`) with `bin_count` f64 bins.
+- `encode_sampled_spectrum_record` (function) — Encode one Mode `0x0103` (`sampled_spectrum_v1`) record with explicit trailing zero padding.
+- `encode_bioelectric_dipole_record` (function) — Encode one 128-byte Mode `0x0107` (`bioelectric_dipole_v1`) record with sealed CRC-32C at `124..128`.
+- `produce_vertebrate_emf_v4` (function) — Produce deterministic canonical EMF v4 (`0x0100, 0x0101, 0x0103, 0x0107`) and companion
+- `produce_botanical_emf_v4` (function) — Produce deterministic canonical EMF v4 (`0x0100, 0x0101, 0x0103, 0x0107`) and companion
+- `inspect_and_verify_emf_v4_bundle` (function) — Inspect and verify both the canonical 4-mode EMF v4 container (`0x0100, 0x0101, 0x0103, 0x0107`)
+- `inspect_and_verify_qac_v1_bundle` (function) — Inspect and verify both the canonical 4-mode QAC v1 container (`0x0100, 0x0101, 0x0102, 0x0104`)
+- `emf_inspection_to_vibe_value` (function) — Convert an `EmfV4InspectionReport` into a deterministic `vibe::Value::Record`.
+- `qac_inspection_to_vibe_value` (function) — Convert a `QacV1InspectionReport` into a deterministic `vibe::Value::Record`.
+- `encode_hoa_order1_sn3d_frame` (function) — Encode one 16-byte Mode `0x0102` (`hoa_spatial_audio`, 1st-order ACN/SN3D `[W, Y, Z, X]`) frame.
+- `encode_modal_resonance_record` (function) — Encode one 32-byte Mode `0x0104` (`modal_resonance`) record per wire-freeze §5.5:
+- `produce_vertebrate_qac_v1` (function) — Produce deterministic QAC v1 containers (`0x0100, 0x0101, 0x0102, 0x0104`) from an
+- `produce_botanical_qac_v1` (function) — Produce deterministic QAC v1 containers (`0x0100, 0x0101, 0x0102, 0x0104`) from a
+- `canonical_wallaby_rig_and_corpus` (function) — Builds a canonical evidenced `SpeciesCorpus` and articulated `VertebrateAnatomicalRig`
+- `canonical_ghost_gum_metamer_rig_and_corpus` (function) — Builds a canonical evidenced `SpeciesCorpus` and Murray-law `BotanicalMetamerRig`
+- `midpoint_m` (method) — Segment midpoint in local frame metres.
+- `length_m` (method) — Segment length in metres.
+- `unit_axis` (method) — Unit axis from proximal to distal joint.
+- `planck_spectral_radiance_w_sr_m3` (function) — Evaluates Planck spectral radiance $B_\lambda(\lambda, T)$ in $\text{W}\cdot\text{sr}^{-1}\cdot\text{m}^{-2}\cdot\text{m}^{-1}$.
+- `validate` (method) — Validates the articulated vertebrate rig against its backing `SpeciesCorpus`.
+- `heightfield_record` (function) — A square, metre-based heightfield record shared by sculpt, erosion and M64.
+- `compile_heightfield_m64` (method) — Seal the retained field via QualiaDB's checked georaster profile. Samples
 - `glyph_advance` (function) — Proportional advance width in normalized em units (1.0 = em height).
 - `pair_kerning` (function) — Pair kerning adjustment in normalized em units.
 - `char_to_svg_subpath` (function) — Emits the clean vector strokes for `ch` into `out` as SVG path instructions `M ... L ...`.
@@ -211,7 +246,6 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `render_hero_rgba_frame` (function) — Renders a 256x256 RGBA studio hero frame suitable for downstream Radiance / CDL / MaterialX morphisms.
 - `render_turnaround_sheet_png` (function) — Renders a 3-panel (`900x420`) RGBA8 turnaround sheet PNG (`Side Profile`, `3/4 Hero`, `Front`).
 - `add_curved_tube` (method) — Add a continuous, welded multi-station curved tube with parallel-transported ring frames.
-- `add_foliage_lobe` (method) — Add an ellipsoid or sculpted foliage cluster lobe with organic surface modulation.
 - `cubic_bezier` (function) — Evaluates a 4-point cubic Bezier curve at parameter `t` in `[0, 1]`.
 - `build_whitegum_whole_organism_10d` (function) — Builds a high-craft Scale-1 Whole-Organism Whitegum / Ghost Gum (`Corymbia aparrerinja`)
 - `print_arc_segments` (function) — Print-density sample count for a circular sweep; `min_seg` is the origin floor.
@@ -233,10 +267,9 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `morphism_to_json` (function) — Serializes a single `AgenticMorphismSpec` including its `OntologicalContract` and `NQuin48` parity hashes.
 - `radiance_decode_cryptomatte_q42` (method) — 2. Cryptomatte Q42 ID coverage matte extraction and isolated compositing
 - `radiance_vector_motion_blur` (method) — 3. Vector motion blur line-integral convolution with Hann shutter window
+- `dispatch_gpu_sdfgi` (function) — Dispatch cascaded irradiance probes and GGX/HG froxel shading on GPU.
 - `grade_cdl_scopes` (method) — 129: `hypermedia.radiance.grade_cdl_scopes`
 - `trace_vector_contours` (method) — 130: `hypermedia.radiance.trace_vector_contours`
-- `optical_nm_to_audio_hz` (method) — Heterodyne optical wavelength onto A4 (532 nm → 440 Hz) so the field is hearable.
-- `sonify_emf_field` (method) — Field-derived mono PCM: irradiance envelope in sealed chunk/cell order (no HashMap).
 - `uv_island_hull` (function) — Monotone-chain hull of a SLIM UV island. Sorted, so iteration is produce-safe.
 - `surface_bsdf_uv_op` (method) — Categorical operations dispatch for surface BSDF, UV, and procedural field synthesis.
 - `bake_pbr_materialx` (method) — 126: `hypermedia.surface.bake_pbr_materialx`
@@ -244,6 +277,9 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 
 **graph**
 
+- `read_work_bound` (function) — Conservative logical cold budget, not a measured cycle or monetary estimate.
+- `metadata_cost` (function) — Walk borrowed input first. Account strings/keys at worst-case JSON escaping,
+- `validate` (method) — Validates the botanical FSPM metamer rig against its `SpeciesCorpus`,
 - `locus_shortest_edge_path` (method) — Shortest edge path across a 3D triangle manifold using deterministic Dijkstra search.
 - `splice_face_cycles` (function) — Join two face cycles at the shared oriented edge (v0, v1).
 - `radiance_filter_kuwahara_anisotropic` (method) — 1. Anisotropic Kuwahara structure-tensor edge-preserving filter
@@ -251,8 +287,6 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 **numerics**
 
 - `mix_tracks` (method) — Multi-track audio mixer with linear fade envelopes and master gain.
-- `emf_cell_display_irradiance` (function) — Vacuum-impedance irradiance (W/m²) used as the display-linear quantity.
-- `spectral_wavelength_to_rgb` (function) — CIE 1931 / Bruton piecewise spectral-to-sRGB mapping for wavelength in nanometers.
 - `solve_continuum_fem_lbm` (method) — 135: `hypermedia.kinetics.solve_continuum_fem_lbm` (`kinetics-continuum-multiphysics`)
 - `solve_flexbox_grid_constraints` (method) — 132: `hypermedia.layout.solve_flexbox_grid_constraints` (`layout-box-autolayout`)
 - `solve_box_tree` (method) — Solves deterministic 2D spatial flex or CSS-grid-like layouts across viewports.
@@ -278,7 +312,7 @@ provenance, deterministic multimedia synchronization, and spatial audio reproduc
 - `categories_json` (function) — Serializes the category-theoretic ontology taxonomy for agentic discovery (`synth.ontology.categories`).
 - `morphisms_json` (function) — Serializes morphisms filtered by optional `category` (`synth.ontology.morphisms`).
 
-_642 undocumented functions — see `modules/crates_asset-production-vibe.md`._
+_859 undocumented functions — see `modules/crates_asset-production-vibe.md`._
 
 ### `crates/audio-aac-codec` — 190 functions (82 documented)
 
@@ -1264,39 +1298,39 @@ _45 undocumented functions — see `modules/crates_geodesy-spatial-analysis.md`.
 
 _!
 
-Easy to use profiler scopes for [wgpu](https://github.com/gfx-rs/wgpu) using timer queries.
+Easy to use profiler scopes for [Etalon](https://github.com/mediaprophet/etalon) using timer queries.
 
-`wgpu_profiler` manages all the necessary [`wgpu::QuerySet`] and [`wgpu::Buffer`] behind the scenes
+`etalon_profiler` manages all the necessary [`etalon::QuerySet`] and [`etalon::Buffer`] behind the scenes
 and allows you to create to create timer scopes with minimal overhead!
 
 # How to use
 
 ```
-use wgpu_profiler::*;
+use etalon_profiler::*;
 
-# async fn wgpu_init() -> (wgpu::Instance, wgpu::Adapter, wgpu::Device, wgpu::Queue) {
-    # let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
-    # let adapter = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await.unwrap();
+# async fn etalon_init() -> (etalon::Instance, etalon::Adapter, etalon::Device, etalon::Queue) {
+    # let instance = etalon::Instance::new(etalon::InstanceDescriptor::new_without_display_handle());
+    # let adapter = instance.request_adapter(&etalon::RequestAdapterOptions::default()).await.unwrap();
     # let (device, queue) = adapter
-    #     .request_device(&wgpu::DeviceDescriptor {
-    #         required_features: wgpu::Features::TIMESTAMP_QUERY,
+    #     .request_device(&etalon::DeviceDescriptor {
+    #         required_features: etalon::Features::TIMESTAMP_QUERY,
     #         ..Default::default()
     #     })
     #     .await
     #     .unwrap();
     # (instance, adapter, device, queue)
 # }
-# let (instance, adapter, device, queue) = futures_lite::future::block_on(wgpu_init());
-# let cs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+# let (instance, adapter, device, queue) = futures_lite::future::block_on(etalon_init());
+# let cs_module = device.create_shader_module(etalon::ShaderModuleDescriptor {
 #     label: None,
-#     source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
+#     source: etalon::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
 # });
-# let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+# let pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
 #        label: None,
 #        layout: None,
 #        module: &cs_module,
 #        entry_point: Some("main"),
-#        compilation_options: wgpu::PipelineCompilationOptions::default(),
+#        compilation_options: etalon::PipelineCompilationOptions::default(),
 #        cache: None,
 #    });
 // ...
@@ -1305,7 +1339,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
 
 // ...
 
-# let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+# let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 {
     // You can now open profiling scopes on any encoder or pass:
     let mut scope = profiler.scope("name of your scope", &mut encoder);
@@ -1324,7 +1358,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
     // Scopes created this way are automatically closed when dropped.
 }
 
-// Wgpu-profiler needs to insert buffer copy commands.
+// Etalon-profiler needs to insert buffer copy commands.
 profiler.resolve_queries(&mut encoder);
 # drop(encoder);
 
@@ -1339,18 +1373,18 @@ if let Some(profiling_data) = profiler.process_finished_frame(queue.get_timestam
     # let button_pressed = false;
     // You usually want to write to disk only under some condition, e.g. press of a key.
     if button_pressed {
-        wgpu_profiler::chrometrace::write_chrometrace(
+        etalon_profiler::chrometrace::write_chrometrace(
             std::path::Path::new("mytrace.json"), &profiling_data);
     }
 }
 ```
-Check also the [Example](https://github.com/Wumpf/wgpu-profiler/blob/main/examples/demo.rs) where everything can be seen in action.
+See the maintained `examples/demo.rs` in this package for a complete example.
 
 ## Tracy integration
 
 If you want to use [tracy](https://github.com/wolfpld/tracy) for profiling, you can enable the `tracy` feature.
 
-This adds `wgpu_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
+This adds `etalon_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
 
 For details check the example code.
 
@@ -1358,7 +1392,7 @@ For details check the example code.
 
 If you want to use [puffin](https://github.com/EmbarkStudios/puffin) for profiling, you can enable the `puffin` feature.
 
-This adds `wgpu_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
+This adds `etalon_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
 
 You can run the demo example with puffin by running `cargo run --example demo --features puffin`.
 All CPU profiling goes to port `8585`, all GPU profiling goes to port `8586`. You can open puffin viewers for both.
@@ -1417,7 +1451,7 @@ _51 undocumented functions — see `modules/crates_gpu-command-profiler.md`._
 
 ### `crates/gpu-device-context` — 48 functions (21 documented)
 
-_Simple helpers for managing wgpu state and surfaces._
+_Simple helpers for managing etalon state and surfaces._
 
 **general**
 
@@ -1440,8 +1474,8 @@ _Simple helpers for managing wgpu state and surfaces._
 - `target_texture_view` (method) — Get a target texture view to render to.
 - `maybe_blit_and_present` (method) — Present the texture to the surface. If there is an intermediate texture, this first blits
 - `blit_from_intermediate_texture_to_surface` (method) — Blit from the intermediate texture to the surface texture
-- `block_on_wgpu` (function) — Block on a future, polling the device as needed.
-- `create_texture` (function) — Create a WGPU Texture, returning a default TextureView
+- `block_on_etalon` (function) — Block on a future, polling the device as needed.
+- `create_texture` (function) — Create a Etalon Texture, returning a default TextureView
 
 _27 undocumented functions — see `modules/crates_gpu-device-context.md`._
 
@@ -2003,29 +2037,20 @@ prototyping simple pixel-based games, animations, and emulators. The pixel buffe
 entirely on the GPU, allowing developers to easily incorporate special effects with shaders and
 a customizable pipeline.
 
-The GPU interface is offered by [`wgpu`](https://crates.io/crates/wgpu), and is re-exported for
+The GPU interface is offered by [`etalon`](https://github.com/mediaprophet/etalon), and is re-exported for
 your convenience. Use a windowing framework or context manager of your choice;
 [`winit`](https://crates.io/crates/winit) is a good place to start. Any windowing framework that
 uses [`raw-window-handle`](https://crates.io/crates/raw-window-handle) will work.
 
 # Environment variables
 
-Pixels will default to selecting the most powerful GPU and most modern graphics API available on
-the system, and these choices can be overridden with environment variables. These are the same
-vars supported by the [`wgpu` examples](https://github.com/gfx-rs/wgpu/tree/v0.10/wgpu#usage).
+The builder uses Etalon's environment settings unless explicit builder options override them.
 
-* `WGPU_BACKEND`: Select the backend (aka graphics API).
-* Supported values: `vulkan`, `metal`, `dx11`, `dx12`, `gl`, `webgpu`
-* The default depends on capabilities of the host system, with `vulkan` being preferred on
-Linux and Windows, and `metal` preferred on macOS.
-* `WGPU_ADAPTER_NAME`: Select an adapter (aka GPU) with substring matching.
-* E.g. `1080` will match `NVIDIA GeForce 1080ti`
-* `WGPU_POWER_PREF`: Select an adapter (aka GPU) that meets the given power profile.
-* Supported values: `low`, `high`
-* The default is `low`. I.e. an integrated GPU will be preferred over a discrete GPU.
+* `ETALON_BACKEND`: Select the graphics backend from those supported by the build and host.
+* `ETALON_ADAPTER_NAME`: Select an adapter by a substring of its name.
+* `ETALON_POWER_PREF`: Set the fallback adapter power preference (`low` or `high`).
 
-Note that `WGPU_ADAPTER_NAME` and `WGPU_POWER_PREF` are mutually exclusive and that
-`WGPU_ADAPTER_NAME` takes precedence._
+An adapter selected by name takes precedence over the fallback power preference._
 
 **2d**
 
@@ -2045,7 +2070,7 @@ Note that `WGPU_ADAPTER_NAME` and `WGPU_POWER_PREF` are mutually exclusive and t
 - `frame` (method) — Get an immutable byte slice for the pixel buffer.
 - `window_pos_to_pixel` (method) — Calculate the pixel location from a physical location on the window,
 - `clamp_pixel_pos` (method) — Clamp a pixel position to the pixel buffer texture size.
-- `texture` (method) — Provides access to the internal source [`wgpu::Texture`].
+- `texture` (method) — Provides access to the internal source [`etalon::Texture`].
 - `render` (method) — Draw the pixel buffer to the render target.
 - `clip_rect` (method) — Get the clipping rectangle for the scaling renderer.
 
@@ -2055,24 +2080,24 @@ Note that `WGPU_ADAPTER_NAME` and `WGPU_POWER_PREF` are mutually exclusive and t
 
 **general**
 
-- `request_adapter_options` (method) — Add options for requesting a [`wgpu::Adapter`].
-- `device_descriptor` (method) — Add options for requesting a [`wgpu::Device`].
-- `wgpu_backend` (method) — Set which backends wgpu will attempt to use.
+- `request_adapter_options` (method) — Add options for requesting a [`etalon::Adapter`].
+- `device_descriptor` (method) — Add options for requesting a [`etalon::Device`].
+- `etalon_backend` (method) — Set which backends etalon will attempt to use.
 - `enable_vsync` (method) — Enable or disable Vsync.
-- `present_mode` (method) — Optimistically set the `wgpu` present mode.
+- `present_mode` (method) — Optimistically set the `etalon` present mode.
 - `blend_state` (method) — Set the blend state.
 - `alpha_mode` (method) — Sets the alpha mode.
 - `clear_color` (method) — Set the clear color.
 - `check_texture_size` (function) — Compare the given size to the limits defined by `device`.
 - `new` (method) — Create a logical texture for a window surface.
 - `clear_color` (method) — Change the clear color.
-- `adapter` (method) — Returns a reference of the `wgpu` adapter used by the crate.
+- `adapter` (method) — Returns a reference of the `etalon` adapter used by the crate.
 - `enable_vsync` (method) — Enable or disable Vsync.
-- `present_mode` (method) — Get the `wgpu` present mode.
-- `set_present_mode` (method) — Set the `wgpu` present mode.
+- `present_mode` (method) — Get the `etalon` present mode.
+- `set_present_mode` (method) — Set the `etalon` present mode.
 - `reconfigure_surface` (method) — Reconfigure the surface.
-- `device` (method) — Provides access to the internal [`wgpu::Device`].
-- `queue` (method) — Provides access to the internal [`wgpu::Queue`].
+- `device` (method) — Provides access to the internal [`etalon::Device`].
+- `queue` (method) — Provides access to the internal [`etalon::Queue`].
 - `context` (method) — Provides access to the internal [`PixelsContext`].
 - `surface_texture_format` (method) — Get the surface texture format.
 - `render_texture_format` (method) — Get the render texture format.
@@ -2090,7 +2115,7 @@ _An AnyRender WindowRenderer for rendering pixel buffers using the pixels crate_
 
 _17 undocumented functions — see `modules/crates_pixel-window-render-adapter.md`._
 
-### `crates/profile-authoring` — 47 functions (2 documented)
+### `crates/profile-authoring` — 48 functions (2 documented)
 
 _Bounded metric profile authoring. Source, units and project history remain host-owned._
 
@@ -2102,7 +2127,7 @@ _Bounded metric profile authoring. Source, units and project history remain host
 
 - `replace` (method) — Pure successor, never a second document store or undo journal.
 
-_45 undocumented functions — see `modules/crates_profile-authoring.md`._
+_46 undocumented functions — see `modules/crates_profile-authoring.md`._
 
 ### `crates/radiance-camera-raw` — 35 functions (14 documented)
 
@@ -2572,7 +2597,7 @@ _27 undocumented functions — see `modules/crates_timeline-editing.md`._
 ### `crates/vector-compute-renderer` — 161 functions (77 documented)
 
 _Vello is a compute-centric 2D graphics rendering engine written in Rust,
-using [`wgpu`].
+using [`etalon`].
 It efficiently draws large 2D scenes with interactive or near-interactive
 performance.
 
@@ -2594,15 +2619,15 @@ This means that Vello needs a GPU with support for compute shaders to run.
 ## Getting started
 
 Vello is meant to be integrated deep in UI render stacks.
-While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a wgpu context, which is a non-trivial task.
+While drawing in a Vello [`Scene`] is easy, actually rendering that scene to a surface setting up a etalon context, which is a non-trivial task.
 
 To use Vello as the renderer for your PDF reader / GUI toolkit / etc, your code will have to look roughly like this:
 
 ```ignore
-// Initialize wgpu and get handles
+// Initialize etalon and get handles
 let (width, height) = ...;
-let device: wgpu::Device = ...;
-let queue: wgpu::Queue = ...;
+let device: etalon::Device = ...;
+let queue: etalon::Queue = ...;
 let mut renderer = Renderer::new(
 &device,
 RendererOptions {
@@ -2629,7 +2654,7 @@ scene.stroke(...);
 scene.pop_layer(...);
 
 let texture = device.create_texture(&...);
-// Render to a wgpu Texture
+// Render to a etalon Texture
 renderer
 .render_to_texture(
 &device,
@@ -2645,7 +2670,7 @@ antialiasing_method: AaConfig::Msaa16,
 )
 .expect("Failed to render to a texture");
 // Do things with surface texture, such as blitting it to the Surface using
-// wgpu::util::TextureBlitter.
+// etalon::util::TextureBlitter.
 ```
 
 See the [`research/examples/`](https://github.com/linebender/vello/tree/main/research/examples) folder to see how that code integrates with frameworks like winit.
@@ -2660,14 +2685,14 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 
 **3d**
 
+- `add_compute_shader` (method) — Add a shader.
 - `all` (method) — Support every anti-aliasing method.
 - `dispatch_indirect` (method) — Do an indirect dispatch.
 - `create_targets` (function) — Vello uses a compute shader to render to the provided texture, which means that it can't bind the surface
-- `add_compute_shader` (method) — Add a shader.
 
 **economics**
 
-- `register_texture` (method) — Register a [`wgpu::Texture`] with Vello, to allow drawing GPU-resident data.
+- `register_texture` (method) — Register a [`etalon::Texture`] with Vello, to allow drawing GPU-resident data.
 
 **general**
 
@@ -2678,12 +2703,19 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 - `is_empty` (method) — True if this `DebugLayers` has no layers enabled.
 - `contains` (method) — Determine whether `self` is a superset of `mask`.
 - `toggle` (method) — Toggle the value of the layers specified in mask.
+- `use_parallel_initialisation` (method) — Enable creating any remaining shaders in parallel
+- `build_shaders_if_needed` (method) — Initialise (in parallel) any shaders which are yet to be created
+- `get_gpu_buf` (method) — Get a buffer, only if it's on GPU.
+- `get_cpu_buf` (method) — Get a CPU buffer.
+- `get_buf` (method) — Get a buffer from the pool or create one.
+- `size_class` (method) — Quantize a size up to the nearest size class.
+- `new` (method) — Create new transient bind map, seeded from external resources
 - `area_only` (method) — Support only [`AaConfig::Area`].
 - `new` (method) — Creates a new renderer for the specified device.
 - `render_to_texture` (method) — Renders a scene to the target texture.
 - `override_image` (method) — Overwrite `image` with `texture`.
 - `mark_override_image_dirty` (method) — Marks `image` as dirty in the atlas cache, so its override texture will be recopied on
-- `unregister_texture` (method) — Unregister a [`wgpu::Texture`] that was registered with [`register_texture`](Self::register_texture).
+- `unregister_texture` (method) — Unregister a [`etalon::Texture`] that was registered with [`register_texture`](Self::register_texture).
 - `reload_shaders` (method) — Reload the shaders. This should only be used during `vello` development
 - `push` (method) — Appends a [`Command`] to the back of the [`Recording`].
 - `upload` (method) — Commands to upload the given data to a new buffer with the given name.
@@ -2731,14 +2763,7 @@ These APIs have not been carefully designed, and might not be powerful enough fo
 - `device` (method) — Finds or creates a compatible device handle id.
 - `new_device` (method) — Creates a compatible device handle id.
 - `adapter` (method) — Returns the adapter associated with the device.
-- `block_on_wgpu` (function) — Block on a future, polling the device as needed.
-- `use_parallel_initialisation` (method) — Enable creating any remaining shaders in parallel
-- `build_shaders_if_needed` (method) — Initialise (in parallel) any shaders which are yet to be created
-- `get_gpu_buf` (method) — Get a buffer, only if it's on GPU.
-- `get_cpu_buf` (method) — Get a CPU buffer.
-- `get_buf` (method) — Get a buffer from the pool or create one.
-- `size_class` (method) — Quantize a size up to the nearest size class.
-- `new` (method) — Create new transient bind map, seeded from external resources
+- `block_on_etalon` (function) — Block on a future, polling the device as needed.
 
 **numerics**
 
@@ -2850,7 +2875,7 @@ _A [`vello`] backend for the [`anyrender`] 2D drawing abstraction_
 **general**
 
 - `with_pipeline_cache` (method) — Like [`ImageRenderer::new`], but reusing compiled pipelines from a cache
-- `spawn_init` (function) — Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask
+- `spawn_init` (function) — Drive the etalon init future. On wasm32 we spawn it onto the JS microtask
 
 _42 undocumented functions — see `modules/crates_vector-gpu-render-adapter.md`._
 
@@ -2860,7 +2885,7 @@ _A [`vello_gpu`] backend for the [`anyrender`] 2D drawing abstraction_
 
 **general**
 
-- `spawn_init` (function) — Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask
+- `spawn_init` (function) — Drive the etalon init future. On wasm32 we spawn it onto the JS microtask
 
 _56 undocumented functions — see `modules/crates_vector-hybrid-render-adapter.md`._
 
@@ -2883,18 +2908,18 @@ preprocessing and GPU rendering:
 
 ## Feature Flags
 
-- `wgpu` (enabled by default): Enables the GPU rendering backend via wgpu and
+- `etalon` (enabled by default): Enables the GPU rendering backend via etalon and
 includes the required Vello GPU shaders.
-- `wgpu_default` (enabled by default): Enables wgpu with its default hardware
+- `etalon_default` (enabled by default): Enables etalon with its default hardware
 backends (such as Vulkan, Metal, and DX12).
 - `text` (enabled by default): Enables glyph rendering ([`Scene::glyph_run`]).
 - `webgl`: Enables the WebGL rendering backend for browser support, using GLSL
 shaders for compatibility.
 
-If you need to customize the set of enabled wgpu features, disable this crate's
-default features then enable its `wgpu` feature. You can then depend on wgpu
+If you need to customize the set of enabled etalon features, disable this crate's
+default features then enable its `etalon` feature. You can then depend on etalon
 directly, setting the specific features you require. Don't forget to also
-disable wgpu's default features.
+disable etalon's default features.
 
 ## Architecture
 
@@ -2927,7 +2952,7 @@ lifecycle and ownership of external resources through [`Resources`][].
 including glyph caching. Experimental APIs are identified in their method
 documentation.
 - Parts of the rendering pipeline are not yet fully optimized, particularly the
-wgpu backend, but also other aspects.
+etalon backend, but also other aspects.
 - Some failures panic instead of being reported through a user-facing error.
 
 With that said, we are continuously improving Vello GPU and will address these
@@ -2943,11 +2968,11 @@ rename._
 
 **2d**
 
+- `write_to_atlas` (method) — Write pixel data to an existing atlas allocation.
 - `new_with` (method) — Creates a new WebGL2 renderer and its persistent resources with specific settings.
 - `begin_with` (method) — Begins creating a WebGL2 renderer with specific settings.
 - `write_to_atlas` (method) — Write pixel data to an existing atlas allocation.
 - `probe` (method) — Conduct a probing operation.
-- `write_to_atlas` (method) — Write pixel data to an existing atlas allocation.
 - `paint_transform_has_area` (method) — Whether the effective paint transform maps paint space onto a non-zero area.
 - `push_clip_rect` (method) — Push a rectangular clip path.
 - `set_aliasing_threshold` (method) — Set the aliasing threshold.
@@ -2958,13 +2983,13 @@ rename._
 
 **3d**
 
+- `vertex_attributes` (method) — Vertex attributes for the strip
 - `new` (method) — Creates a new WebGL2 renderer and its persistent resources.
 - `begin` (method) — Begins creating a WebGL2 renderer and its persistent resources.
 - `try_finish` (method) — Polls shader compilation and program linking without blocking when
 - `finish` (method) — Blocks until shader compilation and program linking finish.
 - `draw_strip_range` (method) — Draw `count` strip instances starting at `first_instance`.
 - `set_strip_attrib_offset` (method) — Point the strip vertex attributes at the instance at `first_instance`.
-- `vertex_attributes` (method) — Vertex attributes for the strip
 
 **general**
 
@@ -2997,6 +3022,34 @@ rename._
 - `pack_image_offset` (function) — Pack image offset coordinates `x` and `y` into a single u32.
 - `pack_image_params` (function) — Pack image `quality` and extend modes into a single u32.
 - `pack_tint` (function) — Pack an optional [`Tint`](vello_common::paint::Tint) into a (`tint_color_u32`, `tint_mode_u32`) pair for the GPU.
+- `new` (method) — Create an empty binding map.
+- `insert` (method) — Insert or replace a texture binding.
+- `get` (method) — Get a texture binding.
+- `remove` (method) — Remove a texture binding.
+- `new` (method) — Creates a new renderer and its persistent resources.
+- `new_with` (method) — Creates a new renderer and its persistent resources with specific settings.
+- `create_depth_texture_view` (method) — Creates a depth texture view compatible with [`render`](Self::render).
+- `render` (method) — Render `scene`.
+- `render_to_atlas` (method) — Render a `scene` directly into an atlas layer.
+- `render_scene` (method) — Shared render pipeline: prepares GPU resources, runs the scheduler against
+- `upload_image` (method) — Upload image to cache and atlas in one step. Returns the `ImageId`.
+- `destroy_image` (method) — Destroy an image from the cache and clear the allocated slot in the atlas.
+- `atlas_texture` (method) — Returns an individual image atlas texture.
+- `clear_atlas_region` (method) — Clear a specific region of the atlas texture.
+- `prepare` (method) — Prepare GPU buffers for rendering, given alphas.
+- `maybe_resize_alphas_tex` (method) — Update the alpha texture size if needed.
+- `maybe_resize_encoded_paints_tex` (method) — Update the encoded paints texture size if needed.
+- `maybe_resize_gradient_tex` (method) — Update the gradient texture size if needed.
+- `maybe_update_config_buffer` (method) — Update config buffer if dimensions changed.
+- `maybe_create_atlas_textures` (method) — Create any newly allocated atlas textures.
+- `upload_alpha_texture` (method) — Upload alpha data to the texture.
+- `upload_encoded_paints_texture` (method) — Upload encoded paints to the texture.
+- `upload_gradient_texture` (method) — Upload gradient data to the texture.
+- `upload_strip_pair` (method) — Uploads two strip slices (opaque then alpha) into the frame arena and
+- `strip_pass_inner` (method) — Render the strips to the specified render target.
+- `width` (method) — Get the width of the image.
+- `height` (method) — Get the height of the image.
+- `write_to_atlas` (method) — Write image data to an atlas texture at the specified offset.
 - `map_js_error` (method) — Attach the WebGL operation that produced this JavaScript result.
 - `get_max_texture_dimension_2d` (function) — Query the WebGL context for the max texture size.
 - `new` (method) — Create an empty binding map.
@@ -3045,34 +3098,6 @@ rename._
 - `copy_to_texture` (function) — Copy from a source texture/framebuffer to an atlas texture.
 - `upload_rgba32ui_rows` (function) — Upload full rows of RGBA32UI data into immutable texture storage.
 - `try_finish` (method) — Try to finish the probe.
-- `new` (method) — Create an empty binding map.
-- `insert` (method) — Insert or replace a texture binding.
-- `get` (method) — Get a texture binding.
-- `remove` (method) — Remove a texture binding.
-- `new` (method) — Creates a new renderer and its persistent resources.
-- `new_with` (method) — Creates a new renderer and its persistent resources with specific settings.
-- `create_depth_texture_view` (method) — Creates a depth texture view compatible with [`render`](Self::render).
-- `render` (method) — Render `scene`.
-- `render_to_atlas` (method) — Render a `scene` directly into an atlas layer.
-- `render_scene` (method) — Shared render pipeline: prepares GPU resources, runs the scheduler against
-- `upload_image` (method) — Upload image to cache and atlas in one step. Returns the `ImageId`.
-- `destroy_image` (method) — Destroy an image from the cache and clear the allocated slot in the atlas.
-- `atlas_texture` (method) — Returns an individual image atlas texture.
-- `clear_atlas_region` (method) — Clear a specific region of the atlas texture.
-- `prepare` (method) — Prepare GPU buffers for rendering, given alphas.
-- `maybe_resize_alphas_tex` (method) — Update the alpha texture size if needed.
-- `maybe_resize_encoded_paints_tex` (method) — Update the encoded paints texture size if needed.
-- `maybe_resize_gradient_tex` (method) — Update the gradient texture size if needed.
-- `maybe_update_config_buffer` (method) — Update config buffer if dimensions changed.
-- `maybe_create_atlas_textures` (method) — Create any newly allocated atlas textures.
-- `upload_alpha_texture` (method) — Upload alpha data to the texture.
-- `upload_encoded_paints_texture` (method) — Upload encoded paints to the texture.
-- `upload_gradient_texture` (method) — Upload gradient data to the texture.
-- `upload_strip_pair` (method) — Uploads two strip slices (opaque then alpha) into the frame arena and
-- `strip_pass_inner` (method) — Render the strips to the specified render target.
-- `width` (method) — Get the width of the image.
-- `height` (method) — Get the height of the image.
-- `write_to_atlas` (method) — Write image data to an atlas texture at the specified offset.
 - `new` (method) — Create a new render context with the given width and height in pixels.
 - `new_with` (method) — Create a new render context with a specific SIMD level.
 - `encode_current_paint` (method) — Encode the current paint into a `Paint` that can be used for rendering.

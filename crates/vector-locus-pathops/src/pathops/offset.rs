@@ -3,11 +3,11 @@
 //! Grounded in authoring rights and creative preservation (UDHR Art. 19, 27).
 
 use kurbo::{BezPath, PathEl, Stroke, StrokeOpts};
-use vector_locus_geometry::{FillRule, PathData, SubPath};
+use vector_locus_geometry::PathData;
 
 pub use kurbo::{Cap, Join};
 
-use crate::pathops::boolean::{boolean, rings_to_path, BoolOp, DEFAULT_PRECISION};
+use crate::pathops::boolean::{boolean, BoolOp};
 
 const STROKE_TOL: f64 = 1e-3;
 

@@ -5,7 +5,6 @@
 
 use crate::geodesy::{Coord, Extent};
 use serde::{Deserialize, Serialize};
-use std::f64::consts::PI;
 
 /// Elevation raster grid wrapper.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

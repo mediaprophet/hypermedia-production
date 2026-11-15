@@ -201,7 +201,7 @@ pub fn develop_image(
 
     // White balance multipliers (simplified von Kries model)
     let temp_ref = 6500.0f32;
-    let temp_ratio = (temp_ref / settings.wb.temp.clamp(2000.0, 50000.0) as f32);
+    let temp_ratio = temp_ref / settings.wb.temp.clamp(2000.0, 50000.0) as f32;
     let r_wb = if temp_ratio > 1.0 { temp_ratio } else { 1.0 };
     let b_wb = if temp_ratio < 1.0 { 1.0 / temp_ratio } else { 1.0 };
     let g_wb = 1.0 + (settings.wb.tint as f32 / 100.0) * 0.1;

@@ -154,16 +154,16 @@ pub fn track_klt_point(
     max_iters: usize,
 ) -> Option<(f64, f64, bool)> {
     let num_levels = pyr_i.levels.len().min(pyr_j.levels.len());
-    let mut cur_x = start_x;
-    let mut cur_y = start_y;
+    let cur_x = start_x;
+    let cur_y = start_y;
 
     // Coarse to fine
     let mut g = [0.0f64, 0.0f64];
 
     for level in (0..num_levels).rev() {
         let scale = 1.0 / (1 << level) as f64;
-        let mut p_x = cur_x * scale;
-        let mut p_y = cur_y * scale;
+        let p_x = cur_x * scale;
+        let p_y = cur_y * scale;
 
         let img_i = &pyr_i.levels[level];
         let img_j = &pyr_j.levels[level];

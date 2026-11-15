@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use media_isobmff::{ByteSource, CodecConfig, Mp4File, TrackKind};
 
-use crate::convert::{Matrix, planar_to_rgba, scale_rgba};
+use crate::convert::{Matrix, planar_to_rgba};
 use crate::Frame;
 
 /// A random-access byte source a [`Movie`] can read from.

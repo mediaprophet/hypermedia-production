@@ -227,7 +227,14 @@ impl Typesetter {
                 let col_x = self.section.margin_left + (curr_col_idx as f32) * (col_w + col_gap);
                 for i in 0..take_lines {
                     let line_text = &lines[l_idx + i];
-                    let line_rect = Rect::new(col_x, self.section.margin_top + curr_y, col_w, p.line_height);
+                    let mut line_rect = Rect::new(col_x, self.section.margin_top + curr_y, col_w, p.line_height);
+                    for fig in figures {
+                        if line_rect.intersects(fig) {
+                            let bumped_y = (fig.bottom() - self.section.margin_top).max(curr_y);
+                            curr_y = bumped_y;
+                            line_rect.y = self.section.margin_top + curr_y;
+                        }
+                    }
                     curr_page.items.push(PlacedItem::Line {
                         rect: line_rect,
                         text: line_text.clone(),

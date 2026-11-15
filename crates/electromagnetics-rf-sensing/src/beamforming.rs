@@ -85,7 +85,7 @@ pub fn music_aoa_spectrum(
         let a = array.steering_vector(angle);
 
         // Project steering vector onto noise subspace: ||E_n^H a||^2 = ||a||^2 - \sum |s_k^H a|^2
-        let a_norm_sq = (m as f32); // Each element has magnitude 1
+        let a_norm_sq = m as f32; // Each element has magnitude 1
         let mut proj_signal_sq = 0.0f32;
 
         for s_vec in &signal_eigenvectors {

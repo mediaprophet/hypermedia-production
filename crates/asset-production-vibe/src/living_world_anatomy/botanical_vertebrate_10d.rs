@@ -20,9 +20,17 @@ impl AssetHost<'_> {
     pub(super) fn compile_botanical_organ_10d(&mut self, a: &Args) -> Result<Value, String> {
         fields(
             a,
-            &["scale", "species_id", "peel_01", "anthesis_01", "stage"],
+            &[
+                "scale",
+                "species_id",
+                "peel_01",
+                "anthesis_01",
+                "stage",
+                "emit_emf_qac",
+            ],
         )?;
 
+        let emit_emf_qac = boolean(a, "emit_emf_qac", false)?;
         let scale = count(a, "scale", 4, 4)?;
         if !(1..=4).contains(&scale) {
             return Err("scale outside 1..=4".into());
@@ -125,7 +133,7 @@ impl AssetHost<'_> {
 
         let mut out = BTreeMap::new();
         out.insert("scale".into(), Value::I64(scale as i64));
-        out.insert("species_id".into(), Value::String(species_id));
+        out.insert("species_id".into(), Value::String(species_id.clone()));
         out.insert("vertex_count".into(), Value::I64(v_count as i64));
         out.insert("triangle_count".into(), Value::I64(t_count as i64));
         out.insert("tissue_slice_count".into(), Value::I64(slice_count as i64));
@@ -139,6 +147,20 @@ impl AssetHost<'_> {
         out.insert("production_plan_resource".into(), flora_plan_res.clone());
         out.insert("mycelium_network_resource".into(), flora_plan_res);
         out.insert("logic_q42".into(), flora_logic_q42);
+
+        if emit_emf_qac {
+            let (mut bridge_corpus, mut bridge_rig) =
+                crate::emf_qac_anatomy_bridge::canonical_ghost_gum_metamer_rig_and_corpus()?;
+            bridge_corpus.species_id = species_id.clone();
+            bridge_rig.species_id = species_id.clone();
+            let bundle = crate::emf_qac_anatomy_bridge::produce_botanical_emf_qac_vibe_bundle(
+                self,
+                &bridge_rig,
+                &bridge_corpus,
+                &species_id,
+            )?;
+            attach_emf_qac_bundle(&mut out, bundle)?;
+        }
 
         Ok(Value::Record(out))
     }
@@ -203,9 +225,11 @@ impl AssetHost<'_> {
                 "rules",
                 "title",
                 "corpus",
+                "emit_emf_qac",
             ],
         )?;
 
+        let emit_emf_qac = boolean(a, "emit_emf_qac", false)?;
         let archetype_str = opt_string(a, "archetype", "macropod_saltatorial")?;
         let archetype = parse_fauna_archetype(&archetype_str)?;
         let title_str = opt_string(a, "title", &archetype_str)?;
@@ -418,7 +442,7 @@ impl AssetHost<'_> {
             behavioral_hooks::build_fauna_production_plan_json(&archetype_str, &title_str);
         let fauna_plan_res = self.encode("json", fauna_plan_json.clone().into_bytes())?;
         let fauna_logic_q42 = self.encode("q42", rules.bytes)?;
-        out.insert("species_id".into(), Value::String(species_id));
+        out.insert("species_id".into(), Value::String(species_id.clone()));
         out.insert(
             "spec_source".into(),
             Value::String(
@@ -455,8 +479,41 @@ impl AssetHost<'_> {
         out.insert("production_plan_resource".into(), fauna_plan_res);
         out.insert("logic_q42".into(), fauna_logic_q42);
 
+        if emit_emf_qac {
+            let (default_corpus, bridge_rig) =
+                crate::emf_qac_anatomy_bridge::canonical_wallaby_rig_and_corpus()?;
+            let active_corpus = corpus.as_ref().unwrap_or(&default_corpus);
+            let bundle = crate::emf_qac_anatomy_bridge::produce_vertebrate_emf_qac_vibe_bundle(
+                self,
+                &bridge_rig,
+                active_corpus,
+                &species_id,
+            )?;
+            attach_emf_qac_bundle(&mut out, bundle)?;
+        }
+
         Ok(Value::Record(out))
     }
+}
+
+pub(super) fn attach_emf_qac_bundle(
+    out: &mut BTreeMap<String, Value>,
+    bundle: Value,
+) -> Result<(), String> {
+    let rec = record(&bundle)?;
+    for key in [
+        "emf_canonical_handle",
+        "emf_profile_handle",
+        "qac_canonical_handle",
+        "qac_preservation_handle",
+    ] {
+        let handle = rec
+            .get(key)
+            .ok_or_else(|| format!("EMF/QAC bundle missing required handle '{key}'"))?;
+        out.insert(key.into(), handle.clone());
+    }
+    out.insert("emf_qac_bundle".into(), bundle);
+    Ok(())
 }
 
 fn store_raw_mesh(
@@ -489,4 +546,105 @@ fn store_raw_mesh(
         }),
         host.limits,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qualia_core_db::q42::field_envelope::{Family, Limits as StorageLimits, StructuralView};
+    use std::sync::atomic::AtomicBool;
+
+    fn test_host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
+        }
+    }
+
+    fn assert_emf_qac_bundle_handles(host: &AssetHost<'_>, rec: &BTreeMap<String, Value>) {
+        assert!(rec.contains_key("emf_qac_bundle"), "missing emf_qac_bundle");
+        let emf_can = rec.get("emf_canonical_handle").expect("emf_canonical_handle");
+        let emf_prof = rec.get("emf_profile_handle").expect("emf_profile_handle");
+        let qac_can = rec.get("qac_canonical_handle").expect("qac_canonical_handle");
+        let qac_pres = rec.get("qac_preservation_handle").expect("qac_preservation_handle");
+
+        let emf_res = host.workspace.encoded(emf_can).expect("encoded emf_canonical_handle");
+        assert_eq!(emf_res.kind, "emf");
+        StructuralView::open(&emf_res.bytes, Family::EmfV4Candidate, StorageLimits::default())
+            .expect("EMF canonical handle opens");
+
+        let emf_prof_res = host.workspace.encoded(emf_prof).expect("encoded emf_profile_handle");
+        assert_eq!(emf_prof_res.kind, "emf");
+        StructuralView::open(&emf_prof_res.bytes, Family::EmfV4Candidate, StorageLimits::default())
+            .expect("EMF profile handle opens");
+
+        let qac_res = host.workspace.encoded(qac_can).expect("encoded qac_canonical_handle");
+        assert_eq!(qac_res.kind, "qac");
+        StructuralView::open(&qac_res.bytes, Family::QacV1Candidate, StorageLimits::default())
+            .expect("QAC canonical handle opens");
+
+        let qac_pres_res = host.workspace.encoded(qac_pres).expect("encoded qac_preservation_handle");
+        assert_eq!(qac_pres_res.kind, "qac");
+        StructuralView::open(&qac_pres_res.bytes, Family::QacV1Candidate, StorageLimits::default())
+            .expect("QAC preservation handle opens");
+    }
+
+    #[test]
+    fn test_compile_botanical_organ_10d_emits_emf_qac_bundle() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        let default_res = host
+            .living_world_anatomy_op("hypermedia.manifold.compile_botanical_organ_10d", &Args::new())
+            .expect("default botanical compile");
+        assert!(!record(&default_res).unwrap().contains_key("emf_qac_bundle"));
+
+        let mut args = Args::new();
+        args.insert("scale".into(), Value::I64(4));
+        args.insert("species_id".into(), Value::String("eucalyptus-camaldulensis".into()));
+        args.insert("emit_emf_qac".into(), Value::Bool(true));
+
+        let res = host
+            .living_world_anatomy_op("hypermedia.manifold.compile_botanical_organ_10d", &args)
+            .expect("botanical emit_emf_qac=true");
+        let rec = record(&res).expect("botanical record");
+        assert_eq!(
+            rec.get("species_id"),
+            Some(&Value::String("eucalyptus-camaldulensis".into()))
+        );
+        assert_emf_qac_bundle_handles(&host, rec);
+    }
+
+    #[test]
+    fn test_compile_vertebrate_anatomy_10d_emits_emf_qac_bundle() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+
+        let default_res = host
+            .living_world_anatomy_op(
+                "hypermedia.manifold.compile_vertebrate_anatomy_10d",
+                &Args::new(),
+            )
+            .expect("default vertebrate compile");
+        assert!(!record(&default_res).unwrap().contains_key("emf_qac_bundle"));
+
+        let mut args = Args::new();
+        args.insert("emit_emf_qac".into(), Value::Bool(true));
+        let res = host
+            .living_world_anatomy_op("hypermedia.manifold.compile_vertebrate_anatomy_10d", &args)
+            .expect("vertebrate emit_emf_qac=true");
+        let rec = record(&res).expect("vertebrate record");
+        assert_emf_qac_bundle_handles(&host, rec);
+
+        let mut bad_args = Args::new();
+        bad_args.insert("emit_emf_qac".into(), Value::String("yes".into()));
+        assert!(host
+            .living_world_anatomy_op("hypermedia.manifold.compile_vertebrate_anatomy_10d", &bad_args)
+            .is_err());
+    }
 }

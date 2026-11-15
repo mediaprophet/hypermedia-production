@@ -2,7 +2,7 @@
 
 use kurbo::{BezPath, Point, Vec2};
 use serde::{Deserialize, Serialize};
-use vector_locus_geometry::{Anchor, AnchorKind, PathData, SubPath};
+use vector_locus_geometry::SubPath;
 
 use crate::track::{Rng, Track, normal, seed_of, tracks};
 use crate::BrushInputSample;

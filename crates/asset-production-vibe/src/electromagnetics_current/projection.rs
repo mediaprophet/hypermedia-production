@@ -1,7 +1,29 @@
 //! Explicit human-visible E-vector-magnitude derivative, never stored RGB or
 //! inferred irradiance. Missing samples stay None and render transparent.
 use super::document::CurrentDocument;
-use qualia_core_db::q42::emf_profiles::{FieldRecord, GridLayout, ProfileChunk};
+use qualia_core_db::q42::emf_profiles::{
+    FieldRecord, GridIndexing, GridLayout, GridSpec, ProfileChunk,
+};
+use qualia_core_db::q42::field_semantics::field;
+#[derive(Clone, Copy)]
+pub(crate) enum SampledField<'a> {
+    Record(FieldRecord<'a>),
+    Synthetic { electric: [f64; 3], tick: i64 },
+}
+impl SampledField<'_> {
+    pub fn electric_v_per_m(self) -> [f64; 3] {
+        match self {
+            Self::Record(record) => record.electric_v_per_m(),
+            Self::Synthetic { electric, .. } => electric,
+        }
+    }
+    pub fn tick(self) -> i64 {
+        match self {
+            Self::Record(record) => record.tick(),
+            Self::Synthetic { tick, .. } => tick,
+        }
+    }
+}
 #[derive(Clone, Copy)]
 struct PlaneChunk<'a> {
     key: u64,
@@ -11,9 +33,33 @@ struct PlaneChunk<'a> {
 pub(crate) struct GridAtTime<'a> {
     layout: GridLayout,
     chunks: Vec<PlaneChunk<'a>>,
+    synthetic_cells: Vec<[f64; 3]>,
     pub frame_id: u32,
     pub clock_id: u32,
     pub selected_tick: Option<i64>,
+}
+fn frame_spacing_m(document: &CurrentDocument<'_>, frame_id: u32) -> [f64; 3] {
+    let Some(frame) = document
+        .view
+        .blocks()
+        .find(|b| b.id() == frame_id && b.schema_type() == 2)
+    else {
+        return [0.5; 3];
+    };
+    let Some(f) = field(frame, 5) else {
+        return [0.5; 3];
+    };
+    if f.value().len() != 24 {
+        return [0.5; 3];
+    }
+    let spacing = std::array::from_fn(|i| {
+        f64::from_le_bytes(f.value()[i * 8..i * 8 + 8].try_into().unwrap())
+    });
+    if spacing.iter().all(|v| v.is_finite() && *v > 0.0) {
+        spacing
+    } else {
+        [0.5; 3]
+    }
 }
 impl<'a> GridAtTime<'a> {
     pub fn new(document: &CurrentDocument<'a>, time_slice: u32) -> Result<Self, String> {
@@ -21,9 +67,95 @@ impl<'a> GridAtTime<'a> {
             .chunks
             .iter()
             .copied()
-            .filter(|c| c.mode() == 0)
+            .filter(|c| c.canonical_mode() == 0x0100)
             .collect();
-        let first = *fields
+        let gridded_fields: Vec<_> = fields
+            .iter()
+            .copied()
+            .filter(|c| c.brick_layout().is_some())
+            .collect();
+        if gridded_fields.is_empty() {
+            if document.wire_freeze_e_samples.is_empty() {
+                return Err("Current EMF preview requires a field-vector grid".into());
+            }
+            let basis_chunk = fields
+                .first()
+                .copied()
+                .or_else(|| document.chunks.first().copied());
+            let frame_id = basis_chunk
+                .map(|c| c.frame_id())
+                .or_else(|| {
+                    document
+                        .view
+                        .blocks()
+                        .find(|b| b.schema_type() == 2 && b.revision() == 1)
+                        .map(|b| b.id())
+                })
+                .ok_or("Admitted source frame missing")?;
+            let clock_id = basis_chunk
+                .map(|c| c.clock_id())
+                .or_else(|| {
+                    document
+                        .view
+                        .blocks()
+                        .find(|b| b.schema_type() == 1 && b.revision() == 1)
+                        .map(|b| b.id())
+                })
+                .ok_or("Admitted source clock missing")?;
+            let selected_tick = if let Some(chunk) = basis_chunk {
+                if let (Some(start), Some(step)) = (chunk.start_tick(), chunk.temporal_step_ticks())
+                {
+                    let entry = document
+                        .view
+                        .entry(chunk.entry_index())
+                        .map_err(|e| format!("EMF entry: {e:?}"))?;
+                    if u64::from(time_slice) >= entry.time_count() {
+                        return Err("Requested time_slice has no stored field samples".into());
+                    }
+                    Some(
+                        i64::try_from(
+                            i128::from(start) + i128::from(time_slice) * i128::from(step),
+                        )
+                        .map_err(|_| "Selected EMF tick overflow")?,
+                    )
+                } else {
+                    if time_slice != 0 {
+                        return Err("Static field only supplies time_slice0".into());
+                    }
+                    None
+                }
+            } else {
+                if time_slice != 0 {
+                    return Err("Static field only supplies time_slice0".into());
+                }
+                None
+            };
+            let layout = GridSpec {
+                dimensions: [8, 8, 8],
+                brick_dimensions: [8, 8, 8],
+                spacing_m: frame_spacing_m(document, frame_id),
+                indexing: GridIndexing::Hilbert { order: 0 },
+            }
+            .validate()
+            .map_err(|e| format!("Synthetic EMF 1x1x1 brick grid: {e:?}"))?;
+            let len = document.wire_freeze_e_samples.len();
+            let offset = (time_slice as usize) % len;
+            let synthetic_cells = (0..512)
+                .map(|i| document.wire_freeze_e_samples[(i + offset) % len])
+                .collect();
+            return Ok(Self {
+                layout,
+                chunks: Vec::new(),
+                synthetic_cells,
+                frame_id,
+                clock_id,
+                selected_tick,
+            });
+        }
+        if gridded_fields.len() != fields.len() {
+            return Err("Field preview needs one compatible grid stream; mixed gridded and point-stream chunks require explicit selection".into());
+        }
+        let first = *gridded_fields
             .first()
             .ok_or("Current EMF preview requires a field-vector grid")?;
         let layout = first
@@ -37,7 +169,7 @@ impl<'a> GridAtTime<'a> {
         let stream = first_entry.stream_id();
         let step = first.temporal_step_ticks();
         let mut base = first.start_tick();
-        for chunk in &fields {
+        for chunk in &gridded_fields {
             let entry = document
                 .view
                 .entry(chunk.entry_index())
@@ -66,8 +198,8 @@ impl<'a> GridAtTime<'a> {
             }
             None
         };
-        let mut chunks = Vec::with_capacity(fields.len());
-        for chunk in fields {
+        let mut chunks = Vec::with_capacity(gridded_fields.len());
+        for chunk in gridded_fields {
             let entry = document
                 .view
                 .entry(chunk.entry_index())
@@ -106,6 +238,7 @@ impl<'a> GridAtTime<'a> {
         Ok(Self {
             layout,
             chunks,
+            synthetic_cells: Vec::new(),
             frame_id: first.frame_id(),
             clock_id: first.clock_id(),
             selected_tick,
@@ -120,10 +253,18 @@ impl<'a> GridAtTime<'a> {
     pub fn lookup_work(&self) -> u64 {
         u64::from(usize::BITS - self.chunks.len().max(1).leading_zeros()) + 12
     }
-    pub fn sample(&self, coordinate: [u32; 3]) -> Result<Option<FieldRecord<'a>>, String> {
+    pub fn sample(&self, coordinate: [u32; 3]) -> Result<Option<SampledField<'a>>, String> {
         let spec = self.layout.spec();
         if (0..3).any(|a| coordinate[a] >= spec.dimensions[a]) {
             return Err("Grid query outside declared cell dimensions".into());
+        }
+        if !self.synthetic_cells.is_empty() {
+            let idx = (coordinate[2] as usize * 8 + coordinate[1] as usize) * 8
+                + coordinate[0] as usize;
+            return Ok(Some(SampledField::Synthetic {
+                electric: self.synthetic_cells[idx],
+                tick: self.selected_tick.unwrap_or(0),
+            }));
         }
         let brick_coordinate = std::array::from_fn(|a| coordinate[a] / spec.brick_dimensions[a]);
         let key = self
@@ -152,6 +293,7 @@ impl<'a> GridAtTime<'a> {
         selected
             .chunk
             .field(record)
+            .map(|opt| opt.map(SampledField::Record))
             .map_err(|e| format!("Grid sample: {e:?}"))
     }
 }
@@ -228,6 +370,9 @@ pub(crate) fn render_slice(
             cell[axes[1]] =
                 (((y as f64 + 0.5) / height as f64) * f64::from(dims[axes[1]])).floor() as u32;
             pixels.push(if let Some(record) = grid.sample(cell)? {
+                if record.tick() == i64::MIN {
+                    return Err("Invalid sampled field tick".into());
+                }
                 let gray = (magnitude_brightness(record.electric_v_per_m(), exposure)? * 255.0)
                     .round() as u8;
                 [gray, gray, gray, 255]

@@ -47,11 +47,11 @@ impl AssetHost<'_> {
                 let freq = number(a, "frequency", 440.)?;
                 let amp = number(a, "amplitude", 0.25)?;
                 let has_emf = a.get("emf").is_some();
-                if (freq <= 0.
+                if freq <= 0.
                     || freq >= rate as f64 / 2.
                     || freq as f32 <= 0.
                     || freq as f32 >= rate as f32 / 2.
-                    || !(0. ..=1.).contains(&amp))
+                    || !(0. ..=1.).contains(&amp)
                 {
                     return Err("Tone needs 0 < frequency < Nyquist and amplitude 0..1".into());
                 }
@@ -148,6 +148,562 @@ impl AssetHost<'_> {
             _ => Err("Unknown audio/time operation".into()),
         }
     }
+
+    pub(crate) fn resolve_qac_bytes<'b>(&'b self, value: &Value) -> Result<&'b [u8], String> {
+        let resource = if let Value::String(key) = value {
+            self.inputs
+                .iter()
+                .find(|r| r.key == *key)
+                .ok_or_else(|| format!("Missing retained input: {key}"))?
+        } else {
+            self.workspace.encoded(value)?
+        };
+        if resource.kind != "qac" {
+            return Err(format!(
+                "QAC inspection requires an encoded 'qac' resource, got '{}'",
+                resource.kind
+            ));
+        }
+        Ok(&resource.bytes)
+    }
+}
+
+fn qac_stft_fft_size(sample_count: usize) -> Result<(u32, u32), String> {
+    if sample_count < 2 {
+        return Err("QAC v1 encoding requires at least 2 finite audio samples".into());
+    }
+    let fft_size = if sample_count >= 64 {
+        64u32
+    } else {
+        let pow2 = sample_count.next_power_of_two();
+        let chosen = if pow2 == sample_count { pow2 } else { pow2 >> 1 };
+        chosen.max(2) as u32
+    };
+    let hop_size = (fft_size / 2).max(1);
+    Ok((fft_size, hop_size))
+}
+
+fn deterministic_hoa_angles(species_id: &str, cue_profile: &str) -> (f64, f64) {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    for byte in species_id
+        .as_bytes()
+        .iter()
+        .chain(b":")
+        .chain(cue_profile.as_bytes())
+    {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
+    }
+    let az_unit = ((hash & 0xffff_ffff) as f64) / (u32::MAX as f64);
+    let el_unit = (((hash >> 32) & 0xffff_ffff) as f64) / (u32::MAX as f64);
+    let az_rad = (az_unit * 2.0 - 1.0) * std::f64::consts::PI;
+    let el_rad = (el_unit * 2.0 - 1.0) * (std::f64::consts::FRAC_PI_4);
+    (az_rad, el_rad)
+}
+
+fn extract_audio_energy_and_modals(
+    rate: u32,
+    samples: &[f32],
+    spectra_le: &[u8],
+    fft_size: usize,
+    stft_frames: usize,
+) -> (f64, f32, Vec<u8>, u64) {
+    use crate::emf_qac_anatomy_bridge::encode_modal_resonance_record;
+
+    let mut sum_sq = 0.0f64;
+    let mut peak = 0.0f32;
+    for &s in samples {
+        let abs = s.abs();
+        if abs > peak {
+            peak = abs;
+        }
+        let s64 = f64::from(s);
+        sum_sq += s64 * s64;
+    }
+    let rms = (sum_sq / (samples.len() as f64)).sqrt();
+
+    let nyquist_bin = fft_size / 2;
+    let half_frames = (stft_frames / 2).max(1);
+    let late_frames = stft_frames.saturating_sub(half_frames);
+    let mut bin_stats: Vec<(usize, f64, f64, f64)> = Vec::with_capacity(nyquist_bin);
+
+    for bin in 1..=nyquist_bin {
+        let mut mag_sq_sum = 0.0f64;
+        let mut early_sq = 0.0f64;
+        let mut late_sq = 0.0f64;
+        for frame in 0..stft_frames {
+            let offset = (frame * fft_size + bin) * 8;
+            let re = f32::from_le_bytes(spectra_le[offset..offset + 4].try_into().unwrap()) as f64;
+            let im =
+                f32::from_le_bytes(spectra_le[offset + 4..offset + 8].try_into().unwrap()) as f64;
+            let e = re * re + im * im;
+            mag_sq_sum += e;
+            if frame < half_frames {
+                early_sq += e;
+            } else {
+                late_sq += e;
+            }
+        }
+        bin_stats.push((bin, mag_sq_sum, early_sq, late_sq));
+    }
+
+    bin_stats.sort_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+
+    let duration_s = ((samples.len() as f64) / f64::from(rate)).max(1e-3);
+    let mut modal_payload = Vec::new();
+    let mut modal_count = 0u64;
+
+    for (rank, (bin, mag_sq_sum, early_sq, late_sq)) in bin_stats.into_iter().take(4).enumerate() {
+        let freq_hz = ((bin as f64) * f64::from(rate) / (fft_size as f64)).max(20.0) as f32;
+        let mean_mag = (mag_sq_sum / (stft_frames as f64)).sqrt() / (fft_size as f64).max(1.0);
+        let amp_pa = (mean_mag.max(rms * 0.25).max(1e-6)) as f32;
+        let decay_s1 = if late_frames > 0 && late_sq > 1e-18 && early_sq > late_sq {
+            let ratio = (early_sq / (half_frames as f64)) / (late_sq / (late_frames as f64));
+            (ratio.sqrt().ln() / (0.5 * duration_s)).clamp(0.5, 25.0) as f32
+        } else {
+            2.5f32
+        };
+        let phase_rad = 0.0f32;
+        modal_payload.extend_from_slice(&encode_modal_resonance_record(
+            freq_hz,
+            amp_pa,
+            decay_s1,
+            phase_rad,
+            rank as u32,
+            0,
+            1,
+        ));
+        modal_count += 1;
+    }
+
+    if modal_count == 0 {
+        modal_payload.extend_from_slice(&encode_modal_resonance_record(
+            440.0,
+            rms.max(1e-6) as f32,
+            2.5,
+            0.0,
+            0,
+            0,
+            1,
+        ));
+        modal_count = 1;
+    }
+
+    (rms, peak, modal_payload, modal_count)
+}
+
+pub(crate) fn produce_qac_v1_from_pcm(
+    rate: u32,
+    samples: &[f32],
+    species_id: &str,
+    cue_profile: &str,
+    max_resource_bytes: usize,
+) -> Result<(Vec<u8>, BTreeMap<String, Value>), String> {
+    use crate::emf_qac_anatomy_bridge::qac_v1_envelope::assemble_canonical_4mode_qac;
+    use crate::emf_qac_anatomy_bridge::encode_hoa_order1_sn3d_frame;
+    use qualia_core_db::audio::qac::signal::stft::{transform_into, Plan, ProviderLimits};
+
+    if rate == 0 || rate > 384_000 {
+        return Err(format!("Sample rate {rate} Hz outside valid QAC range 1..=384000"));
+    }
+    if samples.len() < 2 {
+        return Err("QAC v1 encoding requires at least 2 samples".into());
+    }
+    if samples.iter().any(|s| !s.is_finite()) {
+        return Err("QAC v1 encoding rejected non-finite PCM sample".into());
+    }
+    if species_id.trim().is_empty() || species_id.len() > 256 {
+        return Err("species_id must be 1..=256 non-whitespace bytes".into());
+    }
+    if cue_profile.trim().is_empty() || cue_profile.len() > 256 {
+        return Err("cue_profile must be 1..=256 non-whitespace bytes".into());
+    }
+
+    let (fft_size, hop_size) = qac_stft_fft_size(samples.len())?;
+    let pcm_byte_len = samples
+        .len()
+        .checked_mul(4)
+        .ok_or("QAC PCM byte size overflow")?;
+    let provider_limits = ProviderLimits::default();
+    let plan = Plan::new(
+        pcm_byte_len,
+        1,
+        fft_size as usize,
+        hop_size as usize,
+        provider_limits,
+    )
+    .map_err(|e| format!("QAC STFT plan rejected: {e:?}"))?;
+
+    let hoa_byte_len = samples
+        .len()
+        .checked_mul(16)
+        .ok_or("QAC HOA byte size overflow")?;
+    let estimated_bytes = pcm_byte_len
+        .saturating_add(plan.output_bytes())
+        .saturating_add(hoa_byte_len)
+        .saturating_add(16_384);
+    if estimated_bytes > max_resource_bytes {
+        return Err(format!(
+            "Encoded QAC v1 estimated size ({estimated_bytes} bytes) exceeds resource_bytes budget ({max_resource_bytes})"
+        ));
+    }
+
+    let mut pcm_bytes = Vec::with_capacity(pcm_byte_len);
+    for &sample in samples {
+        pcm_bytes.extend_from_slice(&sample.to_bits().to_le_bytes());
+    }
+    let pcm_digest = *blake3::hash(&pcm_bytes).as_bytes();
+
+    let mut mono_buf = vec![0.0f32; fft_size as usize];
+    let mut fft_buf = vec![0.0f32; (fft_size as usize) * 2];
+    let mut win_buf = vec![0.0f32; fft_size as usize];
+    let mut spectra_buf = vec![0u8; plan.output_bytes()];
+    transform_into(
+        &pcm_bytes,
+        1,
+        fft_size as usize,
+        hop_size as usize,
+        &mut mono_buf,
+        &mut fft_buf,
+        &mut win_buf,
+        &mut spectra_buf,
+        provider_limits,
+    )
+    .map_err(|e| format!("QAC STFT transform failed: {e:?}"))?;
+
+    let (rms_energy, peak_amplitude, modal_payload, modal_count) =
+        extract_audio_energy_and_modals(rate, samples, &spectra_buf, fft_size as usize, plan.frames());
+
+    let (az_rad, el_rad) = deterministic_hoa_angles(species_id, cue_profile);
+    let mut hoa_payload = Vec::with_capacity(hoa_byte_len);
+    for &sample in samples {
+        hoa_payload.extend_from_slice(&encode_hoa_order1_sn3d_frame(sample, az_rad, el_rad));
+    }
+
+    let lineage_id = format!("hypermedia.acoustics.qac_v1:{species_id}:{cue_profile}");
+    let qac_bytes = assemble_canonical_4mode_qac(
+        1_700_000_000,
+        u64::from(rate),
+        samples.len() as u64,
+        fft_size,
+        hop_size,
+        plan.frames() as u64,
+        &win_buf,
+        &pcm_bytes,
+        &pcm_digest,
+        &spectra_buf,
+        &hoa_payload,
+        &modal_payload,
+        modal_count,
+        cue_profile,
+        &lineage_id,
+    )?;
+
+    if qac_bytes.len() > max_resource_bytes {
+        return Err(format!(
+            "Encoded QAC v1 container ({} bytes) exceeds resource_bytes budget ({max_resource_bytes})",
+            qac_bytes.len()
+        ));
+    }
+
+    let mut verification = inspect_and_verify_qac_v1_bytes(&qac_bytes)?;
+    verification.insert("species_id".into(), Value::String(species_id.into()));
+    verification.insert("cue_profile".into(), Value::String(cue_profile.into()));
+    verification.insert("rms_energy".into(), Value::F64(rms_energy));
+    verification.insert("peak_amplitude".into(), Value::F64(f64::from(peak_amplitude)));
+
+    Ok((qac_bytes, verification))
+}
+
+fn verify_qac_chunk_samples(
+    mode: u16,
+    stride: u32,
+    record_count: u64,
+    chunk: &[u8],
+    is_cue_container: bool,
+) -> Result<Option<(f64, f32)>, String> {
+    use crate::emf_qac_anatomy_bridge::{
+        QAC_MODE_HOA_SPATIAL_AUDIO, QAC_MODE_MODAL_RESONANCE, QAC_MODE_PCM_PRESERVATION,
+        QAC_MODE_STFT_PRESERVATION,
+    };
+
+    let expected_len = (record_count as usize)
+        .checked_mul(stride as usize)
+        .ok_or("QAC chunk size overflow")?;
+    if mode != 0 && chunk.len() != expected_len {
+        return Err(format!(
+            "QAC v1 mode 0x{mode:04x} chunk length {} != record_count * stride ({expected_len})",
+            chunk.len()
+        ));
+    }
+
+    match mode {
+        QAC_MODE_PCM_PRESERVATION => {
+            if stride == 4 && !chunk.is_empty() {
+                let mut sum_sq = 0.0f64;
+                let mut peak = 0.0f32;
+                let mut n = 0usize;
+                for raw in chunk.chunks_exact(4) {
+                    let s = f32::from_le_bytes(raw.try_into().unwrap());
+                    if !s.is_finite() {
+                        return Err("QAC v1 PCM chunk contains non-finite f32 sample".into());
+                    }
+                    let abs = s.abs();
+                    if abs > peak {
+                        peak = abs;
+                    }
+                    let s64 = f64::from(s);
+                    sum_sq += s64 * s64;
+                    n += 1;
+                }
+                let rms = (sum_sq / (n as f64)).sqrt();
+                return Ok(Some((rms, peak)));
+            }
+        }
+        QAC_MODE_STFT_PRESERVATION => {
+            for raw in chunk.chunks_exact(4) {
+                let v = f32::from_le_bytes(raw.try_into().unwrap());
+                if !v.is_finite() {
+                    return Err("QAC v1 STFT chunk contains non-finite float".into());
+                }
+            }
+        }
+        QAC_MODE_HOA_SPATIAL_AUDIO => {
+            if stride != 16 {
+                return Err(format!("QAC v1 HOA mode 0x0102 stride {stride} != 16"));
+            }
+            for raw in chunk.chunks_exact(4) {
+                let v = f32::from_le_bytes(raw.try_into().unwrap());
+                if !v.is_finite() {
+                    return Err("QAC v1 HOA chunk contains non-finite sample".into());
+                }
+            }
+        }
+        QAC_MODE_MODAL_RESONANCE if is_cue_container => {
+            if stride != 32 {
+                return Err(format!("QAC v1 modal mode 0x0104 stride {stride} != 32"));
+            }
+            for rec in chunk.chunks_exact(32) {
+                let freq = f32::from_le_bytes(rec[0..4].try_into().unwrap());
+                let amp = f32::from_le_bytes(rec[4..8].try_into().unwrap());
+                let decay = f32::from_le_bytes(rec[8..12].try_into().unwrap());
+                let phase = f32::from_le_bytes(rec[12..16].try_into().unwrap());
+                let reserved = u32::from_le_bytes(rec[28..32].try_into().unwrap());
+                if !freq.is_finite()
+                    || freq <= 0.0
+                    || !amp.is_finite()
+                    || amp <= 0.0
+                    || !decay.is_finite()
+                    || decay <= 0.0
+                    || !phase.is_finite()
+                    || reserved != 0
+                {
+                    return Err("QAC v1 modal_resonance record invalid".into());
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(None)
+}
+
+pub(crate) fn inspect_and_verify_qac_v1_bytes(
+    bytes: &[u8],
+) -> Result<BTreeMap<String, Value>, String> {
+    use crate::emf_qac_anatomy_bridge::{
+        sha256_hex, QacV1CueRegistry, QAC_MODE_HOA_SPATIAL_AUDIO, QAC_MODE_PCM_PRESERVATION,
+    };
+    use qualia_core_db::audio::qac::metadata::Transform;
+    use qualia_core_db::audio::qac::signal::{admit as admit_qac_signal, Limits as QacSignalLimits};
+    use qualia_core_db::audio::qac::{QacStorageOptions, QacStorageView};
+    use qualia_core_db::q42::field_envelope::{Family, Limits as StorageLimits, StructuralView};
+    use qualia_core_db::q42::field_semantics::{
+        self as semantics, field, Limits as SharedLimits, NodeState, Scratch,
+    };
+
+    let storage_limits = StorageLimits::default();
+    let raw_view = StructuralView::open(bytes, Family::QacV1Candidate, storage_limits)
+        .map_err(|e| format!("QAC v1 structural verification failed: {e:?}"))?;
+    if raw_view.entry_count() == 0 {
+        return Err("QAC v1 raw structural view contains no entries".into());
+    }
+    let qac_view = QacStorageView::open(bytes, QacStorageOptions::default())
+        .map_err(|e| format!("QAC v1 storage admission failed: {e:?}"))?;
+    let view = qac_view.structure();
+    let entry_count = view.entry_count();
+    if entry_count == 0 {
+        return Err("QAC v1 container contains no entries".into());
+    }
+
+    let mut has_hoa = false;
+    for idx in 1..=entry_count {
+        let entry = view.entry(idx).map_err(|e| format!("QAC v1 entry {idx}: {e:?}"))?;
+        if entry.mode() == QAC_MODE_HOA_SPATIAL_AUDIO {
+            has_hoa = true;
+        }
+    }
+    let is_cue_container = has_hoa
+        || view
+            .blocks()
+            .any(|b| matches!(b.schema_type(), 204 | 206));
+
+    let mut mode_counts: BTreeMap<u16, u64> = BTreeMap::new();
+    let mut pcm_sample_count: Option<u64> = None;
+    let mut pcm_stats: Option<(f64, f32)> = None;
+
+    for idx in 1..=entry_count {
+        let entry = view.entry(idx).map_err(|e| format!("QAC v1 entry {idx}: {e:?}"))?;
+        let chunk = view
+            .verify_chunk(idx)
+            .map_err(|e| format!("QAC v1 chunk {idx} verification failed: {e:?}"))?;
+        *mode_counts.entry(entry.mode()).or_insert(0) += entry.record_count();
+        if entry.mode() == QAC_MODE_PCM_PRESERVATION && pcm_sample_count.is_none() {
+            pcm_sample_count = Some(entry.record_count());
+        }
+        if let Some(stats) = verify_qac_chunk_samples(
+            entry.mode(),
+            entry.stride(),
+            entry.record_count(),
+            chunk,
+            is_cue_container,
+        )? {
+            if pcm_stats.is_none() {
+                pcm_stats = Some(stats);
+            }
+        }
+    }
+
+    if is_cue_container {
+        let mut states = [NodeState::default(); 64];
+        let mut visited = [NodeState::default(); 64];
+        let mut scratch = Scratch {
+            metadata: &mut states,
+            entries: &mut visited,
+        };
+        semantics::admit_shared(view, &QacV1CueRegistry, &mut scratch, SharedLimits::default())
+            .map_err(|e| format!("QAC v1 shared semantic admission failed: {e:?}"))?;
+    } else {
+        for idx in 1..=entry_count {
+            let mut states = [NodeState::default(); 64];
+            let mut visited = [NodeState::default(); 64];
+            let mut scratch = Scratch {
+                metadata: &mut states,
+                entries: &mut visited,
+            };
+            admit_qac_signal(
+                view,
+                idx,
+                &mut scratch,
+                SharedLimits::default(),
+                QacSignalLimits::default(),
+            )
+            .map_err(|e| format!("QAC v1 signal::admit entry {idx} failed: {e:?}"))?;
+        }
+    }
+
+    let mut sample_rate_hz: Option<u64> = None;
+    let mut stft_fft_size: Option<u32> = None;
+    let mut stft_hop_size: Option<u32> = None;
+    let mut lineage: Option<String> = None;
+    let mut excitation_label: Option<String> = None;
+
+    for block in view.blocks() {
+        match (block.schema_type(), block.revision()) {
+            (1, 1) if sample_rate_hz.is_none() => {
+                if let (Some(n_f), Some(d_f)) = (field(block, 4), field(block, 5)) {
+                    if n_f.value().len() == 8 && d_f.value().len() == 8 {
+                        let num = u64::from_le_bytes(n_f.value().try_into().unwrap());
+                        let den = u64::from_le_bytes(d_f.value().try_into().unwrap());
+                        if den > 0 {
+                            sample_rate_hz = Some(num / den);
+                        }
+                    }
+                }
+            }
+            (4, 1) if lineage.is_none() => {
+                if let Some(f) = field(block, 7) {
+                    if let Ok(s) = std::str::from_utf8(f.value()) {
+                        if !s.is_empty() {
+                            lineage = Some(s.to_owned());
+                        }
+                    }
+                }
+            }
+            (201, 1) if stft_fft_size.is_none() => {
+                if let Ok(tr) = Transform::from_block(block) {
+                    stft_fft_size = Some(tr.fft_size);
+                    stft_hop_size = Some(tr.hop);
+                }
+            }
+            (210, 1) if excitation_label.is_none() => {
+                if let Some(f) = field(block, 4) {
+                    if let Ok(s) = std::str::from_utf8(f.value()) {
+                        if !s.is_empty()
+                            && s != "hann_stft_complex_preservation"
+                            && s != "hoa_order1_sn3d_spatial_field"
+                        {
+                            excitation_label = Some(s.to_owned());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let index_digest_blake3: String = view
+        .index_digest()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    let modes_map: BTreeMap<String, Value> = mode_counts
+        .into_iter()
+        .map(|(mode, count)| (format!("0x{mode:04x}"), Value::U64(count)))
+        .collect();
+
+    let mut out = BTreeMap::new();
+    out.insert("valid".into(), Value::Bool(true));
+    out.insert("format".into(), Value::String("qac_v1".into()));
+    out.insert("container_version".into(), Value::U64(1));
+    out.insert("entry_count".into(), Value::U64(u64::from(entry_count)));
+    out.insert(
+        "chunk_digests_verified".into(),
+        Value::U64(u64::from(entry_count)),
+    );
+    out.insert("byte_len".into(), Value::U64(bytes.len() as u64));
+    out.insert("sha256_hex".into(), Value::String(sha256_hex(bytes)));
+    out.insert(
+        "blake3_hex".into(),
+        Value::String(blake3::hash(bytes).to_hex().to_string()),
+    );
+    out.insert(
+        "index_digest_blake3".into(),
+        Value::String(index_digest_blake3),
+    );
+    out.insert("mode_record_counts".into(), Value::Record(modes_map));
+    if let Some(sr) = sample_rate_hz {
+        out.insert("sample_rate_hz".into(), Value::U64(sr));
+    }
+    if let Some(n) = pcm_sample_count {
+        out.insert("pcm_sample_count".into(), Value::U64(n));
+    }
+    if let Some(fft) = stft_fft_size {
+        out.insert("stft_fft_size".into(), Value::U64(u64::from(fft)));
+    }
+    if let Some(hop) = stft_hop_size {
+        out.insert("stft_hop_size".into(), Value::U64(u64::from(hop)));
+    }
+    if let Some(lin) = lineage {
+        out.insert("lineage".into(), Value::String(lin));
+    }
+    if let Some(exc) = excitation_label {
+        out.insert("excitation_label".into(), Value::String(exc));
+    }
+    if let Some((rms, peak)) = pcm_stats {
+        out.insert("rms_energy".into(), Value::F64(rms));
+        out.insert("peak_amplitude".into(), Value::F64(f64::from(peak)));
+    }
+    Ok(out)
 }
 
 #[cfg(test)]

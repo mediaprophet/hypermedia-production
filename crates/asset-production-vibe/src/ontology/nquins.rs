@@ -448,4 +448,10 @@ pub static ONTOLOGY_NQUINS: &[NQuin48] = &[
     NQuin48::precondition("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#ColourNormalOrmHandleTriple", 148),
     NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#EncodedPbrPngHandleSet", 148),
     NQuin48::invariant("https://qualiadb.org/ext/hypermedia/surface#pack_pbr_set", "https://qualiadb.org/ontology/hypermedia#DeterministicBTreeKeyOrderAndPngMagic", 148),
+    NQuin48::precondition("https://qualiadb.org/ext/hypermedia/manifold#calibrate_biological_subject", "https://qualiadb.org/ontology/hypermedia#AnthropometricDensitometricAndEndocrineObservations", 149),
+    NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/manifold#calibrate_biological_subject", "https://qualiadb.org/ontology/hypermedia#CalibratedBoneScalingCarterHayesModuliAndSkl2Metadata", 149),
+    NQuin48::invariant("https://qualiadb.org/ext/hypermedia/manifold#calibrate_biological_subject", "https://qualiadb.org/ontology/hypermedia#PositivePhysicalBoundsAndEpistemicProvenancePreserved", 149),
+    NQuin48::precondition("https://qualiadb.org/ext/hypermedia/kinetics#evaluate_mobility_fracture_risk", "https://qualiadb.org/ontology/hypermedia#TorqueDemandMuscleQualityComKinematicsAndBoneDensity", 150),
+    NQuin48::postcondition("https://qualiadb.org/ext/hypermedia/kinetics#evaluate_mobility_fracture_risk", "https://qualiadb.org/ontology/hypermedia#RelativeEffortRatioHofMosAndFactorOfRiskClassification", 150),
+    NQuin48::invariant("https://qualiadb.org/ext/hypermedia/kinetics#evaluate_mobility_fracture_risk", "https://qualiadb.org/ontology/hypermedia#FailClosedNonZeroCapacityAndMonotonicMyosteatosisPenalty", 150),
 ];

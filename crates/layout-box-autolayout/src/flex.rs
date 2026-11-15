@@ -213,7 +213,7 @@ pub fn solve_flex(frame: &mut AutoLayoutFrame, available_w: f64, available_h: f6
     let mut cross_cursor = if horizontal { pt } else { pl };
     let n_lines = lines.len();
 
-    let (mut cross_start_offset, effective_cross_gap) = if n_lines > 1 {
+    let (cross_start_offset, effective_cross_gap) = if n_lines > 1 {
         let sum_c: f64 = line_extents.iter().map(|l| l.1).sum();
         let free_c = final_inner_cross - sum_c;
         match frame.content_align {

@@ -50,7 +50,7 @@ $$
 "#;
 
     let doc = parse_markdown(md);
-    assert_eq!(doc.blocks.len(), 5);
+    assert_eq!(doc.blocks.len(), 6);
 
     let serialized = to_markdown(&doc);
     assert!(serialized.contains("# Document Title"));
@@ -171,9 +171,9 @@ fn test_openxml_docx_roundtrip() {
 
 #[test]
 fn test_openxml_pptx_roundtrip() {
-    use layout_presentation_deck::model::master::{LayoutId, Presentation, Slide};
+    use layout_presentation_deck::model::master::{Presentation, Slide};
     use layout_presentation_deck::model::shape::Shape;
-    use layout_presentation_deck::model::types::{ShapeId, SlideId, Xfrm};
+    use layout_presentation_deck::model::types::{LayoutId, ShapeId, SlideId, Xfrm};
 
     let mut pres = Presentation::default();
     let mut slide = Slide::new(SlideId(1), LayoutId(1));

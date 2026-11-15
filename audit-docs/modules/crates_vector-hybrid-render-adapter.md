@@ -46,7 +46,7 @@ _A [`vello_gpu`] backend for the [`anyrender`] 2D drawing abstraction_
 | `impl PaintScene for WebGlScenePainter<'_>::fill` | 6 | `crates/vector-hybrid-render-adapter/src/webgl_scene.rs:168` | - |  |
 | `impl PaintScene for WebGlScenePainter<'_>::draw_glyphs` | 12 | `crates/vector-hybrid-render-adapter/src/webgl_scene.rs:185` | 2d |  |
 | `impl PaintScene for WebGlScenePainter<'_>::draw_box_shadow` | 6 | `crates/vector-hybrid-render-adapter/src/webgl_scene.rs:239` | 2d |  |
-| `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:28` | - | Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask |
+| `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:28` | - | Drive the etalon init future. On wasm32 we spawn it onto the JS microtask |
 | `spawn_init` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:33` | - |  |
 | `impl Default for VelloHybridRendererOptions::default` | 0 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:77` | - |  |
 | `impl VelloHybridRendererOptions::new` | 0 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:90` | - |  |
@@ -60,7 +60,7 @@ _A [`vello_gpu`] backend for the [`anyrender`] 2D drawing abstraction_
 | `impl VelloHybridWindowRenderer::new` | 0 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:161` | - |  |
 | `impl VelloHybridWindowRenderer::with_options` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:165` | - |  |
 | `impl VelloHybridWindowRenderer::current_device_handle` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:179` | - |  |
-| `build_wgpu_context` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:187` | - |  |
+| `build_etalon_context` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:187` | - |  |
 | `impl RenderContext for VelloHybridWindowRenderer::renderer_specific_context` | 1 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:200` | - |  |
 | `impl RenderContext for VelloHybridWindowRenderer::try_register_custom_resource` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:210` | - |  |
 | `impl RenderContext for VelloHybridWindowRenderer::unregister_resource` | 2 | `crates/vector-hybrid-render-adapter/src/window_renderer.rs:241` | - |  |

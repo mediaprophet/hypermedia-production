@@ -1,6 +1,6 @@
 //! MXF demuxer for parsing partitions, metadata, and essence packets.
 
-use crate::mxf::klv::{Cur, KeyClass, Rational, Ul, ber_length, classify};
+use crate::mxf::klv::{KeyClass, Ul, ber_length, classify};
 use crate::mxf::meta::{Metadata, Primer, Set};
 use crate::mxf::partition::{OperationalPattern, Partition};
 

@@ -10,7 +10,7 @@
 > generation timestamp, not a guess.
 
 
-_Simple helpers for managing wgpu state and surfaces._
+_Simple helpers for managing etalon state and surfaces._
 
 | function | arity | location | domains | doc |
 |---|---|---|---|---|
@@ -25,26 +25,26 @@ _Simple helpers for managing wgpu state and surfaces._
 | `impl BufferRenderer::target_texture_view` | 1 | `crates/gpu-device-context/src/buffer_renderer.rs:117` | - |  |
 | `impl BufferRenderer::copy_texture_to_vec` | 2 | `crates/gpu-device-context/src/buffer_renderer.rs:121` | - |  |
 | `impl BufferRenderer::copy_texture_to_buffer` | 2 | `crates/gpu-device-context/src/buffer_renderer.rs:127` | - |  |
-| `impl Display for WgpuContextError::fmt` | 2 | `crates/gpu-device-context/src/error.rs:30` | - |  |
-| `impl From<wgpu::CreateSurfaceError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:58` | - |  |
-| `impl From<RequestAdapterError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:64` | - |  |
-| `impl From<RequestDeviceError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:70` | - |  |
-| `impl From<PollError> for WgpuContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:76` | - |  |
-| `impl DeviceHandle::new_from_compatible_surface` | 4 | `crates/gpu-device-context/src/lib.rs:33` | - | Creates a `DeviceHandle` with `Device` that's compatible with the specified `Surface` |
-| `impl DeviceHandle::create_surface` | 4 | `crates/gpu-device-context/src/lib.rs:79` | - | Creates a new surface for the specified window and dimensions. |
-| `impl Default for WGPUContext::default` | 0 | `crates/gpu-device-context/src/lib.rs:110` | - |  |
-| `impl WGPUContext::new` | 0 | `crates/gpu-device-context/src/lib.rs:116` | - |  |
-| `impl WGPUContext::with_features_and_limits` | 2 | `crates/gpu-device-context/src/lib.rs:120` | - |  |
-| `impl WGPUContext::extra_features` | 1 | `crates/gpu-device-context/src/lib.rs:141` | - |  |
-| `impl WGPUContext::override_limits` | 1 | `crates/gpu-device-context/src/lib.rs:145` | - |  |
-| `impl WGPUContext::create_surface` | 2 | `crates/gpu-device-context/src/lib.rs:150` | - | Creates a new surface for the specified window and dimensions. |
-| `impl WGPUContext::create_surface_renderer` | 4 | `crates/gpu-device-context/src/lib.rs:158` | - | Creates a new surface for the specified window and dimensions. |
-| `impl WGPUContext::create_buffer_renderer` | 2 | `crates/gpu-device-context/src/lib.rs:183` | - | Creates a new `BufferRenderer` for the specified dimensions. |
-| `impl WGPUContext::find_or_create_device` | 2 | `crates/gpu-device-context/src/lib.rs:198` | - | Finds or creates a compatible device handle id. |
-| `impl WGPUContext::find_compatible_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:209` | - | Finds or creates a compatible device handle id. |
-| `impl WGPUContext::find_existing_device_idx` | 2 | `crates/gpu-device-context/src/lib.rs:218` | - | Finds  a compatible device handle id. |
-| `impl WGPUContext::create_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:230` | - |  |
-| `impl WGPUContext::create_device` | 2 | `crates/gpu-device-context/src/lib.rs:243` | - | Creates a compatible device handle id. |
+| `impl Display for EtalonContextError::fmt` | 2 | `crates/gpu-device-context/src/error.rs:30` | - |  |
+| `impl From<etalon::CreateSurfaceError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:58` | - |  |
+| `impl From<RequestAdapterError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:64` | - |  |
+| `impl From<RequestDeviceError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:70` | - |  |
+| `impl From<PollError> for EtalonContextError::from` | 1 | `crates/gpu-device-context/src/error.rs:76` | - |  |
+| `impl DeviceHandle::new_from_compatible_surface` | 4 | `crates/gpu-device-context/src/lib.rs:41` | - | Creates a `DeviceHandle` with `Device` that's compatible with the specified `Surface` |
+| `impl DeviceHandle::create_surface` | 4 | `crates/gpu-device-context/src/lib.rs:87` | - | Creates a new surface for the specified window and dimensions. |
+| `impl Default for EtalonContext::default` | 0 | `crates/gpu-device-context/src/lib.rs:118` | - |  |
+| `impl EtalonContext::new` | 0 | `crates/gpu-device-context/src/lib.rs:124` | - |  |
+| `impl EtalonContext::with_features_and_limits` | 2 | `crates/gpu-device-context/src/lib.rs:128` | - |  |
+| `impl EtalonContext::extra_features` | 1 | `crates/gpu-device-context/src/lib.rs:149` | - |  |
+| `impl EtalonContext::override_limits` | 1 | `crates/gpu-device-context/src/lib.rs:153` | - |  |
+| `impl EtalonContext::create_surface` | 2 | `crates/gpu-device-context/src/lib.rs:158` | - | Creates a new surface for the specified window and dimensions. |
+| `impl EtalonContext::create_surface_renderer` | 4 | `crates/gpu-device-context/src/lib.rs:166` | - | Creates a new surface for the specified window and dimensions. |
+| `impl EtalonContext::create_buffer_renderer` | 2 | `crates/gpu-device-context/src/lib.rs:191` | - | Creates a new `BufferRenderer` for the specified dimensions. |
+| `impl EtalonContext::find_or_create_device` | 2 | `crates/gpu-device-context/src/lib.rs:206` | - | Finds or creates a compatible device handle id. |
+| `impl EtalonContext::find_compatible_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:217` | - | Finds or creates a compatible device handle id. |
+| `impl EtalonContext::find_existing_device_idx` | 2 | `crates/gpu-device-context/src/lib.rs:226` | - | Finds  a compatible device handle id. |
+| `impl EtalonContext::create_device_handle` | 2 | `crates/gpu-device-context/src/lib.rs:238` | - |  |
+| `impl EtalonContext::create_device` | 2 | `crates/gpu-device-context/src/lib.rs:251` | - | Creates a compatible device handle id. |
 | `impl IntermediateBlitter::copy` | 5 | `crates/gpu-device-context/src/surface_renderer.rs:41` | - |  |
 | `impl std::fmt::Debug for SurfaceRenderer<'_>::fmt` | 2 | `crates/gpu-device-context/src/surface_renderer.rs:135` | - |  |
 | `impl SurfaceRenderer<'s>::new` | 4 | `crates/gpu-device-context/src/surface_renderer.rs:145` | - | Creates a new render surface for the specified window and dimensions. |
@@ -60,5 +60,5 @@ _Simple helpers for managing wgpu state and surfaces._
 | `impl SurfaceRenderer<'s>::target_texture_view` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:291` | - | Get a target texture view to render to. |
 | `impl SurfaceRenderer<'s>::maybe_blit_and_present` | 1 | `crates/gpu-device-context/src/surface_renderer.rs:306` | - | Present the texture to the surface. If there is an intermediate texture, this first blits |
 | `impl SurfaceRenderer<'s>::blit_from_intermediate_texture_to_surface` | 3 | `crates/gpu-device-context/src/surface_renderer.rs:324` | - | Blit from the intermediate texture to the surface texture |
-| `block_on_wgpu` | 2 | `crates/gpu-device-context/src/util.rs:8` | - | Block on a future, polling the device as needed. |
-| `create_texture` | 5 | `crates/gpu-device-context/src/util.rs:30` | - | Create a WGPU Texture, returning a default TextureView |
+| `block_on_etalon` | 2 | `crates/gpu-device-context/src/util.rs:8` | - | Block on a future, polling the device as needed. |
+| `create_texture` | 5 | `crates/gpu-device-context/src/util.rs:33` | - | Create a Etalon Texture, returning a default TextureView |

@@ -192,6 +192,7 @@ pub fn generate_dabs(
     let mut dabs = Vec::new();
     let step_dist = (settings.size * settings.spacing).max(1.0) as f64;
     let mut distance_travelled = 0.0;
+    let mut next_dab_dist = 0.0;
     let mut dab_index = 0;
 
     for i in 0..points.len() - 1 {
@@ -204,8 +205,8 @@ pub fn generate_dabs(
             continue;
         }
 
-        let mut t = 0.0;
-        while t < seg_len {
+        while next_dab_dist < distance_travelled + seg_len {
+            let t = (next_dab_dist - distance_travelled).max(0.0);
             let frac = t / seg_len;
             let current_pt = StrokePoint {
                 x: p0.x + dx * frac,
@@ -240,7 +241,7 @@ pub fn generate_dabs(
             });
 
             dab_index += 1;
-            t += step_dist;
+            next_dab_dist += step_dist;
         }
         distance_travelled += seg_len;
     }

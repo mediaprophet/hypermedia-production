@@ -1,8 +1,7 @@
 //! ICC v4.3 binary profile serializer.
 
 use crate::icc::curve::Curve;
-use crate::icc::math::Mat3;
-use crate::icc::profile::{ColorSpace, Pcs, Profile, ProfileClass};
+use crate::icc::profile::{Pcs, Profile};
 
 fn s15(v: f64) -> [u8; 4] {
     ((v * 65536.0).round() as i32).to_be_bytes()

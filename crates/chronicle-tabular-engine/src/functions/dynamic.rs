@@ -104,7 +104,7 @@ pub fn unique(args: &[Value]) -> R<Value> {
             rows.push(row_vals);
         }
         let mut filtered = Vec::new();
-        for (i, r) in rows.iter().enumerate() {
+        for r in &rows {
             let count = rows.iter().filter(|&x| x == r).count();
             if exactly_once {
                 if count == 1 {

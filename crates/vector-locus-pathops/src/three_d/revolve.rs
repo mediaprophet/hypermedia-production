@@ -3,7 +3,7 @@
 //! Grounded in authoring rights and creative preservation (UDHR Art. 19, 27).
 
 use kurbo::{BezPath, ParamCurve, Point, Rect};
-use vector_locus_geometry::{PathData, SubPath};
+use vector_locus_geometry::PathData;
 
 pub const MAX_PROFILE_POINTS: usize = 1024;
 pub const MAX_FACES: usize = 32768;

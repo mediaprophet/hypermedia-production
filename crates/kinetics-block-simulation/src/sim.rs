@@ -175,7 +175,7 @@ impl Sim {
     pub fn run(&mut self) -> Result<SimOut, SimError> {
         let tstop = self.config.tstop;
         let mut steps = 0u64;
-        let mut rejected = 0u64;
+        let rejected = 0u64;
         let mut t_history = Vec::new();
 
         let n_states = self.model.total_states;
@@ -185,7 +185,7 @@ impl Sim {
         let mut k4 = vec![0.0f64; n_states];
         let mut x_temp = vec![0.0f64; n_states];
 
-        let mut h = self.config.dt;
+        let h = self.config.dt;
 
         while self.t < tstop - 1e-12 {
             t_history.push(self.t);

@@ -4,7 +4,7 @@
 use crate::geodesy::Coord;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::BinaryHeap;
 
 /// A node in a spatial network.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

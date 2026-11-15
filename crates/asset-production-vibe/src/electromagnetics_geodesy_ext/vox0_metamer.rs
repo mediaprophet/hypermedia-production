@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 use std::f64::consts::PI;
 
 /// Internal voxel cell representation for DDA raymarching.
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 struct VoxelCell {
     density: f64,
@@ -38,7 +37,7 @@ impl AssetHost<'_> {
         )?;
 
         let time_slice = crate::electromagnetics_current::time_slice(a)?;
-        if a.contains_key("time_slice") && !a.contains_key("emf") {
+        if time_slice != 0 || a.contains_key("time_slice") {
             return Err("time_slice requires a stored EMF volume".into());
         }
 
@@ -252,7 +251,7 @@ impl AssetHost<'_> {
                             let step_alpha = 1.0 - (-sigma_a * ds).exp();
 
                             let rgb_base = spectral_wavelength_to_rgb(cell.wavelength_nm);
-                            let stokes_modulation = 1.0 + 0.25 * cell.stokes_q;
+                            let stokes_modulation = 1.0 + 0.25 * cell.stokes_q + 0.15 * cell.stokes_u;
                             let step_contrib = transmittance * step_alpha;
 
                             pixel_color[0] += step_contrib * rgb_base[0] * stokes_modulation;

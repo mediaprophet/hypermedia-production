@@ -1,7 +1,7 @@
 //! MXF OP1a / OP-Atom writer streaming to any Write + Seek sink.
 
-use std::io::{Seek, SeekFrom, Write};
-use crate::mxf::klv::{Rational, Ul, write_ber4};
+use std::io::{Seek, Write};
+use crate::mxf::klv::{Rational, write_ber4};
 use crate::mxf::labels::*;
 
 /// A SMPTE ST 330 basic UMID (32 bytes).
@@ -97,6 +97,14 @@ impl<W: Write + Seek> MxfWriter<W> {
             material_package_uid,
             source_package_uid,
         })
+    }
+
+    pub fn material_package_uid(&self) -> Umid {
+        self.material_package_uid
+    }
+
+    pub fn source_package_uid(&self) -> Umid {
+        self.source_package_uid
     }
 
     pub fn add_picture_track(&mut self, width: u32, height: u32, rate: Rational) -> usize {
@@ -246,6 +254,9 @@ impl<W: Write + Seek> MxfWriter<W> {
 
         // Random Index Pack (RIP)
         let rip_pos = self.w.stream_position().map_err(|e| e.to_string())? + footer.len() as u64;
+        if rip_pos <= self.footer_partition_pos {
+            return Err("Invalid MXF Random Index Pack offset".to_string());
+        }
         let mut rip = Vec::new();
         rip.extend_from_slice(&RIP_KEY);
         let mut rip_body = Vec::new();

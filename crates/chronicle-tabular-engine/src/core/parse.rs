@@ -1,6 +1,6 @@
 //! Parsing what users type into a cell and numeric text in formulas.
 
-use crate::core::date::{DateSystem, MONTHS, serial_from_ymd, time_fraction};
+use crate::core::date::{DateSystem, serial_from_ymd, time_fraction};
 use crate::core::value::{CellError, Value};
 
 #[derive(Clone, Debug, PartialEq)]

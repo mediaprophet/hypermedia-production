@@ -203,8 +203,8 @@ mod tests;
 pub use nquins::ONTOLOGY_NQUINS;
 pub use vibe_descriptors::{HypermediaOntologyProvider, HYPERMEDIA_PROVIDER_DESCRIPTOR};
 
-const ALL_MORPHISMS: [AgenticMorphismSpec; 148] = {
-    let mut out = [morphisms_01::BATCH[0]; 148];
+const ALL_MORPHISMS: [AgenticMorphismSpec; 150] = {
+    let mut out = [morphisms_01::BATCH[0]; 150];
     let batches: [&[AgenticMorphismSpec]; 9] = [
         morphisms_01::BATCH,
         morphisms_02::BATCH,
@@ -228,7 +228,7 @@ const ALL_MORPHISMS: [AgenticMorphismSpec; 148] = {
         }
         b += 1;
     }
-    assert!(idx == 148);
+    assert!(idx == 150);
     out
 };
 

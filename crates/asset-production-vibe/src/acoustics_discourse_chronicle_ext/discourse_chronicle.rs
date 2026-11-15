@@ -291,6 +291,7 @@ impl AssetHost<'_> {
 
         let fps = count(a, "fps", 24, 60)?;
 
+        let mut audio_sample_info = None;
         if let Some(audio_val) = a.get("audio") {
             let (rate, samples_len) = match self.workspace.get(audio_val)? {
                 Artifact::Audio { rate, samples } => (*rate, samples.len()),
@@ -299,7 +300,10 @@ impl AssetHost<'_> {
             let samples_per_frame = rate as f64 / fps as f64;
             let expected_samples =
                 (frame_items.len() as f64 * samples_per_frame).round() as usize;
-            let _ = (samples_len, expected_samples);
+            if samples_len == 0 {
+                return Err("Companion audio must contain at least one sample".into());
+            }
+            audio_sample_info = Some((samples_len, expected_samples));
         }
 
         let mut mux_args = BTreeMap::new();
@@ -318,6 +322,13 @@ impl AssetHost<'_> {
             }
         }
         out.insert("mp4".into(), mp4);
+        if let Some((samples_len, expected_samples)) = audio_sample_info {
+            out.insert("audio_samples".into(), Value::U64(samples_len as u64));
+            out.insert(
+                "expected_audio_samples".into(),
+                Value::U64(expected_samples as u64),
+            );
+        }
         Ok(Value::Record(out))
     }
 

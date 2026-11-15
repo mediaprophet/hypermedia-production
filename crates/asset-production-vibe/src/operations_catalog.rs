@@ -31,7 +31,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.radiance.import_rgb_png", "QualiaDB/computer_vision/codecs",
      "Retained opaque RGB8 PNG input -> sRGB8 lattice handle"),
     ("hypermedia.acoustics.synthesize_tone", "QualiaDB/qualia-audio",
-     "Harmonic sine oscillator parameters -> mono f32 acoustic wave buffer"),
+     "Harmonic sine oscillator or optional sealed .emf electromagnetic sonification -> mono f32 acoustic wave buffer"),
     ("hypermedia.acoustics.scale_gain", "shared audio buffer adapter",
      "Linear amplitude gain with [-1, 1] hard clipping -> new mono f32 wave buffer"),
     ("hypermedia.acoustics.encode_wav", "QualiaDB/qualia-audio + Etalon/signal",
@@ -103,11 +103,11 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.compile_10d_pbr", "QualiaDB/render/compile_10d",
      "3D manifold + optional PBR albedo RGBA + topology/BVH extras + unwrap UV01 source_10d -> sealed .10d container"),
     ("hypermedia.electromagnetics.compile_emf", "QualiaDB/q42/emf_container",
-     "Wave/dipole emitter parameters + 3D Hilbert brick grid -> sealed Q42EMF64 .emf container"),
+     "Wave emitter sources, optional bioelectric dipoles & constitutive medium + 3D Hilbert brick grid -> sealed Q42EMF64 v4 .emf container"),
     ("hypermedia.electromagnetics.verify_emf", "QualiaDB/q42/emf_container",
-     "Sealed .emf container -> CRC-32C + BLAKE3-Bao verification, total energy density & peak Poynting flux"),
+     "Sealed .emf container -> CRC-32C + BLAKE3-256 verification, v4 format_profile, field/dipole/constitutive record counts, max |E| & energy density"),
     ("hypermedia.electromagnetics.render_spectral_slice", "QualiaDB/q42/emf_container + CIE 1931 spectral projection",
-     "Sealed .emf container + slice axis/index + exposure -> straight-alpha RGBA8 spectral slice lattice"),
+     "Sealed .emf v4 container + slice axis/index + exposure -> straight-alpha RGBA8 electric-magnitude slice lattice"),
     ("hypermedia.geodesy.sculpt_terrain", "hypermedia/terrain-brushes",
      "CoW heightfield tile + reversible brush strokes -> hypsometric relief RGBA8 handle & elevation stats"),
     ("hypermedia.geodesy.compile_m64", "QualiaDB/q42/m64_matter + hypermedia/terrain-brushes",
@@ -125,7 +125,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.acoustics.mix_tracks", "QualiaDB/qualia-audio + shared mixer",
      "Multi-track wave buffers with gain, offset, and fade-in/out envelopes -> mixed mono f32 wave buffer"),
     ("hypermedia.acoustics.encode_aac", "hypermedia/audio-aac-codec",
-     "Mono f32 wave buffer -> ISO/IEC 14496-3 AAC-LC CBR ADTS .aac bitstream resource"),
+     "Mono f32 wave buffer -> ISO/IEC 14496-3 AAC-LC CBR ADTS .aac bitstream or canonical 4-mode QAC v1 (.qac) container"),
     ("hypermedia.chronicle.mux_mp4", "hypermedia/media-isobmff + bitstream-codec + video-h264-preview",
      "Sequence of straight-alpha RGBA8 frames + fps -> self-contained H.264 Baseline I_PCM .mp4 video resource"),
     ("hypermedia.chronicle.decode_mp4_frame", "hypermedia/video-h264-preview + media-isobmff",
@@ -215,7 +215,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.acoustics.spatialize_pga_zone", "QualiaDB/qualia-audio + acoustics_discourse_chronicle_ext",
      "Mono wave buffer + source/listener 3D PGA poses & velocities + occlusion -> Doppler/HRTF/Area3D spatialized audio"),
     ("hypermedia.electromagnetics.raymarch_vox0_dda", "QualiaDB/q42/emf_container + electromagnetics_geodesy_ext",
-     "Sealed .emf or harmonic Vox0 brick + ADM 3+1 lensing mass + Stokes filter -> Amanatides-Woo DDA raymarched RGBA8"),
+     "Sealed .emf v4 volume or harmonic Vox0 brick + ADM 3+1 lensing mass (0.0 for .emf) -> Amanatides-Woo DDA raymarched RGBA8"),
     ("hypermedia.electromagnetics.project_metamer_nullspace", "Etalon/etalon-render/spectral/metamer",
      "41-band SPD + null-space scale -> Cohen- Kappauf fundamental + 38D metameric black projection with zero CIE XYZ drift"),
     ("hypermedia.geodesy.advect_m64_grid", "hypermedia/asset-production-vibe/electromagnetics_geodesy_ext",
@@ -231,11 +231,11 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.chronicle.sync_spatial_motors", "hypermedia/asset-production-vibe/acoustics_discourse_chronicle_ext",
      "Entity PGA motor states + sequence number -> quantized 60Hz 16-byte spatial replication packet & dequantized error report"),
     ("hypermedia.manifold.compile_botanical_organ_10d", "QualiaDB/render/botanical_anatomy",
-     "Botanical scale (1..=4) + species_id + peel/anthesis parameters -> sealed 4-scale botanical .10d organ & histology verification record"),
+     "Botanical scale (1..=4) + species_id + stage + peel/anthesis (+ optional emit_emf_qac) -> sealed 4-scale botanical .10d organ & optional EMF v4 / QAC v1 bundle"),
     ("hypermedia.manifold.compile_vertebrate_anatomy_10d", "QualiaDB/render/vertebrate_anatomy",
-     "Fauna biomechanical archetype + 3-layer visibility & explode factors -> Scale-5 comparative vertebrate 17-submesh .10d anatomy & layer peel record"),
+     "Fauna biomechanical archetype + 3-layer visibility & explode factors (+ optional emit_emf_qac) -> Scale-5 comparative vertebrate 17-submesh .10d anatomy & optional EMF v4 / QAC v1 bundle"),
     ("hypermedia.kinetics.rig_biomechanical_archetype", "QualiaDB/render/skeletal/fauna_rig",
-     "Fauna biomechanical archetype + locomotion speed & turn rate -> stepped 18-joint PGA Motor rig, IK solution & verified .10d SKL1 section record"),
+     "Fauna biomechanical archetype + locomotion speed & turn rate (+ optional emit_emf_qac) -> stepped 18-joint PGA Motor rig, IK solution, verified .10d SKL1 section & optional EMF v4 / QAC v1 bundle"),
     ("hypermedia.discourse.query_anatomical_ontology_pin", "QualiaDB/modalities/biological_ontology",
      "Biological scale (1..=5) + 3D picking ray -> zero-heap Uberon/PO/FMA/DwC anatomical callout pin & biophysical metadata record"),
     ("hypermedia.geodesy.step_sector_continuum_3d", "Etalon/etalon-sim/physics3d + QualiaDB/simulation",
@@ -281,7 +281,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.kinetics.schedule_cpm_evm_montecarlo", "hypermedia/kinetics-schedule-cpm",
      "Task dependency network + trial count -> CPM forward/backward critical path, ANSI/EIA-748 EVM metrics, Monte Carlo P50/P90 risk & Gantt SVG resource"),
     ("hypermedia.acoustics.analyze_ebu_r128_camelot_daw", "hypermedia/acoustics-daw-session + audio-timebase",
-     "Audio signal + tempo map + 5.1 azimuth -> ITU-R BS.1770-4 / EBU R128 gated integrated LUFS, YIN pitch/MIDI, VBAP surround gains, Camelot harmony & SMPTE/35mm timecode"),
+     "Audio signal + tempo map + 5.1 azimuth (+ optional QAC v1 resource verification) -> ITU-R BS.1770-4 / EBU R128 gated integrated LUFS, YIN pitch/MIDI, VBAP surround gains, Camelot harmony, SMPTE/35mm timecode & optional qac_v1_verification"),
     ("hypermedia.electromagnetics.sense_wifi_csi_vitals_aoa", "hypermedia/electromagnetics-rf-sensing",
      "CsiFrame 802.11 CSI subcarrier phases + ULA snapshots -> sanitized CSI phase, contactless respiration/cardiac BPM, MUSIC AoA peak & camera-free privacy witness receipt"),
     ("hypermedia.geodesy.kriging_variogram_morphometry", "hypermedia/geodesy-spatial-analysis",
@@ -298,6 +298,10 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
      "9-slice blit of an RGBA lattice + sidecar JSON insets (corners unstretched)"),
     ("hypermedia.surface.pack_pbr_set", "Etalon/surface_frames/authoring via QualiaDB",
      "Colour/normal/orm handles packed to encoded PNG resources (deterministic BTree key order)"),
+    ("hypermedia.manifold.calibrate_biological_subject", "QualiaDB/wellfare-core + asset-production-vibe",
+     "Anthropometric, densitometric, and endocrine observations -> calibrated non-uniform bone scaling, effective elastic modulus, and .10d/.m64 metadata"),
+    ("hypermedia.kinetics.evaluate_mobility_fracture_risk", "QualiaDB/clinical_formulas + Etalon/skeletal",
+     "Joint torque demand, muscle PCSA/HU/IMAT, CoM kinematics, and bone BMD/BV_TV/callus -> {rer, mos_m, fracture_factor_of_risk, fall_risk_class, fracture_risk_class}"),
 ];
 
 #[cfg(test)]
@@ -1434,5 +1438,438 @@ mod tests {
             err.contains("Unknown argument"),
             "expected Unknown argument, got {err}"
         );
+    }
+
+    #[test]
+    fn catalog_vertebrate_anatomy_emit_emf_qac_routes_canonical_and_profile_handles_to_all_consumers() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let anatomy = match host
+            .invoke(
+                "hypermedia.manifold.compile_vertebrate_anatomy_10d",
+                &Value::Record(BTreeMap::from([
+                    (
+                        "archetype".into(),
+                        Value::String("macropod_saltatorial".into()),
+                    ),
+                    ("emit_emf_qac".into(), Value::Bool(true)),
+                ])),
+            )
+            .expect("compile_vertebrate_anatomy_10d(emit_emf_qac: true)")
+        {
+            Value::Record(r) => r,
+            other => panic!("expected vertebrate anatomy record, got {other:?}"),
+        };
+
+        let emf_canonical = anatomy
+            .get("emf_canonical_handle")
+            .cloned()
+            .expect("emf_canonical_handle present");
+        let emf_profile = anatomy
+            .get("emf_profile_handle")
+            .cloned()
+            .expect("emf_profile_handle present");
+        let qac_canonical = anatomy
+            .get("qac_canonical_handle")
+            .cloned()
+            .expect("qac_canonical_handle present");
+        let qac_preservation = anatomy
+            .get("qac_preservation_handle")
+            .cloned()
+            .expect("qac_preservation_handle present");
+
+        for (label, emf_handle, expected_profile, expected_min_dipoles) in [
+            ("emf_canonical_handle", emf_canonical, "wire_freeze_v4", 1u64),
+            ("emf_profile_handle", emf_profile, "profile_v4", 0u64),
+        ] {
+            let verified = match host
+                .invoke(
+                    "hypermedia.electromagnetics.verify_emf",
+                    &Value::Record(BTreeMap::from([("emf".into(), emf_handle.clone())])),
+                )
+                .unwrap_or_else(|e| panic!("{label} verify_emf failed: {e}"))
+            {
+                Value::Record(r) => r,
+                other => panic!("{label} verify_emf expected record, got {other:?}"),
+            };
+            assert_eq!(verified.get("valid"), Some(&Value::Bool(true)), "{label}");
+            assert_eq!(
+                verified.get("container_version"),
+                Some(&Value::U64(4)),
+                "{label}"
+            );
+            assert_eq!(
+                verified.get("format_profile"),
+                Some(&Value::String(expected_profile.into())),
+                "{label}"
+            );
+            assert!(
+                u64_field(&verified, "dipole_records") >= expected_min_dipoles,
+                "{label} expected >={expected_min_dipoles} dipole_records"
+            );
+            assert!(
+                u64_field(&verified, "field_records") + u64_field(&verified, "dipole_records") >= 1,
+                "{label} expected field or dipole records"
+            );
+
+            let slice_handle = host
+                .invoke(
+                    "hypermedia.electromagnetics.render_spectral_slice",
+                    &Value::Record(BTreeMap::from([
+                        ("emf".into(), emf_handle.clone()),
+                        ("width".into(), Value::U64(32)),
+                        ("height".into(), Value::U64(32)),
+                    ])),
+                )
+                .unwrap_or_else(|e| panic!("{label} render_spectral_slice failed: {e}"));
+            match host.workspace.get(&slice_handle) {
+                Ok(Artifact::Rgba(rgba)) => {
+                    assert_eq!(rgba.width, 32, "{label}");
+                    assert_eq!(rgba.height, 32, "{label}");
+                    assert_eq!(rgba.pixels.len(), 32 * 32, "{label}");
+                }
+                Ok(other) => panic!("{label} render_spectral_slice expected Rgba, got {}", other.kind()),
+                Err(e) => panic!("{label} render_spectral_slice workspace lookup failed: {e}"),
+            }
+
+            let dda = match host
+                .invoke(
+                    "hypermedia.electromagnetics.raymarch_vox0_dda",
+                    &Value::Record(BTreeMap::from([
+                        ("emf".into(), emf_handle.clone()),
+                        ("width".into(), Value::U64(32)),
+                        ("height".into(), Value::U64(32)),
+                        ("deflection_mass".into(), Value::F64(0.0)),
+                        ("step_limit".into(), Value::U64(48)),
+                    ])),
+                )
+                .unwrap_or_else(|e| panic!("{label} raymarch_vox0_dda failed: {e}"))
+            {
+                Value::Record(r) => r,
+                other => panic!("{label} raymarch_vox0_dda expected record, got {other:?}"),
+            };
+            assert_eq!(dda.get("width"), Some(&Value::U64(32)), "{label}");
+            assert_eq!(dda.get("height"), Some(&Value::U64(32)), "{label}");
+            let dda_image = dda.get("image").expect("raymarch image handle");
+            assert!(
+                matches!(
+                    host.workspace.get(dda_image),
+                    Ok(Artifact::Rgba(rgba)) if rgba.width == 32 && rgba.height == 32
+                ),
+                "{label} raymarch image expected 32x32 Rgba"
+            );
+
+            let tone_handle = host
+                .invoke(
+                    "hypermedia.acoustics.synthesize_tone",
+                    &Value::Record(BTreeMap::from([
+                        ("emf".into(), emf_handle),
+                        ("sample_rate".into(), Value::U64(48_000)),
+                        ("frames".into(), Value::U64(256)),
+                        ("amplitude".into(), Value::F64(0.3)),
+                    ])),
+                )
+                .unwrap_or_else(|e| panic!("{label} synthesize_tone(emf) failed: {e}"));
+            match host.workspace.get(&tone_handle) {
+                Ok(Artifact::Audio { rate, samples }) => {
+                    assert_eq!(*rate, 48_000, "{label}");
+                    assert_eq!(samples.len(), 256, "{label}");
+                }
+                Ok(other) => panic!("{label} synthesize_tone expected Audio, got {}", other.kind()),
+                Err(e) => panic!("{label} synthesize_tone workspace lookup failed: {e}"),
+            }
+        }
+
+        for (label, qac_handle, expected_entries) in [
+            ("qac_canonical_handle", qac_canonical, 4u64),
+            ("qac_preservation_handle", qac_preservation, 2u64),
+        ] {
+            let daw = match host
+                .invoke(
+                    "hypermedia.acoustics.analyze_ebu_r128_camelot_daw",
+                    &Value::Record(BTreeMap::from([("qac".into(), qac_handle)])),
+                )
+                .unwrap_or_else(|e| panic!("{label} analyze_ebu_r128_camelot_daw failed: {e}"))
+            {
+                Value::Record(r) => r,
+                other => panic!("{label} expected record, got {other:?}"),
+            };
+            let Some(Value::Record(ver)) = daw.get("qac_v1_verification") else {
+                panic!("{label} missing qac_v1_verification");
+            };
+            assert_eq!(ver.get("valid"), Some(&Value::Bool(true)), "{label}");
+            assert_eq!(
+                ver.get("container_version"),
+                Some(&Value::U64(1)),
+                "{label}"
+            );
+            assert_eq!(
+                ver.get("entry_count"),
+                Some(&Value::U64(expected_entries)),
+                "{label}"
+            );
+        }
+    }
+
+    #[test]
+    fn catalog_botanical_and_rig_emit_emf_qac_bundles_verify_cleanly() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let botanical = match host
+            .invoke(
+                "hypermedia.manifold.compile_botanical_organ_10d",
+                &Value::Record(BTreeMap::from([
+                    ("scale".into(), Value::U64(4)),
+                    (
+                        "species_id".into(),
+                        Value::String("corymbia-aparrerinja".into()),
+                    ),
+                    ("emit_emf_qac".into(), Value::Bool(true)),
+                ])),
+            )
+            .expect("compile_botanical_organ_10d(emit_emf_qac: true)")
+        {
+            Value::Record(r) => r,
+            other => panic!("expected botanical record, got {other:?}"),
+        };
+
+        let rig = match host
+            .invoke(
+                "hypermedia.kinetics.rig_biomechanical_archetype",
+                &Value::Record(BTreeMap::from([
+                    (
+                        "archetype".into(),
+                        Value::String("macropod_saltatorial".into()),
+                    ),
+                    ("emit_emf_qac".into(), Value::Bool(true)),
+                ])),
+            )
+            .expect("rig_biomechanical_archetype(emit_emf_qac: true)")
+        {
+            Value::Record(r) => r,
+            other => panic!("expected rig record, got {other:?}"),
+        };
+
+        for (source_label, record) in [("botanical", botanical), ("rig", rig)] {
+            for handle_key in ["emf_canonical_handle", "emf_profile_handle"] {
+                let handle = record
+                    .get(handle_key)
+                    .cloned()
+                    .unwrap_or_else(|| panic!("{source_label} missing {handle_key}"));
+                let verified = match host
+                    .invoke(
+                        "hypermedia.electromagnetics.verify_emf",
+                        &Value::Record(BTreeMap::from([("emf".into(), handle)])),
+                    )
+                    .unwrap_or_else(|e| panic!("{source_label}.{handle_key} verify_emf: {e}"))
+                {
+                    Value::Record(r) => r,
+                    other => panic!("expected verify_emf record, got {other:?}"),
+                };
+                assert_eq!(verified.get("valid"), Some(&Value::Bool(true)));
+                assert_eq!(verified.get("container_version"), Some(&Value::U64(4)));
+            }
+            for (handle_key, expected_entries) in [
+                ("qac_canonical_handle", 4u64),
+                ("qac_preservation_handle", 2u64),
+            ] {
+                let handle = record
+                    .get(handle_key)
+                    .cloned()
+                    .unwrap_or_else(|| panic!("{source_label} missing {handle_key}"));
+                let daw = match host
+                    .invoke(
+                        "hypermedia.acoustics.analyze_ebu_r128_camelot_daw",
+                        &Value::Record(BTreeMap::from([("qac".into(), handle)])),
+                    )
+                    .unwrap_or_else(|e| panic!("{source_label}.{handle_key} daw verify: {e}"))
+                {
+                    Value::Record(r) => r,
+                    other => panic!("expected daw record, got {other:?}"),
+                };
+                let Some(Value::Record(ver)) = daw.get("qac_v1_verification") else {
+                    panic!("{source_label}.{handle_key} missing qac_v1_verification");
+                };
+                assert_eq!(ver.get("valid"), Some(&Value::Bool(true)));
+                assert_eq!(ver.get("container_version"), Some(&Value::U64(1)));
+                assert_eq!(
+                    ver.get("entry_count"),
+                    Some(&Value::U64(expected_entries)),
+                    "{source_label}.{handle_key}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn catalog_encode_aac_qac_mode_and_compile_emf_dipoles_constitutive_roundtrip() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let tone = host
+            .invoke(
+                "hypermedia.acoustics.synthesize_tone",
+                &Value::Record(BTreeMap::from([
+                    ("frequency".into(), Value::F64(440.0)),
+                    ("sample_rate".into(), Value::U64(48_000)),
+                    ("frames".into(), Value::U64(24_000)),
+                    ("amplitude".into(), Value::F64(0.25)),
+                ])),
+            )
+            .expect("synthesize_tone");
+        let qac = host
+            .invoke(
+                "hypermedia.acoustics.encode_aac",
+                &Value::Record(BTreeMap::from([
+                    ("audio".into(), tone),
+                    ("format".into(), Value::String("qac".into())),
+                    (
+                        "species_id".into(),
+                        Value::String("corymbia-aparrerinja".into()),
+                    ),
+                    ("cue_profile".into(), Value::String("up05_e2e".into())),
+                ])),
+            )
+            .expect("encode_aac(format: qac)");
+        let qac_rec = match &qac {
+            Value::Record(r) => r.clone(),
+            other => panic!("expected qac handle record, got {other:?}"),
+        };
+        assert_eq!(
+            qac_rec.get("species_id"),
+            Some(&Value::String("corymbia-aparrerinja".into()))
+        );
+        assert_eq!(
+            qac_rec.get("cue_profile"),
+            Some(&Value::String("up05_e2e".into()))
+        );
+        let daw = match host
+            .invoke(
+                "hypermedia.acoustics.analyze_ebu_r128_camelot_daw",
+                &Value::Record(BTreeMap::from([("qac".into(), qac)])),
+            )
+            .expect("analyze_ebu_r128_camelot_daw(qac)")
+        {
+            Value::Record(r) => r,
+            other => panic!("expected daw record, got {other:?}"),
+        };
+        let Some(Value::Record(ver)) = daw.get("qac_v1_verification") else {
+            panic!("missing qac_v1_verification");
+        };
+        assert_eq!(ver.get("valid"), Some(&Value::Bool(true)));
+        assert_eq!(ver.get("format"), Some(&Value::String("qac_v1".into())));
+        assert_eq!(ver.get("container_version"), Some(&Value::U64(1)));
+        assert_eq!(ver.get("entry_count"), Some(&Value::U64(4)));
+        assert_eq!(ver.get("sha256_hex"), qac_rec.get("sha256_hex"));
+        assert_eq!(ver.get("blake3_hex"), qac_rec.get("blake3_hex"));
+
+        let emf = host
+            .invoke(
+                "hypermedia.electromagnetics.compile_emf",
+                &Value::Record(BTreeMap::from([
+                    ("origin".into(), vec3(0.0, 0.0, 0.0)),
+                    ("voxel_size".into(), Value::F64(0.5)),
+                    (
+                        "grid_dims".into(),
+                        Value::List(vec![Value::U64(1), Value::U64(1), Value::U64(1)]),
+                    ),
+                    ("epoch_s".into(), Value::F64(1_700_000_000.0)),
+                    (
+                        "sources".into(),
+                        Value::List(vec![Value::Record(BTreeMap::from([
+                            ("position".into(), vec3(1.0, 1.0, 1.0)),
+                            ("e_amplitude".into(), vec3(120.0, 0.0, 0.0)),
+                            ("wavelength_nm".into(), Value::F64(550.0)),
+                            ("phase".into(), Value::F64(0.0)),
+                        ]))]),
+                    ),
+                    (
+                        "dipoles".into(),
+                        Value::List(vec![Value::Record(BTreeMap::from([
+                            ("position".into(), vec3(0.5, 0.5, 0.5)),
+                            ("moment".into(), vec3(0.0, 0.0, 1.5e-6)),
+                            ("label".into(), Value::String("up05_dipole".into())),
+                        ]))]),
+                    ),
+                    (
+                        "constitutive".into(),
+                        Value::Record(BTreeMap::from([
+                            ("epsilon_relative".into(), Value::F64(4.0)),
+                            ("mu_relative".into(), Value::F64(1.0)),
+                            ("conductivity_s_per_m".into(), Value::F64(0.25)),
+                            ("model".into(), Value::String("up05_medium".into())),
+                        ])),
+                    ),
+                ])),
+            )
+            .expect("compile_emf with dipoles + constitutive");
+
+        let emf_rec = match &emf {
+            Value::Record(r) => r.clone(),
+            other => panic!("expected compile_emf handle record, got {other:?}"),
+        };
+        assert_eq!(emf_rec.get("dipole_records"), Some(&Value::U64(1)));
+        let Some(Value::Record(dipole_sum)) = emf_rec.get("bioelectric_dipole_summary") else {
+            panic!("missing bioelectric_dipole_summary");
+        };
+        assert_eq!(dipole_sum.get("dipole_count"), Some(&Value::U64(1)));
+        assert_eq!(
+            dipole_sum.get("schema"),
+            Some(&Value::String("bioelectric_dipole_v1".into()))
+        );
+        let Some(Value::Record(const_sum)) = emf_rec.get("constitutive_summary") else {
+            panic!("missing constitutive_summary");
+        };
+        assert_eq!(const_sum.get("epsilon_relative"), Some(&Value::F64(4.0)));
+        assert_eq!(const_sum.get("mu_relative"), Some(&Value::F64(1.0)));
+        assert_eq!(
+            const_sum.get("conductivity_s_per_m"),
+            Some(&Value::F64(0.25))
+        );
+        assert_eq!(
+            const_sum.get("model"),
+            Some(&Value::String("up05_medium".into()))
+        );
+
+        let emf_ver = match host
+            .invoke(
+                "hypermedia.electromagnetics.verify_emf",
+                &Value::Record(BTreeMap::from([("emf".into(), emf)])),
+            )
+            .expect("verify_emf")
+        {
+            Value::Record(r) => r,
+            other => panic!("expected verify_emf record, got {other:?}"),
+        };
+        assert_eq!(emf_ver.get("valid"), Some(&Value::Bool(true)));
+        assert_eq!(emf_ver.get("container_version"), Some(&Value::U64(4)));
+        assert!(emf_ver.contains_key("dipole_records"));
+        assert!(emf_ver.contains_key("constitutive_records"));
+        assert!(matches!(
+            emf_ver.get("format_profile"),
+            Some(Value::String(s)) if !s.is_empty()
+        ));
+        let has_dipole_and_constitutive_lineage = match emf_ver.get("provenance") {
+            Some(Value::List(items)) => items.iter().any(|item| match item {
+                Value::Record(m) => matches!(
+                    m.get("lineage"),
+                    Some(Value::String(s)) if s.contains("up05_dipole") && s.contains("up05_medium")
+                ),
+                _ => false,
+            }),
+            _ => false,
+        };
+        assert!(
+            has_dipole_and_constitutive_lineage,
+            "verify_emf provenance should retain dipole and constitutive medium lineage"
+        );
+
+        assert_eq!(OPERATIONS.len(), 150);
+        assert_eq!(ontology::MORPHISMS.len(), 150);
     }
 }

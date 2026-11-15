@@ -181,6 +181,7 @@ impl Round {
                 });
 
                 (draw.is_some() || filter.is_some() || blend.is_some()).then_some(LayerPass {
+                    #[cfg(test)]
                     texture_parity,
                     draw,
                     filter,
@@ -476,7 +477,7 @@ pub(super) struct LayerPass<'a> {
     pub(super) draw: Option<DrawPass<'a>>,
     pub(super) filter: Option<FilterPass<'a>>,
     pub(super) blend: Option<BlendPass<'a>>,
-    #[allow(dead_code, reason = "only used for a test.")]
+    #[cfg(test)]
     pub(super) texture_parity: TextureParity,
 }
 

@@ -8,7 +8,6 @@ use qualia_core_db::q42::m64_matter::{
 use std::collections::BTreeMap;
 use vibe::Value;
 
-#[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct RadialEdge {
     v0: usize,
@@ -392,13 +391,19 @@ impl AssetHost<'_> {
                     .map_or(false, |e| e.incident_faces.len() >= 3)
             });
 
+            let tri_crease = [e0, e1, e2]
+                .into_iter()
+                .filter_map(|idx| edges.get(idx).filter(|e| e.v0 != e.v1).map(|e| e.crease))
+                .next()
+                .unwrap_or(crease_sharpness as f32);
+
             let mut rec = M64ShellRecord {
                 face_id: i as u32,
                 vertex_indices: *tri,
                 edge_indices: [e0 as u32, e1 as u32, e2 as u32],
                 normal,
                 centroid,
-                crease: crease_sharpness as f32,
+                crease: tri_crease,
                 flags: if is_nm { 1 } else { 0 },
                 record_crc32c: 0,
             };
@@ -490,7 +495,6 @@ impl AssetHost<'_> {
         }
 
         // 2. Build edge connectivity map to bridge adjacent beveled face edges
-        #[allow(dead_code)]
         struct EdgeFaceRef {
             face_idx: usize,
             v_start: u32,
@@ -520,12 +524,12 @@ impl AssetHost<'_> {
 
         // Connect adjacent face edges with quad / triangle strips
         for refs in edge_map.values() {
-            if refs.len() == 2 {
+            if refs.len() == 2 && refs[0].face_idx != refs[1].face_idx {
                 let r1 = &refs[0];
                 let r2 = &refs[1];
 
                 // Orient r2 so endpoints match r1
-                let (r2_start, r2_end) = if r1.v_start == r2.v_start {
+                let (r2_start, r2_end) = if r1.v_start == r2.v_start && r1.v_end == r2.v_end {
                     (r2.inset_start, r2.inset_end)
                 } else {
                     (r2.inset_end, r2.inset_start)

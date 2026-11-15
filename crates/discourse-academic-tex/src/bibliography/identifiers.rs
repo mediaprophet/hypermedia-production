@@ -137,6 +137,11 @@ pub fn parse_identifier(raw: &str) -> Option<Ident> {
     if looks_like_arxiv(s) {
         return Some(Ident::Arxiv(arxiv_body(s)));
     }
+    if let Some(id) = s.strip_prefix("PMC").or_else(|| s.strip_prefix("pmc")) {
+        if !id.is_empty() && id.chars().all(|c| c.is_ascii_digit()) {
+            return Some(Ident::Pmcid(format!("PMC{id}")));
+        }
+    }
     None
 }
 

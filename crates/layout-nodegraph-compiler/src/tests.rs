@@ -4,13 +4,12 @@
 
 use std::collections::BTreeMap;
 
-use super::compiler::cse::{compute_node_hashes, cse_deduplicate, prune_dead_nodes};
+use super::compiler::cse::{cse_deduplicate, prune_dead_nodes};
 use super::compiler::flatten::flatten_network;
 use super::compiler::node::{
     DocumentNode, NodeId, NodeImplementation, NodeInput, NodeNetwork, TaggedValue,
 };
-use super::compiler::pipeline::{CompilerOptions, NodeGraphCompiler};
-use super::math_parser::ast::Unit;
+use super::compiler::pipeline::NodeGraphCompiler;
 use super::math_parser::eval::MathContext;
 
 #[test]

@@ -9,7 +9,7 @@ pub mod pattern;
 pub mod scatter;
 pub mod track;
 
-use kurbo::{BezPath, Point, Vec2};
+use kurbo::{BezPath, Point};
 use serde::{Deserialize, Serialize};
 use vector_locus_geometry::PathData;
 

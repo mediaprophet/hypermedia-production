@@ -181,7 +181,7 @@ pub fn gaussian_blur_rgba8(src: &[u8], width: usize, height: usize, radius: f64,
     }
     let r = radius.round().max(1.0) as usize;
     let kernel = gaussian_kernel_1d(r, sigma);
-    let k_size = kernel.len();
+    debug_assert_eq!(kernel.len(), 2 * r + 1);
 
     // 1. Horizontal pass
     let mut horiz = vec![0.0f64; width * height * 4];

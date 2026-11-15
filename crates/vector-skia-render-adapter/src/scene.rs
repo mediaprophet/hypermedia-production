@@ -362,9 +362,12 @@ impl SkiaScenePainter<'_> {
 
     fn get_or_cache_typeface<'a>(
         &'a mut self,
-        #[allow(unused_mut)] mut font: &'a peniko::FontData,
+        font: &'a peniko::FontData,
     ) -> Option<Typeface> {
         let cache_key = (font.data.id(), font.index);
+
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        let mut font = font;
 
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         #[allow(clippy::map_entry, reason = "Cannot early-return with entry API")]
@@ -511,7 +514,7 @@ impl PaintScene for SkiaScenePainter<'_> {
 
     fn draw_glyphs<'a, 's: 'a>(
         &'s mut self,
-        #[allow(unused_mut)] mut font: &'a peniko::FontData,
+        font: &'a peniko::FontData,
         font_size: f32,
         hint: bool,
         normalized_coords: &'a [anyrender::NormalizedCoord],

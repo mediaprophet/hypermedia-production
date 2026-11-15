@@ -1,7 +1,7 @@
 //! Text manipulation functions: CONCAT, TEXTJOIN, LEFT, RIGHT, MID, etc.
 
 use crate::core::value::{CellError, Value};
-use crate::functions::util::{R, as_array, num, opt_num};
+use crate::functions::util::{R, num, opt_num};
 
 pub fn concat(args: &[Value]) -> R<Value> {
     let mut s = String::new();

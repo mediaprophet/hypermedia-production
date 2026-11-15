@@ -5,7 +5,7 @@
 //! and Informatics Fiduciary duties ensuring scientific precision and geographic accuracy.
 
 use serde::{Deserialize, Serialize};
-use std::f64::consts::{FRAC_PI_2, PI};
+use std::f64::consts::PI;
 
 /// Mean Earth radius used for spherical approximations (metres).
 pub const EARTH_RADIUS_M: f64 = 6_371_008.8;
@@ -188,11 +188,11 @@ pub fn wgs84_inverse(lat1_deg: f64, lon1_deg: f64, lat2_deg: f64, lon2_deg: f64)
     let mut lambda = l;
     let mut lambda_prev;
     let mut iter_limit = 100;
-    let mut sin_sigma = 0.0;
-    let mut cos_sigma = 0.0;
-    let mut sigma = 0.0;
-    let mut cos_sq_alpha = 0.0;
-    let mut cos_2sigma_m = 0.0;
+    let mut sin_sigma;
+    let mut cos_sigma;
+    let mut sigma;
+    let mut cos_sq_alpha;
+    let mut cos_2sigma_m;
 
     let converged = loop {
         let (sin_lambda, cos_lambda) = lambda.sin_cos();
@@ -523,6 +523,9 @@ where
 {
     let step = 1e-4;
     let centre = project(c)?;
+    if !centre.x.is_finite() || !centre.y.is_finite() {
+        return None;
+    }
     let east = project(Coord::new(c.x + step, c.y))?;
     let west = project(Coord::new(c.x - step, c.y))?;
     let north = project(Coord::new(c.x, c.y + step))?;

@@ -5,9 +5,9 @@ use std::hash::{BuildHasherDefault, Hasher};
 use std::sync::Arc;
 
 use crate::core::addr::{CellRef, RangeRef};
-use crate::core::value::{Array, CellError, Value};
+use crate::core::value::{CellError, Value};
 use crate::calc::eval::{Area, Evaluator, Host, precedents};
-use crate::calc::model::{Sheet, Workbook};
+use crate::calc::model::Workbook;
 
 #[derive(Default, Clone, Copy)]
 pub struct FxHasher(u64);

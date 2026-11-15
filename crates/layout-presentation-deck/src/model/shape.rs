@@ -1,7 +1,7 @@
 //! Shape, text, table, and transition data models.
 
 use serde::{Deserialize, Serialize};
-use super::types::{ColorRef, Fill, Line, PhType, Rect, Rgba, ShapeId, ShapeKind, Xfrm};
+use super::types::{ColorRef, Fill, Line, PhType, Rect, ShapeId, ShapeKind, Xfrm};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Placeholder {

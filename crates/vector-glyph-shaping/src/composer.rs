@@ -120,7 +120,7 @@ pub fn compose(
     }];
     let mut active = vec![0];
 
-    for (cand_idx, brk) in breaks.iter().enumerate() {
+    for brk in &breaks {
         let is_last = brk.end == n;
         let mut new_active = Vec::new();
 

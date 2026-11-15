@@ -1,10 +1,10 @@
 //! Pattern brush: modular tiles repeated along stroke segments and corners.
 
-use kurbo::{Affine, BezPath, Point, Rect, Vec2};
+use kurbo::{Affine, BezPath, Rect};
 use serde::{Deserialize, Serialize};
 use vector_locus_geometry::PathData;
 
-use crate::track::{Track, normal, tracks};
+use crate::track::tracks;
 
 /// How tiles fit into segment lengths that are not a whole number of tiles long.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

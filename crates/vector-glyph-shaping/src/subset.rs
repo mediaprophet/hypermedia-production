@@ -2,8 +2,6 @@
 //!
 //! Grounded in authoring rights and digital document preservation (UDHR Art. 19, 27).
 
-use std::collections::HashMap;
-
 /// SFNT table entry in an OpenType / TrueType font.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SfntTable {

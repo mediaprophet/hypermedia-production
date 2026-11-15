@@ -15,6 +15,7 @@ use crate::filter::FILTER_ATLAS_PADDING;
 use crate::scene::{LayersConfig, MemorySettings, RecordedDraw};
 use alloc::vec::Vec;
 use bytemuck::{Pod, Zeroable};
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 use core::mem::size_of;
 use vello_common::color::{AlphaColor, Srgb};
 use vello_common::geometry::{RectU16, SizeU16};
@@ -451,6 +452,7 @@ pub struct GpuStrip {
 }
 
 /// Different types of GPU encoded paints.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[derive(Debug)]
 pub(crate) enum GpuEncodedPaint {
     /// An encoded image.
@@ -465,6 +467,7 @@ pub(crate) enum GpuEncodedPaint {
     BlurredRoundedRect(GpuBlurredRoundedRect),
 }
 
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 const fn texels<T>() -> u32 {
     let bytes = size_of::<T>();
     assert!(
@@ -474,6 +477,7 @@ const fn texels<T>() -> u32 {
     (bytes / 16) as u32
 }
 
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 impl GpuEncodedPaint {
     const IMAGE_TEXELS: u32 = texels::<GpuEncodedImage>();
     const LINEAR_TEXELS: u32 = texels::<GpuLinearGradient>();
@@ -518,9 +522,9 @@ impl GpuEncodedPaint {
 
 /// GPU encoded image data.
 /// Align to 16 bytes for `RGBA32Uint` alignment.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[allow(dead_code, reason = "Clippy fails when --no-default-features")]
 pub(crate) struct GpuEncodedImage {
     /// Packed rendering quality and extend modes.
     /// Bits 4-5: `extend_y` (2 bits)
@@ -543,9 +547,9 @@ pub(crate) struct GpuEncodedImage {
 
 /// GPU encoded blurred rounded rectangle data.
 /// Align to 16 bytes for `RGBA32Uint` alignment.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[allow(dead_code, reason = "Clippy fails when --no-default-features")]
 pub(crate) struct GpuBlurredRoundedRect {
     /// Transform matrix [a, b, c, d, tx, ty].
     pub transform: [f32; 6],
@@ -565,9 +569,9 @@ pub(crate) struct GpuBlurredRoundedRect {
 
 /// GPU encoded linear gradient data.
 /// Align to 16 bytes for `RGBA32Uint` alignment.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[allow(dead_code, reason = "Clippy fails when --no-default-features")]
 pub(crate) struct GpuLinearGradient {
     /// Packed texture width (bits 0-30) and extend mode (bit 31: 0=Pad, 1=Repeat).
     pub texture_width_and_extend_mode: u32,
@@ -579,9 +583,9 @@ pub(crate) struct GpuLinearGradient {
 
 /// GPU encoded radial gradient data.
 /// Align to 16 bytes for `RGBA32Uint` alignment.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[allow(dead_code, reason = "Clippy fails when --no-default-features")]
 pub(crate) struct GpuRadialGradient {
     /// Packed texture width (bits 0-30) and extend mode (bit 31: 0=Pad, 1=Repeat).
     pub texture_width_and_extend_mode: u32,
@@ -609,9 +613,9 @@ pub(crate) struct GpuRadialGradient {
 
 /// GPU encoded sweep gradient data.
 /// Align to 16 bytes for `RGBA32Uint` alignment.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[allow(dead_code, reason = "Clippy fails when --no-default-features")]
 pub(crate) struct GpuSweepGradient {
     /// Packed texture width (bits 0-30) and extend mode (bit 31: 0=Pad, 1=Repeat).
     pub texture_width_and_extend_mode: u32,
@@ -628,12 +632,15 @@ pub(crate) struct GpuSweepGradient {
 }
 
 // Constants for packing extend_mode and texture_width.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 const EXTEND_MODE_MASK: u32 = 1 << 30;
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 const TEXTURE_WIDTH_MASK: u32 = !EXTEND_MODE_MASK;
 
 /// Pack `extend_mode` and `texture_width` into a single u32.
 /// `extend_mode`: 0=Pad, 1=Repeat, 2=Reflect (stored in bits 30 & 31)
 /// `texture_width`: stored in bits 0-29 (max value: 2^30-1)
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_texture_width_and_extend_mode(texture_width: u32, extend_mode: u32) -> u32 {
     debug_assert!(extend_mode <= 2, "extend_mode must be less or equal to 2");
@@ -647,6 +654,7 @@ pub(crate) fn pack_texture_width_and_extend_mode(texture_width: u32, extend_mode
 /// Pack radial gradient `kind` and `f_is_swapped` into a single u32.
 /// `kind`: 0=Radial, 1=Strip, 2=Focal (stored in bits 0-1)
 /// `f_is_swapped`: 0=false, 1=true (stored in bit 2)
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_radial_kind_and_swapped(kind: u32, f_is_swapped: u32) -> u32 {
     debug_assert!(kind <= 2, "kind must be 0, 1, or 2");
@@ -657,6 +665,7 @@ pub(crate) fn pack_radial_kind_and_swapped(kind: u32, f_is_swapped: u32) -> u32 
 /// Pack image `width` and `height` into a single u32.
 /// `width`: stored in bits 16-31 (upper 16 bits)
 /// `height`: stored in bits 0-15 (lower 16 bits)
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_image_size(width: u16, height: u16) -> u32 {
     ((width as u32) << 16) | (height as u32)
@@ -665,6 +674,7 @@ pub(crate) fn pack_image_size(width: u16, height: u16) -> u32 {
 /// Pack image offset coordinates `x` and `y` into a single u32.
 /// `x`: stored in bits 16-31 (upper 16 bits)
 /// `y`: stored in bits 0-15 (lower 16 bits)
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_image_offset(x: u16, y: u16) -> u32 {
     ((x as u32) << 16) | (y as u32)
@@ -674,6 +684,7 @@ pub(crate) fn pack_image_offset(x: u16, y: u16) -> u32 {
 /// `extend_y`: stored in bits 4-5 (2 bits)
 /// `extend_x`: stored in bits 2-3 (2 bits)
 /// `quality`: stored in bits 0-1 (2 bits)
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_image_params(quality: u32, extend_x: u32, extend_y: u32) -> u32 {
     debug_assert!(extend_x <= 3, "extend_x must be 0-3 (2 bits)");
@@ -686,6 +697,7 @@ pub(crate) fn pack_image_params(quality: u32, extend_x: u32, extend_y: u32) -> u
 ///
 /// The tint color is premultiplied before packing into a u32 in the same layout
 /// as WGSL `pack4x8unorm`.
+#[cfg(any(feature = "etalon", feature = "webgl"))]
 #[inline(always)]
 pub(crate) fn pack_tint(tint: Option<vello_common::paint::Tint>) -> (u32, u32) {
     match tint {

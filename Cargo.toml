@@ -26,4 +26,4 @@ debug = 0
 incremental = false
 
 [patch."https://github.com/mediaprophet/vibe-script.git"]
-vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "ce88c2adc5f7411561f5670f0cc42452a7f39263" }
+vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "4ec9ab3dfb2eabf8b19af8c10bcf52c714c5c994" }

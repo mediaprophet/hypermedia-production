@@ -5,8 +5,6 @@
 
 use crate::geodesy::Coord;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::f64::consts::PI;
 
 /// A marker shape for point geometries.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

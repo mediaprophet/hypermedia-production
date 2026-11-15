@@ -401,7 +401,7 @@ fn write_inlines(inlines: &[FlowInline], out: &mut String) {
     for inline in inlines {
         match inline {
             FlowInline::Text(t, fmt) => {
-                if let Some(url) = &fmt.link {
+                if fmt.link.is_some() {
                     out.push('[');
                 }
                 if fmt.bold {

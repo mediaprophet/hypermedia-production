@@ -1,6 +1,5 @@
 //! Formatting `Expr` AST back into formula text.
 
-use std::fmt::Write;
 use crate::core::addr::{CellRef, col_to_letters};
 use crate::core::value::number_to_text;
 use crate::formula::ast::*;

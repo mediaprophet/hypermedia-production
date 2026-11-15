@@ -1,9 +1,6 @@
 //! LaTeX (.tex) document importer and exporter for FlowDoc.
 
-use crate::flow::model::{
-    FlowBlock, FlowCell, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowListInfo, FlowPara, FlowRow,
-    FlowTable,
-};
+use crate::flow::model::{FlowBlock, FlowDoc, FlowInline, FlowKind, FlowPara};
 
 /// Export a `FlowDoc` to standard LaTeX source.
 pub fn to_latex(doc: &FlowDoc) -> String {

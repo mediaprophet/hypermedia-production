@@ -1,6 +1,6 @@
 # hypermedia-production — audit docs
 
-Generated 2026-11-10T12:07:10.5599269Z · 903 files · 8745 functions · 69 modules
+Generated 2026-11-15T03:55:25.1861484Z · 939 files · 8997 functions · 69 modules
 
 > **GENERATED — do not edit.** Regenerate with `audit docs`.
 >

@@ -2,10 +2,10 @@
 //!
 //! Grounded in authoring rights and creative integrity (UDHR Art. 19, 27).
 
-use kurbo::{Point, Rect};
-use vector_locus_geometry::{PathData, SubPath};
+use kurbo::Point;
+use vector_locus_geometry::PathData;
 
-use crate::pathops::boolean::{boolean, flatten_subpath, polygon_area, BoolOp};
+use crate::pathops::boolean::{boolean, BoolOp};
 use crate::pathops::pathfinder::Region;
 
 /// Find an interior point inside a closed simple polygon.
@@ -36,7 +36,7 @@ pub fn shape_builder(paths: &[PathData]) -> Vec<Region> {
 
     // Pairwise overlap and face extraction
     for (i, p) in paths.iter().enumerate() {
-        let mut curr = p.clone();
+        let curr = p.clone();
         for (j, other) in paths.iter().enumerate() {
             if i != j {
                 let inter = boolean(&curr, other, BoolOp::Intersect);

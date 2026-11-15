@@ -366,12 +366,25 @@ impl AssetHost<'_> {
 
     /// 121: `hypermedia.locus.pathfinder_warp_envelope` (`vector-locus-pathops` + `vector-locus-geometry`)
     pub(crate) fn pathfinder_warp_envelope(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["profile", "clip_profile", "width", "height", "bend", "corner_radius", "extrude_depth"])?;
+        fields(
+            a,
+            &[
+                "profile",
+                "clip_profile",
+                "width",
+                "height",
+                "bend",
+                "corner_radius",
+                "extrude_depth",
+                "warp_style",
+            ],
+        )?;
         let width = number(a, "width", 60.0)?;
         let height = number(a, "height", 60.0)?;
         let bend = number(a, "bend", 25.0)?;
         let corner_radius = number(a, "corner_radius", 6.0)?;
         let extrude_depth = number(a, "extrude_depth", 50.0)?.clamp(1.0, 1000.0);
+        let warp_style_str = opt_str(a, "warp_style", "arc")?;
         if !(1.0..=2000.0).contains(&width) || !(1.0..=2000.0).contains(&height) {
             return Err("width/height outside 1.0..=2000.0".into());
         }
@@ -424,7 +437,25 @@ impl AssetHost<'_> {
             dense.anchor_count().saturating_mul(64).saturating_add(2048),
             dense.anchor_count().saturating_mul(256).saturating_add(8192),
         )?;
-        let warped = warp(&dense, bounds, WarpStyle::Arc, &serde_json::json!({ "bend": bend }));
+        let warp_style = match warp_style_str.to_ascii_lowercase().as_str() {
+            "arc" => WarpStyle::Arc,
+            "arc_lower" => WarpStyle::ArcLower,
+            "arc_upper" => WarpStyle::ArcUpper,
+            "arch" => WarpStyle::Arch,
+            "bulge" => WarpStyle::Bulge,
+            "shell_lower" => WarpStyle::ShellLower,
+            "shell_upper" => WarpStyle::ShellUpper,
+            "flag" => WarpStyle::Flag,
+            "wave" => WarpStyle::Wave,
+            "fish" => WarpStyle::Fish,
+            "rise" => WarpStyle::Rise,
+            "fisheye" => WarpStyle::Fisheye,
+            "inflate" => WarpStyle::Inflate,
+            "squeeze" => WarpStyle::Squeeze,
+            "twist" => WarpStyle::Twist,
+            other => return Err(format!("Unknown warp_style: {other}")),
+        };
+        let warped = warp(&dense, bounds, warp_style, &serde_json::json!({ "bend": bend }));
         let faces = extrude(&warped, Extrude { depth: extrude_depth, ..Extrude::default() })
             .map_err(|e| format!("3D extrude failed: {e}"))?;
 
@@ -481,10 +512,23 @@ impl AssetHost<'_> {
 
     /// 122: `hypermedia.locus.transcode_geospatial_vector` (`locus-geospatial-codecs`)
     pub(crate) fn transcode_geospatial_vector(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["profile", "name", "lon", "lat", "zoom"])?;
+        fields(a, &["profile", "name", "lon", "lat", "zoom", "landxml", "tile_x", "tile_y"])?;
         let station_name = opt_str(a, "name", "Survey Station")?;
         let (lon, lat) = (number(a, "lon", 149.1300)?, number(a, "lat", -35.2809)?);
         let zoom = count(a, "zoom", 12, 24)? as u8;
+        let max_tile = (1u32 << zoom).saturating_sub(1);
+        let tile_x = a
+            .get("tile_x")
+            .map(|v| integer(v, "tile_x"))
+            .transpose()?
+            .unwrap_or(1024)
+            .clamp(0, max_tile as usize) as u32;
+        let tile_y = a
+            .get("tile_y")
+            .map(|v| integer(v, "tile_y"))
+            .transpose()?
+            .unwrap_or(1024)
+            .clamp(0, max_tile as usize) as u32;
         let opt_prof = a.get("profile").map(|v| self.profile(v).map(|p| p.to_vec())).transpose()?;
 
         self.charge(128, 2048)?;
@@ -515,13 +559,14 @@ impl AssetHost<'_> {
         let kml_xml = serialize_kml("Commons Survey", &placemarks);
         let parsed_kml = parse_kml(&kml_xml);
 
-        let landxml_sample = r#"<LandXML><Alignments><Alignment name="Corridor" length="150.0"><CoordGeom><Line><Start>0.0 0.0</Start><End>150.0 0.0</End></Line></CoordGeom></Alignment></Alignments><Surfaces><Surface name="TIN1"><Definition surfType="TIN"><Pnts><P id="1">0.0 0.0 10.0</P><P id="2">10.0 0.0 10.0</P><P id="3">0.0 10.0 12.0</P></Pnts><Faces><F>1 2 3</F></Faces></Definition></Surface></Surfaces></LandXML>"#;
-        let (alignments, surfaces) = parse_landxml(landxml_sample);
-        let pmtiles_id = zxy_to_tile_id(zoom, 1024, 1024);
+        let default_landxml = r#"<LandXML><Alignments><Alignment name="Corridor" length="150.0"><CoordGeom><Line><Start>0.0 0.0</Start><End>150.0 0.0</End></Line></CoordGeom></Alignment></Alignments><Surfaces><Surface name="TIN1"><Definition surfType="TIN"><Pnts><P id="1">0.0 0.0 10.0</P><P id="2">10.0 0.0 10.0</P><P id="3">0.0 10.0 12.0</P></Pnts><Faces><F>1 2 3</F></Faces></Definition></Surface></Surfaces></LandXML>"#;
+        let landxml_input = opt_str(a, "landxml", default_landxml)?;
+        let (alignments, surfaces) = parse_landxml(&landxml_input);
+        let pmtiles_id = zxy_to_tile_id(zoom, tile_x, tile_y);
 
         let wkb_handle = self.encode("wkb", wkb_bytes.clone())?;
         let kml_handle = self.encode("kml", kml_xml.into_bytes())?;
-        let landxml_handle = self.encode("xml", landxml_sample.as_bytes().to_vec())?;
+        let landxml_handle = self.encode("xml", landxml_input.into_bytes())?;
 
         let mut out = BTreeMap::new();
         out.insert("wkb_resource".into(), wkb_handle);

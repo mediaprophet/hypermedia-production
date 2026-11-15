@@ -168,7 +168,7 @@ impl XmlNode {
 
     /// Parse an XML text document into an `XmlNode` tree.
     pub fn parse(xml: &str) -> Result<XmlNode, String> {
-        let mut tokens = tokenize(xml)?;
+        let tokens = tokenize(xml)?;
         if tokens.is_empty() {
             return Err("Empty XML input".into());
         }

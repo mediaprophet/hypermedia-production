@@ -64,7 +64,7 @@ pub fn evaluate_stratum(
     let thickness = 0.5 + (hash - 0.5) * config.thickness_randomness;
 
     // S-curve stepping modulation
-    let mut stepped = fraction;
+    let mut stepped = (fraction * thickness * 2.0).clamp(0.0, 1.0);
     for oct in 0..config.octaves.clamp(1, 8) {
         let oct_scale = 1.0 / (oct as f32 + 1.0);
         let oct_hash = table[((stratum + oct * 13).rem_euclid(256)) as usize] as f32 / 255.0;

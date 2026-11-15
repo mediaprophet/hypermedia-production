@@ -211,8 +211,9 @@ pub fn run_sector_physics_verification_step(
         }
 
         // 3. Two-way continuum coupling (Bekker-Wong soil + Archimedes/Gerstner hydro + FSPM botanical sway).
+        let mut soil_sinkage_max = 0.0f32;
         for wi in 2..=5 {
-            let _soil = couple_rigid_body_with_soil(
+            let soil = couple_rigid_body_with_soil(
                 &mut bodies[wi],
                 4_500.0,
                 0.04,
@@ -220,13 +221,15 @@ pub fn run_sector_physics_verification_step(
                 &soil_profile,
                 dt,
             );
+            soil_sinkage_max = soil_sinkage_max.max(soil.sinkage_depth_m);
         }
-        let _hydro = couple_rigid_body_with_hydro(
+        let hydro = couple_rigid_body_with_hydro(
             &mut bodies[1],
             &gerstner_spectrum,
             (step_idx as f32) * dt,
             dt,
         );
+        debug_assert!(soil_sinkage_max.is_finite() && hydro.buoyant_force_n.is_finite());
 
         // Give a probe body a brush impulse against a roadside Corymbia sapling on step 0
         if step_idx == 0 {
@@ -325,8 +328,330 @@ impl AssetHost<'_> {
             | "species.assemble_corpus"
             | "assemble_species_corpus" => self.assemble_species_corpus(a),
 
+            "hypermedia.manifold.calibrate_biological_subject"
+            | "manifold.calibrate_biological_subject"
+            | "synth.manifold.calibrate_biological_subject"
+            | "calibrate_biological_subject" => self.calibrate_biological_subject(a),
+
+            "hypermedia.kinetics.evaluate_mobility_fracture_risk"
+            | "kinetics.evaluate_mobility_fracture_risk"
+            | "synth.kinetics.evaluate_mobility_fracture_risk"
+            | "evaluate_mobility_fracture_risk" => self.evaluate_mobility_fracture_risk(a),
+
             _ => Err(format!("Unknown living-world anatomy operation: {id}")),
         }
+    }
+
+    fn calibrate_biological_subject(&self, a: &Args) -> Result<Value, String> {
+        fields(
+            a,
+            &[
+                "stature_m",
+                "mass_kg",
+                "age_years",
+                "biological_sex",
+                "reproductive_phase",
+                "cortical_vbmd_mg_cm3",
+                "trabecular_bv_tv",
+                "epistemic_tier",
+                "observation_method",
+                "confidence",
+            ],
+        )?;
+        let stature_m = number(a, "stature_m", 1.72)?;
+        let mass_kg = number(a, "mass_kg", 70.0)?;
+        let age_years = number(a, "age_years", 30.0)?;
+        let biological_sex = opt_string(a, "biological_sex", "female")?;
+        let reproductive_phase = opt_string(a, "reproductive_phase", "baseline")?;
+        let cortical_vbmd_mg_cm3 = number(a, "cortical_vbmd_mg_cm3", 1150.0)?;
+        let trabecular_bv_tv = number(a, "trabecular_bv_tv", 0.22)?;
+        let epistemic_tier = opt_string(a, "epistemic_tier", "InferredFromObservation")?;
+        let observation_method = opt_string(a, "observation_method", "q42m:DEXA")?;
+        let confidence = number(a, "confidence", 0.90)?;
+
+        if !stature_m.is_finite() || stature_m <= 0.0 {
+            return Err("calibrate_biological_subject: stature_m must be finite and > 0".into());
+        }
+        if !mass_kg.is_finite() || mass_kg <= 0.0 {
+            return Err("calibrate_biological_subject: mass_kg must be finite and > 0".into());
+        }
+        if !age_years.is_finite() || !(0.0..=130.0).contains(&age_years) {
+            return Err(
+                "calibrate_biological_subject: age_years must be finite and in [0, 130]".into(),
+            );
+        }
+        if !cortical_vbmd_mg_cm3.is_finite() || cortical_vbmd_mg_cm3 <= 0.0 {
+            return Err(
+                "calibrate_biological_subject: cortical_vbmd_mg_cm3 must be finite and > 0".into(),
+            );
+        }
+        if !trabecular_bv_tv.is_finite() || trabecular_bv_tv <= 0.0 || trabecular_bv_tv > 1.0 {
+            return Err(
+                "calibrate_biological_subject: trabecular_bv_tv must be finite and in (0, 1]"
+                    .into(),
+            );
+        }
+        if !confidence.is_finite() || !(0.0..=1.0).contains(&confidence) {
+            return Err(
+                "calibrate_biological_subject: confidence must be finite and in [0, 1]".into(),
+            );
+        }
+
+        let sex_norm = biological_sex.trim().to_ascii_lowercase();
+        let is_female = match sex_norm.as_str() {
+            "female" | "xx" | "f" => true,
+            "male" | "xy" | "m" => false,
+            "other" => false,
+            _ => {
+                return Err(format!(
+                    "calibrate_biological_subject: unrecognized biological_sex '{biological_sex}'"
+                ));
+            }
+        };
+
+        let phase_norm = reproductive_phase.trim().to_ascii_lowercase();
+        let (relaxin_ng_ml, phase_bmd_factor, is_postmenopausal) = match phase_norm.as_str() {
+            "baseline" | "none" => (0.0, 1.0, false),
+            "ovulatory" => (0.25, 1.0, false),
+            "trimester1" | "first_trimester" => (1.0, 1.0, false),
+            "trimester2" | "second_trimester" => (0.85, 0.98, false),
+            "trimester3" | "third_trimester" => (0.95, 0.95, false),
+            "lactation" => (0.05, 0.94, false),
+            "perimenopause" => (0.0, 0.95, false),
+            "menopause" | "postmenopausal" => (0.0, 1.0, true),
+            _ => {
+                return Err(format!(
+                    "calibrate_biological_subject: unrecognized reproductive_phase '{reproductive_phase}'"
+                ));
+            }
+        };
+
+        let ligament_stiffness_modifier = 1.0 - 0.35 * (relaxin_ng_ml / (relaxin_ng_ml + 0.5));
+        let age_bmd_mult = if age_years < 25.0 {
+            0.45 + 0.55 * (age_years / 25.0)
+        } else if age_years <= 35.0 {
+            1.0
+        } else {
+            let years_past_peak = age_years - 35.0;
+            let base_decline = 0.006 * years_past_peak;
+            if is_female && is_postmenopausal {
+                let estrogen_withdrawal = 0.18 * (1.0 - (-0.10 * years_past_peak).exp());
+                (1.0 - base_decline - estrogen_withdrawal).max(0.35)
+            } else {
+                (1.0 - base_decline).max(0.40)
+            }
+        };
+
+        let bone_scale_y = stature_m / 1.70;
+        let allometric_radial = (mass_kg / 68.0).powf(0.375) * (1.70 / stature_m).powf(0.125);
+        let cortical_apparent_density_g_cm3 = 0.70 + 0.001 * cortical_vbmd_mg_cm3;
+        let trabecular_apparent_density_g_cm3 =
+            trabecular_bv_tv * 1.85 * age_bmd_mult * phase_bmd_factor;
+        let strain_factor = 0.01_f64.powf(0.06);
+        let effective_cortical_modulus_gpa =
+            3.790 * cortical_apparent_density_g_cm3.powi(3) * strain_factor;
+        let effective_trabecular_modulus_gpa =
+            3.790 * trabecular_apparent_density_g_cm3.powi(3) * strain_factor;
+
+        let mut out = std::collections::BTreeMap::new();
+        out.insert("bone_scale_x".into(), Value::F64(allometric_radial));
+        out.insert("bone_scale_y".into(), Value::F64(bone_scale_y));
+        out.insert("bone_scale_z".into(), Value::F64(allometric_radial));
+        out.insert(
+            "cortical_apparent_density_g_cm3".into(),
+            Value::F64(cortical_apparent_density_g_cm3),
+        );
+        out.insert(
+            "trabecular_apparent_density_g_cm3".into(),
+            Value::F64(trabecular_apparent_density_g_cm3),
+        );
+        out.insert(
+            "effective_cortical_modulus_gpa".into(),
+            Value::F64(effective_cortical_modulus_gpa),
+        );
+        out.insert(
+            "effective_trabecular_modulus_gpa".into(),
+            Value::F64(effective_trabecular_modulus_gpa),
+        );
+        out.insert(
+            "ligament_stiffness_modifier".into(),
+            Value::F64(ligament_stiffness_modifier),
+        );
+        out.insert(
+            "container_10d_profile".into(),
+            Value::String("SKL2+UV01".into()),
+        );
+        out.insert("m64_mode".into(), Value::String("0x05:BioTissue".into()));
+        out.insert("epistemic_tier".into(), Value::String(epistemic_tier));
+        out.insert(
+            "observation_method".into(),
+            Value::String(observation_method),
+        );
+        out.insert("confidence".into(), Value::F64(confidence));
+        Ok(Value::Record(out))
+    }
+
+    fn evaluate_mobility_fracture_risk(&self, a: &Args) -> Result<Value, String> {
+        fields(
+            a,
+            &[
+                "required_torque_nm",
+                "muscle_pcsa_cm2",
+                "specific_tension_n_cm2",
+                "pennation_angle_rad",
+                "moment_arm_m",
+                "hu_muscle",
+                "imat_fraction",
+                "neural_activation_factor",
+                "com_pos_m",
+                "com_vel_m_s",
+                "bos_boundary_m",
+                "leg_length_m",
+                "applied_bone_stress_mpa",
+                "trabecular_bv_tv",
+                "cortical_vbmd_mg_cm3",
+                "callus_stage",
+            ],
+        )?;
+        let required_torque_nm = number(a, "required_torque_nm", 85.0)?;
+        let muscle_pcsa_cm2 = number(a, "muscle_pcsa_cm2", 45.0)?;
+        let specific_tension_n_cm2 = number(a, "specific_tension_n_cm2", 40.0)?;
+        let pennation_angle_rad = number(a, "pennation_angle_rad", 0.20)?;
+        let moment_arm_m = number(a, "moment_arm_m", 0.055)?;
+        let hu_muscle = number(a, "hu_muscle", 48.0)?;
+        let imat_fraction = number(a, "imat_fraction", 0.05)?;
+        let neural_activation_factor = number(a, "neural_activation_factor", 1.0)?;
+        let com_pos_m = number(a, "com_pos_m", 0.02)?;
+        let com_vel_m_s = number(a, "com_vel_m_s", 0.15)?;
+        let bos_boundary_m = number(a, "bos_boundary_m", 0.12)?;
+        let leg_length_m = number(a, "leg_length_m", 0.95)?;
+        let applied_bone_stress_mpa = number(a, "applied_bone_stress_mpa", 1.8)?;
+        let trabecular_bv_tv = number(a, "trabecular_bv_tv", 0.22)?;
+        let cortical_vbmd_mg_cm3 = number(a, "cortical_vbmd_mg_cm3", 1150.0)?;
+        let callus_stage = number(a, "callus_stage", 4.0)?.round() as i64;
+
+        if !required_torque_nm.is_finite()
+            || !muscle_pcsa_cm2.is_finite()
+            || !specific_tension_n_cm2.is_finite()
+            || !pennation_angle_rad.is_finite()
+            || !moment_arm_m.is_finite()
+            || !hu_muscle.is_finite()
+            || !imat_fraction.is_finite()
+            || !neural_activation_factor.is_finite()
+            || !com_pos_m.is_finite()
+            || !com_vel_m_s.is_finite()
+            || !bos_boundary_m.is_finite()
+            || !leg_length_m.is_finite()
+            || !applied_bone_stress_mpa.is_finite()
+            || !trabecular_bv_tv.is_finite()
+            || !cortical_vbmd_mg_cm3.is_finite()
+        {
+            return Err("evaluate_mobility_fracture_risk: all numeric inputs must be finite".into());
+        }
+        if muscle_pcsa_cm2 <= 0.0
+            || specific_tension_n_cm2 <= 0.0
+            || moment_arm_m <= 0.0
+            || leg_length_m <= 0.0
+            || cortical_vbmd_mg_cm3 <= 0.0
+        {
+            return Err(
+                "evaluate_mobility_fracture_risk: pcsa, specific_tension, moment_arm, leg_length, and cortical_vbmd must be > 0"
+                    .into(),
+            );
+        }
+        if !(0.0..std::f64::consts::FRAC_PI_2).contains(&pennation_angle_rad) {
+            return Err(
+                "evaluate_mobility_fracture_risk: pennation_angle_rad must be in [0, pi/2)".into(),
+            );
+        }
+        if !(-1000.0..=3000.0).contains(&hu_muscle)
+            || !(0.0..=1.0).contains(&imat_fraction)
+            || !(0.0..=1.0).contains(&neural_activation_factor)
+            || trabecular_bv_tv <= 0.0
+            || trabecular_bv_tv > 1.0
+        {
+            return Err(
+                "evaluate_mobility_fracture_risk: hu_muscle, imat_fraction, neural_activation_factor, or trabecular_bv_tv out of bounds"
+                    .into(),
+            );
+        }
+        let callus_factor = match callus_stage {
+            0 => 0.05,
+            1 => 0.20,
+            2 => 0.55,
+            3 => 0.85,
+            4 => 1.0,
+            _ => {
+                return Err(
+                    "evaluate_mobility_fracture_risk: callus_stage must be in 0..=4".into(),
+                );
+            }
+        };
+
+        let hu_quality = ((hu_muscle + 20.0) / 60.0).clamp(0.0, 1.0);
+        let muscle_max_force_n = muscle_pcsa_cm2
+            * specific_tension_n_cm2
+            * pennation_angle_rad.cos()
+            * (1.0 - imat_fraction)
+            * hu_quality
+            * neural_activation_factor;
+        let muscle_max_torque_nm = muscle_max_force_n * moment_arm_m;
+        if muscle_max_torque_nm <= 0.0 {
+            return Err(
+                "evaluate_mobility_fracture_risk: effective muscle max torque must be > 0".into(),
+            );
+        }
+        let rer = required_torque_nm.abs() / muscle_max_torque_nm;
+
+        let omega0 = (9.80665 / leg_length_m).sqrt();
+        let xcom = com_pos_m + com_vel_m_s / omega0;
+        let mos_m = bos_boundary_m - xcom;
+
+        let mu_min = (cortical_vbmd_mg_cm3 / 1150.0).clamp(0.3, 1.2);
+        let bone_yield_strength_mpa =
+            0.3 * 140.0 * mu_min * trabecular_bv_tv.powf(1.5) * callus_factor;
+        let fracture_factor_of_risk = applied_bone_stress_mpa.abs() / bone_yield_strength_mpa;
+
+        let fall_risk_class = if mos_m >= 0.04 && rer <= 0.65 {
+            "low"
+        } else if mos_m >= 0.0 && rer <= 0.90 {
+            "moderate"
+        } else {
+            "high"
+        };
+        let fracture_risk_class = if fracture_factor_of_risk < 0.60 {
+            "low"
+        } else if fracture_factor_of_risk < 1.0 {
+            "moderate"
+        } else {
+            "high"
+        };
+
+        let mut out = std::collections::BTreeMap::new();
+        out.insert("rer".into(), Value::F64(rer));
+        out.insert("mos_m".into(), Value::F64(mos_m));
+        out.insert(
+            "fracture_factor_of_risk".into(),
+            Value::F64(fracture_factor_of_risk),
+        );
+        out.insert("fall_risk_class".into(), Value::String(fall_risk_class.into()));
+        out.insert(
+            "fracture_risk_class".into(),
+            Value::String(fracture_risk_class.into()),
+        );
+        out.insert(
+            "muscle_max_force_n".into(),
+            Value::F64(muscle_max_force_n),
+        );
+        out.insert(
+            "muscle_max_torque_nm".into(),
+            Value::F64(muscle_max_torque_nm),
+        );
+        out.insert(
+            "bone_yield_strength_mpa".into(),
+            Value::F64(bone_yield_strength_mpa),
+        );
+        Ok(Value::Record(out))
     }
 }
 
@@ -503,7 +828,7 @@ mod tests {
             )
             .unwrap();
         let rec = record(&res).unwrap();
-        assert_eq!(rec.get("joint_count"), Some(&Value::I64(18)));
+        assert_eq!(rec.get("joint_count"), Some(&Value::I64(24)));
         assert_eq!(rec.get("valid_motors"), Some(&Value::Bool(true)));
 
         // 4. Biological ontology pin picking
@@ -534,5 +859,89 @@ mod tests {
         let rec = record(&res).unwrap();
         assert_eq!(rec.get("wedge_count"), Some(&Value::I64(60)));
         assert_eq!(rec.get("packet_valid_crc32c"), Some(&Value::Bool(true)));
+    }
+
+    #[test]
+    fn test_calibrate_biological_subject_and_mobility_fracture_risk_dispatch() {
+        assert_eq!(OPERATIONS.len(), 150);
+        assert_eq!(ontology::MORPHISMS.len(), 150);
+
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits: &limits,
+            cancel: &cancel,
+            work: 0,
+        };
+
+        // 1. Calibrate biological subject (pregnant first-trimester female)
+        let mut cal_args = Args::new();
+        cal_args.insert("stature_m".into(), Value::F64(1.68));
+        cal_args.insert("mass_kg".into(), Value::F64(66.0));
+        cal_args.insert("age_years".into(), Value::F64(31.0));
+        cal_args.insert("biological_sex".into(), Value::String("female".into()));
+        cal_args.insert("reproductive_phase".into(), Value::String("trimester1".into()));
+        cal_args.insert("cortical_vbmd_mg_cm3".into(), Value::F64(1150.0));
+        cal_args.insert("trabecular_bv_tv".into(), Value::F64(0.24));
+        let cal_res = host
+            .invoke(
+                "hypermedia.manifold.calibrate_biological_subject",
+                &Value::Record(cal_args),
+            )
+            .expect("calibrate_biological_subject");
+        let cal_rec = record(&cal_res).unwrap();
+        assert_eq!(
+            cal_rec.get("container_10d_profile"),
+            Some(&Value::String("SKL2+UV01".into()))
+        );
+        assert_eq!(
+            cal_rec.get("m64_mode"),
+            Some(&Value::String("0x05:BioTissue".into()))
+        );
+        let lig_mod = match cal_rec.get("ligament_stiffness_modifier") {
+            Some(Value::F64(v)) => *v,
+            other => panic!("expected f64 ligament_stiffness_modifier, got {other:?}"),
+        };
+        assert!(lig_mod < 0.80 && lig_mod > 0.70);
+
+        // 2. Evaluate mobility & fracture risk (osteoporotic + myosteatotic high-risk case)
+        let mut risk_args = Args::new();
+        risk_args.insert("required_torque_nm".into(), Value::F64(90.0));
+        risk_args.insert("muscle_pcsa_cm2".into(), Value::F64(32.0));
+        risk_args.insert("hu_muscle".into(), Value::F64(15.0));
+        risk_args.insert("imat_fraction".into(), Value::F64(0.25));
+        risk_args.insert("com_pos_m".into(), Value::F64(0.06));
+        risk_args.insert("com_vel_m_s".into(), Value::F64(0.35));
+        risk_args.insert("bos_boundary_m".into(), Value::F64(0.12));
+        risk_args.insert("applied_bone_stress_mpa".into(), Value::F64(3.0));
+        risk_args.insert("trabecular_bv_tv".into(), Value::F64(0.12));
+        risk_args.insert("callus_stage".into(), Value::I64(4));
+        let risk_res = host
+            .invoke(
+                "hypermedia.kinetics.evaluate_mobility_fracture_risk",
+                &Value::Record(risk_args),
+            )
+            .expect("evaluate_mobility_fracture_risk");
+        let risk_rec = record(&risk_res).unwrap();
+        assert_eq!(
+            risk_rec.get("fall_risk_class"),
+            Some(&Value::String("high".into()))
+        );
+        assert_eq!(
+            risk_rec.get("fracture_risk_class"),
+            Some(&Value::String("high".into()))
+        );
+
+        // 3. Fail-closed validation on invalid inputs
+        let mut bad_args = Args::new();
+        bad_args.insert("stature_m".into(), Value::F64(-1.0));
+        assert!(host
+            .invoke(
+                "hypermedia.manifold.calibrate_biological_subject",
+                &Value::Record(bad_args),
+            )
+            .is_err());
     }
 }

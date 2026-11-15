@@ -35,14 +35,15 @@ impl OctreeNode {
         self.pixel_count > 0 && self.children.iter().all(|c| c.is_none())
     }
 
-    fn insert(&mut self, r: u8, g: u8, b: u8, a: u8, depth: usize) {
+    fn insert(&mut self, r: u8, g: u8, b: u8, a: u8, depth: usize) -> bool {
         if depth == MAX_DEPTH {
+            let is_new = self.pixel_count == 0;
             self.pixel_count += 1;
             self.sum_r += r as u64;
             self.sum_g += g as u64;
             self.sum_b += b as u64;
             self.sum_a += a as u64;
-            return;
+            return is_new;
         }
 
         let shift = 7 - depth;
@@ -58,7 +59,7 @@ impl OctreeNode {
         self.children[index]
             .as_mut()
             .unwrap()
-            .insert(r, g, b, a, depth + 1);
+            .insert(r, g, b, a, depth + 1)
     }
 }
 
@@ -77,7 +78,13 @@ impl OctreeQuantizer {
     }
 
     pub fn insert(&mut self, r: u8, g: u8, b: u8, a: u8) {
-        self.root.insert(r, g, b, a, 0);
+        if self.root.insert(r, g, b, a, 0) {
+            self.leaf_count += 1;
+        }
+    }
+
+    pub fn leaf_count(&self) -> usize {
+        self.leaf_count
     }
 
     /// Reduce octree leaves to `max_colors`.
@@ -85,18 +92,16 @@ impl OctreeQuantizer {
         let max_colors = max_colors.max(1);
 
         // Gather reducible nodes at all depths
-        loop {
-            let mut leaves = 0;
-            count_leaves(&self.root, &mut leaves);
-            if leaves <= max_colors {
-                break;
-            }
-
+        while self.leaf_count > max_colors {
             // Find parent node of deepest leaves with smallest pixel count
             let mut best_target: Option<u64> = None;
             find_min_reducible(&self.root, &mut best_target);
             if let Some(min_count) = best_target {
-                reduce_node(&mut self.root, min_count);
+                let merged = reduce_node(&mut self.root, min_count);
+                if merged == 0 {
+                    break;
+                }
+                self.leaf_count -= merged - 1;
             } else {
                 break;
             }
@@ -105,16 +110,6 @@ impl OctreeQuantizer {
         let mut palette = Vec::new();
         collect_palette(&mut self.root, &mut palette);
         palette
-    }
-}
-
-fn count_leaves(node: &OctreeNode, count: &mut usize) {
-    if node.is_leaf() {
-        *count += 1;
-    } else {
-        for child in node.children.iter().flatten() {
-            count_leaves(child, count);
-        }
     }
 }
 
@@ -138,17 +133,17 @@ fn find_min_reducible(node: &OctreeNode, min_count: &mut Option<u64>) {
     }
 }
 
-fn reduce_node(node: &mut OctreeNode, target_count: u64) -> bool {
-    let mut has_leaf_children = false;
+fn reduce_node(node: &mut OctreeNode, target_count: u64) -> usize {
+    let mut leaf_children = 0usize;
     let mut sum_count = 0;
     for child in node.children.iter().flatten() {
         if child.is_leaf() {
-            has_leaf_children = true;
+            leaf_children += 1;
             sum_count += child.pixel_count;
         }
     }
 
-    if has_leaf_children && sum_count == target_count {
+    if leaf_children > 0 && sum_count == target_count {
         for child in node.children.iter_mut() {
             if let Some(c) = child.take() {
                 node.pixel_count += c.pixel_count;
@@ -158,15 +153,16 @@ fn reduce_node(node: &mut OctreeNode, target_count: u64) -> bool {
                 node.sum_a += c.sum_a;
             }
         }
-        return true;
+        return leaf_children;
     }
 
     for child in node.children.iter_mut().flatten() {
-        if reduce_node(child, target_count) {
-            return true;
+        let reduced = reduce_node(child, target_count);
+        if reduced > 0 {
+            return reduced;
         }
     }
-    false
+    0
 }
 
 fn collect_palette(node: &mut OctreeNode, palette: &mut Vec<[u8; 4]>) {
@@ -340,7 +336,7 @@ mod tests {
             let c = (i % 8) as u8 * 32;
             p[0] = c;
             p[1] = 255 - c;
-            p[2] = (c + 64) % 256;
+            p[2] = c.wrapping_add(64);
             p[3] = 255;
         }
 

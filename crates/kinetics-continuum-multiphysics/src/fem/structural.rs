@@ -3,7 +3,7 @@
 //! Grounded in structural integrity and thermal continuum conservation (UDHR Art. 19, 27; ICESCR Art. 15).
 
 use crate::fem::constitutive::ElasticIsotropic;
-use crate::fem::shape::{gauss_quad_2x2, shape_deriv_quad4, shape_quad4};
+use crate::fem::shape::{gauss_quad_2x2, shape_deriv_quad4};
 
 /// 3D Timoshenko beam element stiffness matrix (12x12 for 2 nodes with 6 DOFs per node).
 pub fn timoshenko_beam_3d(

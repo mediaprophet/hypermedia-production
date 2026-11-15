@@ -282,7 +282,9 @@ mod tests {
 
             let origin_left = hl.apply(Point::ZERO).unwrap();
             let origin_right = hr.apply(Point::ZERO).unwrap();
+            let origin_ground = hg.apply(Point::ZERO).unwrap();
             assert!(origin_left.distance(origin_right) < 1e-9);
+            assert!(origin_ground.x.is_finite() && origin_ground.y.is_finite());
 
             let pt = Point::new(50.0, 50.0);
             let page_pt = grid.to_page(Plane::Left, pt).unwrap();

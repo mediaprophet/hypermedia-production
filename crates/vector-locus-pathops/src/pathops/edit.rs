@@ -6,7 +6,7 @@
 use kurbo::{CubicBez, ParamCurveArclen, Point, Rect, Vec2};
 use vector_locus_geometry::{Anchor, PathData, SubPath};
 
-use crate::pathops::fit::{end_tangent, fit_cubics, fit_single, fit_single_from, is_straight, sample, start_tangent};
+use crate::pathops::fit::{end_tangent, fit_cubics, fit_single, is_straight, sample, start_tangent};
 
 /// Options for `simplify_with`.
 #[derive(Clone, Copy, Debug, PartialEq)]

@@ -12,39 +12,39 @@
 
 _!
 
-Easy to use profiler scopes for [wgpu](https://github.com/gfx-rs/wgpu) using timer queries.
+Easy to use profiler scopes for [Etalon](https://github.com/mediaprophet/etalon) using timer queries.
 
-`wgpu_profiler` manages all the necessary [`wgpu::QuerySet`] and [`wgpu::Buffer`] behind the scenes
+`etalon_profiler` manages all the necessary [`etalon::QuerySet`] and [`etalon::Buffer`] behind the scenes
 and allows you to create to create timer scopes with minimal overhead!
 
 # How to use
 
 ```
-use wgpu_profiler::*;
+use etalon_profiler::*;
 
-# async fn wgpu_init() -> (wgpu::Instance, wgpu::Adapter, wgpu::Device, wgpu::Queue) {
-    # let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
-    # let adapter = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await.unwrap();
+# async fn etalon_init() -> (etalon::Instance, etalon::Adapter, etalon::Device, etalon::Queue) {
+    # let instance = etalon::Instance::new(etalon::InstanceDescriptor::new_without_display_handle());
+    # let adapter = instance.request_adapter(&etalon::RequestAdapterOptions::default()).await.unwrap();
     # let (device, queue) = adapter
-    #     .request_device(&wgpu::DeviceDescriptor {
-    #         required_features: wgpu::Features::TIMESTAMP_QUERY,
+    #     .request_device(&etalon::DeviceDescriptor {
+    #         required_features: etalon::Features::TIMESTAMP_QUERY,
     #         ..Default::default()
     #     })
     #     .await
     #     .unwrap();
     # (instance, adapter, device, queue)
 # }
-# let (instance, adapter, device, queue) = futures_lite::future::block_on(wgpu_init());
-# let cs_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+# let (instance, adapter, device, queue) = futures_lite::future::block_on(etalon_init());
+# let cs_module = device.create_shader_module(etalon::ShaderModuleDescriptor {
 #     label: None,
-#     source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
+#     source: etalon::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("../examples/compute_shader.wgsl"))),
 # });
-# let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+# let pipeline = device.create_compute_pipeline(&etalon::ComputePipelineDescriptor {
 #        label: None,
 #        layout: None,
 #        module: &cs_module,
 #        entry_point: Some("main"),
-#        compilation_options: wgpu::PipelineCompilationOptions::default(),
+#        compilation_options: etalon::PipelineCompilationOptions::default(),
 #        cache: None,
 #    });
 // ...
@@ -53,7 +53,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
 
 // ...
 
-# let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+# let mut encoder = device.create_command_encoder(&etalon::CommandEncoderDescriptor::default());
 {
     // You can now open profiling scopes on any encoder or pass:
     let mut scope = profiler.scope("name of your scope", &mut encoder);
@@ -72,7 +72,7 @@ let mut profiler = GpuProfiler::new(&device, GpuProfilerSettings::default()).unw
     // Scopes created this way are automatically closed when dropped.
 }
 
-// Wgpu-profiler needs to insert buffer copy commands.
+// Etalon-profiler needs to insert buffer copy commands.
 profiler.resolve_queries(&mut encoder);
 # drop(encoder);
 
@@ -87,18 +87,18 @@ if let Some(profiling_data) = profiler.process_finished_frame(queue.get_timestam
     # let button_pressed = false;
     // You usually want to write to disk only under some condition, e.g. press of a key.
     if button_pressed {
-        wgpu_profiler::chrometrace::write_chrometrace(
+        etalon_profiler::chrometrace::write_chrometrace(
             std::path::Path::new("mytrace.json"), &profiling_data);
     }
 }
 ```
-Check also the [Example](https://github.com/Wumpf/wgpu-profiler/blob/main/examples/demo.rs) where everything can be seen in action.
+See the maintained `examples/demo.rs` in this package for a complete example.
 
 ## Tracy integration
 
 If you want to use [tracy](https://github.com/wolfpld/tracy) for profiling, you can enable the `tracy` feature.
 
-This adds `wgpu_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
+This adds `etalon_profiler::new_with_tracy_client` which will automatically report profiling data to tracy.
 
 For details check the example code.
 
@@ -106,7 +106,7 @@ For details check the example code.
 
 If you want to use [puffin](https://github.com/EmbarkStudios/puffin) for profiling, you can enable the `puffin` feature.
 
-This adds `wgpu_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
+This adds `etalon_profiler::puffin::output_frame_to_puffin` which makes it easy to report profiling data to a `puffin::GlobalProfiler`.
 
 You can run the demo example with puffin by running `cargo run --example demo --features puffin`.
 All CPU profiling goes to port `8585`, all GPU profiling goes to port `8586`. You can open puffin viewers for both.
@@ -138,11 +138,11 @@ On [`GpuProfiler::end_frame`], we memorize the total size of all `QueryPool`s in
 | `scopes_to_console_recursive` | 2 | `crates/gpu-command-profiler/examples/demo.rs:18` | - |  |
 | `console_output` | 2 | `crates/gpu-command-profiler/examples/demo.rs:40` | - |  |
 | `impl GfxState::new` | 1 | `crates/gpu-command-profiler/examples/demo.rs:76` | - |  |
-| `impl ApplicationHandler<()> for State::resumed` | 2 | `crates/gpu-command-profiler/examples/demo.rs:181` | - |  |
-| `impl ApplicationHandler<()> for State::window_event` | 4 | `crates/gpu-command-profiler/examples/demo.rs:200` | - |  |
-| `impl ApplicationHandler<()> for State::about_to_wait` | 2 | `crates/gpu-command-profiler/examples/demo.rs:318` | - |  |
-| `draw` | 4 | `crates/gpu-command-profiler/examples/demo.rs:326` | - |  |
-| `main` | 0 | `crates/gpu-command-profiler/examples/demo.rs:422` | - |  |
+| `impl ApplicationHandler<()> for State::resumed` | 2 | `crates/gpu-command-profiler/examples/demo.rs:182` | - |  |
+| `impl ApplicationHandler<()> for State::window_event` | 4 | `crates/gpu-command-profiler/examples/demo.rs:202` | - |  |
+| `impl ApplicationHandler<()> for State::about_to_wait` | 2 | `crates/gpu-command-profiler/examples/demo.rs:320` | - |  |
+| `draw` | 4 | `crates/gpu-command-profiler/examples/demo.rs:328` | - |  |
+| `main` | 0 | `crates/gpu-command-profiler/examples/demo.rs:424` | - |  |
 | `vs_main` | 2 | `crates/gpu-command-profiler/examples/shader.wgsl:7` | 3d |  |
 | `fs_main` | 1 | `crates/gpu-command-profiler/examples/shader.wgsl:27` | - |  |
 | `write_chrometrace` | 2 | `crates/gpu-command-profiler/src/chrometrace.rs:6` | graph | Writes a .json trace file that can be viewed as a flame graph in Chrome or Edge via <chrome://tracing> |
@@ -160,16 +160,16 @@ On [`GpuProfiler::end_frame`], we memorize the total size of all `QueryPool`s in
 | `impl GpuProfiler::end_query` | 3 | `crates/gpu-command-profiler/src/profiler.rs:284` | - | Ends passed query. |
 | `impl GpuProfiler::resolve_queries` | 2 | `crates/gpu-command-profiler/src/profiler.rs:345` | - | Puts query resolve commands in the encoder for all unresolved, pending queries of the active profiler frame. |
 | `impl GpuProfiler::end_frame` | 1 | `crates/gpu-command-profiler/src/profiler.rs:394` | - | Marks the end of a frame. |
-| `impl GpuProfiler::process_finished_frame` | 2 | `crates/gpu-command-profiler/src/profiler.rs:493` | - | Checks if all timer queries for the oldest pending finished frame are done and returns that snapshot if any. |
-| `timestamp_query_support` | 3 | `crates/gpu-command-profiler/src/profiler.rs:542` | - | Returns true if a timestamp query is supported. |
-| `impl GpuProfiler::next_scope_tree_handle` | 1 | `crates/gpu-command-profiler/src/profiler.rs:558` | - |  |
-| `impl GpuProfiler::reset_and_cache_unused_query_pools` | 2 | `crates/gpu-command-profiler/src/profiler.rs:570` | - |  |
-| `impl GpuProfiler::try_reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:591` | - |  |
-| `impl GpuProfiler::reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:629` | - |  |
-| `impl GpuProfiler::begin_query_internal` | 4 | `crates/gpu-command-profiler/src/profiler.rs:685` | - |  |
-| `impl GpuProfiler::process_timings_recursive` | 3 | `crates/gpu-command-profiler/src/profiler.rs:740` | - |  |
-| `impl QueryPool::new` | 2 | `crates/gpu-command-profiler/src/profiler.rs:860` | - |  |
-| `impl QueryPool::reset` | 1 | `crates/gpu-command-profiler/src/profiler.rs:888` | - |  |
+| `impl GpuProfiler::process_finished_frame` | 2 | `crates/gpu-command-profiler/src/profiler.rs:495` | - | Checks if all timer queries for the oldest pending finished frame are done and returns that snapshot if any. |
+| `timestamp_query_support` | 3 | `crates/gpu-command-profiler/src/profiler.rs:544` | - | Returns true if a timestamp query is supported. |
+| `impl GpuProfiler::next_scope_tree_handle` | 1 | `crates/gpu-command-profiler/src/profiler.rs:560` | - |  |
+| `impl GpuProfiler::reset_and_cache_unused_query_pools` | 2 | `crates/gpu-command-profiler/src/profiler.rs:572` | - |  |
+| `impl GpuProfiler::try_reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:593` | - |  |
+| `impl GpuProfiler::reserve_query_pair` | 1 | `crates/gpu-command-profiler/src/profiler.rs:631` | - |  |
+| `impl GpuProfiler::begin_query_internal` | 4 | `crates/gpu-command-profiler/src/profiler.rs:687` | - |  |
+| `impl GpuProfiler::process_timings_recursive` | 3 | `crates/gpu-command-profiler/src/profiler.rs:742` | - |  |
+| `impl QueryPool::new` | 2 | `crates/gpu-command-profiler/src/profiler.rs:862` | - |  |
+| `impl QueryPool::reset` | 1 | `crates/gpu-command-profiler/src/profiler.rs:890` | - |  |
 | `trait ProfilerCommandRecorder::is_pass` | 1 | `crates/gpu-command-profiler/src/profiler_command_recorder.rs:4` | - | Returns `true` if it's a pass or `false` if it's an encoder |
 | `trait ProfilerCommandRecorder::write_timestamp` | 3 | `crates/gpu-command-profiler/src/profiler_command_recorder.rs:5` | - |  |
 | `trait ProfilerCommandRecorder::push_debug_group` | 2 | `crates/gpu-command-profiler/src/profiler_command_recorder.rs:6` | - |  |
@@ -188,16 +188,16 @@ On [`GpuProfiler::end_frame`], we memorize the total size of all `QueryPool`s in
 | `handle_dropped_frames_gracefully` | 0 | `crates/gpu-command-profiler/tests/src/dropped_frame_handling.rs:7` | - |  |
 | `invalid_pending_frame_count` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:6` | - |  |
 | `end_frame_unclosed_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:25` | - |  |
-| `end_frame_unresolved_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:55` | - |  |
-| `change_settings_while_query_open` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:85` | - |  |
+| `end_frame_unresolved_query` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:57` | - |  |
+| `change_settings_while_query_open` | 0 | `crates/gpu-command-profiler/tests/src/errors.rs:89` | - |  |
 | `interleaved_scopes` | 0 | `crates/gpu-command-profiler/tests/src/interleaved_command_buffer.rs:8` | - |  |
 | `multithreaded_scopes` | 0 | `crates/gpu-command-profiler/tests/src/interleaved_command_buffer.rs:66` | - |  |
 | `create_device` | 1 | `crates/gpu-command-profiler/tests/src/mod.rs:7` | - |  |
 | `create_default_device_async` | 1 | `crates/gpu-command-profiler/tests/src/mod.rs:10` | - |  |
-| `impl Requires::expect_time_result` | 2 | `crates/gpu-command-profiler/tests/src/mod.rs:39` | - |  |
-| `expected_scope` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:56` | - |  |
-| `validate_results` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:64` | - |  |
-| `validate_results_unordered` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:87` | - |  |
+| `impl Requires::expect_time_result` | 2 | `crates/gpu-command-profiler/tests/src/mod.rs:40` | - |  |
+| `expected_scope` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:57` | - |  |
+| `validate_results` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:65` | - |  |
+| `validate_results_unordered` | 3 | `crates/gpu-command-profiler/tests/src/mod.rs:88` | - |  |
 | `multiple_resolves_per_frame` | 0 | `crates/gpu-command-profiler/tests/src/multiple_resolves_per_frame.rs:5` | - |  |
 | `nested_scopes` | 2 | `crates/gpu-command-profiler/tests/src/nested_scopes.rs:7` | - |  |
 | `nested_scopes_timestamp_in_passes_and_encoder_enabled` | 0 | `crates/gpu-command-profiler/tests/src/nested_scopes.rs:140` | - |  |

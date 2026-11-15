@@ -302,11 +302,11 @@ impl SubElementHooks {
         Ok(self)
     }
 
-    /// Applies the macro + sub-element hooks onto an 18-joint `FaunaSkeletalRig10d` PGA motor pose.
+    /// Applies the macro + sub-element hooks onto a `FaunaSkeletalRig10d` PGA motor pose.
     pub fn apply_to_rig_pose(
         &self,
         rig: &mut FaunaSkeletalRig10d,
-        pose: &mut [PgaMotor; 18],
+        pose: &mut [PgaMotor],
         phase_01: f32,
     ) {
         let theta = phase_01 * TAU;

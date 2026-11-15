@@ -3,8 +3,8 @@
 //! following Slide -> Layout -> Master -> Theme.
 
 use super::master::{Layout, Master, Presentation, Slide};
-use super::shape::{Placeholder, Shape, ShapeContent, TextBody};
-use super::types::{ColorScheme, Fill, Line, PhType, Rgba, Xfrm};
+use super::shape::Shape;
+use super::types::{ColorScheme, Fill, Line, PhType, Xfrm};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Owner {

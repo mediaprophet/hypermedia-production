@@ -13,5 +13,5 @@ pub use shape::{
 };
 pub use types::{
     ColorRef, ColorScheme, Fill, LayoutId, Line, MasterId, PhType, Rect, Rgba, SchemeSlot,
-    ShapeId, ShapeKind, Size, Xfrm,
+    ShapeId, ShapeKind, Size, SlideId, Xfrm,
 };

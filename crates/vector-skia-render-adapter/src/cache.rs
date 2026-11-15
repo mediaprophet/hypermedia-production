@@ -49,7 +49,7 @@ where
         self.current_generation = self.current_generation.wrapping_add(1);
     }
 
-    #[allow(unused)]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     pub(crate) fn contains_key<Q>(&mut self, key: &Q) -> bool
     where
         Q: Hash + Equivalent<K> + ?Sized,

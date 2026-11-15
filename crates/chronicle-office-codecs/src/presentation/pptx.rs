@@ -1,6 +1,6 @@
 //! OpenXML PresentationML (.pptx) presentation reader and writer.
 
-use crate::xml::dom::{escape_xml, parse_xml, XEl, XNode};
+use crate::xml::dom::{escape_xml, parse_xml};
 use crate::zip::minizip::ZipPackage;
 use layout_presentation_deck::model::master::{Presentation, Slide};
 use layout_presentation_deck::model::shape::{Paragraph, Shape, ShapeContent, TextBody};

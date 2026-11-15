@@ -7,7 +7,6 @@
 
 use crate::csg::P3;
 use serde::{Deserialize, Serialize};
-use std::f64::consts::{PI, TAU};
 
 /// 2D Point.
 pub type P2 = [f64; 2];

@@ -2,7 +2,7 @@
 //!
 //! Grounded in authoring rights and creative preservation (UDHR Art. 19, 27).
 
-use kurbo::{Point, Rect, Vec2};
+use kurbo::{Point, Rect};
 use serde::{Deserialize, Serialize};
 
 /// Alignment method for the first line's baseline inside an area text frame.
@@ -106,7 +106,7 @@ pub fn layout_area_text(bounds: Rect, text: &str, opts: &AreaTextOptions) -> Lay
                 line_w += space_w + word_w;
             } else {
                 // Emit line
-                if curr_y + opts.line_height * 0.2 > bounds.height() - bottom_inset {
+                if curr_y + opts.line_height * 0.2 > top_inset + avail_h {
                     curr_col += 1;
                     if curr_col >= cols {
                         overflow = true;

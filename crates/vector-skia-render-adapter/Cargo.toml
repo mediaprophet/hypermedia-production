@@ -26,7 +26,6 @@ documentation = "https://docs.rs/anyrender_skia"
 readme = false
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dioxuslabs/anyrender"
-resolver = "2"
 
 [features]
 log_frame_times = [

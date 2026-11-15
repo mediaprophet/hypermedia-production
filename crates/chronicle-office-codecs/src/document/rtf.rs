@@ -1,8 +1,6 @@
 //! Rich Text Format (RTF 1.5) reader and writer for FlowDoc.
 
-use crate::flow::model::{
-    FlowBlock, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowPara, FlowRow, FlowTable,
-};
+use crate::flow::model::{FlowBlock, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowPara};
 
 /// Serialize a `FlowDoc` to standard RTF 1.5.
 pub fn to_rtf(doc: &FlowDoc) -> String {

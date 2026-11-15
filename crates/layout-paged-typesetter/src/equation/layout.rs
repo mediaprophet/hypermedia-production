@@ -162,7 +162,15 @@ pub fn layout_equation(nodes: &[MNode], font_size: f32) -> MathLayout {
             }
             MNode::Rad { deg, e, .. } => {
                 let e_layout = layout_equation(e, font_size);
-                let surd_w = em * 0.6;
+                let mut deg_w = 0.0f32;
+                if !deg.is_empty() {
+                    let mut d_layout = layout_equation(deg, font_size * 0.65);
+                    d_layout.shift(x_cursor, em * 0.55);
+                    deg_w = d_layout.width;
+                    layout.ascent = layout.ascent.max(em * 0.55 + d_layout.ascent);
+                    layout.items.extend(d_layout.items);
+                }
+                let surd_w = em * 0.6 + deg_w;
                 let top_y = e_layout.ascent + em * 0.15;
 
                 // Radical line over the expression
@@ -176,7 +184,7 @@ pub fn layout_equation(nodes: &[MNode], font_size: f32) -> MathLayout {
 
                 // Surd checkmark
                 layout.items.push(MItem::Text {
-                    x: x_cursor,
+                    x: x_cursor + deg_w,
                     y: 0.0,
                     text: "√".to_string(),
                     font_size: font_size * 1.2,
@@ -219,13 +227,27 @@ pub fn layout_equation(nodes: &[MNode], font_size: f32) -> MathLayout {
                 }
             }
             MNode::Nary { chr, sub, sup, e, .. } => {
-                let nary_w = em * 0.8;
+                let mut nary_w = em * 0.8;
                 layout.items.push(MItem::Text {
                     x: x_cursor,
                     y: 0.0,
                     text: chr.to_string(),
                     font_size: font_size * 1.4,
                 });
+                if !sub.is_empty() {
+                    let mut sub_l = layout_equation(sub, font_size * 0.65);
+                    sub_l.shift(x_cursor, -em * 0.65);
+                    nary_w = nary_w.max(sub_l.width + em * 0.2);
+                    layout.descent = layout.descent.max(em * 0.65 + sub_l.descent);
+                    layout.items.extend(sub_l.items);
+                }
+                if !sup.is_empty() {
+                    let mut sup_l = layout_equation(sup, font_size * 0.65);
+                    sup_l.shift(x_cursor, em * 0.9);
+                    nary_w = nary_w.max(sup_l.width + em * 0.2);
+                    layout.ascent = layout.ascent.max(em * 0.9 + sup_l.ascent);
+                    layout.items.extend(sup_l.items);
+                }
                 let mut e_layout = layout_equation(e, font_size);
                 e_layout.shift(x_cursor + nary_w, 0.0);
                 layout.items.extend(e_layout.items);

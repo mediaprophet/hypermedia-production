@@ -13,10 +13,39 @@ impl AssetHost<'_> {
     /// 126: `hypermedia.surface.bake_pbr_materialx`
     /// (`surface-pbr-studio` + `surface-layered-codecs`)
     pub(crate) fn bake_pbr_materialx(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["mesh", "resolution", "samples", "material_name", "uvs"])?;
+        fields(
+            a,
+            &[
+                "mesh",
+                "resolution",
+                "samples",
+                "material_name",
+                "uvs",
+                "max_distance",
+                "ao_distance",
+                "seed",
+                "base_color_path",
+                "normal_path",
+                "ao_path",
+            ],
+        )?;
         let resolution = count(a, "resolution", 32, 256)? as u32;
         let samples = count(a, "samples", 4, 64)? as u32;
         let material_name = opt_str(a, "material_name", "Architectural_Bronze")?;
+        let max_distance = number(a, "max_distance", 0.2)? as f32;
+        let ao_distance = number(a, "ao_distance", 0.25)? as f32;
+        let seed = a
+            .get("seed")
+            .map(|v| integer(v, "seed"))
+            .transpose()?
+            .unwrap_or(42) as u32;
+        let slug = material_name
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '_' })
+            .collect::<String>();
+        let base_color_path = opt_str(a, "base_color_path", &format!("{slug}_albedo.png"))?;
+        let normal_path = opt_str(a, "normal_path", &format!("{slug}_normal.png"))?;
+        let ao_path = opt_str(a, "ao_path", &format!("{slug}_ao.png"))?;
 
         self.charge((resolution * resolution * samples) as usize, 32768)?;
 
@@ -97,9 +126,9 @@ impl AssetHost<'_> {
         let settings = BakeSettings {
             resolution,
             samples,
-            max_distance: 0.2,
-            ao_distance: 0.25,
-            seed: 42,
+            max_distance,
+            ao_distance,
+            seed,
         };
         let ao_map = bake_map(&pbr_mesh, &bvh, BakeMapKind::AmbientOcclusion, &settings);
         let norm_map = bake_map(&pbr_mesh, &bvh, BakeMapKind::WorldNormal, &settings);
@@ -119,9 +148,9 @@ impl AssetHost<'_> {
         let normal_image = self.store_rgba(resolution, resolution, norm_pixels)?;
 
         let mut maps = BTreeMap::new();
-        maps.insert(PbrChannel::BaseColor, "bronze_albedo.png".to_string());
-        maps.insert(PbrChannel::Normal, "bronze_normal.png".to_string());
-        maps.insert(PbrChannel::AO, "bronze_ao.png".to_string());
+        maps.insert(PbrChannel::BaseColor, base_color_path);
+        maps.insert(PbrChannel::Normal, normal_path);
+        maps.insert(PbrChannel::AO, ao_path);
 
         let mtlx_opts = MaterialXOptions {
             shader: ShaderModel::OpenPbr,
@@ -155,10 +184,34 @@ impl AssetHost<'_> {
     /// 127: `hypermedia.surface.expand_procedural_brush`
     /// (`vector-surface-brush` + `raster-layer-mask-adapter`)
     pub(crate) fn expand_procedural_brush(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["profile", "stroke_weight", "bristle_count", "wetness"])?;
+        fields(
+            a,
+            &[
+                "profile",
+                "stroke_weight",
+                "bristle_count",
+                "wetness",
+                "reservoir_color",
+                "dab_color",
+                "load",
+                "mix",
+                "flow",
+            ],
+        )?;
         let weight = number(a, "stroke_weight", 8.0)?;
         let bristle_count = count(a, "bristle_count", 12, 64)? as f64;
         let wetness = number(a, "wetness", 0.6)? as f32;
+        let load = (number(a, "load", 0.8)? as f32).clamp(0.0, 1.0);
+        let mix = (number(a, "mix", 0.5)? as f32).clamp(0.0, 1.0);
+        let flow = (number(a, "flow", 1.0)? as f32).clamp(0.0, 1.0);
+        let reservoir_color = match a.get("reservoir_color") {
+            Some(v) => vector::<4>(v)?.map(|x| x as f32),
+            None => [0.9, 0.4, 0.1, 1.0],
+        };
+        let dab_color = match a.get("dab_color") {
+            Some(v) => vector::<4>(v)?.map(|x| x as f32),
+            None => [0.2, 0.3, 0.8, 1.0],
+        };
 
         self.charge(256, 8192)?;
 
@@ -193,15 +246,15 @@ impl AssetHost<'_> {
         let bristle_pieces = expand_brush_stroke(&Brush::Bristle(bristle_cfg), &path, weight, None);
 
         let mut mixer = MixerState::new();
-        mixer.reservoir = Some([0.9, 0.4, 0.1, 1.0]);
+        mixer.reservoir = Some(reservoir_color);
         let settings = MixerSettings {
             wet: wetness.clamp(0.0, 1.0),
-            load: 0.8,
-            mix: 0.5,
-            flow: 1.0,
+            load,
+            mix,
+            flow,
             sample_all_layers: false,
         };
-        let mixed_color = mix_dab([0.2, 0.3, 0.8, 1.0], &settings, &mut mixer);
+        let mixed_color = mix_dab(dab_color, &settings, &mut mixer);
 
         // Extract a closed 2D outline polygon from the expanded calligraphic stroke
         let mut outline_pts: Vec<[f64; 2]> = calli_pieces

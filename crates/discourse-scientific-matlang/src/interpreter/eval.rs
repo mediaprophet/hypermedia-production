@@ -2,7 +2,7 @@
 
 use crate::interpreter::ast::{BinOp, Expr, Stmt, UnOp};
 use crate::interpreter::lexer::LangError;
-use crate::matrix::{chol, eig_symmetric, lu, qr, svd, Matrix};
+use crate::matrix::{chol, lu, qr, svd, Matrix};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]

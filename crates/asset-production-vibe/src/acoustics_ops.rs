@@ -244,36 +244,199 @@ impl AssetHost<'_> {
             .insert(Artifact::Audio { rate, samples: mixed }, self.limits)
     }
 
-    /// AAC-LC CBR audio encoding with ADTS framing.
+    /// AAC-LC CBR audio encoding with ADTS framing, or canonical QAC v1 (`qac\0\0\0\0\0` v1)
+    /// container encoding when `format="qac"`.
     fn encode_aac(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["audio", "bitrate"])?;
+        fields(a, &["audio", "bitrate", "format", "species_id", "cue_profile"])?;
 
         let (rate, samples) = match self.workspace.get(required(a, "audio")?)? {
             Artifact::Audio { rate, samples } => (*rate, samples.clone()),
             _ => return Err("Expected audio handle".into()),
         };
 
-        let bitrate = count(a, "bitrate", 96_000, 320_000)? as u32;
-        if bitrate < 16_000 {
-            return Err(format!("bitrate must be >= 16000, got {bitrate}"));
+        let format = a.get("format").map(text).transpose()?.unwrap_or("aac");
+        let species_id = a
+            .get("species_id")
+            .map(text)
+            .transpose()?
+            .unwrap_or("hypermedia.acoustics.encoded");
+        let cue_profile = a
+            .get("cue_profile")
+            .map(text)
+            .transpose()?
+            .unwrap_or("acoustic_pcm_stft_hoa_modal_v1");
+
+        match format {
+            "aac" => {
+                let bitrate = count(a, "bitrate", 96_000, 320_000)? as u32;
+                if bitrate < 16_000 {
+                    return Err(format!("bitrate must be >= 16000, got {bitrate}"));
+                }
+
+                self.charge(samples.len() * 16, samples.len() * 2 + 4096)?;
+
+                if !SAMPLE_RATES.contains(&rate) {
+                    return Err(format!(
+                        "Sample rate {rate} Hz is not supported by AAC (supported rates: {SAMPLE_RATES:?})"
+                    ));
+                }
+
+                let mut cfg = EncoderConfig::cbr(rate, 1, bitrate);
+                cfg.adts = true;
+                let mut enc = Encoder::new(cfg).map_err(|e| format!("AAC encoder init: {e}"))?;
+
+                let mut aus = enc.encode(&[&samples]);
+                aus.extend(enc.flush());
+                let aac_bytes = aus.into_iter().flatten().collect::<Vec<u8>>();
+
+                self.encode("aac", aac_bytes)
+            }
+            "qac" => {
+                if a.contains_key("bitrate") {
+                    let bitrate = count(a, "bitrate", 96_000, 320_000)? as u32;
+                    if bitrate < 16_000 {
+                        return Err(format!("bitrate must be >= 16000, got {bitrate}"));
+                    }
+                }
+                let scratch_est = samples
+                    .len()
+                    .saturating_mul(40)
+                    .saturating_add(16_384);
+                self.charge(samples.len() * 24 + 1024, scratch_est)?;
+
+                let (qac_bytes, verification) = crate::sound::produce_qac_v1_from_pcm(
+                    rate,
+                    &samples,
+                    species_id,
+                    cue_profile,
+                    self.limits.resource_bytes,
+                )?;
+                let mut handle = self.admit_encoded("qac", qac_bytes)?;
+                if let Value::Record(ref mut meta) = handle {
+                    for (k, v) in verification {
+                        if k != "handle" && k != "type" {
+                            meta.insert(k, v);
+                        }
+                    }
+                }
+                Ok(handle)
+            }
+            other => Err(format!(
+                "Unsupported audio encoding format '{other}' (expected \"aac\" or \"qac\")"
+            )),
         }
+    }
+}
 
-        self.charge(samples.len() * 16, samples.len() * 2 + 4096)?;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use qualia_core_db::q42::field_envelope::{Family, Limits as StorageLimits, StructuralView};
+    use std::sync::atomic::AtomicBool;
 
-        if !SAMPLE_RATES.contains(&rate) {
-            return Err(format!(
-                "Sample rate {rate} Hz is not supported by AAC (supported rates: {SAMPLE_RATES:?})"
-            ));
+    fn test_host<'a>(cancel: &'a AtomicBool, limits: &'a ToolLimits) -> AssetHost<'a> {
+        AssetHost {
+            workspace: AssetWorkspace::default(),
+            inputs: &[],
+            limits,
+            cancel,
+            work: 0,
         }
+    }
 
-        let mut cfg = EncoderConfig::cbr(rate, 1, bitrate);
-        cfg.adts = true;
-        let mut enc = Encoder::new(cfg).map_err(|e| format!("AAC encoder init: {e}"))?;
+    fn synth_tone(host: &mut AssetHost<'_>, frames: u64) -> Value {
+        let mut args = Args::new();
+        args.insert("frequency".into(), Value::F64(440.0));
+        args.insert("sample_rate".into(), Value::U64(48_000));
+        args.insert("frames".into(), Value::U64(frames));
+        args.insert("amplitude".into(), Value::F64(0.3));
+        host.invoke("hypermedia.acoustics.synthesize_tone", &Value::Record(args))
+            .expect("synthesize_tone")
+    }
 
-        let mut aus = enc.encode(&[&samples]);
-        aus.extend(enc.flush());
-        let aac_bytes = aus.into_iter().flatten().collect::<Vec<u8>>();
+    #[test]
+    fn test_encode_aac_qac_v1_canonical_and_metadata() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+        let audio = synth_tone(&mut host, 256);
 
-        self.encode("aac", aac_bytes)
+        let mut args = Args::new();
+        args.insert("audio".into(), audio);
+        args.insert("format".into(), Value::String("qac".into()));
+        args.insert("species_id".into(), Value::String("wallabia-bicolor".into()));
+        args.insert("cue_profile".into(), Value::String("vocal_contact".into()));
+
+        let res_a = host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &args)
+            .expect("encode_aac format=qac");
+        let res_b = host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &args)
+            .expect("encode_aac format=qac repeat");
+
+        let rec = record(&res_a).expect("qac handle record");
+        assert_eq!(rec.get("type"), Some(&Value::String("qac".into())));
+        assert_eq!(rec.get("valid"), Some(&Value::Bool(true)));
+        assert_eq!(rec.get("container_version"), Some(&Value::U64(1)));
+        assert_eq!(rec.get("entry_count"), Some(&Value::U64(4)));
+        assert_eq!(
+            rec.get("species_id"),
+            Some(&Value::String("wallabia-bicolor".into()))
+        );
+        assert_eq!(
+            rec.get("cue_profile"),
+            Some(&Value::String("vocal_contact".into()))
+        );
+
+        let res_a_bytes = host.workspace.encoded(&res_a).expect("qac resource a");
+        let res_b_bytes = host.workspace.encoded(&res_b).expect("qac resource b");
+        assert_eq!(res_a_bytes.kind, "qac");
+        assert_eq!(&res_a_bytes.bytes[0..8], b"qac\0\0\0\0\0");
+        assert_eq!(res_a_bytes.bytes, res_b_bytes.bytes, "QAC encoding must be deterministic");
+
+        let view = StructuralView::open(
+            &res_a_bytes.bytes,
+            Family::QacV1Candidate,
+            StorageLimits::default(),
+        )
+        .expect("StructuralView::open");
+        assert_eq!(view.entry_count(), 4);
+    }
+
+    #[test]
+    fn test_encode_aac_preserves_default_aac_and_rejects_unknown_format() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = test_host(&cancel, &limits);
+        let audio = synth_tone(&mut host, 2048);
+
+        let mut default_args = Args::new();
+        default_args.insert("audio".into(), audio.clone());
+        let aac_res = host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &default_args)
+            .expect("default encode_aac");
+        assert_eq!(host.workspace.encoded(&aac_res).unwrap().kind, "aac");
+
+        let mut explicit_aac = default_args.clone();
+        explicit_aac.insert("format".into(), Value::String("aac".into()));
+        let explicit_res = host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &explicit_aac)
+            .expect("explicit aac");
+        assert_eq!(host.workspace.encoded(&explicit_res).unwrap().kind, "aac");
+
+        let mut bad_format = Args::new();
+        bad_format.insert("audio".into(), audio.clone());
+        bad_format.insert("format".into(), Value::String("opus".into()));
+        assert!(host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &bad_format)
+            .is_err());
+
+        let mut empty_species = Args::new();
+        empty_species.insert("audio".into(), audio);
+        empty_species.insert("format".into(), Value::String("qac".into()));
+        empty_species.insert("species_id".into(), Value::String("   ".into()));
+        assert!(host
+            .acoustics_ext("hypermedia.acoustics.encode_aac", &empty_species)
+            .is_err());
     }
 }

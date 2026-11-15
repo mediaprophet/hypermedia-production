@@ -4,7 +4,6 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::core::addr::{letters_to_col, parse_a1_prefix};
-use crate::core::value::CellError;
 use crate::formula::ast::*;
 use crate::formula::lexer::{Tok, Token, tokenize};
 

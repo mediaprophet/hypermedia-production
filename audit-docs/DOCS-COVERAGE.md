@@ -13,9 +13,9 @@ A `///`/`/**`/docstring attached to a function counts as documented. Test functi
 
 | module | functions | documented | coverage | undocumented | undocumented public |
 |---|---|---|---|---|---|
+| `crates/asset-production-vibe` | 1065 | 206 | 19% | 859 | 214 |
 | `crates/chronicle-tabular-engine` | 274 | 17 | 6% | 257 | 195 |
 | `crates/vector-compute-shaders` | 259 | 7 | 3% | 252 | 172 |
-| `crates/asset-production-vibe` | 814 | 172 | 21% | 642 | 153 |
 | `crates/color-transforms` | 288 | 91 | 32% | 197 | 123 |
 | `crates/drafting-geometry` | 264 | 62 | 23% | 202 | 122 |
 | `crates/vector-hybrid-renderer` | 802 | 209 | 26% | 593 | 120 |
@@ -60,7 +60,7 @@ A `///`/`/**`/docstring attached to a function counts as documented. Test functi
 | `crates/discourse-academic-tex` | 208 | 44 | 21% | 164 | 17 |
 | `crates/gpu-device-context` | 48 | 21 | 44% | 27 | 17 |
 | `crates/raster-layer-mask-adapter` | 60 | 19 | 32% | 41 | 17 |
-| `crates/profile-authoring` | 47 | 2 | 4% | 45 | 14 |
+| `crates/profile-authoring` | 48 | 2 | 4% | 46 | 14 |
 | `crates/electromagnetics-rf-sensing` | 41 | 16 | 39% | 25 | 13 |
 | `crates/kinetics-continuum-multiphysics` | 95 | 55 | 58% | 40 | 13 |
 | `crates/radiance-camera-raw` | 35 | 14 | 40% | 21 | 12 |
@@ -82,13 +82,42 @@ A `///`/`/**`/docstring attached to a function counts as documented. Test functi
 | `crates/vector-hybrid-shaders` | 51 | 19 | 37% | 32 | 1 |
 | `checks/consumer-smoke` | 1 | 0 | 0% | 1 | 0 |
 | `crates/terrain-erosion-solvers` | 50 | 18 | 36% | 32 | 0 |
-| **total** | **8745** | **2198** | **25%** | **6547** | **2532** |
+| **total** | **8997** | **2232** | **25%** | **6765** | **2593** |
 
-**Public-surface coverage: 1822/4354 (42%)** — the KPI worth tracking.
+**Public-surface coverage: 1859/4452 (42%)** — the KPI worth tracking.
 
 ## Undocumented-public worklist
 
 Top 25 per module (full list in `modules/*.md` — blank `doc` column):
+
+### `crates/asset-production-vibe` (214 undocumented public)
+
+- `impl AssetHost<'_>::route_bus_dag` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:10`
+- `impl AssetHost<'_>::spatialize_pga_zone` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:338`
+- `impl AssetHost<'_>::inspect_engine_telemetry` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:98`
+- `impl AssetHost<'_>::verify_fiduciary_rid` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:205`
+- `impl AssetHost<'_>::capture_deterministic_movie` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:275`
+- `impl AssetHost<'_>::sync_spatial_motors` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:327`
+- `closed_oriented` — `crates/asset-production-vibe/src/boolean_conforming.rs:5`
+- `impl AssetHost<'_>::chronicle_op` — `crates/asset-production-vibe/src/chronicle_ops.rs:13`
+- `impl AssetHost<'_>::capture_png_sequence` — `crates/asset-production-vibe/src/chronicle_sequence.rs:24`
+- `impl AssetHost<'_>::compile_prose_docx` — `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:20`
+- `impl AssetHost<'_>::compile_deck_pptx` — `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:158`
+- `impl ZipArchiveWriter::new` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:49`
+- `impl ZipArchiveWriter::add_file` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:55`
+- `impl ZipArchiveWriter::finish` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:62`
+- `impl AssetHost<'_>::compile_pdf` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:294`
+- `impl AssetHost<'_>::render_chart_svg` — `crates/asset-production-vibe/src/discourse_docs/pdf_chart.rs:26`
+- `impl AssetHost<'_>::compile_emf` — `crates/asset-production-vibe/src/electromagnetics_compile.rs:4`
+- `from_f64_epoch` — `crates/asset-production-vibe/src/electromagnetics_current/clock.rs:9`
+- `impl AssetHost<'_>::compile_emf_current` — `crates/asset-production-vibe/src/electromagnetics_current/compile_host.rs:130`
+- `read_memory_bound` — `crates/asset-production-vibe/src/electromagnetics_current/document.rs:18`
+- `impl CurrentDocument<'a>::host_work_used` — `crates/asset-production-vibe/src/electromagnetics_current/document.rs:162`
+- `impl CurrentDocument<'a>::open` — `crates/asset-production-vibe/src/electromagnetics_current/document.rs:184`
+- `generate_peak` — `crates/asset-production-vibe/src/electromagnetics_current/model.rs:31`
+- `generate_work` — `crates/asset-production-vibe/src/electromagnetics_current/model.rs:41`
+- `compile_generated` — `crates/asset-production-vibe/src/electromagnetics_current/model.rs:53`
+- _…189 more in `modules/crates_asset-production-vibe.md`_
 
 ### `crates/chronicle-tabular-engine` (195 undocumented public)
 
@@ -147,35 +176,6 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `erf7` — `crates/vector-compute-shaders/shader/fine.wgsl:715`
 - `hypot` — `crates/vector-compute-shaders/shader/fine.wgsl:724`
 - _…147 more in `modules/crates_vector-compute-shaders.md`_
-
-### `crates/asset-production-vibe` (153 undocumented public)
-
-- `impl AssetHost<'_>::route_bus_dag` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:11`
-- `impl AssetHost<'_>::spatialize_pga_zone` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/acoustics_bus_spatial.rs:339`
-- `impl AssetHost<'_>::inspect_engine_telemetry` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:98`
-- `impl AssetHost<'_>::verify_fiduciary_rid` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:205`
-- `impl AssetHost<'_>::capture_deterministic_movie` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:275`
-- `impl AssetHost<'_>::sync_spatial_motors` — `crates/asset-production-vibe/src/acoustics_discourse_chronicle_ext/discourse_chronicle.rs:322`
-- `impl AssetHost<'_>::chronicle_op` — `crates/asset-production-vibe/src/chronicle_ops.rs:13`
-- `impl AssetHost<'_>::compile_prose_docx` — `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:21`
-- `impl AssetHost<'_>::compile_deck_pptx` — `crates/asset-production-vibe/src/discourse_docs/docx_pptx.rs:159`
-- `impl ZipArchiveWriter::new` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:49`
-- `impl ZipArchiveWriter::add_file` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:55`
-- `impl ZipArchiveWriter::finish` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:62`
-- `impl AssetHost<'_>::compile_pdf` — `crates/asset-production-vibe/src/discourse_docs/mod.rs:294`
-- `impl AssetHost<'_>::render_chart_svg` — `crates/asset-production-vibe/src/discourse_docs/pdf_chart.rs:27`
-- `impl AssetHost<'_>::geodesy_op` — `crates/asset-production-vibe/src/geodesy_ops.rs:302`
-- `impl AssetHost<'_>::geometry` — `crates/asset-production-vibe/src/geometry.rs:7`
-- `impl AssetHost<'_>::profile` — `crates/asset-production-vibe/src/geometry.rs:288`
-- `impl AssetHost<'_>::store_profile` — `crates/asset-production-vibe/src/geometry.rs:294`
-- `impl AssetHost<'_>::mesh_budget` — `crates/asset-production-vibe/src/geometry.rs:313`
-- `impl AssetHost<'_>::store_mesh` — `crates/asset-production-vibe/src/geometry.rs:319`
-- `color` — `crates/asset-production-vibe/src/geometry.rs:411`
-- `impl SubpathBuilder<'a>::new` — `crates/asset-production-vibe/src/glyph/mod.rs:148`
-- `impl SubpathBuilder<'a>::stroke` — `crates/asset-production-vibe/src/glyph/mod.rs:157`
-- `impl SubpathBuilder<'a>::closed` — `crates/asset-production-vibe/src/glyph/mod.rs:170`
-- `char_to_svg_subpath_ext` — `crates/asset-production-vibe/src/glyph/stroke_table.rs:5`
-- _…128 more in `modules/crates_asset-production-vibe.md`_
 
 ### `crates/color-transforms` (123 undocumented public)
 
@@ -821,14 +821,19 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `impl DebugRenderer::render` — `crates/vector-compute-renderer/src/debug/renderer.rs:210`
 - `impl LineEndpoint::new` — `crates/vector-compute-renderer/src/debug/validate.rs:23`
 - `validate_line_soup` — `crates/vector-compute-renderer/src/debug/validate.rs:47`
-- `impl Renderer::render_to_texture_async` — `crates/vector-compute-renderer/src/lib.rs:644`
-- `impl DebugDownloads<'a>::map` — `crates/vector-compute-renderer/src/lib.rs:794`
+- `impl EtalonEngine::new` — `crates/vector-compute-renderer/src/etalon_engine.rs:144`
+- `impl EtalonEngine::add_render_shader` — `crates/vector-compute-renderer/src/etalon_engine.rs:317`
+- `impl EtalonEngine::run_recording` — `crates/vector-compute-renderer/src/etalon_engine.rs:381`
+- `impl EtalonEngine::get_download` — `crates/vector-compute-renderer/src/etalon_engine.rs:781`
+- `impl EtalonEngine::free_download` — `crates/vector-compute-renderer/src/etalon_engine.rs:785`
+- `impl Renderer::render_to_texture_async` — `crates/vector-compute-renderer/src/lib.rs:655`
+- `impl DebugDownloads<'a>::map` — `crates/vector-compute-renderer/src/lib.rs:805`
 - `impl ResourceId::next` — `crates/vector-compute-renderer/src/recording.rs:16`
 - `impl Recording::write_image` — `crates/vector-compute-renderer/src/recording.rs:155`
 - `impl Recording::dispatch` — `crates/vector-compute-renderer/src/recording.rs:159`
 - `impl BufferProxy::new` — `crates/vector-compute-renderer/src/recording.rs:236`
-- `impl ImageFormat::to_wgpu` — `crates/vector-compute-renderer/src/recording.rs:245`
-- `impl ImageFormat::from_wgpu` — `crates/vector-compute-renderer/src/recording.rs:253`
+- `impl ImageFormat::to_etalon` — `crates/vector-compute-renderer/src/recording.rs:245`
+- `impl ImageFormat::from_etalon` — `crates/vector-compute-renderer/src/recording.rs:253`
 - `impl ImageProxy::new` — `crates/vector-compute-renderer/src/recording.rs:263`
 - `impl ResourceProxy::new_buf` — `crates/vector-compute-renderer/src/recording.rs:275`
 - `impl ResourceProxy::new_image` — `crates/vector-compute-renderer/src/recording.rs:279`
@@ -837,11 +842,6 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `impl CapturedBuffers::release_buffers` — `crates/vector-compute-renderer/src/render.rs:77`
 - `render_full` — `crates/vector-compute-renderer/src/render.rs:84`
 - `impl Render::new` — `crates/vector-compute-renderer/src/render.rs:121`
-- `impl Render::bump_buf` — `crates/vector-compute-renderer/src/render.rs:639`
-- `impl Render::take_captured_buffers` — `crates/vector-compute-renderer/src/render.rs:650`
-- `full_shaders` — `crates/vector-compute-renderer/src/shaders.rs:48`
-- `impl RenderContext::new` — `crates/vector-compute-renderer/src/util.rs:32`
-- `impl RenderContext::set_present_mode` — `crates/vector-compute-renderer/src/util.rs:130`
 - _…6 more in `modules/crates_vector-compute-renderer.md`_
 
 ### `crates/geodesy-spatial-analysis` (30 undocumented public)
@@ -1326,11 +1326,11 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `impl BufferRenderer::target_texture_view` — `crates/gpu-device-context/src/buffer_renderer.rs:117`
 - `impl BufferRenderer::copy_texture_to_vec` — `crates/gpu-device-context/src/buffer_renderer.rs:121`
 - `impl BufferRenderer::copy_texture_to_buffer` — `crates/gpu-device-context/src/buffer_renderer.rs:127`
-- `impl WGPUContext::new` — `crates/gpu-device-context/src/lib.rs:116`
-- `impl WGPUContext::with_features_and_limits` — `crates/gpu-device-context/src/lib.rs:120`
-- `impl WGPUContext::extra_features` — `crates/gpu-device-context/src/lib.rs:141`
-- `impl WGPUContext::override_limits` — `crates/gpu-device-context/src/lib.rs:145`
-- `impl WGPUContext::create_device_handle` — `crates/gpu-device-context/src/lib.rs:230`
+- `impl EtalonContext::new` — `crates/gpu-device-context/src/lib.rs:124`
+- `impl EtalonContext::with_features_and_limits` — `crates/gpu-device-context/src/lib.rs:128`
+- `impl EtalonContext::extra_features` — `crates/gpu-device-context/src/lib.rs:149`
+- `impl EtalonContext::override_limits` — `crates/gpu-device-context/src/lib.rs:153`
+- `impl EtalonContext::create_device_handle` — `crates/gpu-device-context/src/lib.rs:238`
 - `impl SurfaceRenderer<'s>::device` — `crates/gpu-device-context/src/surface_renderer.rs:208`
 - `impl SurfaceRenderer<'s>::queue` — `crates/gpu-device-context/src/surface_renderer.rs:212`
 - `impl SurfaceRenderer<'s>::set_present_mode` — `crates/gpu-device-context/src/surface_renderer.rs:234`
@@ -1362,9 +1362,9 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `finite_positive` — `crates/profile-authoring/provenance/original-lib.rs:28`
 - `compile_assembly` — `crates/profile-authoring/src/assembly.rs:164`
 - `unit` — `crates/profile-authoring/src/frames.rs:9`
-- `record` — `crates/profile-authoring/src/frames.rs:25`
-- `normal` — `crates/profile-authoring/src/frames.rs:46`
-- `face` — `crates/profile-authoring/src/frames.rs:57`
+- `record` — `crates/profile-authoring/src/frames.rs:28`
+- `normal` — `crates/profile-authoring/src/frames.rs:49`
+- `face` — `crates/profile-authoring/src/frames.rs:60`
 - `impl GeometryLimits::admit` — `crates/profile-authoring/src/geometry.rs:31`
 - `sphere` — `crates/profile-authoring/src/geometry.rs:201`
 - `torus` — `crates/profile-authoring/src/geometry.rs:230`
@@ -1513,9 +1513,9 @@ Top 25 per module (full list in `modules/*.md` — blank `doc` column):
 - `fs_main` — `crates/pixel-buffer-output/shaders/scale_fill.wgsl:30`
 - `create_backing_texture` — `crates/pixel-buffer-output/src/builder.rs:464`
 - `impl ScalingRenderer::new` — `crates/pixel-buffer-output/src/renderers.rs:23`
-- `impl ScalingRenderer::resize` — `crates/pixel-buffer-output/src/renderers.rs:295`
-- `impl ScalingMatrix::new` — `crates/pixel-buffer-output/src/renderers.rs:317`
-- `impl ScalingMatrix::clip_rect` — `crates/pixel-buffer-output/src/renderers.rs:382`
+- `impl ScalingRenderer::resize` — `crates/pixel-buffer-output/src/renderers.rs:303`
+- `impl ScalingMatrix::new` — `crates/pixel-buffer-output/src/renderers.rs:325`
+- `impl ScalingMatrix::clip_rect` — `crates/pixel-buffer-output/src/renderers.rs:390`
 
 ### `crates/gpu-command-profiler` (7 undocumented public)
 

@@ -7,7 +7,7 @@ use super::a11y::{
     AccessibleList, AccessibleTable, Rule, Status, check_accessibility, generate_html_report,
 };
 use super::forms::{
-    AcroForm, AcroFormField, CalcOp, CalculateRule, FieldKind, FormatRule, ValidateRule,
+    AcroForm, AcroFormField, CalcOp, CalculateRule, FormatRule, ValidateRule,
     execute_calculation, export_xfdf, flatten_form, format_field, import_xfdf, validate_field,
 };
 use super::preflight::{
@@ -15,8 +15,7 @@ use super::preflight::{
 };
 use super::redact::{
     HiddenCategory, SanitizeManifest, apply_semantic_redaction, luhn_check, sanitize_document,
-    scan_all_pii, scan_credit_cards, scan_emails, scan_phones, scan_ssns, scan_tax_ids,
-    verify_zero_residue,
+    scan_all_pii, verify_zero_residue,
 };
 use super::sign::{
     ByteRange, TimestampToken, verify_pades_byte_range, verify_rfc3161_timestamp,
@@ -160,7 +159,7 @@ fn test_forms_validation_flattening_and_xfdf() {
     f1.value = "5".into();
     let mut f2 = AcroFormField::new_text("UnitPrice", 0, [60.0, 10.0, 100.0, 30.0]);
     f2.value = "20.50".into();
-    let mut f3 = AcroFormField::new_text("Total", 0, [110.0, 10.0, 160.0, 30.0]);
+    let f3 = AcroFormField::new_text("Total", 0, [110.0, 10.0, 160.0, 30.0]);
 
     form.fields.push(f1);
     form.fields.push(f2);

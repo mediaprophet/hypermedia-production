@@ -112,7 +112,7 @@ pub fn parse_sections(code: &str) -> Vec<Section> {
         let mut toks = Vec::new();
         let mut color = None;
         let mut percent = 0;
-        let mut exp = false;
+        let exp = false;
         let mut fraction = false;
         let mut fill = false;
         let mut currency = false;

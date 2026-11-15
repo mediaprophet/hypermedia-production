@@ -62,9 +62,14 @@ impl AssetHost<'_> {
     /// (`kinetics-schedule-cpm`)
     pub(crate) fn schedule_cpm_evm_montecarlo(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["resource", "trials", "seed", "status_day"])?;
-        if let Some(v) = a.get("resource") {
-            let _ = self.workspace.get(v)?;
-        }
+        let resource_bytes = if let Some(v) = a.get("resource") {
+            match self.workspace.get(v)? {
+                Artifact::Encoded(res) => Some(res.bytes.len()),
+                _ => Some(0),
+            }
+        } else {
+            None
+        };
         let trials = count(a, "trials", 100, 2000)?;
         let seed = count(a, "seed", 42, 1_000_000)? as u64;
         let status_day = number(a, "status_day", 10.0)?;
@@ -83,6 +88,7 @@ impl AssetHost<'_> {
         let svg_handle = self.encode("svg", gantt_svg.into_bytes())?;
 
         let schedule_report = serde_json::json!({
+            "resource_bytes": resource_bytes,
             "cpm": {
                 "project_duration_days": summary.project_duration_days,
                 "critical_task_ids": summary.critical_task_ids,
@@ -133,10 +139,18 @@ impl AssetHost<'_> {
     /// 139: `hypermedia.acoustics.analyze_ebu_r128_camelot_daw`
     /// (`acoustics-daw-session` + `audio-timebase`)
     pub(crate) fn analyze_ebu_r128_camelot_daw(&mut self, a: &Args) -> Result<Value, String> {
-        fields(a, &["audio", "freq_hz", "bpm", "azimuth_deg"])?;
+        fields(a, &["audio", "freq_hz", "bpm", "azimuth_deg", "qac"])?;
         let freq_hz = number(a, "freq_hz", 440.0)? as f32;
         let bpm = number(a, "bpm", 120.0)?;
         let azimuth = number(a, "azimuth_deg", 30.0)? as f32;
+
+        let qac_verification = if let Some(qac_val) = a.get("qac") {
+            let qac_bytes = self.resolve_qac_bytes(qac_val)?.to_vec();
+            self.charge(qac_bytes.len() / 4 + 256, 0)?;
+            Some(crate::sound::inspect_and_verify_qac_v1_bytes(&qac_bytes)?)
+        } else {
+            None
+        };
 
         use acoustics_daw_session::{
             CamelotKey, HarmonicRelation, LAYOUT_5_1, VbapPanner, detect_pitch_yin, hz_to_midi,
@@ -229,6 +243,9 @@ impl AssetHost<'_> {
         out.insert("camelot_relation".into(), Value::String(format!("{rel:?}")));
         out.insert("bar2_smpte_timecode".into(), Value::String(pos.timecode.format(TimecodeRate::Fps24)));
         out.insert("bar2_film_feet_frames".into(), Value::String(pos.feet_frames.format()));
+        if let Some(qac_ver) = qac_verification {
+            out.insert("qac_v1_verification".into(), Value::Record(qac_ver));
+        }
         Ok(Value::Record(out))
     }
 
@@ -395,5 +412,97 @@ mod tests {
             _ => panic!("vbap_5_1_power"),
         };
         assert!((power - 1.0).abs() < 0.15, "unit VBAP power, got {power}");
+    }
+
+    #[test]
+    fn test_analyze_ebu_r128_camelot_daw_verifies_qac_canonical_and_preservation() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let mut tone_args = Args::new();
+        tone_args.insert("frequency".into(), Value::F64(440.0));
+        tone_args.insert("sample_rate".into(), Value::U64(48_000));
+        tone_args.insert("frames".into(), Value::U64(24_000));
+        tone_args.insert("amplitude".into(), Value::F64(0.25));
+        let audio = host
+            .invoke("hypermedia.acoustics.synthesize_tone", &Value::Record(tone_args))
+            .expect("synthesize_tone");
+
+        let mut enc_args = Args::new();
+        enc_args.insert("audio".into(), audio.clone());
+        enc_args.insert("format".into(), Value::String("qac".into()));
+        enc_args.insert("species_id".into(), Value::String("wallabia-bicolor".into()));
+        enc_args.insert("cue_profile".into(), Value::String("daw_check".into()));
+        let qac_handle = host
+            .invoke("hypermedia.acoustics.encode_aac", &Value::Record(enc_args))
+            .expect("encode_aac format=qac");
+        let qac_meta = record(&qac_handle).expect("qac handle record");
+
+        let mut daw_args = Args::new();
+        daw_args.insert("audio".into(), audio);
+        daw_args.insert("qac".into(), qac_handle.clone());
+        let daw_res = host
+            .analyze_ebu_r128_camelot_daw(&daw_args)
+            .expect("analyze_ebu_r128_camelot_daw with qac");
+        let daw_rec = record(&daw_res).expect("daw record");
+        let qac_ver = daw_rec
+            .get("qac_v1_verification")
+            .and_then(|v| record(v).ok())
+            .expect("qac_v1_verification record");
+
+        assert_eq!(qac_ver.get("valid"), Some(&Value::Bool(true)));
+        assert_eq!(qac_ver.get("container_version"), Some(&Value::U64(1)));
+        assert_eq!(qac_ver.get("entry_count"), Some(&Value::U64(4)));
+        assert_eq!(qac_ver.get("sha256_hex"), qac_meta.get("sha256_hex"));
+        assert_eq!(qac_ver.get("blake3_hex"), qac_meta.get("blake3_hex"));
+
+        let (corpus, rig) =
+            crate::emf_qac_anatomy_bridge::canonical_wallaby_rig_and_corpus().expect("wallaby");
+        let bundle = crate::emf_qac_anatomy_bridge::produce_vertebrate_emf_qac_vibe_bundle(
+            &mut host,
+            &rig,
+            &corpus,
+            "daw_pres",
+        )
+        .expect("produce bundle");
+        let pres_handle = record(&bundle)
+            .unwrap()
+            .get("qac_preservation_handle")
+            .unwrap()
+            .clone();
+        let mut pres_args = Args::new();
+        pres_args.insert("qac".into(), pres_handle);
+        let pres_daw = host
+            .analyze_ebu_r128_camelot_daw(&pres_args)
+            .expect("analyze_ebu_r128_camelot_daw preservation qac");
+        let pres_ver = record(&pres_daw)
+            .unwrap()
+            .get("qac_v1_verification")
+            .and_then(|v| record(v).ok())
+            .expect("preservation qac_v1_verification");
+        assert_eq!(pres_ver.get("valid"), Some(&Value::Bool(true)));
+        assert_eq!(pres_ver.get("entry_count"), Some(&Value::U64(2)));
+    }
+
+    #[test]
+    fn test_analyze_ebu_r128_camelot_daw_rejects_corrupt_or_non_qac_handle() {
+        let cancel = AtomicBool::new(false);
+        let limits = ToolLimits::default();
+        let mut host = host(&cancel, &limits);
+
+        let corrupt_handle = host
+            .admit_encoded("qac", b"not-a-valid-qac-container".to_vec())
+            .expect("admit corrupt bytes");
+        let mut bad_qac = Args::new();
+        bad_qac.insert("qac".into(), corrupt_handle);
+        assert!(host.analyze_ebu_r128_camelot_daw(&bad_qac).is_err());
+
+        let wav_handle = host
+            .admit_encoded("wav", b"RIFF0000WAVE".to_vec())
+            .expect("admit wav");
+        let mut wrong_kind = Args::new();
+        wrong_kind.insert("qac".into(), wav_handle);
+        assert!(host.analyze_ebu_r128_camelot_daw(&wrong_kind).is_err());
     }
 }

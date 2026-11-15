@@ -2145,7 +2145,6 @@ dependencies = [
 name = "etalon-vibe"
 version = "0.0.2"
 dependencies = [
- "etalon-model",
  "etalon-nquin",
  "etalon-resources",
  "etalon-sense-core",
@@ -8540,27 +8539,3 @@ dependencies = [
  "syn 3.0.9",
  "winnow",
 ]
-
-[[patch.unused]]
-name = "etalon-agent"
-version = "0.0.2"
-
-[[patch.unused]]
-name = "etalon-wasm"
-version = "0.0.2"
-
-[[patch.unused]]
-name = "qualia-mcp"
-version = "0.0.41"
-
-[[patch.unused]]
-name = "qualia-sim"
-version = "0.0.41"
-
-[[patch.unused]]
-name = "qualia-vision"
-version = "0.0.41"
-
-[[patch.unused]]
-name = "webizen-render"
-version = "0.0.41"

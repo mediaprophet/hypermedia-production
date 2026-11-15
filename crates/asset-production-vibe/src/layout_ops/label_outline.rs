@@ -1,6 +1,6 @@
 //! Shared, deterministic glyph outlines for raster and SVG UI labels.
 use super::{LayoutBox, ThemeTokens};
-use kurbo::{Affine, BezPath, Rect, Shape};
+use kurbo::{Affine, BezPath, Rect};
 use parley::{Alignment, AlignmentOptions, FontContext, Layout, LayoutContext,
     PositionedLayoutItem, StyleProperty};
 use std::{borrow::Cow, sync::Arc};
@@ -118,6 +118,7 @@ impl ttf_parser::OutlineBuilder for Outline<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kurbo::Shape;
     #[test]
     fn label_is_glyph_geometry_and_respects_its_box() {
         let theme = super::super::build_theme_tokens("test", "holosonic-dark", [0,216,242,255], 10.0);

@@ -59,7 +59,6 @@ impl std::error::Error for SimError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::sinks::Scope;
     use std::collections::BTreeMap;
 
     #[test]
@@ -138,7 +137,7 @@ mod tests {
 
         let factory = StandardBlockFactory;
         let doc = Document::parse(json_text).unwrap();
-        let mut model = doc.to_model(&factory).unwrap();
+        let model = doc.to_model(&factory).unwrap();
         let compiled = model.compile().unwrap();
 
         let mut sim = Sim::new(compiled, doc.solver).unwrap();

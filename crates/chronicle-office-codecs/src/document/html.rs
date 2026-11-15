@@ -1,8 +1,7 @@
 //! Semantic HTML5 / XHTML importer and exporter for FlowDoc.
 
 use crate::flow::model::{
-    FlowBlock, FlowCell, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowListInfo, FlowPara, FlowRow,
-    FlowTable,
+    FlowBlock, FlowCell, FlowDoc, FlowFmt, FlowInline, FlowKind, FlowPara, FlowRow, FlowTable,
 };
 use crate::xml::dom::{escape_xml, parse_xml, XEl, XNode};
 

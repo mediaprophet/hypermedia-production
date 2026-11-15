@@ -1,6 +1,6 @@
 //! Timeline compilation: organizes animations into sequential click steps.
 
-use super::anim::{AnimClass, AnimStart, Animation, EffectTiming, Sequence};
+use super::anim::{AnimClass, AnimStart, EffectTiming, Sequence};
 use crate::model::master::Slide;
 use crate::model::types::ShapeId;
 
@@ -37,7 +37,6 @@ impl Timeline {
                         cur_step += 1;
                     }
                     cur_step_duration = 0.0;
-                    last_end_time = 0.0;
                     (cur_step, anim.delay)
                 }
                 AnimStart::WithPrev => {

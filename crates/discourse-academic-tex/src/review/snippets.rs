@@ -12,7 +12,7 @@
 //! stop's byte offset.
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::path::{Path, PathBuf};
 
 /// One snippet.

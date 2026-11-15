@@ -32,7 +32,7 @@ _A [`vello`] backend for the [`anyrender`] 2D drawing abstraction_
 | `impl PaintScene for VelloScenePainter<'_, '_>::fill` | 6 | `crates/vector-gpu-render-adapter/src/scene.rs:104` | - |  |
 | `impl PaintScene for VelloScenePainter<'_, '_>::draw_glyphs` | 12 | `crates/vector-gpu-render-adapter/src/scene.rs:139` | 2d |  |
 | `impl PaintScene for VelloScenePainter<'_, '_>::draw_box_shadow` | 6 | `crates/vector-gpu-render-adapter/src/scene.rs:175` | 2d |  |
-| `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:30` | - | Drive the wgpu init future. On wasm32 we spawn it onto the JS microtask |
+| `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:30` | - | Drive the etalon init future. On wasm32 we spawn it onto the JS microtask |
 | `spawn_init` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:35` | - |  |
 | `impl Default for VelloRendererOptions::default` | 0 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:80` | - |  |
 | `impl VelloRendererOptions::new` | 0 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:86` | - |  |
@@ -50,7 +50,7 @@ _A [`vello`] backend for the [`anyrender`] 2D drawing abstraction_
 | `impl RenderContext for VelloWindowRenderer::try_register_custom_resource` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:199` | - |  |
 | `impl RenderContext for VelloWindowRenderer::unregister_resource` | 2 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:217` | - |  |
 | `impl RenderContext for VelloWindowRenderer::renderer_specific_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:227` | - |  |
-| `build_wgpu_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:238` | - |  |
+| `build_etalon_context` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:238` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::is_active` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:250` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::is_pending` | 1 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:254` | - |  |
 | `impl WindowRenderer for VelloWindowRenderer::resume` | 5 | `crates/vector-gpu-render-adapter/src/window_renderer.rs:258` | - |  |

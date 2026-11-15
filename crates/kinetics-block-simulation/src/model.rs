@@ -1,9 +1,9 @@
 //! Model graph representation, signal type propagation, and topological compiler.
 
-use crate::block::{Block, SampleTime};
+use crate::block::Block;
 use crate::signal::{SigMeta, SigVal};
 use crate::SimError;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Wire {
@@ -272,4 +272,17 @@ pub struct CompiledModel {
     pub state_offsets: Vec<usize>,
     pub total_states: usize,
     pub initial_outputs: Vec<Vec<SigVal>>,
+}
+
+impl std::fmt::Debug for CompiledModel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompiledModel")
+            .field("names", &self.names)
+            .field("block_count", &self.blocks.len())
+            .field("drivers", &self.drivers)
+            .field("order", &self.order)
+            .field("state_offsets", &self.state_offsets)
+            .field("total_states", &self.total_states)
+            .finish()
+    }
 }

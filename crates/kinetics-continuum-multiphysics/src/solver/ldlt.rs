@@ -134,9 +134,9 @@ mod tests {
         assert_eq!(inertia.negative, 1);
         assert_eq!(inertia.zero, 0);
 
-        let b = [5.0, 4.0];
+        let b = [5.0, 1.0];
         let x = ldlt.solve(&b).unwrap();
-        // A * x = [1, 2; 2, 1] * [-1, 3] = [5, 4]
+        // A * x = [1, 2; 2, 1] * [-1, 3] = [5, 1]
         assert!((x[0] - (-1.0)).abs() < 1e-10);
         assert!((x[1] - 3.0).abs() < 1e-10);
     }

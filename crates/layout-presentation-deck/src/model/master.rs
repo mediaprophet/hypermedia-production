@@ -1,7 +1,7 @@
 //! Presentation, slide master, layout, and theme hierarchies.
 
 use serde::{Deserialize, Serialize};
-use super::types::{ColorScheme, LayoutId, MasterId, ShapeId, Size, SlideId, Xfrm};
+use super::types::{ColorScheme, LayoutId, MasterId, ShapeId, Size, SlideId};
 use super::shape::{Shape, SlideTransition};
 use crate::timeline::anim::Animation;
 

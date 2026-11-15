@@ -8,11 +8,14 @@ impl AssetHost<'_> {
     /// 135: `hypermedia.kinetics.solve_continuum_fem_lbm` (`kinetics-continuum-multiphysics`)
     pub(crate) fn solve_continuum_fem_lbm(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["mesh", "youngs_modulus_pa", "poisson_ratio", "lbm_steps"])?;
-        if let Some(mv) = a.get("mesh") {
-            let Artifact::Mesh(_) = self.workspace.get(mv)? else {
+        let input_mesh_counts = if let Some(mv) = a.get("mesh") {
+            let Artifact::Mesh(m) = self.workspace.get(mv)? else {
                 return Err("Expected mesh handle".into());
             };
-        }
+            Some((m.positions.len(), m.triangles.len()))
+        } else {
+            None
+        };
         let youngs = number(a, "youngs_modulus_pa", 210e9)?;
         let nu = number(a, "poisson_ratio", 0.3)?.clamp(0.01, 0.49);
         let lbm_steps = count(a, "lbm_steps", 2, 16)?;
@@ -98,6 +101,10 @@ impl AssetHost<'_> {
         out.insert("solved_dof_0".into(), Value::F64(disp[0]));
         out.insert("lbm_mass_conservation_error".into(), Value::F64((mass1 - mass0).abs()));
         out.insert("hex_element_count".into(), Value::I64(hex_mesh.elements.len() as i64));
+        if let Some((vc, tc)) = input_mesh_counts {
+            out.insert("input_vertex_count".into(), Value::I64(vc as i64));
+            out.insert("input_triangle_count".into(), Value::I64(tc as i64));
+        }
         Ok(Value::Record(out))
     }
 

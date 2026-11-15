@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use super::node::{DocumentNode, NodeId, NodeImplementation, NodeInput, NodeNetwork};
+use super::node::{NodeId, NodeImplementation, NodeInput, NodeNetwork};
 
 pub fn flatten_network(network: &NodeNetwork) -> NodeNetwork {
     let mut flat = NodeNetwork::new();

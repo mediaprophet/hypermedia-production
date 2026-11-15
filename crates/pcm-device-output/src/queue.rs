@@ -159,7 +159,7 @@ impl Queue {
         let frames = (out.len() / 2) as u64;
         if self
             .consumed
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |v| {
                 v.checked_add(frames)
             })
             .is_err()
