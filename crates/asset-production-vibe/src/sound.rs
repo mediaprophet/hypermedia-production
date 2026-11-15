@@ -1,92 +1,6 @@
 use super::*;
-use crate::electromagnetics_ops::{emf_cell_display_irradiance, parse_sealed_emf};
-use qualia_core_db::q42::emf_container::SPEED_OF_LIGHT;
 
 impl AssetHost<'_> {
-    /// Heterodyne optical wavelength onto A4 (532 nm → 440 Hz) so the field is hearable.
-    fn optical_nm_to_audio_hz(wavelength_nm: f64, nyquist: f64) -> f64 {
-        if !(wavelength_nm > 0.0) {
-            return 440.0;
-        }
-        let f_em = (SPEED_OF_LIGHT as f64) * 1e9 / wavelength_nm;
-        (f_em / 1.281_82e12).clamp(20.0, nyquist)
-    }
-
-    /// Field-derived mono PCM: irradiance envelope in sealed chunk/cell order (no HashMap).
-    fn sonify_emf_field(
-        &self,
-        emf_val: &Value,
-        rate: u32,
-        frames: usize,
-        amp: f32,
-    ) -> Result<Vec<f32>, String> {
-        let bytes = self.resolve_emf_bytes(emf_val)?;
-        let reader = parse_sealed_emf(&bytes)?;
-
-        let mut envelope: Vec<f32> = Vec::new();
-        let mut irr_sum = 0.0f64;
-        let mut wl_weight = 0.0f64;
-        let mut max_i = 0.0f64;
-
-        let chunk_count = reader.chunk_count();
-        for chunk_idx in 0..chunk_count {
-            let entry = reader
-                .chunk_entry(chunk_idx)
-                .ok_or_else(|| format!("Missing chunk directory entry at index {chunk_idx}"))?;
-            let cell_count = entry.cell_count as usize;
-            for cell_idx in 0..cell_count {
-                let cell = reader.cell(chunk_idx, cell_idx).ok_or_else(|| {
-                    format!("Missing cell {cell_idx} in chunk {chunk_idx}")
-                })?;
-                let i = emf_cell_display_irradiance(&cell);
-                if i > max_i {
-                    max_i = i;
-                }
-                envelope.push(i as f32);
-                if i > 0.0 {
-                    irr_sum += i;
-                    let wl = if cell.wavelength_nm > 0.0 {
-                        cell.wavelength_nm as f64
-                    } else {
-                        532.0
-                    };
-                    wl_weight += wl * i;
-                }
-                if envelope.len() >= 8192 {
-                    break;
-                }
-            }
-            if envelope.len() >= 8192 {
-                break;
-            }
-        }
-
-        if max_i <= 0.0 || envelope.is_empty() {
-            return Err("emf field has no audible energy (black lattice)".into());
-        }
-
-        let nyquist = (rate as f64) * 0.49;
-        let mean_wl = if irr_sum > 0.0 {
-            wl_weight / irr_sum
-        } else {
-            532.0
-        };
-        let f0 = Self::optical_nm_to_audio_hz(mean_wl, nyquist) as f32;
-        let peak_amp = ((1.0 - (-max_i).exp()) as f32 * amp).clamp(0.0, 1.0);
-        let inv_max = (1.0 / max_i) as f32;
-        let n_env = envelope.len();
-        let sr = rate as f32;
-
-        let mut samples = vec![0.0f32; frames];
-        for i in 0..frames {
-            let env = envelope[i % n_env] * inv_max;
-            let t = i as f32 / sr;
-            let s = env * peak_amp * (std::f32::consts::TAU * f0 * t).sin();
-            samples[i] = if s.is_finite() { s.clamp(-1.0, 1.0) } else { 0.0 };
-        }
-        Ok(samples)
-    }
-
     pub(super) fn sound(&mut self, id: &str, a: &Args) -> Result<Value, String> {
         match id {
             "hypermedia.kinetics.sample_frames" | "hypermedia.timeline.frames" => {
@@ -121,7 +35,10 @@ impl AssetHost<'_> {
                 ))
             }
             "hypermedia.acoustics.synthesize_tone" | "hypermedia.audio.tone" => {
-                fields(a, &["frequency", "sample_rate", "frames", "amplitude", "emf"])?;
+                fields(
+                    a,
+                    &["frequency", "sample_rate", "frames", "amplitude", "emf"],
+                )?;
                 let rate = count(a, "sample_rate", 48000, 192000)? as u32;
                 if rate < 8000 {
                     return Err("Sample rate must be 8000..192000".into());
@@ -130,12 +47,11 @@ impl AssetHost<'_> {
                 let freq = number(a, "frequency", 440.)?;
                 let amp = number(a, "amplitude", 0.25)?;
                 let has_emf = a.get("emf").is_some();
-                if !has_emf
-                    && (freq <= 0.
-                        || freq >= rate as f64 / 2.
-                        || freq as f32 <= 0.
-                        || freq as f32 >= rate as f32 / 2.
-                        || !(0. ..=1.).contains(&amp))
+                if (freq <= 0.
+                    || freq >= rate as f64 / 2.
+                    || freq as f32 <= 0.
+                    || freq as f32 >= rate as f32 / 2.
+                    || !(0. ..=1.).contains(&amp))
                 {
                     return Err("Tone needs 0 < frequency < Nyquist and amplitude 0..1".into());
                 }
@@ -143,24 +59,46 @@ impl AssetHost<'_> {
                     return Err("Amplitude must be 0..1".into());
                 }
                 self.charge(frames * 8, frames * 4)?;
+                let mut source_counts = None;
                 let samples = if let Some(emf_val) = a.get("emf") {
-                    self.sonify_emf_field(emf_val, rate, frames, amp as f32)?
+                    let (samples, source, missing) =
+                        self.sonify_current_emf(emf_val, rate, frames, freq, amp)?;
+                    source_counts = Some((source, missing));
+                    samples
                 } else {
-                    qualia_audio::media_store::synth_tone_f32(
-                        freq as f32,
-                        rate,
-                        frames,
-                        amp as f32,
-                    )
+                    qualia_audio::media_store::synth_tone_f32(freq as f32, rate, frames, amp as f32)
                 };
-                self.workspace
-                    .insert(Artifact::Audio { rate, samples }, self.limits)
+                let mut handle = self
+                    .workspace
+                    .insert(Artifact::Audio { rate, samples }, self.limits)?;
+                if let (Value::Record(meta), Some((source, missing))) = (&mut handle, source_counts)
+                {
+                    meta.insert(
+                        "derivative_profile".into(),
+                        Value::String(
+                            "electric_magnitude_normalized_amplitude_modulation_v1".into(),
+                        ),
+                    );
+                    meta.insert("source_units".into(), Value::String("V/m".into()));
+                    meta.insert(
+                        "output_units".into(),
+                        Value::String("normalized_audio_amplitude".into()),
+                    );
+                    meta.insert("acoustic_frequency_hz".into(), Value::F64(freq));
+                    meta.insert("carrier_source".into(),Value::String("explicit synthesize_tone frequency argument; independent of EM carrier/sigma".into()));
+                    meta.insert("source_sample_limit".into(), Value::U64(8192));
+                    meta.insert("source_samples".into(), Value::U64(source as u64));
+                    meta.insert("missing_source_samples".into(), Value::U64(missing as u64));
+                    meta.insert("missing_policy".into(),Value::String("missing source states map to silence only in this derivative; source observations unchanged".into()));
+                }
+                Ok(handle)
             }
             "hypermedia.acoustics.scale_gain"
             | "hypermedia.audio.gain"
             | "hypermedia.acoustics.encode_wav"
             | "hypermedia.audio.wav" => {
-                let is_gain = id == "hypermedia.acoustics.scale_gain" || id == "hypermedia.audio.gain";
+                let is_gain =
+                    id == "hypermedia.acoustics.scale_gain" || id == "hypermedia.audio.gain";
                 fields(
                     a,
                     if is_gain {
@@ -265,9 +203,7 @@ mod tests {
 
     fn audio_peak(host: &AssetHost<'_>, handle: &Value) -> f32 {
         match host.workspace.get(handle).expect("audio handle") {
-            Artifact::Audio { samples, .. } => samples
-                .iter()
-                .fold(0.0f32, |m, s| m.max(s.abs())),
+            Artifact::Audio { samples, .. } => samples.iter().fold(0.0f32, |m, s| m.max(s.abs())),
             _ => panic!("expected Audio artifact"),
         }
     }
@@ -296,7 +232,9 @@ mod tests {
                     samples.iter().any(|s| s.abs() > 0.01),
                     "field-derived sonic from sealed .emf must be non-silent"
                 );
-                assert!(samples.iter().all(|s| s.is_finite() && *s >= -1.0 && *s <= 1.0));
+                assert!(samples
+                    .iter()
+                    .all(|s| s.is_finite() && *s >= -1.0 && *s <= 1.0));
             }
             _ => panic!("expected Audio from emf-sonic"),
         }
@@ -344,10 +282,7 @@ mod tests {
             Value::List(vec![Value::Record(bus), Value::Record(master)]),
         );
         let mixed = host
-            .acoustics_discourse_chronicle_ext_op(
-                "hypermedia.acoustics.route_bus_dag",
-                &bus_args,
-            )
+            .acoustics_discourse_chronicle_ext_op("hypermedia.acoustics.route_bus_dag", &bus_args)
             .expect("route_bus_dag");
         assert!(
             audio_peak(&host, &mixed) > 0.01,
@@ -374,7 +309,10 @@ mod tests {
             .expect("spatialize_pga_zone");
         match host.workspace.get(&spatial).expect("spatial handle") {
             Artifact::Audio { samples, .. } => {
-                assert!(samples.iter().any(|s| s.abs() > 1e-4), "spatial wave non-silent");
+                assert!(
+                    samples.iter().any(|s| s.abs() > 1e-4),
+                    "spatial wave non-silent"
+                );
                 assert!(samples.iter().all(|s| s.is_finite()));
             }
             _ => panic!("expected spatial Audio"),
