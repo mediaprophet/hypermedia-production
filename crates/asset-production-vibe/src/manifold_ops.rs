@@ -13,6 +13,13 @@ use qualia_core_db::specialized_libs::computational_geometry::{
 };
 use vibe::Value;
 
+#[path = "production_simplify.rs"]
+mod production_simplify;
+
+fn is_production_handle(value: &Value) -> bool {
+    matches!(value, Value::Record(record) if record.contains_key("handle") && record.contains_key("type"))
+}
+
 impl AssetHost<'_> {
     pub(super) fn manifold_ext(&mut self, id: &str, a: &Args) -> Result<Value, String> {
         match id {
@@ -136,20 +143,26 @@ impl AssetHost<'_> {
                 "target_edge_length",
                 "target_edge",
                 "metric",
+                "domains",
+                "locks",
             ],
         )?;
         let mode = match a.get("mode") {
             Some(v) => text(v)?,
             None => "decimate",
         };
-        match mode {
-            "decimate" => self.manifold_simplify_decimate(a),
-            "remesh" => self.manifold_simplify_remesh(a),
-            "anisotropic" => self.manifold_simplify_anisotropic(a),
-            _ => Err(
-                "Unknown simplify mode: expected 'decimate' (QEM), 'remesh' (isotropic), or 'anisotropic'"
-                    .into(),
-            ),
+        if production_simplify::is_semantic_mode(mode) {
+            self.manifold_simplify_semantic(a)
+        } else {
+            match mode {
+                "decimate" => self.manifold_simplify_decimate(a),
+                "remesh" => self.manifold_simplify_remesh(a),
+                "anisotropic" => self.manifold_simplify_anisotropic(a),
+                _ => Err(
+                    "Unknown simplify mode: expected 'decimate' (QEM), 'remesh' (isotropic), 'anisotropic', or 'semantic' (admitted transfer)"
+                        .into(),
+                ),
+            }
         }
     }
 
@@ -282,6 +295,62 @@ impl AssetHost<'_> {
         out_v.truncate(report.vertex_count);
         out_t.truncate(report.triangle_count);
         self.store_mesh(out_v, out_t)
+    }
+
+    fn manifold_simplify_semantic(&mut self, a: &Args) -> Result<Value, String> {
+        let request = production_simplify::parse_semantic_request(a)?;
+        let (vertices, triangles) = self.simplify_mesh_buffers(a)?;
+        let nv = vertices.len();
+        let nt = triangles.len();
+        production_simplify::validate_semantic_input(nv, nt, request.target_triangles)?;
+        let domain_tags = self.semantic_domain_tags(a, nv)?;
+        let locked = self.semantic_locks(a, nv)?;
+        let scratch = production_simplify::estimated_scratch_bytes(nv, nt)?;
+        self.charge((nv + nt) * 20, scratch)?;
+        let byte_limit = self
+            .limits
+            .total_resource_bytes
+            .saturating_sub(self.workspace.bytes);
+        let work_limit = self.limits.asset_work_units.saturating_sub(self.work);
+        let cancelled = self.cancel.load(std::sync::atomic::Ordering::Acquire);
+        let (out_v, out_t) = production_simplify::decimate_semantic_admitted(
+            &vertices,
+            &triangles,
+            request.target_triangles,
+            request.max_error,
+            &domain_tags,
+            &locked,
+            byte_limit,
+            work_limit,
+            cancelled,
+        )?;
+        self.store_mesh(out_v, out_t)
+    }
+
+    fn semantic_domain_tags(&self, a: &Args, vertex_count: usize) -> Result<Vec<u64>, String> {
+        match a.get("domains") {
+            None => Ok(vec![0; vertex_count]),
+            Some(value) if is_production_handle(value) => match self.workspace.get(value)? {
+                Artifact::Encoded(resource) => {
+                    production_simplify::decode_domain_bytes(&resource.bytes, vertex_count)
+                }
+                _ => Err("domains handle must be an encoded u64-per-vertex resource".into()),
+            },
+            Some(value) => production_simplify::parse_domain_list(value, vertex_count),
+        }
+    }
+
+    fn semantic_locks(&self, a: &Args, vertex_count: usize) -> Result<Vec<bool>, String> {
+        match a.get("locks") {
+            None => Ok(vec![false; vertex_count]),
+            Some(value) if is_production_handle(value) => match self.workspace.get(value)? {
+                Artifact::Encoded(resource) => {
+                    production_simplify::decode_lock_bytes(&resource.bytes, vertex_count)
+                }
+                _ => Err("locks handle must be an encoded per-vertex lock resource".into()),
+            },
+            Some(value) => production_simplify::parse_lock_list(value, vertex_count),
+        }
     }
 
     fn manifold_import_mesh(&mut self, a: &Args) -> Result<Value, String> {
@@ -2095,6 +2164,94 @@ mod tests {
         assert!(
             err.contains("positive definite") || err.contains("indefinite"),
             "expected positive-definite error, got {err}"
+        );
+    }
+
+    #[test]
+    fn test_manifold_simplify_semantic_argument_validation() {
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+
+        let mut missing = BTreeMap::new();
+        missing.insert("mesh".into(), cube.clone());
+        missing.insert("mode".into(), Value::String("semantic".into()));
+        let missing_err = host
+            .manifold_ext("hypermedia.manifold.simplify", &missing)
+            .expect_err("semantic requires target_triangles");
+        assert!(
+            missing_err.contains("Missing target_triangles"),
+            "got {missing_err}"
+        );
+
+        let mut unknown = BTreeMap::new();
+        unknown.insert("mesh".into(), cube.clone());
+        unknown.insert("target_triangles".into(), Value::U64(8));
+        unknown.insert("mode".into(), Value::String("not-a-mode".into()));
+        let unknown_err = host
+            .manifold_ext("hypermedia.manifold.simplify", &unknown)
+            .expect_err("unknown mode");
+        assert!(
+            unknown_err.contains("semantic"),
+            "help must list semantic, got {unknown_err}"
+        );
+
+        let empty = host
+            .store_mesh(Vec::new(), Vec::new())
+            .expect("store empty mesh");
+        let mut empty_args = BTreeMap::new();
+        empty_args.insert("mesh".into(), empty);
+        empty_args.insert("target_triangles".into(), Value::U64(4));
+        empty_args.insert("mode".into(), Value::String("semantic".into()));
+        let empty_err = host
+            .manifold_ext("hypermedia.manifold.simplify", &empty_args)
+            .expect_err("empty mesh is not success");
+        assert!(empty_err.contains("empty mesh"), "got {empty_err}");
+
+        let mut impossible = BTreeMap::new();
+        impossible.insert("mesh".into(), cube.clone());
+        impossible.insert("target_triangles".into(), Value::U64(13));
+        impossible.insert("mode".into(), Value::String("admitted".into()));
+        let impossible_err = host
+            .manifold_ext("hypermedia.manifold.simplify", &impossible)
+            .expect_err("impossible target is not success");
+        assert!(
+            impossible_err.contains("impossible target_triangles"),
+            "got {impossible_err}"
+        );
+
+        let mut domains = BTreeMap::new();
+        domains.insert("mesh".into(), cube);
+        domains.insert("target_triangles".into(), Value::U64(8));
+        domains.insert("mode".into(), Value::String("semantic".into()));
+        domains.insert("domains".into(), Value::List(vec![Value::U64(1)]));
+        let domain_err = host
+            .manifold_ext("hypermedia.manifold.simplify", &domains)
+            .expect_err("domain length must match vertices");
+        assert!(domain_err.contains("does not match"), "got {domain_err}");
+    }
+
+    #[test]
+    fn test_manifold_simplify_semantic_budget_exhaustion_is_error() {
+        let limits = ToolLimits {
+            asset_work_units: 1,
+            total_resource_bytes: 256,
+            ..ToolLimits::default()
+        };
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube);
+        args.insert("target_triangles".into(), Value::U64(8));
+        args.insert("mode".into(), Value::String("semantic".into()));
+        let err = host
+            .manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect_err("budget exhaustion is not a success mesh");
+        assert!(
+            err.contains("budget") || err.contains("capacity_exhausted") || err.contains("exceeds"),
+            "got {err}"
         );
     }
 
