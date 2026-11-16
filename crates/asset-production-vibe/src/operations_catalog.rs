@@ -95,7 +95,7 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.manifold.boolean_3d", "QualiaDB/computational_geometry/boolean_3",
      "Two closed 3D triangle manifolds + union|intersection|difference -> 3D manifold"),
     ("hypermedia.manifold.simplify", "QualiaDB/computational_geometry/decimate_qem",
-     "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic -> simplified 3D manifold (default decimate = QEM decimate_qem); anisotropic default per-vertex isotropic(local mean edge), optional target_edge or metric[6]"),
+     "3D triangle manifold + target_triangles + max_error + mode=decimate|remesh|anisotropic|semantic -> simplified 3D manifold (default decimate = QEM decimate_qem; semantic/admitted = decimate_semantic_admitted_3 + P07 CollapseTransfer); anisotropic default per-vertex isotropic(local mean edge), optional target_edge or metric[6]; semantic requires target_triangles, optional max_error/domains/locks"),
     ("hypermedia.manifold.import_mesh", "QualiaDB/render/assets/import_asset_with_normals",
      "Retained OBJ, STL, or GLB binary/ASCII input -> 3D triangle manifold handle"),
     ("hypermedia.manifold.project_dxf", "hypermedia/asset-production-vibe/manifold_ops",

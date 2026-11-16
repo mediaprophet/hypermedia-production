@@ -7,7 +7,7 @@ description = "Application-independent bounded Vibe adapters for shared asset pr
 
 [dependencies]
 qualia-geospatial = { path = "../../../qualiaDB/crates/qualia-geospatial" }
-qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "dc043329489a9ef541248497ff1628feda9f270d", default-features = false }
+qualia-core-db = { path = "../../../qualiaDB/crates/qualia-core-db", default-features = false }
 vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "dc043329489a9ef541248497ff1628feda9f270d" }
 vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "dc043329489a9ef541248497ff1628feda9f270d" }
 serde_json = "1.0"
