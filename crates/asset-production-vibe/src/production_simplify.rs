@@ -333,6 +333,13 @@ fn verify_decoded_matches_admission(decoded: MeshCounts, admitted: MeshCounts) -
     Ok(())
 }
 
+fn verify_sealed_container(sealed: &AdmittedSimplify) -> Result<(), String> {
+    if sealed.container_10d.is_empty() {
+        return Err("semantic simplify failed: invalid_input: empty sealed container_10d".into());
+    }
+    verify_decoded_matches_admission(sealed.decoded, sealed.admitted)
+}
+
 fn seal_admitted_10d(
     vertices: &[Point3],
     triangles: &[[u32; 3]],
@@ -533,13 +540,15 @@ pub(super) fn decimate_semantic_admitted_10d(
         return Err("semantic simplify failed: invalid_input: empty simplification output".into());
     }
     let (container_10d, admitted, decoded) = seal_admitted_10d(&out_vertices, &out_triangles, &report)?;
-    Ok(AdmittedSimplify {
+    let sealed = AdmittedSimplify {
         vertices: out_vertices,
         triangles: out_triangles,
         container_10d,
         admitted,
         decoded,
-    })
+    };
+    verify_sealed_container(&sealed)?;
+    Ok(sealed)
 }
 
 pub(super) fn decimate_semantic_admitted(
@@ -564,6 +573,7 @@ pub(super) fn decimate_semantic_admitted(
         work_limit,
         cancelled,
     )?;
+    verify_sealed_container(&sealed)?;
     Ok((sealed.vertices, sealed.triangles))
 }
 
@@ -791,6 +801,41 @@ mod tests {
         .unwrap_err();
         assert!(mismatch.contains("decode_10d_mesh"), "{mismatch}");
         assert!(mismatch.contains("unsatisfied_constraint"), "{mismatch}");
+
+        let empty_container = verify_sealed_container(&AdmittedSimplify {
+            vertices: vec![Point3::new(0.0, 0.0, 0.0)],
+            triangles: vec![[0, 0, 0]],
+            container_10d: Vec::new(),
+            admitted: MeshCounts {
+                vertices: 1,
+                faces: 1,
+            },
+            decoded: MeshCounts {
+                vertices: 1,
+                faces: 1,
+            },
+        })
+        .unwrap_err();
+        assert!(
+            empty_container.contains("empty sealed container_10d"),
+            "{empty_container}"
+        );
+
+        let sealed_mismatch = verify_sealed_container(&AdmittedSimplify {
+            vertices: vec![Point3::new(0.0, 0.0, 0.0); 8],
+            triangles: vec![[0, 1, 2]; 12],
+            container_10d: vec![1],
+            admitted: MeshCounts {
+                vertices: 8,
+                faces: 8,
+            },
+            decoded: MeshCounts {
+                vertices: 8,
+                faces: 12,
+            },
+        })
+        .unwrap_err();
+        assert!(sealed_mismatch.contains("unsatisfied_constraint"), "{sealed_mismatch}");
     }
 
     #[test]

@@ -68,7 +68,7 @@ optional = true
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "a326f829731b116aab634904c6850571b4cdf965"
+rev = "c0bddc9650b9265d1a5578c251af1ab12896601a"
 default-features = false
 
 [dev-dependencies.futures-lite]
@@ -87,7 +87,7 @@ version = "0.18"
 package = "etalon"
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "a326f829731b116aab634904c6850571b4cdf965"
+rev = "c0bddc9650b9265d1a5578c251af1ab12896601a"
 default-features = true
 
 [dev-dependencies.winit]
