@@ -205,11 +205,12 @@ impl AssetHost<'_> {
                 triangles.truncate(nt);
                 if caps {
                     append_extrusion_caps(&section, n, &mut triangles)?;
+                    reverse_inverted_solid(&vertices, &mut triangles);
                 }
                 self.store_mesh(vertices, triangles)
             }
             "hypermedia.manifold.revolve" | "hypermedia.mesh.revolve" => {
-                fields(a, &["points", "segments", "interpolation", "samples"])?;
+                fields(a, &["points", "segments", "interpolation", "samples", "caps"])?;
                 let points = points2(required(a, "points")?, 2)?;
                 if points.iter().any(|p| p[0] <= 0.) {
                     return Err("Revolve radii must be positive (surface only)".into());
@@ -218,6 +219,7 @@ impl AssetHost<'_> {
                 if segments < 3 {
                     return Err("Revolve needs at least 3 segments".into());
                 }
+                let caps = boolean(a, "caps", false)?;
                 let interpolation = match a.get("interpolation") {
                     Some(v) => text(v)?,
                     None => "linear",
@@ -262,13 +264,40 @@ impl AssetHost<'_> {
                         .map(|p| Point3::new(p[0], p[1], 0.))
                         .collect()
                 };
-                let nv = profile.len() * segments;
-                let nt = (profile.len() - 1) * segments * 2;
+                let n = profile.len();
+                let shell_v = n * segments;
+                let shell_t = (n - 1) * segments * 2;
+                let nv = shell_v + if caps { 2 } else { 0 };
+                let nt = shell_t + if caps { 2 * segments } else { 0 };
                 self.mesh_budget(nv, nt)?;
                 let mut v = vec![Point3::default(); nv];
                 let mut t = vec![[0; 3]; nt];
-                cg::parametric_cad::revolve_profile(&profile, segments, &mut v, &mut t)
-                    .map_err(|e| format!("Revolve: {e:?}"))?;
+                cg::parametric_cad::revolve_profile(
+                    &profile,
+                    segments,
+                    &mut v[..shell_v],
+                    &mut t[..shell_t],
+                )
+                .map_err(|e| format!("Revolve: {e:?}"))?;
+                if caps {
+                    v[shell_v] = Point3::new(0., profile[0].y, 0.);
+                    v[shell_v + 1] = Point3::new(0., profile[n - 1].y, 0.);
+                    let pole0 = shell_v as u32;
+                    let pole1 = (shell_v + 1) as u32;
+                    let mut ti = shell_t;
+                    for s in 0..segments {
+                        let ns = (s + 1) % segments;
+                        let a0 = (s * n) as u32;
+                        let b0 = (ns * n) as u32;
+                        t[ti] = [pole0, b0, a0];
+                        ti += 1;
+                        let a1 = (s * n + (n - 1)) as u32;
+                        let b1 = (ns * n + (n - 1)) as u32;
+                        t[ti] = [pole1, a1, b1];
+                        ti += 1;
+                    }
+                    reverse_inverted_solid(&v, &mut t);
+                }
                 self.store_mesh(v, t)
             }
             "hypermedia.manifold.compile_10d" | "hypermedia.mesh.encode" => {
@@ -360,6 +389,23 @@ impl AssetHost<'_> {
 }
 // Reuse Core's validated polygon triangulation for the same planar cap; this
 // avoids inventing an interior centroid whose rounding can create sliver cuts.
+fn reverse_inverted_solid(vertices: &[Point3], triangles: &mut [[u32; 3]]) {
+    let mut volume = 0.0;
+    for &[i, j, k] in triangles.iter() {
+        let a = vertices[i as usize];
+        let b = vertices[j as usize];
+        let c = vertices[k as usize];
+        volume += a.x * (b.y * c.z - b.z * c.y)
+            + a.y * (b.z * c.x - b.x * c.z)
+            + a.z * (b.x * c.y - b.y * c.x);
+    }
+    if volume < -1e-12 {
+        for t in triangles.iter_mut() {
+            t.swap(1, 2);
+        }
+    }
+}
+
 fn append_extrusion_caps(section: &[Point2], rings: usize, triangles: &mut Vec<[u32; 3]>) -> Result<(), String> {
     let cap = cg::triangulation_2::triangulate_polygon(section);
     if cap.len() != section.len() - 2 || !cg::triangulation_2::verify_triangulation(section, &cap) {

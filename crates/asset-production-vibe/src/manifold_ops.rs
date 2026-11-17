@@ -117,6 +117,8 @@ impl AssetHost<'_> {
                 drop(out_t);
                 let inputs = (va.len() + vb.len()).saturating_mul(std::mem::size_of::<Point3>())
                     .saturating_add((ta.len() + tb.len()).saturating_mul(std::mem::size_of::<[u32; 3]>()));
+                // Authoring leftover (production16: 256 MiB aggregate) must admit
+                // conforming scratch. Preview 64 MiB leftover cannot.
                 let bytes = self.limits.total_resource_bytes.saturating_sub(self.workspace.bytes).saturating_sub(inputs);
                 let work = usize::try_from(self.limits.asset_work_units.saturating_sub(self.work)).unwrap_or(usize::MAX);
                 let cancel = self.cancel;
@@ -151,15 +153,29 @@ impl AssetHost<'_> {
             Some(v) => text(v)?,
             None => "decimate",
         };
-        if production_simplify::is_semantic_mode(mode) {
-            self.manifold_simplify_semantic(a)
+        if production_simplify::is_optimize_mode(mode)
+            && a.get("domains").is_none()
+            && a.get("locks").is_none()
+        {
+            self.manifold_simplify_optimize_tessellation(a)
+        } else if production_simplify::is_semantic_mode(mode) {
+            match self.manifold_simplify_semantic(a) {
+                Ok(handle) => Ok(handle),
+                Err(err)
+                    if production_simplify::is_optimize_mode(mode)
+                        && production_simplify::is_admitted_tessellation_dead_end(&err) =>
+                {
+                    self.manifold_simplify_optimize_tessellation(a)
+                }
+                Err(err) => Err(err),
+            }
         } else {
             match mode {
                 "decimate" => self.manifold_simplify_decimate(a),
                 "remesh" => self.manifold_simplify_remesh(a),
                 "anisotropic" => self.manifold_simplify_anisotropic(a),
                 _ => Err(
-                    "Unknown simplify mode: expected 'decimate' (QEM), 'remesh' (isotropic), 'anisotropic', or 'semantic' (admitted transfer)"
+                    "Unknown simplify mode: expected 'decimate' (QEM), 'remesh' (isotropic), 'anisotropic', or 'semantic'/'optimize' (admitted transfer; tessellation cost, not model degradation)"
                         .into(),
                 ),
             }
@@ -216,6 +232,171 @@ impl AssetHost<'_> {
 
         out_v.truncate(report.vertices);
         out_t.truncate(report.faces);
+        self.store_mesh(out_v, out_t)
+    }
+
+    /// Runtime tessellation for `mode=optimize` after admitted search finds no
+    /// legal collapse: coplanar region merge, then QualiaDB semantic QEM
+    /// (`decimate_semantic_qem_3`) with domain/lock attributes. Source handle
+    /// is unchanged; a closed solid stays closed.
+    fn manifold_simplify_optimize_tessellation(&mut self, a: &Args) -> Result<Value, String> {
+        let target_triangles = integer(required(a, "target_triangles")?, "target_triangles")?;
+        if target_triangles < 4 || target_triangles > 200_000 {
+            return Err("target_triangles outside 4..=200000 range".into());
+        }
+        let max_error = match a.get("max_error") {
+            None => None,
+            Some(v) => {
+                let value = num(v)?;
+                if !value.is_finite() || value < 0.0 || value > 1e4 {
+                    return Err("max_error outside 0..=1e4 range".into());
+                }
+                Some(value)
+            }
+        };
+        let (mut vertices, mut triangles) = self.simplify_mesh_buffers(a)?;
+        let nv = vertices.len();
+        let nt = triangles.len();
+        if nt < 4 || nv < 3 {
+            return Err("Mesh has too few triangles or vertices for simplification".into());
+        }
+        let input_closed =
+            crate::boolean_conforming::closed_oriented(&triangles, vertices.len()).is_ok();
+        self.charge((nv + nt) * 20, nv * 96 + nt * 48)?;
+
+        if a.get("domains").is_none() && a.get("locks").is_none() {
+            let labels = vec![0u32; triangles.len()];
+            if let Ok(simplified) = cg::simplify_coplanar_regions(
+                &vertices,
+                &triangles,
+                &labels,
+                &cg::SimplifyOptions {
+                    use_exact_coplanarity: true,
+                    preserve_region_labels: false,
+                },
+            ) {
+                if simplified.triangles.len() >= 4
+                    && (!input_closed
+                        || crate::boolean_conforming::closed_oriented(
+                            &simplified.triangles,
+                            simplified.vertices.len(),
+                        )
+                        .is_ok())
+                {
+                    vertices = simplified.vertices;
+                    triangles = simplified.triangles;
+                }
+            }
+        }
+
+        let target_faces = target_triangles.min(triangles.len());
+        if a.get("domains").is_none()
+            && a.get("locks").is_none()
+            && triangles.len() > target_faces.saturating_mul(2)
+        {
+            let mean = mean_triangle_edge_length(&vertices, &triangles);
+            let target_edge =
+                (mean * (triangles.len() as f64 / target_faces.max(1) as f64).sqrt()).max(1e-6);
+            let iterations = 3u32;
+            let (cap_v, cap_t) =
+                cg::required_output_capacity(vertices.len(), triangles.len(), iterations);
+            let cap_v = cap_v.min(200_000);
+            let cap_t = cap_t.min(400_000);
+            self.mesh_budget(cap_v, cap_t)?;
+            let mut remesh_v = vec![Point3::default(); cap_v];
+            let mut remesh_t = vec![[0u32; 3]; cap_t];
+            if let Ok(report) = cg::isotropic_remesh(
+                &vertices,
+                &triangles,
+                RemeshOptions {
+                    target_edge_length: target_edge,
+                    iterations,
+                },
+                &mut remesh_v,
+                &mut remesh_t,
+            ) {
+                remesh_v.truncate(report.vertex_count);
+                remesh_t.truncate(report.triangle_count);
+                if remesh_t.len() >= 4
+                    && (!input_closed
+                        || crate::boolean_conforming::closed_oriented(
+                            &remesh_t,
+                            remesh_v.len(),
+                        )
+                        .is_ok())
+                {
+                    vertices = remesh_v;
+                    triangles = remesh_t;
+                }
+            }
+        }
+
+        let nv = vertices.len();
+        let nt = triangles.len();
+        let domain_tags = self.semantic_domain_tags(a, nv)?;
+        let locked = self.semantic_locks(a, nv)?;
+        let mut attributes = vec![cg::SemanticVertexAttributes::default(); nv];
+        for i in 0..nv {
+            attributes[i].subpart_tag = domain_tags[i] as u32;
+            attributes[i].cluster_border_locked = locked[i];
+        }
+        let target_faces = target_triangles.min(nt);
+        if target_faces >= nt {
+            if input_closed {
+                crate::boolean_conforming::closed_oriented(&triangles, vertices.len()).map_err(
+                    |e| format!("optimize must keep a closed, oriented solid: {e}"),
+                )?;
+            }
+            return self.store_mesh(vertices, triangles);
+        }
+
+        let mut out_v = vec![Point3::default(); nv];
+        let mut out_a = vec![cg::SemanticVertexAttributes::default(); nv];
+        let mut out_t = vec![[0u32; 3]; nt];
+        let report = cg::decimate_semantic_qem_3(
+            &vertices,
+            &attributes,
+            &triangles,
+            DecimateOptions {
+                target_faces,
+                max_error,
+            },
+            cg::SemanticDecimateWeights::default(),
+            &mut out_v,
+            &mut out_a,
+            &mut out_t,
+        )
+        .map_err(|e| format!("optimize semantic QEM failed: {e:?}"))?;
+        out_v.truncate(report.vertices);
+        out_t.truncate(report.faces);
+        if input_closed
+            && crate::boolean_conforming::closed_oriented(&out_t, out_v.len()).is_err()
+        {
+            let mut qem_v = vec![Point3::default(); nv];
+            let mut qem_t = vec![[0u32; 3]; nt];
+            let qem = cg::decimate_qem(
+                &vertices,
+                &triangles,
+                DecimateOptions {
+                    target_faces,
+                    max_error,
+                },
+                &mut qem_v,
+                &mut qem_t,
+            )
+            .map_err(|e| format!("optimize QEM fallback failed: {e:?}"))?;
+            qem_v.truncate(qem.vertices);
+            qem_t.truncate(qem.faces);
+            crate::boolean_conforming::closed_oriented(&qem_t, qem_v.len()).map_err(|e| {
+                format!("optimize must keep a closed, oriented solid: {e}")
+            })?;
+            return self.store_mesh(qem_v, qem_t);
+        }
+        if input_closed {
+            crate::boolean_conforming::closed_oriented(&out_t, out_v.len()).map_err(|e| {
+                format!("optimize must keep a closed, oriented solid: {e}")
+            })?;
+        }
         self.store_mesh(out_v, out_t)
     }
 
@@ -303,6 +484,8 @@ impl AssetHost<'_> {
         let nv = vertices.len();
         let nt = triangles.len();
         production_simplify::validate_semantic_input(nv, nt, request.target_triangles)?;
+        let input_closed =
+            crate::boolean_conforming::closed_oriented(&triangles, vertices.len()).is_ok();
         let domain_tags = self.semantic_domain_tags(a, nv)?;
         let locked = self.semantic_locks(a, nv)?;
         let scratch = production_simplify::estimated_scratch_bytes(nv, nt)?;
@@ -324,6 +507,11 @@ impl AssetHost<'_> {
             work_limit,
             cancelled,
         )?;
+        if input_closed {
+            crate::boolean_conforming::closed_oriented(&out_t, out_v.len()).map_err(|e| {
+                format!("optimize must keep a closed, oriented solid: {e}")
+            })?;
+        }
         self.store_mesh(out_v, out_t)
     }
 
@@ -2253,6 +2441,267 @@ mod tests {
             err.contains("budget") || err.contains("capacity_exhausted") || err.contains("exceeds"),
             "got {err}"
         );
+    }
+
+    #[test]
+    fn test_manifold_simplify_optimize_keeps_source_closed_solid() {
+        let limits = ToolLimits {
+            total_resource_bytes: 256 * 1024 * 1024,
+            ..ToolLimits::default()
+        };
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let cube = unit_cube_mesh(&mut host);
+        let source_counts = {
+            let Artifact::Mesh(mesh) = host.workspace.get(&cube).expect("source cube") else {
+                panic!("expected mesh");
+            };
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("source cube is closed");
+            (mesh.positions.len(), mesh.triangles.len())
+        };
+        let mut args = BTreeMap::new();
+        args.insert("mesh".into(), cube.clone());
+        args.insert("target_triangles".into(), Value::U64(8));
+        args.insert("mode".into(), Value::String("optimize".into()));
+        let optimised = host
+            .manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect("mode=optimize");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&cube).expect("source handle remains")
+            else {
+                panic!("expected mesh");
+            };
+            assert_eq!(mesh.positions.len(), source_counts.0);
+            assert_eq!(mesh.triangles.len(), source_counts.1);
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("source solid is unchanged");
+        }
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&optimised).expect("optimised mesh")
+            else {
+                panic!("expected mesh");
+            };
+            assert!(mesh.triangles.len() <= source_counts.1);
+            assert!(mesh.triangles.len() >= 4);
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("optimised mesh stays a closed oriented solid");
+        }
+        args.insert("mode".into(), Value::String("optimisation".into()));
+        host.manifold_ext("hypermedia.manifold.simplify", &args)
+            .expect("mode=optimisation is the same admitted path");
+    }
+
+    #[test]
+    fn test_manifold_revolve_caps_closed_solid_unions() {
+        let limits = ToolLimits {
+            total_resource_bytes: 256 * 1024 * 1024,
+            ..ToolLimits::default()
+        };
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let ring = |points: Vec<(f64, f64)>, segments: u64, caps: bool| {
+            let mut args = BTreeMap::new();
+            args.insert(
+                "points".into(),
+                Value::List(
+                    points
+                        .into_iter()
+                        .map(|(r, z)| Value::List(vec![Value::F64(r), Value::F64(z)]))
+                        .collect(),
+                ),
+            );
+            args.insert("segments".into(), Value::U64(segments));
+            args.insert("caps".into(), Value::Bool(caps));
+            args
+        };
+        let a = host
+            .invoke(
+                "hypermedia.manifold.revolve",
+                &Value::Record(ring(vec![(0.2, 0.0), (0.4, 0.5), (0.2, 1.0)], 12, true)),
+            )
+            .expect("capped revolve a");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&a).expect("a") else {
+                panic!("expected mesh");
+            };
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("capped revolve is a closed solid");
+        }
+        let b = translated_cube(&mut host, 0.35, 0.4, 0.0);
+        let mut union_args = BTreeMap::new();
+        union_args.insert("a".into(), a);
+        union_args.insert("b".into(), b);
+        union_args.insert("op".into(), Value::String("union".into()));
+        let union_h = host
+            .invoke("hypermedia.manifold.boolean_3d", &Value::Record(union_args))
+            .expect("capped revolve union with an offset solid");
+        let Artifact::Mesh(mesh) = host.workspace.get(&union_h).expect("union") else {
+            panic!("expected mesh");
+        };
+        crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+            .expect("union of a capped revolve and an offset solid stays closed");
+    }
+
+    #[test]
+    fn test_manifold_optimize_lathe_falls_back_to_qem() {
+        let limits = ToolLimits {
+            total_resource_bytes: 256 * 1024 * 1024,
+            ..ToolLimits::default()
+        };
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mut args = BTreeMap::new();
+        args.insert(
+            "points".into(),
+            Value::List(
+                [(0.2, 0.0), (0.4, 0.5), (0.2, 1.0)]
+                    .into_iter()
+                    .map(|(r, z)| Value::List(vec![Value::F64(r), Value::F64(z)]))
+                    .collect(),
+            ),
+        );
+        args.insert("segments".into(), Value::U64(16));
+        args.insert("caps".into(), Value::Bool(true));
+        let body = host
+            .invoke("hypermedia.manifold.revolve", &Value::Record(args))
+            .expect("capped lathe");
+        let source_counts = {
+            let Artifact::Mesh(mesh) = host.workspace.get(&body).expect("source lathe") else {
+                panic!("expected mesh");
+            };
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("capped lathe is closed");
+            (mesh.positions.len(), mesh.triangles.len())
+        };
+        let mut semantic = BTreeMap::new();
+        semantic.insert("mesh".into(), body.clone());
+        semantic.insert("target_triangles".into(), Value::U64(24));
+        semantic.insert("mode".into(), Value::String("semantic".into()));
+        host.manifold_ext("hypermedia.manifold.simplify", &semantic)
+            .expect_err("regular lathe has no legal admitted collapse");
+        let mut optimize = BTreeMap::new();
+        optimize.insert("mesh".into(), body.clone());
+        optimize.insert("target_triangles".into(), Value::U64(24));
+        optimize.insert("mode".into(), Value::String("optimize".into()));
+        let opt = host
+            .manifold_ext("hypermedia.manifold.simplify", &optimize)
+            .expect("optimize falls back to QEM on a lathe");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&body).expect("source remains") else {
+                panic!("expected mesh");
+            };
+            assert_eq!(mesh.positions.len(), source_counts.0);
+            assert_eq!(mesh.triangles.len(), source_counts.1);
+        }
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&opt).expect("optimised lathe") else {
+                panic!("expected mesh");
+            };
+            assert!(mesh.triangles.len() < source_counts.1);
+            assert!(mesh.triangles.len() >= 4);
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("QEM fallback of a closed lathe stays closed");
+        }
+    }
+
+    #[test]
+    fn test_manifold_capped_revolve_unions_overlapping_extrude() {
+        let limits = ToolLimits {
+            total_resource_bytes: 256 * 1024 * 1024,
+            asset_work_units: 500_000_000,
+            ..ToolLimits::default()
+        };
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mut revolve = BTreeMap::new();
+        revolve.insert(
+            "points".into(),
+            Value::List(
+                [(0.2, 0.0), (0.4, 0.5), (0.2, 1.0)]
+                    .into_iter()
+                    .map(|(r, z)| Value::List(vec![Value::F64(r), Value::F64(z)]))
+                    .collect(),
+            ),
+        );
+        revolve.insert("segments".into(), Value::U64(12));
+        revolve.insert("caps".into(), Value::Bool(true));
+        let body = host
+            .invoke(
+                "hypermedia.manifold.revolve",
+                &Value::Record(revolve),
+            )
+            .expect("capped revolve");
+        let mut circle = BTreeMap::new();
+        circle.insert("shape".into(), Value::String("circle".into()));
+        circle.insert("radius".into(), Value::F64(0.08));
+        circle.insert("segments".into(), Value::U64(12));
+        let profile = host
+            .invoke(
+                "hypermedia.locus.construct",
+                &Value::Record(circle),
+            )
+            .expect("circle");
+        let mut extrude = BTreeMap::new();
+        extrude.insert("profile".into(), profile);
+        extrude.insert(
+            "path".into(),
+            Value::List(vec![vec3(0.10, 0.5, 0.0), vec3(0.55, 0.5, 0.0)]),
+        );
+        extrude.insert("caps".into(), Value::Bool(true));
+        let limb = host
+            .invoke(
+                "hypermedia.manifold.extrude",
+                &Value::Record(extrude),
+            )
+            .expect("capped limb");
+        {
+            let Artifact::Mesh(mesh) = host.workspace.get(&limb).expect("limb") else {
+                panic!("expected mesh");
+            };
+            crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+                .expect("capped extrude is a closed solid");
+        }
+        let mut union_args = BTreeMap::new();
+        union_args.insert("a".into(), body);
+        union_args.insert("b".into(), limb);
+        union_args.insert("op".into(), Value::String("union".into()));
+        let union_h = host
+            .invoke("hypermedia.manifold.boolean_3d", &Value::Record(union_args))
+            .expect("overlapping capped extrude unions with the lathe");
+        let Artifact::Mesh(mesh) = host.workspace.get(&union_h).expect("union") else {
+            panic!("expected mesh");
+        };
+        crate::boolean_conforming::closed_oriented(&mesh.triangles, mesh.positions.len())
+            .expect("union of capped revolve and overlapping extrude stays closed");
+        let raw_tris = mesh.triangles.len();
+        let mut optimize = BTreeMap::new();
+        optimize.insert("mesh".into(), union_h.clone());
+        optimize.insert(
+            "target_triangles".into(),
+            Value::U64((raw_tris as u64 / 2).max(8)),
+        );
+        optimize.insert("mode".into(), Value::String("optimize".into()));
+        let opt = host
+            .manifold_ext("hypermedia.manifold.simplify", &optimize)
+            .expect("optimize the unioned solid");
+        {
+            let Artifact::Mesh(raw) = host.workspace.get(&union_h).expect("raw remains") else {
+                panic!("expected mesh");
+            };
+            assert_eq!(raw.triangles.len(), raw_tris);
+            crate::boolean_conforming::closed_oriented(&raw.triangles, raw.positions.len())
+                .expect("raw union is unchanged");
+        }
+        {
+            let Artifact::Mesh(opt_mesh) = host.workspace.get(&opt).expect("opt") else {
+                panic!("expected mesh");
+            };
+            assert!(opt_mesh.triangles.len() <= raw_tris);
+            assert!(opt_mesh.triangles.len() >= 4);
+            crate::boolean_conforming::closed_oriented(&opt_mesh.triangles, opt_mesh.positions.len())
+                .expect("optimised union stays a closed solid");
+        }
     }
 
     #[test]

@@ -1,5 +1,7 @@
 //! Admitted semantic decimate (`decimate_semantic_admitted_3`) + P07 `CollapseTransfer`.
-//! Geometric QEM (`mode=decimate`) stays in `manifold_ops`; this module is `mode=semantic|admitted`.
+//! Geometric QEM (`mode=decimate`) stays in `manifold_ops`; this module is
+//! `mode=semantic|admitted|optimize|optimisation`. Optimise is tessellation reduction
+//! for runtime cost; it must not open, invert, or replace the source solid.
 //! Successful admission compiles in-memory `.10d` and independently reads it with `decode_10d_mesh`.
 use crate::{fields, integer, list, num, required, Args};
 use qualia_core_db::render::assets::Mesh;
@@ -36,7 +38,17 @@ pub(super) const SEMANTIC_FIELDS: &[&str] = &[
 ];
 
 pub(super) fn is_semantic_mode(mode: &str) -> bool {
-    matches!(mode, "semantic" | "admitted")
+    matches!(mode, "semantic" | "admitted" | "optimize" | "optimisation")
+}
+
+pub(super) fn is_optimize_mode(mode: &str) -> bool {
+    matches!(mode, "optimize" | "optimisation")
+}
+
+/// Admitted search finished without a legal collapse. `mode=optimize` may then
+/// reduce tessellation with QEM; `mode=semantic` stays fail-closed.
+pub(super) fn is_admitted_tessellation_dead_end(err: &str) -> bool {
+    err.contains("WorkExhausted") || err.contains("EventCapacityExhausted")
 }
 
 #[derive(Debug)]
@@ -848,17 +860,33 @@ mod tests {
             .find(|op| op.0 == "hypermedia.manifold.simplify")
             .expect("simplify catalog row");
         assert!(catalog.2.contains("semantic"), "{}", catalog.2);
+        assert!(catalog.2.contains("optimize"), "{}", catalog.2);
         let spec = crate::ontology::resolve_morphism("hypermedia.manifold.simplify").expect("spec");
         assert!(spec.summary.contains("semantic"), "{}", spec.summary);
+        assert!(spec.summary.contains("optimize"), "{}", spec.summary);
         assert!(spec.arguments.contains("semantic"), "{}", spec.arguments);
+        assert!(spec.arguments.contains("optimize"), "{}", spec.arguments);
+        assert!(help.contains("optimize"), "{help}");
     }
 
     #[test]
     fn semantic_and_admitted_are_the_admitted_mode() {
         assert!(is_semantic_mode("semantic"));
         assert!(is_semantic_mode("admitted"));
+        assert!(is_semantic_mode("optimize"));
+        assert!(is_semantic_mode("optimisation"));
         assert!(!is_semantic_mode("decimate"));
         assert!(!is_semantic_mode("remesh"));
         assert!(!is_semantic_mode("anisotropic"));
+        assert!(is_optimize_mode("optimize"));
+        assert!(is_optimize_mode("optimisation"));
+        assert!(!is_optimize_mode("semantic"));
+        assert!(!is_optimize_mode("decimate"));
+        assert!(is_admitted_tessellation_dead_end(
+            "semantic simplify failed: capacity_exhausted: WorkExhausted"
+        ));
+        assert!(!is_admitted_tessellation_dead_end(
+            "semantic simplify failed: capacity_exhausted: scratch 90 exceeds byte budget 8"
+        ));
     }
 }

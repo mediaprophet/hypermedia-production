@@ -100,7 +100,12 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         teleology: "Lifts a 2D planar cross-section into a 3D structural beam, architectural molding, UI 3D badge, or mechanical part along a 3D spine.",
         units_and_frames: "Right-handed 3D Cartesian space in [-1e6, 1e6]; parallel-transported Frenet frames along Path3D; Euler characteristic V - E + F = 2 when convex & capped.",
         arguments: "profile: handle, path:[[x,y,z],...], caps=true (convex only)",
-        composable_with: &["hypermedia.manifold.compile_10d"],
+        composable_with: &[
+            "hypermedia.manifold.boolean_3d",
+            "hypermedia.manifold.simplify",
+            "hypermedia.manifold.compile_10d",
+            "hypermedia.manifold.compile_10d_pbr",
+        ],
         human_preview_affordance: "Compile to .10d via hypermedia.manifold.compile_10d and render a 2048x2048 contact sheet via `synth preview`.",
         abi_descriptor: morphism_func!(
             "extrude",
@@ -123,8 +128,13 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "Functor",
         teleology: "Generates axisymmetric 3D lathe geometry such as vessels, columns, lenses, dials, and turned mechanical components.",
         units_and_frames: "Radial profile (r > 0, height z) swept 2*pi radians in `segments` angular divisions.",
-        arguments: "points:[[positive_radius,height],...], segments=32, interpolation=linear|nurbs (optional NURBS profile densify via nurbs_eval then revolve_profile), samples=8",
-        composable_with: &["hypermedia.manifold.compile_10d"],
+        arguments: "points:[[positive_radius,height],...], segments=32, interpolation=linear|nurbs (optional NURBS profile densify via nurbs_eval then revolve_profile), samples=8, caps=false (true adds axial poles so the lathe is a closed solid for boolean_3d)",
+        composable_with: &[
+            "hypermedia.manifold.boolean_3d",
+            "hypermedia.manifold.simplify",
+            "hypermedia.manifold.compile_10d",
+            "hypermedia.manifold.compile_10d_pbr",
+        ],
         human_preview_affordance: "Compile to .10d via hypermedia.manifold.compile_10d and render via `synth preview`.",
         abi_descriptor: morphism_func!(
             "revolve",
