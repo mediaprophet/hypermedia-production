@@ -225,7 +225,7 @@ impl AssetHost<'_> {
         Ok(Value::Record(out))
     }
 
-    /// Blender ActionChannelbag NLA Strip Blending + Godot LensTweenTable evaluation.
+    /// ActionChannelbag NLA strip blending + Qualia LensTweenTable evaluation.
     pub(super) fn evaluate_nla_channelbag(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["strips", "eval_time"])?;
 

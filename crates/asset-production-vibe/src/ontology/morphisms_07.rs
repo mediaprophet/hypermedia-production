@@ -160,7 +160,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         domain: "(List<NlaChannelStrip>, EvalTimeSeconds)",
         codomain: "NlaEvalRecord{evaluated_value, active_strip_count, eval_time}",
         morphism_kind: "AlgebraicFold",
-        teleology: "Evaluates layered non-linear animation (`ActionChannelbag`) strips with Penner/Godot transition equations (`linear`, `sine`, `quad`, `cubic`, `expo`, `back`, `spring`) and replace/add/multiply blending.",
+        teleology: "Evaluates layered non-linear animation (`ActionChannelbag`) strips with Penner easing and Qualia LensTween transition equations (`linear`, `sine`, `quad`, `cubic`, `expo`, `back`, `spring`) and replace/add/multiply blending.",
         units_and_frames: "eval_time in seconds; evaluated_value in [f64; 3].",
         arguments: "strips:[{name, start_time:0.0, end_time:1.0, weight:1.0, blend_mode=replace|add|multiply, start_val:[x,y,z], end_val:[x,y,z], transition=linear|sine|quad|cubic|expo|back|spring}], eval_time:0.5",
         composable_with: &["hypermedia.kinetics.export_lottie", "hypermedia.kinetics.interpolate_motor_fti"],

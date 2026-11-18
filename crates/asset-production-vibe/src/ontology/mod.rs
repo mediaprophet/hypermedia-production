@@ -73,7 +73,7 @@ pub const CATEGORIES: &[CategoryDescriptor] = &[
         sub_id: 7,
         iri: "https://qualiadb.org/ontology/hypermedia/category#Kinetics",
         object_space: "TimebaseRational, TrajectoryCurve,KinematicChain, SceneGraph",
-        pubmorphism_purpose: "Rational frame-time lattices, keyframe/spring trajectories, skeletal rigs, FABRIK/CCD inverse kinematics, and Lottie/pose compilation",
+        pubmorphism_purpose: "Rational frame-time lattices, keyframe/spring trajectories, skeletal rigs, two-bone IK, XPBD islands, DirectSpace queries, funnel+ORCA navigation, NLA channelbags, and Lottie/pose compilation",
         replaces_legacy_terms: &["effectcraft", "timeline", "animation"],
     },
     CategoryDescriptor {
@@ -97,7 +97,7 @@ pub const CATEGORIES: &[CategoryDescriptor] = &[
         sub_id: 10,
         iri: "https://qualiadb.org/ontology/hypermedia/category#Geodesy",
         object_space: "HeightfieldTile, GeodesicPatch, MatterBrickM64",
-        pubmorphism_purpose: "Planetary/terrain elevation lattices, reversible sculpt/stamp/smooth brush morphisms, and .m64 matter brick compilation",
+        pubmorphism_purpose: "Planetary/terrain elevation lattices, reversible sculpt/stamp/smooth brush morphisms, .m64 matter brick compilation, and GIS bake (WGS84 / OSM vector transcode; DEM/STAC ingest later)",
         replaces_legacy_terms: &["terrain-craft", "world-sculpt"],
     },
     CategoryDescriptor {
