@@ -10,7 +10,7 @@ QualiaDB, Webizen AI Synth, Hypermedia-Production, and all Qualia-specific archi
 Full terms: [`LICENSE`](LICENSE), [`LICENSE-QUALIA`](LICENSE-QUALIA), and [Creative Commons Legal Code](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode).  
 Upstream historical code retains its respective MIT/Apache-2.0 attribution notices where applicable inside crate-local notice files.
 
-All participating AI agents and contributors must strictly honor this copyright, moral rights, and non-commercial attribution. Never replace root `LICENSE` or `Cargo.toml` license declarations with Apache-2.0 or MIT.
+All participating AI agents and contributors must strictly honor this copyright, moral rights (UDHR Article 27(2) / ICESCR Article 15(1)(c)), and non-commercial attribution. Never replace root `LICENSE` or `Cargo.toml` license declarations with Apache-2.0 or MIT. Never use the term `"sovereign"` or `"self-sovereign"` to describe human-centric authorship, personal custody, or licensing; always use human-rights agreement vocabulary (**human rights**, **human dignity**, **human agency**, **natural person**, **moral and material interests of the author**, **sanctuary / selfhood**, and **Permissive Commons**).
 
 ---
 
