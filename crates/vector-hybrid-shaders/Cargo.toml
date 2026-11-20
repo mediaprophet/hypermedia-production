@@ -55,7 +55,7 @@ test = false
 [dependencies.naga]
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "c0bddc9650b9265d1a5578c251af1ab12896601a"
+rev = "a8f12b3f769fe7c8f33c6b93fece6aa046f6db16"
 features = [
     "wgsl-in",
     "wgsl-out",
@@ -67,7 +67,7 @@ default-features = false
 [dev-dependencies.naga]
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "c0bddc9650b9265d1a5578c251af1ab12896601a"
+rev = "a8f12b3f769fe7c8f33c6b93fece6aa046f6db16"
 features = [
     "wgsl-in",
     "wgsl-out",
@@ -81,7 +81,7 @@ version = "=0.4.0"
 [build-dependencies.naga]
 version = "=0.0.2"
 git = "https://github.com/mediaprophet/etalon.git"
-rev = "c0bddc9650b9265d1a5578c251af1ab12896601a"
+rev = "a8f12b3f769fe7c8f33c6b93fece6aa046f6db16"
 features = [
     "wgsl-in",
     "wgsl-out",

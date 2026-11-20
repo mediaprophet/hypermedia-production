@@ -9,8 +9,8 @@ description = "Application-independent bounded Vibe adapters for shared asset pr
 [dependencies]
 qualia-geospatial = { path = "../../../qualiaDB/crates/qualia-geospatial" }
 qualia-core-db = { path = "../../../qualiaDB/crates/qualia-core-db", default-features = false }
-vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "dc043329489a9ef541248497ff1628feda9f270d" }
-vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "dc043329489a9ef541248497ff1628feda9f270d" }
+vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
+vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
 serde_json = "1.0"
 ciborium = "0.2.2"
 profile-authoring = { path = "../profile-authoring" }
@@ -68,7 +68,7 @@ kurbo = "0.13.1"
 peniko = "0.6"
 parley = { version = "0.12.0", default-features = false, features = ["std", "complex-scripts"] }
 ttf-parser = "0.25.1"
-qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "4ec9ab3dfb2eabf8b19af8c10bcf52c714c5c994" }
+qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
 png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"
@@ -76,4 +76,4 @@ blake3 = { version = "1.8", default-features = false }
 sha2 = "0.10"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-etalon = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "c0bddc9650b9265d1a5578c251af1ab12896601a" }
+etalon = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "a8f12b3f769fe7c8f33c6b93fece6aa046f6db16" }
