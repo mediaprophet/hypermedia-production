@@ -2,7 +2,7 @@
 name = "raster-blend-operators"
 version = "0.2.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 description = "Pure channel blend operators, HDRI operators, and W3C/PDF blend modes"
 
 [lib]

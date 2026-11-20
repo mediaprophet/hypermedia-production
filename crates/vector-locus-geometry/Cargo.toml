@@ -3,7 +3,7 @@ name = "vector-locus-geometry"
 description = "Categorical locus geometry: paths, anchors, live corners, homography perspective grids, gestures, and units"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

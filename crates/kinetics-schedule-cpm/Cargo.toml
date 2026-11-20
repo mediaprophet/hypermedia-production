@@ -3,7 +3,7 @@ name = "kinetics-schedule-cpm"
 description = "Project scheduling engine: CPM forward/backward passes, 8 constraint types, ANSI/EIA-748 EVM, resource leveling, Monte Carlo simulation, MSPDI XML/P6 XER interop, and change DAG"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

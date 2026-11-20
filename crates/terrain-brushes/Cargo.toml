@@ -3,7 +3,7 @@ name = "terrain-brushes"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.90"
-license = "MIT"
+license-file = "../../LICENSE"
 description = "Cold terrain tile brush previews with copy-on-write stroke deltas and reversible local history"
 
 [lints.rust]

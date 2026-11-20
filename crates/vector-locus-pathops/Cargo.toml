@@ -3,7 +3,7 @@ name = "vector-locus-pathops"
 description = "Categorical locus vector path operations: booleans, shape builder planar graph, distortion effects, 15 warp envelopes, and 3D revolution"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

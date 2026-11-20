@@ -3,7 +3,7 @@ name = "kinetics-continuum-multiphysics"
 description = "Categorical continuum multiphysics: finite element shape functions, sparse Cholesky/LDLT solvers, D3Q19 Lattice Boltzmann CFD, explicit dynamics, Delaunay meshing, and engineering deck interchange"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

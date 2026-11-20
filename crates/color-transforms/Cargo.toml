@@ -3,7 +3,7 @@ name = "color-transforms"
 version = "0.5.0"
 edition = "2024"
 rust-version = "1.95"
-license = "MIT"
+license-file = "../../LICENSE"
 description = "Color-space and transfer-function conversions"
 
 [dependencies]

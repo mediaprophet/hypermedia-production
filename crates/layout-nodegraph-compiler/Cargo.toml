@@ -3,7 +3,7 @@ name = "layout-nodegraph-compiler"
 description = "Pure-Rust typed dataflow node graph compiler with composite inlining, CSE deduplication, dead-code elimination, and unit-aware algebraic expression parser"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

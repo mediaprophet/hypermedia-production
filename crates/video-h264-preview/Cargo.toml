@@ -3,7 +3,7 @@ name = "video-h264-preview"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
-license = "MIT"
+license-file = "../../LICENSE"
 description = "Bounded MP4/MOV preview and timeline inspection adapter over H.264 and ProRes codecs"
 
 [dependencies]

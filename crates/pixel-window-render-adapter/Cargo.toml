@@ -24,7 +24,7 @@ description = "AnyRender WindowRenderer backed by the pixels crate"
 homepage = "https://github.com/dioxuslabs/anyrender"
 documentation = "https://docs.rs/pixels_window_renderer"
 readme = false
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 repository = "https://github.com/dioxuslabs/anyrender"
 
 [features]

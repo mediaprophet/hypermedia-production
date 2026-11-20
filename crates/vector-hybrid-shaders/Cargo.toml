@@ -31,7 +31,7 @@ categories = [
     "rendering",
     "graphics",
 ]
-license = "Apache-2.0 OR MIT"
+license-file = "../../LICENSE"
 repository = "https://github.com/linebender/vello"
 
 [package.metadata.docs.rs]

@@ -3,7 +3,7 @@ name = "vector-surface-brush"
 description = "Categorical surface brush engines: calligraphic, scatter, art spine warp, pattern, and bristle procedural brushes"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

@@ -3,7 +3,7 @@ name = "chronicle-broadcast-containers"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 description = "Categorical broadcast containers: Matroska/WebM (EBML), SMPTE 377M MXF (KLV), MPEG-2 Transport Stream (188-byte TS/PES), and SMPTE VC-3 Avid DNxHD/DNxHR"
 
 [dependencies]

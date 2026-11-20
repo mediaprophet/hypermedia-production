@@ -23,7 +23,7 @@ autobenches = false
 description = "Context for managing Etalon surfaces"
 homepage = "https://github.com/dioxuslabs/anyrender"
 readme = false
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 repository = "https://github.com/dioxuslabs/anyrender"
 
 [lib]

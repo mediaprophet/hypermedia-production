@@ -3,7 +3,7 @@ name = "chronicle-fiduciary-ledger"
 description = "Categorical fiduciary ledger: exact fixed-point multi-currency arithmetic, balanced double-entry journals, ASC 606 / IFRS 15 rev rec, asset depreciation, multi-entity consolidation, and hash-chained fiduciary audit trails"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

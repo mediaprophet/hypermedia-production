@@ -2,7 +2,8 @@
 name = "asset-production-vibe"
 version = "0.1.0"
 edition = "2021"
-license = "Apache-2.0"
+authors = ["Timothy Charles Holborn <timothy.holborn@gmail.com>"]
+license-file = "../../LICENSE"
 description = "Application-independent bounded Vibe adapters for shared asset production"
 
 [dependencies]

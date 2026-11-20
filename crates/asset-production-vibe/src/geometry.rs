@@ -316,7 +316,15 @@ impl AssetHost<'_> {
                 };
                 let bytes = qualia_core_db::render::compile_10d::compile_mesh_to_10d(mesh)
                     .map_err(|e| format!("10D encoding: {e:?}"))?;
-                self.encode("10d", bytes)
+                let centroid = mesh.centroid();
+                let upgraded = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+                    &bytes,
+                    "urn:hypermedia:manifold:10d",
+                    1,
+                    [0.0, 3.0, 2.0, centroid[0], centroid[1], centroid[2], 0.0, 1.0, 1.0, 0.5],
+                )
+                .unwrap_or(bytes);
+                self.encode("10d", upgraded)
             }
             _ => Err("Unknown geometry operation".into()),
         }

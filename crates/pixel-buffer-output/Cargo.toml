@@ -42,7 +42,7 @@ categories = [
     "graphics",
     "rendering",
 ]
-license = "MIT"
+license-file = "../../LICENSE"
 repository = "https://github.com/parasyte/pixels"
 
 [lib]

@@ -25,7 +25,7 @@ description = "Simple profiler scopes for etalon using timer queries"
 homepage = "https://github.com/Wumpf/wgpu-profiler"
 readme = "README.md"
 keywords = ["graphics"]
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 repository = "https://github.com/Wumpf/wgpu-profiler"
 
 [features]

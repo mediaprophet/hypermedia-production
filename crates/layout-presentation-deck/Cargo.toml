@@ -3,7 +3,7 @@ name = "layout-presentation-deck"
 description = "Categorical presentation deck engine with master/layout placeholder inheritance, shape morph correspondence matching, cubic Bézier path morph interpolation, click-sequence animation groups, and presentation show state machine"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

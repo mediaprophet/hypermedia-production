@@ -9,7 +9,9 @@ exclude = ["crates/audio-device-cpal"]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
-license = "MIT OR Apache-2.0"
+authors = ["Timothy Charles Holborn <timothy.holborn@gmail.com>"]
+license = "CC-BY-NC-ND-4.0"
+license-file = "LICENSE"
 
 [workspace.dependencies]
 serde = { version = "=1.0.229", features = ["derive"] }

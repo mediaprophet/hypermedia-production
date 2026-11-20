@@ -3,7 +3,7 @@ name = "locus-parametric-solver"
 description = "2D parametric sketch constraint solver (damped Gauss-Newton / LM), autoconstrain inference, expression evaluator, and MTEXT/single-stroke CAM typography"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]

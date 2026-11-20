@@ -24,7 +24,7 @@ description = "Vello backend for anyrender"
 homepage = "https://github.com/dioxuslabs/anyrender"
 documentation = "https://docs.rs/anyrender_vello"
 readme = false
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 repository = "https://github.com/dioxuslabs/anyrender"
 
 [features]

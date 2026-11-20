@@ -1224,6 +1224,14 @@ impl AssetHost<'_> {
             qualia_core_db::container_10d::attach_material_section(&sealed, &data.materials, &data.submeshes, (mesh.triangles.len() * 3) as u32)
                 .map_err(|e| format!("Imported material attachment failed: {e:?}"))?
         } else { sealed };
+        let centroid = mesh.centroid();
+        let sealed = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+            &sealed,
+            "urn:hypermedia:manifold:10d-pbr",
+            1,
+            [0.0, 3.0, 2.0, centroid[0], centroid[1], centroid[2], 0.0, 1.0, 1.0, 0.5],
+        )
+        .unwrap_or(sealed);
         let mut result = self.encode("10d", sealed)?;
         let mut textures = authored_textures;
         if let Some(data) = imported {

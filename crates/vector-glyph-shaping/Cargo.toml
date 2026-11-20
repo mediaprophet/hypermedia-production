@@ -3,7 +3,7 @@ name = "vector-glyph-shaping"
 description = "Categorical glyph shaping: OpenType features, UAX #9 BiDi run ordering, Knuth-Plass optimal line-breaking composer, hyphenation, and text layout"
 version = "0.1.0"
 edition = "2024"
-license = "MIT OR Apache-2.0"
+license-file = "../../LICENSE"
 rust-version = "1.95"
 
 [dependencies]
