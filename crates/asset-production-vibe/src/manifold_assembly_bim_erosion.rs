@@ -340,6 +340,25 @@ impl AssetHost<'_> {
             &compiled.ranges,
             (triangle_count * 3) as u32,
         ).map_err(|e| format!("Assembly material sealing failed: {e:?}"))?;
+        let entity_uri = format!("qualia://hypermedia/assembly/{title_str}");
+        bytes_10d = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+            &bytes_10d,
+            &entity_uri,
+            1,
+            [
+                compiled.mesh.centroid()[0],
+                compiled.mesh.centroid()[1],
+                compiled.mesh.centroid()[2],
+                1.0,
+                0.0,
+                0.55,
+                1.0,
+                0.5,
+                0.98,
+                1.0,
+            ],
+        )
+        .map_err(|e| format!("Holographic 10D v2 upgrade failed: {e:?}"))?;
         let container_10d = self.encode("10d", bytes_10d)?;
         let turntable_png = self.encode("png", turntable_bytes)?;
         let blueprint_svg = self.encode("svg", blueprint_bytes)?;
