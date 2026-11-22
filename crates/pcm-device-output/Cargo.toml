@@ -7,4 +7,4 @@ description = "Bounded source-bound PCM output through the controlled native CPA
 
 [dependencies]
 cpal = { path = "../audio-device-cpal" }
-qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9", default-features = false }
+qualia-core-db = { git = "https://github.com/mediaprophet/$174db719383a7e9d743862458442d9a45c9a16c35", default-features = false }

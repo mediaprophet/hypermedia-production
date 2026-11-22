@@ -334,13 +334,20 @@ impl AssetHost<'_> {
         let mut sorted_mats = compiled.materials.clone();
         sorted_mats.sort_by_key(|m| m.id);
         sorted_mats.dedup_by_key(|m| m.id);
+        let slug: String = title_str
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.') { c } else { '_' })
+            .collect();
+        let entity_uri = format!(
+            "qualia://hypermedia/assembly/{}",
+            if slug.is_empty() { "assembly" } else { &slug }
+        );
         bytes_10d = attach_material_section(
             &bytes_10d,
             &sorted_mats,
             &compiled.ranges,
             (triangle_count * 3) as u32,
         ).map_err(|e| format!("Assembly material sealing failed: {e:?}"))?;
-        let entity_uri = format!("qualia://hypermedia/assembly/{title_str}");
         bytes_10d = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
             &bytes_10d,
             &entity_uri,

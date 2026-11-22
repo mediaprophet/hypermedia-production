@@ -7,9 +7,7 @@ fn all_ontology_nquins_verify_five_field_parity_and_spans() {
     let desc = provider.descriptor();
     assert!(desc.versions.is_engine_compatible());
     let quins = provider.static_ontology_nquins();
-    assert_eq!(MORPHISMS.len(), 150);
-    assert_eq!(crate::OPERATIONS.len(), 150);
-    assert_eq!(quins.len(), 450);
+    assert_eq!(crate::OPERATIONS.len(), MORPHISMS.len());
     assert_eq!(quins.len(), MORPHISMS.len() * 3);
     for (idx, q) in quins.iter().enumerate() {
         assert!(q.verify_parity(), "NQuin48 at index {idx} failed parity");

@@ -36,6 +36,7 @@ pub mod portable_scaffold;
 mod rig_ontology_continuum_frustum;
 pub mod corpus_values;
 pub mod joint_rom;
+mod morphogenesis_and_wave09;
 pub mod rule_pack;
 pub mod species_spec;
 #[cfg(test)]
@@ -863,8 +864,7 @@ mod tests {
 
     #[test]
     fn test_calibrate_biological_subject_and_mobility_fracture_risk_dispatch() {
-        assert_eq!(OPERATIONS.len(), 150);
-        assert_eq!(ontology::MORPHISMS.len(), 150);
+        assert_eq!(OPERATIONS.len(), ontology::MORPHISMS.len());
 
         let cancel = AtomicBool::new(false);
         let limits = ToolLimits::default();

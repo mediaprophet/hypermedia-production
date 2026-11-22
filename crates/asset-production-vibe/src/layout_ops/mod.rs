@@ -5,7 +5,7 @@
 
 mod box_theme;
 mod sheet_render;
-mod label_outline;
+pub(crate) mod label_outline;
 
 use crate::geometry::color;
 use crate::*;

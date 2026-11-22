@@ -854,6 +854,7 @@ impl AssetHost<'_> {
             a,
             &[
                 "mesh",
+                "entity_iri",
                 "albedo",
                 "source_10d",
                 "tangents",
@@ -1216,22 +1217,35 @@ impl AssetHost<'_> {
         } else {
             bytes
         };
+        let entity_iri = crate::asset_entity_iri(a.get("entity_iri"), &sealed)?;
+        let entity_hash = qualia_core_db::q_hash(&entity_iri);
         let sealed = if let Some(mat) = authored_material {
-            let range = qualia_core_db::container_10d::SubmeshRange { first_index: 0, index_count: (mesh.triangles.len() * 3) as u32, material_id: mat.id, semantic_id: 0 };
+            let range = qualia_core_db::container_10d::SubmeshRange {
+                first_index: 0,
+                index_count: (mesh.triangles.len() * 3) as u32,
+                material_id: mat.id,
+                semantic_id: entity_hash,
+            };
             qualia_core_db::container_10d::attach_material_section(&sealed, &[mat], &[range], (mesh.triangles.len() * 3) as u32)
                 .map_err(|e| format!("Material attachment failed: {e:?}"))?
         } else if let Some(data) = imported.as_ref().filter(|v| !v.materials.is_empty()) {
-            qualia_core_db::container_10d::attach_material_section(&sealed, &data.materials, &data.submeshes, (mesh.triangles.len() * 3) as u32)
+            let mut ranges = data.submeshes.clone();
+            for range in &mut ranges {
+                if range.semantic_id == 0 {
+                    range.semantic_id = entity_hash;
+                }
+            }
+            qualia_core_db::container_10d::attach_material_section(&sealed, &data.materials, &ranges, (mesh.triangles.len() * 3) as u32)
                 .map_err(|e| format!("Imported material attachment failed: {e:?}"))?
         } else { sealed };
         let centroid = mesh.centroid();
         let sealed = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
             &sealed,
-            "urn:hypermedia:manifold:10d-pbr",
+            &entity_iri,
             1,
             [0.0, 3.0, 2.0, centroid[0], centroid[1], centroid[2], 0.0, 1.0, 1.0, 0.5],
         )
-        .unwrap_or(sealed);
+        .map_err(|e| format!("10D PBR semantic sealing: {e:?}"))?;
         let mut result = self.encode("10d", sealed)?;
         let mut textures = authored_textures;
         if let Some(data) = imported {

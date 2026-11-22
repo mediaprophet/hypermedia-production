@@ -11,6 +11,8 @@
 
 mod fields_instances;
 mod sdf_botany;
+mod sdf_brick_v2;
+mod triangle_field;
 
 use crate::*;
 use qualia_core_db::render::assets::Mesh;
@@ -69,96 +71,6 @@ pub(super) fn p_normalize(a: [f32; 3]) -> [f32; 3] {
     }
 }
 
-/// Computes the exact closest point on a 3D triangle to a query point P
-/// using Voronoi feature regions (Ericson RTCD algorithm).
-pub(super) fn closest_point_on_triangle(
-    p: [f32; 3],
-    a: [f32; 3],
-    b: [f32; 3],
-    c: [f32; 3],
-) -> [f32; 3] {
-    let ab = p_sub(b, a);
-    let ac = p_sub(c, a);
-    let ap = p_sub(p, a);
-
-    let d1 = p_dot(ab, ap);
-    let d2 = p_dot(ac, ap);
-    if d1 <= 0.0 && d2 <= 0.0 {
-        return a;
-    }
-
-    let bp = p_sub(p, b);
-    let d3 = p_dot(ab, bp);
-    let d4 = p_dot(ac, bp);
-    if d3 >= 0.0 && d4 <= d3 {
-        return b;
-    }
-
-    let vc = d1 * d4 - d3 * d2;
-    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
-        let v = d1 / (d1 - d3);
-        return p_add(a, p_scale(ab, v));
-    }
-
-    let cp = p_sub(p, c);
-    let d5 = p_dot(ab, cp);
-    let d6 = p_dot(ac, cp);
-    if d6 >= 0.0 && d5 <= d6 {
-        return c;
-    }
-
-    let vb = d5 * d2 - d1 * d6;
-    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
-        let w = d2 / (d2 - d6);
-        return p_add(a, p_scale(ac, w));
-    }
-
-    let va = d3 * d6 - d5 * d4;
-    if va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0 {
-        let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-        return p_add(b, p_scale(p_sub(c, b), w));
-    }
-
-    let denom = 1.0 / (va + vb + vc);
-    let v = vb * denom;
-    let w = vc * denom;
-    p_add(a, p_add(p_scale(ab, v), p_scale(ac, w)))
-}
-
-/// Möller-Trumbore ray-triangle intersection test returning true if ray (origin, dir) intersects.
-pub(super) fn ray_intersects_triangle(
-    orig: [f32; 3],
-    dir: [f32; 3],
-    a: [f32; 3],
-    b: [f32; 3],
-    c: [f32; 3],
-) -> bool {
-    let edge1 = p_sub(b, a);
-    let edge2 = p_sub(c, a);
-    let h = p_cross(dir, edge2);
-    let a_det = p_dot(edge1, h);
-
-    if a_det.abs() < 1e-8 {
-        return false;
-    }
-
-    let f = 1.0 / a_det;
-    let s = p_sub(orig, a);
-    let u = f * p_dot(s, h);
-    if !(0.0..=1.0).contains(&u) {
-        return false;
-    }
-
-    let q = p_cross(s, edge1);
-    let v = f * p_dot(dir, q);
-    if v < 0.0 || u + v > 1.0 {
-        return false;
-    }
-
-    let t = f * p_dot(edge2, q);
-    t > 1e-5
-}
-
 // ── AssetHost Extension Implementation ──────────────────────────────────────
 
 impl AssetHost<'_> {
@@ -172,6 +84,10 @@ impl AssetHost<'_> {
             "hypermedia.manifold.mesh_to_sdf_brick"
             | "manifold.mesh_to_sdf_brick"
             | "synth.manifold.mesh_to_sdf_brick" => self.manifold_mesh_to_sdf_brick(a),
+
+            "hypermedia.manifold.seal_sdf_brick_10d" => self.seal_sdf_brick_10d(a),
+
+            "hypermedia.manifold.fit_holographic_v2" => self.fit_holographic_v2(a),
 
             "hypermedia.manifold.sdf_brick_to_mesh"
             | "manifold.sdf_brick_to_mesh"
@@ -237,14 +153,7 @@ impl AssetHost<'_> {
     pub(super) fn manifold_mesh_to_sdf_brick(&mut self, a: &Args) -> Result<Value, String> {
         fields(a, &["mesh", "resolution", "padding"])?;
 
-        let mesh = {
-            let Artifact::Mesh(m) = self.workspace.get(required(a, "mesh")?)? else {
-                return Err("Expected mesh handle for 'mesh'".into());
-            };
-            m.clone()
-        };
-
-        let resolution = count(a, "resolution", 16, 32)?;
+        let resolution = count(a, "resolution", 16, 128)?;
         if resolution < 8 {
             return Err("resolution must be at least 8".into());
         }
@@ -256,10 +165,24 @@ impl AssetHost<'_> {
         let pad_f = padding as f32;
 
         let total_voxels = resolution * resolution * resolution;
-        self.charge(
-            total_voxels * (mesh.triangles.len().max(1) * 2 + 10),
-            total_voxels * 4 + 4096,
-        )?;
+        let mesh_value = required(a, "mesh")?;
+        let triangle_count = match self.workspace.get(mesh_value)? {
+            Artifact::Mesh(mesh) => mesh.triangles.len(),
+            _ => return Err("Expected mesh handle for 'mesh'".into()),
+        };
+        let scratch = (total_voxels * 4 + 36)
+            .saturating_add(triangle_count.saturating_mul(triangle_field::SCRATCH_PER_TRIANGLE));
+        if total_voxels * 4 + 36 > self.limits.resource_bytes {
+            return Err("Dense SDF exceeds the resource byte limit".into());
+        }
+        self.charge(triangle_count.saturating_mul(32), scratch)?;
+        let Artifact::Mesh(mesh) = self.workspace.get(mesh_value)? else {
+            return Err("Expected mesh handle for 'mesh'".into());
+        };
+        let field = triangle_field::TriangleField::build(mesh)?;
+        let remaining = usize::try_from(self.limits.asset_work_units.saturating_sub(self.work))
+            .unwrap_or(usize::MAX);
+        let mut budget = triangle_field::SamplingBudget { remaining, cancel: self.cancel };
 
         let origin = [
             mesh.min[0] - pad_f,
@@ -284,8 +207,6 @@ impl AssetHost<'_> {
             span[2] / res_denom,
         ];
 
-        let ray_dir = p_normalize([1.0, 1.41421356e-4, 2.71828182e-4]);
-
         let mut bytes = Vec::with_capacity(36 + total_voxels * 4);
         bytes.extend_from_slice(SDF_BRICK_MAGIC);
         bytes.extend_from_slice(&(resolution as u32).to_le_bytes());
@@ -296,53 +217,22 @@ impl AssetHost<'_> {
         bytes.extend_from_slice(&voxel_size[1].to_le_bytes());
         bytes.extend_from_slice(&voxel_size[2].to_le_bytes());
 
-        // Evaluate signed distance for each grid node in Morton/row-major ordering (iz, iy, ix)
-        for iz in 0..resolution {
-            let pz = origin[2] + (iz as f32) * voxel_size[2];
-            for iy in 0..resolution {
-                let py = origin[1] + (iy as f32) * voxel_size[1];
-                for ix in 0..resolution {
-                    let px = origin[0] + (ix as f32) * voxel_size[0];
-                    let p = [px, py, pz];
-
-                    if mesh.triangles.is_empty() {
-                        bytes.extend_from_slice(&1.0f32.to_le_bytes());
-                        continue;
+        let result = (|| -> Result<(), String> {
+            for iz in 0..resolution {
+                for iy in 0..resolution {
+                    for ix in 0..resolution {
+                        let indices = [ix, iy, iz];
+                        let point = std::array::from_fn(|axis| {
+                            origin[axis] + indices[axis] as f32 * voxel_size[axis]
+                        });
+                        bytes.extend_from_slice(&field.distance(point, &mut budget)?.to_le_bytes());
                     }
-
-                    let mut min_dist_sq = f32::INFINITY;
-                    let mut intersections = 0usize;
-
-                    for tri in &mesh.triangles {
-                        let i0 = tri[0] as usize;
-                        let i1 = tri[1] as usize;
-                        let i2 = tri[2] as usize;
-                        if i0 < mesh.positions.len()
-                            && i1 < mesh.positions.len()
-                            && i2 < mesh.positions.len()
-                        {
-                            let a_pt = mesh.positions[i0];
-                            let b_pt = mesh.positions[i1];
-                            let c_pt = mesh.positions[i2];
-
-                            let cp = closest_point_on_triangle(p, a_pt, b_pt, c_pt);
-                            let d2 = p_len_sq(p_sub(p, cp));
-                            if d2 < min_dist_sq {
-                                min_dist_sq = d2;
-                            }
-
-                            if ray_intersects_triangle(p, ray_dir, a_pt, b_pt, c_pt) {
-                                intersections += 1;
-                            }
-                        }
-                    }
-
-                    let dist = min_dist_sq.sqrt();
-                    let signed_dist = if intersections % 2 == 1 { -dist } else { dist };
-                    bytes.extend_from_slice(&signed_dist.to_le_bytes());
                 }
             }
-        }
+            Ok(())
+        })();
+        self.charge(remaining - budget.remaining, 0)?;
+        result?;
 
         self.encode("sdf", bytes)
     }
@@ -399,6 +289,37 @@ mod tests {
         ];
         host.store_mesh_positions(positions, triangles)
             .expect("store test cube")
+    }
+
+    #[test]
+    fn mesh_seals_local_refinement_and_resolves_both_iris() {
+        use qualia_core_db::container_10d::sdf_brick_section::read_container_sdfb;
+
+        let limits = ToolLimits::default();
+        let cancel = AtomicBool::new(false);
+        let mut host = make_test_host(&limits, &cancel, &[]);
+        let mesh = store_test_cube(&mut host);
+        let point = |p: [f64; 3]| Value::List(p.into_iter().map(Value::F64).collect());
+        let args = BTreeMap::from([
+            ("mesh".into(), mesh),
+            ("resolution".into(), Value::U64(16)),
+            ("wall_iri".into(), Value::String("urn:test:cube-wall".into())),
+            ("lumen_iri".into(), Value::String("urn:test:cube-lumen".into())),
+            (
+                "refinement_bounds".into(),
+                Value::List(vec![point([0.5, -0.2, -0.2]), point([1.1, 0.2, 0.2])]),
+            ),
+        ]);
+        let result = host.manifold_fields_sdf_op("hypermedia.manifold.seal_sdf_brick_10d", &args).unwrap();
+        let result = record(&result).unwrap();
+        let asset = host.workspace.encoded(&result["asset"]).unwrap();
+        let view = read_container_sdfb(&asset.bytes).unwrap().unwrap();
+        assert!(view.bricks().any(|brick| brick.key().refinement_level == 0));
+        assert!(view.bricks().any(|brick| brick.key().refinement_level == 1));
+        assert!(view.bricks().all(|brick| {
+            brick.wall_semantic_id() == qualia_core_db::q_hash("urn:test:cube-wall")
+                && brick.lumen_semantic_id() == qualia_core_db::q_hash("urn:test:cube-lumen")
+        }));
     }
 
     #[test]

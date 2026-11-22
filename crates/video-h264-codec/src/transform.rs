@@ -124,6 +124,7 @@ pub fn idct4_add(d: &[i32; 16], dst: &mut [u8], stride: usize) {
 }
 
 /// DC-only shortcut: all AC coefficients zero.
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn idct4_dc_add(dc: i32, dst: &mut [u8], stride: usize) {
     let v = (dc + 32) >> 6;
     for i in 0..4 {

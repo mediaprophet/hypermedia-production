@@ -301,7 +301,7 @@ impl AssetHost<'_> {
                 self.store_mesh(v, t)
             }
             "hypermedia.manifold.compile_10d" | "hypermedia.mesh.encode" => {
-                fields(a, &["mesh"])?;
+                fields(a, &["mesh", "entity_iri"])?;
                 let index = integer(required(record(required(a, "mesh")?)?, "handle")?, "handle")?;
                 if self.workspace.imported.get(index).is_some_and(Option::is_some) {
                     return self.manifold_ext("hypermedia.manifold.compile_10d_pbr", a);
@@ -316,14 +316,15 @@ impl AssetHost<'_> {
                 };
                 let bytes = qualia_core_db::render::compile_10d::compile_mesh_to_10d(mesh)
                     .map_err(|e| format!("10D encoding: {e:?}"))?;
+                let entity_iri = crate::asset_entity_iri(a.get("entity_iri"), &bytes)?;
                 let centroid = mesh.centroid();
                 let upgraded = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
                     &bytes,
-                    "urn:hypermedia:manifold:10d",
+                    &entity_iri,
                     1,
                     [0.0, 3.0, 2.0, centroid[0], centroid[1], centroid[2], 0.0, 1.0, 1.0, 0.5],
                 )
-                .unwrap_or(bytes);
+                .map_err(|e| format!("10D semantic sealing: {e:?}"))?;
                 self.encode("10d", upgraded)
             }
             _ => Err("Unknown geometry operation".into()),

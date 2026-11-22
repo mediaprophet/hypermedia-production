@@ -1,0 +1,132 @@
+//! WP-27 production morphism descriptors.
+
+use super::{AgenticMorphismSpec, DEFAULT_ENVELOPE, DEFAULT_PARAMS};
+use vibescript_abi::{DeterminismGuarantee, EffectSet, FuncDescriptor, PrimitiveKind,
+    ReversibilityKind, StableFuncId};
+
+pub(super) const BATCH: &[AgenticMorphismSpec] = &[
+    AgenticMorphismSpec {
+        id: "hypermedia.physics.homogenize_multiphase_and_cartoon_kinetics",
+        aliases: &[],
+        category: "physics",
+        morphism: "homogenize_multiphase_and_cartoon_kinetics",
+        owner: "QualiaDB/specialized_libs/physics_simulation",
+        summary: "Evaluate bounded multiphase homogenization or stylized kinetics and seal the results in Q42.",
+        domain: "ConstituentPhases | CartoonKinematicState",
+        codomain: "{result: PhysicsRecord, receipt: Encoded{Q42}}",
+        morphism_kind: "Functor",
+        teleology: "Material mixtures and stylized motions can share reproducible, queryable physical parameters.",
+        units_and_frames: "SI units and radians. Fractions and reflectance in [0, 1]. Positive vertical force uses +Z.",
+        arguments: "task, parameters. Tasks: cartoon_wafer_floor, cartoon_anharmonic_step, cartoon_apex_aerodynamics, voigt_reuss_hill, drucker_prager, bachmann_wetting, kubelka_munk_pigment, crim_permittivity, biot_velocities, kozeny_carman, exner_sediment, van_genuchten.",
+        composable_with: &[],
+        human_preview_affordance: "Inspect the physical properties, resulting state and Q42 receipt.",
+        abi_descriptor: morphism_func!(
+            "homogenize_multiphase_and_cartoon_kinetics",
+            "https://qualiadb.org/ext/hypermedia/physics#homogenize_multiphase_and_cartoon_kinetics",
+            22, 249, "(PhysicsTask, Parameters) -> (PhysicsRecord, EncodedQ42)", 163
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.topology.harbour_gtop_geometry_graphs",
+        aliases: &[],
+        category: "topology",
+        morphism: "harbour_gtop_geometry_graphs",
+        owner: "QualiaDB/topology",
+        summary: "Seal an anchored multi-graph GTOP complex, apply bounded deltas, and query cross-graph cell hops.",
+        domain: "AttributedMesh | DenseFieldLattice",
+        codomain: "{gtop: Encoded{GTOP}, cbld: Encoded{CBLD}, graphs, cell_hops}",
+        morphism_kind: "Functor",
+        teleology: "Seal an anchored multi-graph GTOP complex, apply bounded deltas, and query cross-graph cell hops.",
+        units_and_frames: "Anchor indices refer to the supplied cell complex.",
+        arguments: "source, geometry_iri, metric_regime, graphs?, evidence?, mutations?, active_graph_slot?, hops?",
+        composable_with: &[],
+        human_preview_affordance: "Inspect the result and verify the input evidence or artifact.",
+        abi_descriptor: morphism_func!(
+            "harbour_gtop_geometry_graphs", "https://qualiadb.org/ext/qualia/topology#harbour_gtop_geometry_graphs", 23, 248,
+            "(AttributedMesh | DenseFieldLattice) -> {gtop: Encoded{GTOP}, cbld: Encoded{CBLD}, graphs, cell_hops}", 164
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.inference.transcode_p64_ternary_and_sieve",
+        aliases: &[],
+        category: "inference",
+        morphism: "transcode_p64_ternary_and_sieve",
+        owner: "QualiaDB/q42/p64_weight + inference/ternary",
+        summary: "Quantize inline or retained FFN weights and losslessly rebake a ternary tensor into the GPU two-bit layout.",
+        domain: "RetainedSafetensors | P64 | TernaryTensor | NumericWeights",
+        codomain: "P64OrTernaryResult{p64?, tensor?, receipt: Encoded{Q42}}",
+        morphism_kind: "Functor",
+        teleology: "Quantize inline or retained FFN weights and losslessly rebake a ternary tensor into the GPU two-bit layout.",
+        units_and_frames: "FP32 scale and exact trit bits.",
+        arguments: "op, parameters. Ops: quantize_ternary, transcode_safetensors, rebake_tensor_2bit, sieve_nquin.",
+        composable_with: &[],
+        human_preview_affordance: "Inspect the result and verify the input evidence or artifact.",
+        abi_descriptor: morphism_func!(
+            "transcode_p64_ternary_and_sieve", "https://qualiadb.org/ext/qualia/inference#transcode_p64_ternary_and_sieve", 18, 251,
+            "(RetainedSafetensors | P64 | TernaryTensor | NumericWeights) -> P64OrTernaryResult{p64?, tensor?, receipt: Encoded{Q42}}", 165
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.geometry.advanced_cg_arrangements_and_meshing",
+        aliases: &[],
+        category: "geometry",
+        morphism: "advanced_cg_arrangements_and_meshing",
+        owner: "QualiaDB/specialized_libs/computational_geometry",
+        summary: "Run advancing-front refinement, 3D co-refinement and arrangements, or FEM boundary certification.",
+        domain: "PlanarProfile | AttributedMesh | TetConnectivity",
+        codomain: "RefinedMesh | ArrangementRecord | FemBoundaryCertificate",
+        morphism_kind: "Functor",
+        teleology: "Prepare geometry and finite element boundaries from supplied source meshes.",
+        units_and_frames: "Target size uses source coordinates. Tetrahedron indices refer to the supplied vertex array.",
+        arguments: "kernel, source, parameters. Kernels: advancing_front_2d, advancing_front_3d, corefine_weiler_3d, fem_boundary_cert, snap_round_3d, balanced_octree_hex_tet, tet_quality_sliver_exude, nary_boolean_csg_section, kirkpatrick_point_location.",
+        composable_with: &[],
+        human_preview_affordance: "Inspect the generated mesh, arrangement topology or boundary certificate.",
+        abi_descriptor: morphism_func!(
+            "advanced_cg_arrangements_and_meshing", "https://qualiadb.org/ext/qualia/geometry#advanced_cg_arrangements_and_meshing",
+            26, 250, "(GeometryKernel, Source, Parameters) -> GeometryResult", 166
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.twin.evaluate_ethogram_and_entity_affordance",
+        aliases: &[],
+        category: "twin",
+        morphism: "evaluate_ethogram_and_entity_affordance",
+        owner: "QualiaDB/entity_view",
+        summary: "Evaluate an authored stimulus or intent and project the resulting entity affordances for an observer scenario.",
+        domain: "EntityOntology × StimulusOrIntent × ObserverScenario",
+        codomain: "EthogramOrAffordanceDecision",
+        morphism_kind: "CoalgebricProjection",
+        teleology: "Evaluate bounded entity behavior and inspect observer-relative affordances using authored inputs.",
+        units_and_frames: "Stimulus distance uses meters. Physiological state uses permille where encoded by EONT.",
+        arguments: "entity, event, observer, state?, scene?, behaviors?, export_ai_tools?, clip_source?. Event kind: stimulus, intent, inspect.",
+        composable_with: &["hypermedia.kinetics.compile_skl2_rig"],
+        human_preview_affordance: "Inspect the reasoned decision, semantic receipt and retained clip reference.",
+        abi_descriptor: morphism_func!(
+            "evaluate_ethogram_and_entity_affordance", "https://qualiadb.org/ext/qualia/twin#evaluate_ethogram_and_entity_affordance",
+            28, 247, "(Entity, Event, ObserverScenario) -> EthogramOrAffordanceDecision", 167
+        ),
+    },
+    AgenticMorphismSpec {
+        id: "qualia.graph.prove_equivalence_scrub_and_rdf_star",
+        aliases: &[],
+        category: "graph",
+        morphism: "prove_equivalence_scrub_and_rdf_star",
+        owner: "QualiaDB/query, foundation and governance",
+        summary: "Prove retained RDF/Q42 equivalence, replay temporal facts, merge graph revisions, and annotate RDF-star statements.",
+        domain: "RetainedRdfAndQ42 | TemporalCommits | GraphParameters",
+        codomain: "GraphProofOrDiff | DerivedNQuins",
+        morphism_kind: "Functor",
+        teleology: "Verify and transform explicitly retained graph evidence.",
+        units_and_frames: "Temporal cutoffs are expressed in integer milliseconds. External sort uses an explicit local temporary byte budget.",
+        arguments: "op, parameters. Ops: prove_rdf_q42_equivalence, temporal_replay, temporal_frame_diff, rdf_star_annotate, resolve_nquin_crdt, filter_nquins.",
+        composable_with: &["qualia.container.pack_and_diff_hmc"],
+        human_preview_affordance: "Inspect the proof, temporal events, or resulting semantic facts.",
+        abi_descriptor: morphism_func!(
+            "prove_equivalence_scrub_and_rdf_star",
+            "https://qualiadb.org/ext/qualia/graph#prove_equivalence_scrub_and_rdf_star",
+            36, 253, "(GraphOperation, Parameters) -> GraphProofOrDerivedNQuins", 168,
+            DEFAULT_PARAMS, EffectSet::GRAPH_READ,
+            DeterminismGuarantee::DeterministicExact, ReversibilityKind::PureNoState
+        ),
+    },
+];

@@ -1,7 +1,9 @@
 /// Versioned categorical operation contracts exposed by application Vibe capability hosts.
 /// Canonical names follow the category-theoretic `hypermedia.<category>.<morphism>` taxonomy;
 /// historical `hypermedia.*` and `synth.*` names resolve losslessly via `ontology::canonical_morphism_id`.
-pub const OPERATIONS: &[(&str, &str, &str)] = &[
+type Operation = (&'static str, &'static str, &'static str);
+
+const BASE_OPERATIONS: &[Operation] = &[
     ("hypermedia.locus.construct", "hypermedia/profile-authoring",
      "Parametric circle, rounded rectangle, open channel, or polygon -> closed 2D locus"),
     ("hypermedia.locus.transform", "hypermedia/drafting-geometry",
@@ -303,6 +305,23 @@ pub const OPERATIONS: &[(&str, &str, &str)] = &[
     ("hypermedia.kinetics.evaluate_mobility_fracture_risk", "QualiaDB/clinical_formulas + Etalon/skeletal",
      "Joint torque demand, muscle PCSA/HU/IMAT, CoM kinematics, and bone BMD/BV_TV/callus -> {rer, mos_m, fracture_factor_of_risk, fall_risk_class, fracture_risk_class}"),
 ];
+
+const ALL_OPERATIONS: [Operation; BASE_OPERATIONS.len() + crate::ontology::EXPANSION.len()] = {
+    let mut operations = [("", "", ""); BASE_OPERATIONS.len() + crate::ontology::EXPANSION.len()];
+    let mut index = 0;
+    while index < BASE_OPERATIONS.len() {
+        operations[index] = BASE_OPERATIONS[index];
+        index += 1;
+    }
+    while index < operations.len() {
+        let morphism = crate::ontology::EXPANSION[index - BASE_OPERATIONS.len()];
+        operations[index] = (morphism.id, morphism.owner, morphism.summary);
+        index += 1;
+    }
+    operations
+};
+
+pub const OPERATIONS: &[Operation] = &ALL_OPERATIONS;
 
 #[cfg(test)]
 mod tests {
@@ -1869,7 +1888,6 @@ mod tests {
             "verify_emf provenance should retain dipole and constitutive medium lineage"
         );
 
-        assert_eq!(OPERATIONS.len(), 150);
-        assert_eq!(ontology::MORPHISMS.len(), 150);
+        assert_eq!(OPERATIONS.len(), ontology::MORPHISMS.len());
     }
 }

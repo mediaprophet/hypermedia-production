@@ -173,7 +173,18 @@ impl Sim {
     }
 
     pub fn run(&mut self) -> Result<SimOut, SimError> {
+        self.run_with_state_observer(|_, _| Ok(()))
+    }
+
+    /// Observe each sampled state, including the initial and terminal states.
+    pub fn run_with_state_observer(
+        &mut self,
+        mut observe: impl FnMut(f64, &[f64]) -> Result<(), SimError>,
+    ) -> Result<SimOut, SimError> {
         let tstop = self.config.tstop;
+        if !self.config.dt.is_finite() || self.config.dt <= 0.0 || !tstop.is_finite() {
+            return Err(SimError::Msg("Simulation step and horizon must be finite, with a positive step".into()));
+        }
         let mut steps = 0u64;
         let rejected = 0u64;
         let mut t_history = Vec::new();
@@ -185,10 +196,14 @@ impl Sim {
         let mut k4 = vec![0.0f64; n_states];
         let mut x_temp = vec![0.0f64; n_states];
 
-        let h = self.config.dt;
-
-        while self.t < tstop - 1e-12 {
+        while self.t < tstop {
+            let next_t = (self.t + self.config.dt).min(tstop);
+            let h = next_t - self.t;
+            if h <= 0.0 {
+                return Err(SimError::Msg("Simulation step cannot advance the time coordinate".into()));
+            }
             t_history.push(self.t);
+            observe(self.t, &self.x)?;
 
             // Step 1 & 2: Outputs + discrete updates
             let x_cur = self.x.clone();
@@ -201,7 +216,7 @@ impl Sim {
 
             // Integration step
             if n_states == 0 {
-                self.t = (self.t + h).min(tstop);
+                self.t = next_t;
                 steps += 1;
                 continue;
             }
@@ -212,7 +227,7 @@ impl Sim {
                     for i in 0..n_states {
                         self.x[i] += h * k1[i];
                     }
-                    self.t += h;
+                    self.t = next_t;
                     steps += 1;
                 }
                 Solver::Rk4 => {
@@ -240,7 +255,7 @@ impl Sim {
                     for i in 0..n_states {
                         self.x[i] += (h / 6.0) * (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]);
                     }
-                    self.t += h;
+                    self.t = next_t;
                     steps += 1;
                 }
                 Solver::Rk45 => {
@@ -253,7 +268,7 @@ impl Sim {
                     for i in 0..n_states {
                         self.x[i] += h * k2[i];
                     }
-                    self.t += h;
+                    self.t = next_t;
                     steps += 1;
                 }
             }
@@ -268,6 +283,7 @@ impl Sim {
         }
 
         t_history.push(self.t);
+        observe(self.t, &self.x)?;
         let x_final = self.x.clone();
         self.eval_outputs(self.t, &x_final)?;
         self.log_sinks(self.t)?;

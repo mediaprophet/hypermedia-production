@@ -1617,9 +1617,16 @@ impl AssetHost<'_> {
         let v_count = compiled.vertex_count;
         let t_count = compiled.triangle_count;
         let submesh_count = compiled.submesh_ranges.len();
-        let byte_len = compiled.container_bytes.len();
+        let upgraded_10d = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+            &compiled.container_bytes,
+            &format!("urn:qualia:entity:human-welfare:{}:w{week}", profile.slug()),
+            1,
+            [0.0; 10],
+        )
+        .unwrap_or(compiled.container_bytes);
+        let byte_len = upgraded_10d.len();
 
-        let container_10d = self.encode("10d", compiled.container_bytes)?;
+        let container_10d = self.encode("10d", upgraded_10d)?;
         let turntable_png = self.encode("png", turntable_bytes)?;
         let blueprint_svg = self.encode("svg", blueprint_svg_bytes)?;
         let measurements_res = self.encode("json", measurements_json.clone().into_bytes())?;

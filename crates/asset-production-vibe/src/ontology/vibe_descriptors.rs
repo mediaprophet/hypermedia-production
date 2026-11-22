@@ -1,247 +1,387 @@
 ﻿//! VibeScript ABI FuncDescriptor tables, sub-namespace descriptors, and HypermediaOntologyProvider.
 
-use super::{MORPHISMS, ONTOLOGY_NQUINS};
+use super::ONTOLOGY_NQUINS;
+
+#[cfg(test)]
+use super::MORPHISMS;
 use vibescript_abi::{
     BorrowedSliceView, CallerOutputSlice, FuncDescriptor, NQuin48, ProviderDescriptor, SemVer64,
     StableFuncId, SubNamespaceDescriptor, TargetProfileMask, VibeNamespaceProvider, VibeTrap,
 };
 
-static LOCUS_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[0].abi_descriptor,
-    MORPHISMS[1].abi_descriptor,
-    MORPHISMS[2].abi_descriptor,
-    MORPHISMS[26].abi_descriptor,
-    MORPHISMS[27].abi_descriptor,
-    MORPHISMS[28].abi_descriptor,
-    MORPHISMS[29].abi_descriptor,
-    MORPHISMS[68].abi_descriptor,
-    MORPHISMS[69].abi_descriptor,
-    MORPHISMS[70].abi_descriptor,
-    MORPHISMS[71].abi_descriptor,
-    MORPHISMS[72].abi_descriptor,
-    MORPHISMS[120].abi_descriptor,
-    MORPHISMS[121].abi_descriptor,
-    MORPHISMS[122].abi_descriptor,
-];
-static MANIFOLD_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[3].abi_descriptor,
-    MORPHISMS[4].abi_descriptor,
-    MORPHISMS[5].abi_descriptor,
-    MORPHISMS[6].abi_descriptor,
-    MORPHISMS[45].abi_descriptor,
-    MORPHISMS[46].abi_descriptor,
-    MORPHISMS[47].abi_descriptor,
-    MORPHISMS[48].abi_descriptor,
-    MORPHISMS[49].abi_descriptor,
-    MORPHISMS[73].abi_descriptor,
-    MORPHISMS[74].abi_descriptor,
-    MORPHISMS[75].abi_descriptor,
-    MORPHISMS[76].abi_descriptor,
-    MORPHISMS[77].abi_descriptor,
-    MORPHISMS[78].abi_descriptor,
-    MORPHISMS[79].abi_descriptor,
-    MORPHISMS[80].abi_descriptor,
-    MORPHISMS[81].abi_descriptor,
-    MORPHISMS[82].abi_descriptor,
-    MORPHISMS[83].abi_descriptor,
-    MORPHISMS[84].abi_descriptor,
-    MORPHISMS[114].abi_descriptor,
-    MORPHISMS[115].abi_descriptor,
-    MORPHISMS[123].abi_descriptor,
-    MORPHISMS[124].abi_descriptor,
-    MORPHISMS[125].abi_descriptor,
-    // The Qualia-owned species constructor declares ABI sub-id 2 (manifold).
-    MORPHISMS[144].abi_descriptor,
-    MORPHISMS[148].abi_descriptor,
-];
-static SURFACE_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[24].abi_descriptor,
-    MORPHISMS[85].abi_descriptor,
-    MORPHISMS[86].abi_descriptor,
-    MORPHISMS[87].abi_descriptor,
-    MORPHISMS[88].abi_descriptor,
-    MORPHISMS[126].abi_descriptor,
-    MORPHISMS[127].abi_descriptor,
-    MORPHISMS[147].abi_descriptor,
-];
-static RADIANCE_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[7].abi_descriptor,
-    MORPHISMS[8].abi_descriptor,
-    MORPHISMS[9].abi_descriptor,
-    MORPHISMS[10].abi_descriptor,
-    MORPHISMS[11].abi_descriptor,
-    MORPHISMS[12].abi_descriptor,
-    MORPHISMS[13].abi_descriptor,
-    MORPHISMS[18].abi_descriptor,
-    MORPHISMS[19].abi_descriptor,
-    MORPHISMS[20].abi_descriptor,
-    MORPHISMS[21].abi_descriptor,
-    MORPHISMS[22].abi_descriptor,
-    MORPHISMS[23].abi_descriptor,
-    MORPHISMS[38].abi_descriptor,
-    MORPHISMS[39].abi_descriptor,
-    MORPHISMS[40].abi_descriptor,
-    MORPHISMS[41].abi_descriptor,
-    MORPHISMS[42].abi_descriptor,
-    MORPHISMS[43].abi_descriptor,
-    MORPHISMS[44].abi_descriptor,
-    MORPHISMS[89].abi_descriptor,
-    MORPHISMS[90].abi_descriptor,
-    MORPHISMS[91].abi_descriptor,
-    MORPHISMS[92].abi_descriptor,
-    MORPHISMS[93].abi_descriptor,
-    MORPHISMS[128].abi_descriptor,
-    MORPHISMS[129].abi_descriptor,
-    MORPHISMS[130].abi_descriptor,
-    MORPHISMS[145].abi_descriptor,
-    MORPHISMS[146].abi_descriptor,
-];
-static GLYPH_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[30].abi_descriptor,
-    MORPHISMS[31].abi_descriptor,
-    MORPHISMS[32].abi_descriptor,
-    MORPHISMS[33].abi_descriptor,
-    MORPHISMS[94].abi_descriptor,
-    MORPHISMS[95].abi_descriptor,
-    MORPHISMS[131].abi_descriptor,
-];
-static LAYOUT_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[34].abi_descriptor,
-    MORPHISMS[35].abi_descriptor,
-    MORPHISMS[36].abi_descriptor,
-    MORPHISMS[37].abi_descriptor,
-    MORPHISMS[96].abi_descriptor,
-    MORPHISMS[97].abi_descriptor,
-    MORPHISMS[119].abi_descriptor,
-    MORPHISMS[132].abi_descriptor,
-    MORPHISMS[133].abi_descriptor,
-    MORPHISMS[134].abi_descriptor,
-];
-static KINETICS_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[17].abi_descriptor,
-    MORPHISMS[56].abi_descriptor,
-    MORPHISMS[57].abi_descriptor,
-    MORPHISMS[58].abi_descriptor,
-    MORPHISMS[98].abi_descriptor,
-    MORPHISMS[99].abi_descriptor,
-    MORPHISMS[100].abi_descriptor,
-    MORPHISMS[101].abi_descriptor,
-    MORPHISMS[102].abi_descriptor,
-    MORPHISMS[103].abi_descriptor,
-    MORPHISMS[116].abi_descriptor,
-    MORPHISMS[135].abi_descriptor,
-    MORPHISMS[136].abi_descriptor,
-    MORPHISMS[137].abi_descriptor,
-    MORPHISMS[138].abi_descriptor,
-    MORPHISMS[149].abi_descriptor,
-];
-static ACOUSTICS_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[14].abi_descriptor,
-    MORPHISMS[15].abi_descriptor,
-    MORPHISMS[16].abi_descriptor,
-    MORPHISMS[59].abi_descriptor,
-    MORPHISMS[60].abi_descriptor,
-    MORPHISMS[61].abi_descriptor,
-    MORPHISMS[104].abi_descriptor,
-    MORPHISMS[105].abi_descriptor,
-    MORPHISMS[139].abi_descriptor,
-];
-static ELECTROMAGNETICS_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[50].abi_descriptor,
-    MORPHISMS[51].abi_descriptor,
-    MORPHISMS[52].abi_descriptor,
-    MORPHISMS[106].abi_descriptor,
-    MORPHISMS[107].abi_descriptor,
-    MORPHISMS[140].abi_descriptor,
-];
-static GEODESY_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[53].abi_descriptor,
-    MORPHISMS[54].abi_descriptor,
-    MORPHISMS[55].abi_descriptor,
-    MORPHISMS[108].abi_descriptor,
-    MORPHISMS[109].abi_descriptor,
-    MORPHISMS[118].abi_descriptor,
-    MORPHISMS[141].abi_descriptor,
-];
-static DISCOURSE_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[25].abi_descriptor,
-    MORPHISMS[64].abi_descriptor,
-    MORPHISMS[65].abi_descriptor,
-    MORPHISMS[66].abi_descriptor,
-    MORPHISMS[67].abi_descriptor,
-    MORPHISMS[110].abi_descriptor,
-    MORPHISMS[111].abi_descriptor,
-    MORPHISMS[117].abi_descriptor,
-    MORPHISMS[142].abi_descriptor,
-];
-static CHRONICLE_FUNCS: &[FuncDescriptor] = &[
-    MORPHISMS[62].abi_descriptor,
-    MORPHISMS[63].abi_descriptor,
-    MORPHISMS[112].abi_descriptor,
-    MORPHISMS[113].abi_descriptor,
-    MORPHISMS[143].abi_descriptor,
-];
+const fn function_count(sub_id: u16) -> usize {
+    let mut index = 0;
+    let mut count = 0;
+    while index < super::ALL_MORPHISMS.len() {
+        if super::ALL_MORPHISMS[index].abi_descriptor.stable_id.sub_namespace_id == sub_id {
+            count += 1;
+        }
+        index += 1;
+    }
+    count
+}
+
+const fn functions_in<const N: usize>(sub_id: u16) -> [FuncDescriptor; N] {
+    let mut functions = [super::ALL_MORPHISMS[0].abi_descriptor; N];
+    let mut index = 0;
+    let mut count = 0;
+    while index < super::ALL_MORPHISMS.len() {
+        let descriptor = super::ALL_MORPHISMS[index].abi_descriptor;
+        if descriptor.stable_id.sub_namespace_id == sub_id {
+            functions[count] = descriptor;
+            count += 1;
+        }
+        index += 1;
+    }
+    assert!(count == N);
+    functions
+}
 
 static SUB_NAMESPACES: &[SubNamespaceDescriptor] = &[
     SubNamespaceDescriptor {
         name: "locus",
         sub_id: 1,
-        functions: LOCUS_FUNCS,
+        functions: &functions_in::<{ function_count(1) }>(1),
     },
     SubNamespaceDescriptor {
         name: "manifold",
         sub_id: 2,
-        functions: MANIFOLD_FUNCS,
+        functions: &functions_in::<{ function_count(2) }>(2),
     },
     SubNamespaceDescriptor {
         name: "surface",
         sub_id: 3,
-        functions: SURFACE_FUNCS,
+        functions: &functions_in::<{ function_count(3) }>(3),
     },
     SubNamespaceDescriptor {
         name: "radiance",
         sub_id: 4,
-        functions: RADIANCE_FUNCS,
+        functions: &functions_in::<{ function_count(4) }>(4),
     },
     SubNamespaceDescriptor {
         name: "glyph",
         sub_id: 5,
-        functions: GLYPH_FUNCS,
+        functions: &functions_in::<{ function_count(5) }>(5),
     },
     SubNamespaceDescriptor {
         name: "layout",
         sub_id: 6,
-        functions: LAYOUT_FUNCS,
+        functions: &functions_in::<{ function_count(6) }>(6),
     },
     SubNamespaceDescriptor {
         name: "kinetics",
         sub_id: 7,
-        functions: KINETICS_FUNCS,
+        functions: &functions_in::<{ function_count(7) }>(7),
     },
     SubNamespaceDescriptor {
         name: "acoustics",
         sub_id: 8,
-        functions: ACOUSTICS_FUNCS,
+        functions: &functions_in::<{ function_count(8) }>(8),
     },
     SubNamespaceDescriptor {
         name: "electromagnetics",
         sub_id: 9,
-        functions: ELECTROMAGNETICS_FUNCS,
+        functions: &functions_in::<{ function_count(9) }>(9),
     },
     SubNamespaceDescriptor {
         name: "geodesy",
         sub_id: 10,
-        functions: GEODESY_FUNCS,
+        functions: &functions_in::<{ function_count(10) }>(10),
     },
     SubNamespaceDescriptor {
         name: "discourse",
         sub_id: 11,
-        functions: DISCOURSE_FUNCS,
+        functions: &functions_in::<{ function_count(11) }>(11),
     },
     SubNamespaceDescriptor {
         name: "chronicle",
         sub_id: 12,
-        functions: CHRONICLE_FUNCS,
+        functions: &functions_in::<{ function_count(12) }>(12),
+    },
+    SubNamespaceDescriptor {
+        name: "container",
+        sub_id: 13,
+        functions: &functions_in::<{ function_count(13) }>(13),
+    },
+    SubNamespaceDescriptor {
+        name: "math",
+        sub_id: 14,
+        functions: &functions_in::<{ function_count(14) }>(14),
+    },
+    SubNamespaceDescriptor {
+        name: "statistics",
+        sub_id: 15,
+        functions: &functions_in::<{ function_count(15) }>(15),
+    },
+    SubNamespaceDescriptor {
+        name: "knowledge",
+        sub_id: 16,
+        functions: &functions_in::<{ function_count(16) }>(16),
+    },
+    SubNamespaceDescriptor {
+        name: "geospatial",
+        sub_id: 17,
+        functions: &functions_in::<{ function_count(17) }>(17),
+    },
+    SubNamespaceDescriptor {
+        name: "inference",
+        sub_id: 18,
+        functions: &functions_in::<{ function_count(18) }>(18),
+    },
+    SubNamespaceDescriptor {
+        name: "epistemics",
+        sub_id: 19,
+        functions: &functions_in::<{ function_count(19) }>(19),
+    },
+    SubNamespaceDescriptor {
+        name: "live",
+        sub_id: 20,
+        functions: &functions_in::<{ function_count(20) }>(20),
+    },
+    SubNamespaceDescriptor {
+        name: "network",
+        sub_id: 21,
+        functions: &functions_in::<{ function_count(21) }>(21),
+    },
+    SubNamespaceDescriptor {
+        name: "physics",
+        sub_id: 22,
+        functions: &functions_in::<{ function_count(22) }>(22),
+    },
+    SubNamespaceDescriptor {
+        name: "topology",
+        sub_id: 23,
+        functions: &functions_in::<{ function_count(23) }>(23),
+    },
+    SubNamespaceDescriptor {
+        name: "governance",
+        sub_id: 24,
+        functions: &functions_in::<{ function_count(24) }>(24),
+    },
+    SubNamespaceDescriptor {
+        name: "cooperative",
+        sub_id: 25,
+        functions: &functions_in::<{ function_count(25) }>(25),
+    },
+    SubNamespaceDescriptor {
+        name: "geometry",
+        sub_id: 26,
+        functions: &functions_in::<{ function_count(26) }>(26),
+    },
+    SubNamespaceDescriptor {
+        name: "anatomy",
+        sub_id: 27,
+        functions: &functions_in::<{ function_count(27) }>(27),
+    },
+    SubNamespaceDescriptor {
+        name: "twin",
+        sub_id: 28,
+        functions: &functions_in::<{ function_count(28) }>(28),
+    },
+    SubNamespaceDescriptor {
+        name: "science",
+        sub_id: 29,
+        functions: &functions_in::<{ function_count(29) }>(29),
+    },
+    SubNamespaceDescriptor {
+        name: "q42",
+        sub_id: 30,
+        functions: &functions_in::<{ function_count(30) }>(30),
+    },
+    SubNamespaceDescriptor {
+        name: "solvers",
+        sub_id: 31,
+        functions: &functions_in::<{ function_count(31) }>(31),
+    },
+    SubNamespaceDescriptor {
+        name: "economics",
+        sub_id: 32,
+        functions: &functions_in::<{ function_count(32) }>(32),
+    },
+    SubNamespaceDescriptor {
+        name: "vision",
+        sub_id: 33,
+        functions: &functions_in::<{ function_count(33) }>(33),
+    },
+    SubNamespaceDescriptor {
+        name: "wellfair",
+        sub_id: 34,
+        functions: &functions_in::<{ function_count(34) }>(34),
+    },
+    SubNamespaceDescriptor {
+        name: "vibe",
+        sub_id: 35,
+        functions: &functions_in::<{ function_count(35) }>(35),
+    },
+    SubNamespaceDescriptor {
+        name: "graph",
+        sub_id: 36,
+        functions: &functions_in::<{ function_count(36) }>(36),
+    },
+    SubNamespaceDescriptor {
+        name: "sensing",
+        sub_id: 37,
+        functions: &functions_in::<{ function_count(37) }>(37),
+    },
+    SubNamespaceDescriptor {
+        name: "vector",
+        sub_id: 38,
+        functions: &functions_in::<{ function_count(38) }>(38),
+    },
+    SubNamespaceDescriptor {
+        name: "image",
+        sub_id: 39,
+        functions: &functions_in::<{ function_count(39) }>(39),
+    },
+    SubNamespaceDescriptor {
+        name: "rights",
+        sub_id: 40,
+        functions: &functions_in::<{ function_count(40) }>(40),
+    },
+    SubNamespaceDescriptor {
+        name: "cosmos",
+        sub_id: 41,
+        functions: &functions_in::<{ function_count(41) }>(41),
+    },
+    SubNamespaceDescriptor {
+        name: "compute",
+        sub_id: 42,
+        functions: &functions_in::<{ function_count(42) }>(42),
+    },
+    SubNamespaceDescriptor {
+        name: "linguistics",
+        sub_id: 43,
+        functions: &functions_in::<{ function_count(43) }>(43),
+    },
+    SubNamespaceDescriptor {
+        name: "interchange",
+        sub_id: 44,
+        functions: &functions_in::<{ function_count(44) }>(44),
+    },
+    SubNamespaceDescriptor {
+        name: "category",
+        sub_id: 45,
+        functions: &functions_in::<{ function_count(45) }>(45),
+    },
+    SubNamespaceDescriptor {
+        name: "accessibility",
+        sub_id: 46,
+        functions: &functions_in::<{ function_count(46) }>(46),
+    },
+    SubNamespaceDescriptor {
+        name: "quantum",
+        sub_id: 47,
+        functions: &functions_in::<{ function_count(47) }>(47),
+    },
+    SubNamespaceDescriptor {
+        name: "narrative",
+        sub_id: 48,
+        functions: &functions_in::<{ function_count(48) }>(48),
+    },
+    SubNamespaceDescriptor {
+        name: "logic",
+        sub_id: 49,
+        functions: &functions_in::<{ function_count(49) }>(49),
+    },
+    SubNamespaceDescriptor {
+        name: "fabrication",
+        sub_id: 50,
+        functions: &functions_in::<{ function_count(50) }>(50),
+    },
+    SubNamespaceDescriptor {
+        name: "privacy",
+        sub_id: 51,
+        functions: &functions_in::<{ function_count(51) }>(51),
+    },
+    SubNamespaceDescriptor {
+        name: "infrastructure",
+        sub_id: 52,
+        functions: &functions_in::<{ function_count(52) }>(52),
+    },
+    SubNamespaceDescriptor {
+        name: "control",
+        sub_id: 53,
+        functions: &functions_in::<{ function_count(53) }>(53),
+    },
+    SubNamespaceDescriptor {
+        name: "environment",
+        sub_id: 54,
+        functions: &functions_in::<{ function_count(54) }>(54),
+    },
+    SubNamespaceDescriptor {
+        name: "botany",
+        sub_id: 55,
+        functions: &functions_in::<{ function_count(55) }>(55),
+    },
+    SubNamespaceDescriptor {
+        name: "anvil",
+        sub_id: 56,
+        functions: &functions_in::<{ function_count(56) }>(56),
+    },
+    SubNamespaceDescriptor {
+        name: "storage",
+        sub_id: 57,
+        functions: &functions_in::<{ function_count(57) }>(57),
+    },
+    SubNamespaceDescriptor {
+        name: "provenance",
+        sub_id: 58,
+        functions: &functions_in::<{ function_count(58) }>(58),
+    },
+    SubNamespaceDescriptor {
+        name: "medical",
+        sub_id: 59,
+        functions: &functions_in::<{ function_count(59) }>(59),
+    },
+    SubNamespaceDescriptor {
+        name: "matter",
+        sub_id: 60,
+        functions: &functions_in::<{ function_count(60) }>(60),
+    },
+    SubNamespaceDescriptor {
+        name: "ai",
+        sub_id: 61,
+        functions: &functions_in::<{ function_count(61) }>(61),
+    },
+    SubNamespaceDescriptor {
+        name: "crypto",
+        sub_id: 62,
+        functions: &functions_in::<{ function_count(62) }>(62),
+    },
+    SubNamespaceDescriptor {
+        name: "chemistry",
+        sub_id: 63,
+        functions: &functions_in::<{ function_count(63) }>(63),
+    },
+    SubNamespaceDescriptor {
+        name: "bio",
+        sub_id: 64,
+        functions: &functions_in::<{ function_count(64) }>(64),
+    },
+    SubNamespaceDescriptor {
+        name: "biosphere",
+        sub_id: 65,
+        functions: &functions_in::<{ function_count(65) }>(65),
+    },
+    SubNamespaceDescriptor {
+        name: "neuro",
+        sub_id: 66,
+        functions: &functions_in::<{ function_count(66) }>(66),
+    },
+    SubNamespaceDescriptor {
+        name: "wellfare",
+        sub_id: 67,
+        functions: &functions_in::<{ function_count(67) }>(67),
+    },
+    SubNamespaceDescriptor {
+        name: "poet",
+        sub_id: 68,
+        functions: &functions_in::<{ function_count(68) }>(68),
+    },
+    SubNamespaceDescriptor {
+        name: "biology",
+        sub_id: 69,
+        functions: &functions_in::<{ function_count(69) }>(69),
     },
 ];
 
@@ -252,7 +392,7 @@ pub static HYPERMEDIA_PROVIDER_DESCRIPTOR: ProviderDescriptor = ProviderDescript
     SemVer64::new(0, 2, 0, 0),
     TargetProfileMask::ALL_CPU,
     SUB_NAMESPACES,
-    256,
+    ONTOLOGY_NQUINS.len() as u32,
 );
 
 /// Zero-heap VibeScript namespace provider exposing the ontological contracts and `NQuin48` triples
@@ -275,8 +415,7 @@ mod tests {
 
     #[test]
     fn descriptor_contracts_and_arguments_expose_emf_v4_qac_v1_and_anatomy_parameters() {
-        assert_eq!(crate::OPERATIONS.len(), 150);
-        assert_eq!(MORPHISMS.len(), 150);
+        assert_eq!(crate::OPERATIONS.len(), MORPHISMS.len());
 
         let category_total: usize = crate::ontology::CATEGORIES
             .iter()
@@ -287,8 +426,7 @@ mod tests {
                     .count()
             })
             .sum();
-        // Sum of admitted morphisms across the 12 canonical categories (150 total).
-        assert_eq!(category_total, 150);
+        assert_eq!(category_total, MORPHISMS.len());
         assert!(crate::ontology::resolve_morphism("qualia.species.assemble_corpus").is_some());
 
         let provider_funcs: Vec<&FuncDescriptor> = HYPERMEDIA_PROVIDER_DESCRIPTOR
@@ -296,7 +434,7 @@ mod tests {
             .iter()
             .flat_map(|ns| ns.functions)
             .collect();
-        assert_eq!(provider_funcs.len(), 150);
+        assert_eq!(provider_funcs.len(), MORPHISMS.len());
 
         let checks: &[(&str, &[&str], &[&str])] = &[
             (
@@ -389,7 +527,7 @@ mod tests {
         let ops = catalogue["operations"]
             .as_array()
             .expect("catalogue operations array");
-        assert_eq!(ops.len(), 150);
+        assert_eq!(ops.len(), MORPHISMS.len());
         for (id, expected_args, _) in checks {
             let entry = ops
                 .iter()

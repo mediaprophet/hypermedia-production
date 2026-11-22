@@ -98,6 +98,15 @@ pub(super) fn shape_labels(
 }
 
 struct Outline<'a> { path: &'a mut BezPath, x: f64, y: f64, scale: f64 }
+
+pub(crate) fn sfnt_outline(
+    face: &ttf_parser::Face<'_>, glyph: ttf_parser::GlyphId, x: f64, y: f64, scale: f64,
+) -> Option<BezPath> {
+    let mut path = BezPath::new();
+    let mut outline = Outline { path: &mut path, x, y, scale };
+    face.outline_glyph(glyph, &mut outline)?;
+    Some(path)
+}
 impl Outline<'_> {
     fn point(&self, x: f32, y: f32) -> (f64, f64) {
         (self.x + x as f64*self.scale, self.y - y as f64*self.scale)

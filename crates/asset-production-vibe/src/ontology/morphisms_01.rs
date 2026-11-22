@@ -181,7 +181,7 @@ pub(super) const BATCH: &[AgenticMorphismSpec] = &[
         morphism_kind: "CoalgebricProjection",
         teleology: "Seals a 3D triangle manifold into QualiaDB's native `.10d` spatial container format for zero-copy runtime loading, spatial indexing, and 2048x2048 GPU/CPU preview rendering.",
         units_and_frames: "QualiaDB 10D binary container with precomputed AABB [min, max], f32x3 positions, and u32x3 triangle indices.",
-        arguments: "mesh: handle",
+        arguments: "mesh: handle, entity_iri: optional canonical RDF IRI (defaults to a content-derived URN)",
         composable_with: &["hypermedia.discourse.review_gallery"],
         human_preview_affordance: "Render 2048x2048 PNG preview via `synth preview <bundle.hmc> <out_dir>`.",
         abi_descriptor: morphism_func!(

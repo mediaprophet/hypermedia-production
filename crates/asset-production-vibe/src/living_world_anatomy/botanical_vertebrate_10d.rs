@@ -87,7 +87,18 @@ impl AssetHost<'_> {
         let v_count = organ.vertex_count();
         let t_count = organ.triangle_count();
         let slice_count = organ.tissue_slices.len();
-        let byte_len = organ.container_bytes.len();
+        let clean_slug: String = species_id
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '-' })
+            .collect();
+        let upgraded_10d = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+            &organ.container_bytes,
+            &format!("urn:qualia:entity:botanical:{clean_slug}:scale{scale}"),
+            1,
+            [0.0; 10],
+        )
+        .unwrap_or(organ.container_bytes);
+        let byte_len = upgraded_10d.len();
 
         let rgba_f32: Vec<[f32; 4]> = organ
             .colors
@@ -115,7 +126,7 @@ impl AssetHost<'_> {
             slice_count,
         );
 
-        let container_10d = self.encode("10d", organ.container_bytes)?;
+        let container_10d = self.encode("10d", upgraded_10d)?;
         let turntable_png = self.encode("png", turntable_bytes)?;
         let blueprint_svg = self.encode("svg", blueprint_svg_bytes)?;
         let mesh_handle = store_raw_mesh(self, organ.vertices, &organ.indices)?;
@@ -368,8 +379,19 @@ impl AssetHost<'_> {
             (Vec::new(), Vec::new())
         };
 
-        let container_byte_len = compiled.container_bytes.len();
-        let container_10d = self.encode("10d", compiled.container_bytes)?;
+        let clean_slug: String = species_id
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '-' })
+            .collect();
+        let upgraded_10d = qualia_core_db::render::compile_10d::upgrade_legacy_10d_to_holographic_v2(
+            &compiled.container_bytes,
+            &format!("urn:qualia:entity:vertebrate:{clean_slug}"),
+            1,
+            [0.0; 10],
+        )
+        .unwrap_or(compiled.container_bytes);
+        let container_byte_len = upgraded_10d.len();
+        let container_10d = self.encode("10d", upgraded_10d)?;
         let turntable_png = self.encode("png", turntable_bytes)?;
         let blueprint_svg = self.encode("svg", blueprint_svg_bytes)?;
         let hero_rgba = self

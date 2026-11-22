@@ -6,14 +6,22 @@ authors = ["Timothy Charles Holborn <timothy.holborn@gmail.com>"]
 license-file = "../../LICENSE"
 description = "Application-independent bounded Vibe adapters for shared asset production"
 
+[features]
+gpu-vbd-contact = ["qualia-core-db/gpu-runtime"]
+
 [dependencies]
 qualia-geospatial = { path = "../../../qualiaDB/crates/qualia-geospatial" }
 qualia-core-db = { path = "../../../qualiaDB/crates/qualia-core-db", default-features = false }
-vibe = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
-vibescript-abi = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
+qualia-cooperative-core = { path = "../../../qualiaDB/crates/qualia-cooperative-core" }
+qualia-seal-10d = { path = "../../../qualiaDB/crates/qualia-seal-10d" }
+wellfare-core = { path = "../../../qualiaDB/crates/wellfare-core" }
+work-graph = { path = "../../../qualiaDB/crates/work-graph" }
+vibe = { path = "../../../qualiaDB/crates/vibe" }
+vibescript-abi = { path = "../../../qualiaDB/crates/vibescript-abi" }
 serde_json = "1.0"
 ciborium = "0.2.2"
 profile-authoring = { path = "../profile-authoring" }
+provenance-stego-physical = { path = "../provenance-stego-physical" }
 drafting-geometry = { path = "../drafting-geometry" }
 color-transforms = { path = "../color-transforms" }
 raster-blend-operators = { path = "../raster-blend-operators" }
@@ -68,7 +76,7 @@ kurbo = "0.13.1"
 peniko = "0.6"
 parley = { version = "0.12.0", default-features = false, features = ["std", "complex-scripts"] }
 ttf-parser = "0.25.1"
-qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "a3b214c33b6bb38fcdbd8d9df207d1523041aba9" }
+qualia-audio = { git = "https://github.com/mediaprophet/$174db719383a7e9d743862458442d9a45c9a16c35" }
 png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"
@@ -76,4 +84,4 @@ blake3 = { version = "1.8", default-features = false }
 sha2 = "0.10"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-etalon = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/etalon.git", rev = "a8f12b3f769fe7c8f33c6b93fece6aa046f6db16" }
+etalon = { package = "etalon", version = "=0.0.2", git = "https://github.com/mediaprophet/$12663d53a14e2105bda36714fc0af87f0304719ab" }

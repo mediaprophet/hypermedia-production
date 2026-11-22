@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::log::LogCurve;
-use crate::matrix::{ColorInfo, Primaries, Transfer};
+use crate::matrix::Primaries;
 
 pub type Mat3 = [[f64; 3]; 3];
 

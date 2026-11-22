@@ -20,8 +20,8 @@ All participating AI agents and contributors must strictly honor this copyright,
 
 Read [`C:\github\synth\AGENTS.md`](../synth/AGENTS.md) and [`C:\github\synth\agent-instructions\README.md`](../synth/agent-instructions/README.md) before modifying or claiming a morphism is missing.
 
-### 1. 150-Morphism Catalog & Function Registry
-- **Catalog Owner:** [`crates/asset-production-vibe/src/operations_catalog.rs`](crates/asset-production-vibe/src/operations_catalog.rs) (`OPERATIONS`) and [`crates/asset-production-vibe/src/ontology/`](crates/asset-production-vibe/src/ontology/) (`ALL_MORPHISMS`). Counts must remain strictly aligned (`OPERATIONS.len() == ontology::MORPHISMS.len() == 150`).
+### 1. 400-Morphism Catalog (`150` Base + `250` Expansion) & Function Registry
+- **Catalog Owner:** [`crates/asset-production-vibe/src/operations_catalog.rs`](crates/asset-production-vibe/src/operations_catalog.rs) (`OPERATIONS`) and [`crates/asset-production-vibe/src/ontology/`](crates/asset-production-vibe/src/ontology/) (`MORPHISMS` + `ONTOLOGY_NQUINS`). Counts must remain strictly aligned (`OPERATIONS.len() == ontology::MORPHISMS.len() == 400`, `ONTOLOGY_NQUINS.len() == 1200`).
 - **Audit Index:** [`audit-docs/FUNCTIONS.md`](audit-docs/FUNCTIONS.md) and [`audit-docs/modules/`](audit-docs/modules/) index all functions across the workspace. Grep `audit-docs/FUNCTIONS.md` before adding or duplicating any capability.
 
 ### 2. Holographic 10D v2 Primacy (`HOLO` `0x0306`) & Two-Tier Constituency

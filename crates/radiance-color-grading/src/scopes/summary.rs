@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::matrix::{Matrix, rgb_to_ycbcr};
-use crate::scopes::{Grid, Signal, Vectorscope, Waveform, angle_deg};
+use crate::scopes::{Signal, Vectorscope, angle_deg};
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 pub struct Level {

@@ -302,6 +302,23 @@ pub struct Doc {
     pages: Vec<Page>,
 }
 
+/// One block's standard structure role and accessible Unicode text.
+pub struct TextBlock<'a> {
+    pub role: &'a str,
+    pub actual_text: &'a str,
+}
+
+/// Structural metadata and a block index for each positioned text run on every page.
+pub struct DocumentTags<'a> {
+    pub title: &'a str,
+    pub language: &'a str,
+    pub blocks: &'a [TextBlock<'a>],
+    pub page_run_blocks: &'a [Vec<usize>],
+    pub glyph_unicode: &'a BTreeMap<u16, String>,
+    pub font_bounds: [i16; 4],
+    pub italic_angle: f32,
+}
+
 impl Doc {
     pub fn new() -> Self {
         Doc { fonts: BTreeMap::new(), uni: BTreeMap::new(), pages: Vec::new() }
@@ -318,16 +335,89 @@ impl Doc {
 
     /// Serialize document to valid PDF 1.5 format.
     pub fn save(&self) -> Result<Vec<u8>, PdfError> {
+        self.save_inner(None, None)
+    }
+
+    /// Serialize a tagged text document with embedded fonts and tagged reading order.
+    pub fn save_tagged(&self, tags: &DocumentTags<'_>) -> Result<Vec<u8>, PdfError> {
+        self.save_tagged_inner(tags, None)
+    }
+
+    /// Preserve the authoring recipe for lossless reflow with the same retained font.
+    /// Values are page width, height, margin, body font size, and paragraph spacing, in points.
+    pub fn save_tagged_with_page_layout(
+        &self,
+        tags: &DocumentTags<'_>,
+        layout: [f64; 5],
+    ) -> Result<Vec<u8>, PdfError> {
+        let [width, height, margin, font_size, spacing] = layout;
+        if !layout.iter().all(|value| value.is_finite())
+            || width <= 0.0 || height <= 0.0 || margin < 0.0 || font_size <= 0.0 || spacing < 0.0
+            || self.pages.iter().any(|page| page.width != width || page.height != height)
+        {
+            return Err(PdfError("invalid tagged PDF authoring layout".into()));
+        }
+        self.save_tagged_inner(tags, Some(layout))
+    }
+
+    fn save_tagged_inner(
+        &self,
+        tags: &DocumentTags<'_>,
+        layout: Option<[f64; 5]>,
+    ) -> Result<Vec<u8>, PdfError> {
+        if tags.title.trim().is_empty() || tags.language.is_empty()
+            || self.fonts.len() != 1
+            || !tags.italic_angle.is_finite()
+            || !tags.language.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+            || tags.page_run_blocks.len() != self.pages.len()
+            || tags.blocks.is_empty()
+            || tags.blocks.iter().any(|block| {
+                !matches!(block.role, "H1" | "H2" | "H3" | "H4" | "H5" | "H6" | "P")
+                    || block.actual_text.trim().is_empty()
+            })
+            || self.pages.iter().zip(tags.page_run_blocks).any(|(page, blocks)| {
+                page.runs.len() != blocks.len() || !page.rects.is_empty()
+                    || blocks.iter().any(|&index| index >= tags.blocks.len())
+                    || page.runs.iter().any(|run| run.gids.is_empty())
+            })
+            || !tags.page_run_blocks.iter().flatten().is_sorted()
+        {
+            return Err(PdfError("invalid tagged PDF block or page mapping".into()));
+        }
+        self.save_inner(Some(tags), layout)
+    }
+
+    fn save_inner(
+        &self,
+        tags: Option<&DocumentTags<'_>>,
+        layout: Option<[f64; 5]>,
+    ) -> Result<Vec<u8>, PdfError> {
         if self.pages.is_empty() {
             return Err(PdfError("no pages".to_string()));
         }
         let nfonts = self.fonts.len();
         let font_base = 3usize;
         let page_base = font_base + nfonts * 5;
-        let total = page_base + self.pages.len() * 2;
+        let page_last = page_base + self.pages.len() * 2 - 1;
+        let structure_root = page_last + 1;
+        let document_element = structure_root + 1;
+        let parent_tree = structure_root + 2;
+        let info = structure_root + 3;
+        let block_base = structure_root + 4;
+        let total = tags.map_or(page_last + 1, |tags| block_base + tags.blocks.len() - 1);
         let mut objs: Vec<Vec<u8>> = vec![Vec::new(); total + 1];
 
-        objs[1] = b"<< /Type /Catalog /Pages 2 0 R >>".to_vec();
+        objs[1] = if let Some(tags) = tags {
+            let recipe = layout.map_or(String::new(), |[width, height, margin, font_size, spacing]| {
+                format!(" /QualiaPageLayout [{width} {height} {margin} {font_size} {spacing}]")
+            });
+            format!(
+                "<< /Type /Catalog /Pages 2 0 R /Lang ({}) /MarkInfo << /Marked true >> /ViewerPreferences << /DisplayDocTitle true >> /StructTreeRoot {structure_root} 0 R{recipe} >>",
+                tags.language,
+            ).into_bytes()
+        } else {
+            b"<< /Type /Catalog /Pages 2 0 R >>".to_vec()
+        };
 
         let kids: Vec<String> = (0..self.pages.len()).map(|i| format!("{} 0 R", page_base + i * 2 + 1)).collect();
         objs[2] = format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids.join(" "), self.pages.len()).into_bytes();
@@ -342,18 +432,27 @@ impl Doc {
             let upm = ttf.units_per_em as f64;
             let asc = (ttf.ascender as f64 * 1000.0 / upm).round() as i32;
             let desc = (ttf.descender as f64 * 1000.0 / upm).round() as i32;
+            let (bounds, angle) = tags.map_or(([0, desc, 1000, asc], 0.0), |tags| {
+                (tags.font_bounds.map(|unit| (f64::from(unit) * 1000.0 / upm).round() as i32),
+                 tags.italic_angle)
+            });
+            let [x_min, y_min, x_max, y_max] = bounds;
+            let flags = if angle == 0.0 { 32 } else { 96 };
             objs[fd] = format!(
-                "<< /Type /FontDescriptor /FontName /{} /Flags 32 /FontBBox [0 {desc} 1000 {asc}] /Ascent {asc} /Descent {desc} /CapHeight {asc} /ItalicAngle 0 /StemV 80 /FontFile2 {ff} 0 R >>",
+                "<< /Type /FontDescriptor /FontName /{} /Flags {flags} /FontBBox [{x_min} {y_min} {x_max} {y_max}] /Ascent {asc} /Descent {desc} /CapHeight {asc} /ItalicAngle {angle} /StemV 80 /FontFile2 {ff} 0 R >>",
                 ttf.ps_name
-            )
-            .into_bytes();
+            ).into_bytes();
             let w = widths_array(ttf);
             objs[cid] = format!(
                 "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /{} /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor {fd} 0 R /W {w} /CIDToGIDMap /Identity >>",
                 ttf.ps_name
             )
             .into_bytes();
-            objs[tu] = tounicode_stream(self.uni.get(name));
+            objs[tu] = if let Some(tags) = tags {
+                unicode_stream(tags.glyph_unicode.iter().map(|(&gid, text)| (gid, text.encode_utf16().collect())))
+            } else {
+                tounicode_stream(self.uni.get(name))
+            };
             objs[f0] = format!(
                 "<< /Type /Font /Subtype /Type0 /BaseFont /{} /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {tu} 0 R >>",
                 ttf.ps_name
@@ -361,15 +460,61 @@ impl Doc {
             .into_bytes();
         }
 
+        let mut block_refs = vec![String::new(); tags.map_or(0, |tags| tags.blocks.len())];
+        let mut parent_numbers = String::new();
         for (i, page) in self.pages.iter().enumerate() {
             let (content, pobj) = (page_base + i * 2, page_base + i * 2 + 1);
-            let body = page_stream(page);
+            let (body, page_tags) = if let Some(tags) = tags {
+                let mut body = String::new();
+                let _ = write!(parent_numbers, "{i} [");
+                let mut runs = 0;
+                for (mcid, group) in tags.page_run_blocks[i].chunk_by(|a, b| a == b).enumerate() {
+                    let index = group[0];
+                    let role = tags.blocks[index].role;
+                    let block_id = block_base + index;
+                    let _ = write!(parent_numbers, "{block_id} 0 R ");
+                    let _ = write!(block_refs[index], "<< /Type /MCR /Pg {pobj} 0 R /MCID {mcid} >> ");
+                    let _ = writeln!(body, "/{role} << /MCID {mcid} >> BDC");
+                    for run in &page.runs[runs..runs + group.len()] {
+                        write_text_run(&mut body, run);
+                    }
+                    runs += group.len();
+                    body.push_str("EMC\n");
+                }
+                parent_numbers.push_str("] ");
+                (body.into_bytes(), format!(" /StructParents {i} /Tabs /S"))
+            } else {
+                (page_stream(page), String::new())
+            };
             objs[content] = stream(&format!("<< /Length {} >>", body.len()), &body);
             objs[pobj] = format!(
-                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {:.2} {:.2}] /Resources << /Font << {font_res}>> >> /Contents {content} 0 R >>",
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {:.2} {:.2}] /Resources << /Font << {font_res}>> >> /Contents {content} 0 R{page_tags} >>",
                 page.width, page.height
             )
             .into_bytes();
+        }
+        if let Some(tags) = tags {
+            objs[structure_root] = format!(
+                "<< /Type /StructTreeRoot /K [{document_element} 0 R] /ParentTree {parent_tree} 0 R /ParentTreeNextKey {} >>",
+                self.pages.len()
+            ).into_bytes();
+            let mut kids = String::new();
+            for (index, block) in tags.blocks.iter().enumerate() {
+                if block_refs[index].is_empty() {
+                    return Err(PdfError("tagged block has no marked content".to_string()));
+                }
+                let id = block_base + index;
+                let _ = write!(kids, "{id} 0 R ");
+                objs[id] = format!(
+                    "<< /Type /StructElem /S /{} /P {document_element} 0 R /ActualText {} /K [{}] >>",
+                    block.role, text_string(block.actual_text), block_refs[index],
+                ).into_bytes();
+            }
+            objs[document_element] = format!(
+                "<< /Type /StructElem /S /Document /P {structure_root} 0 R /K [{kids}] >>",
+            ).into_bytes();
+            objs[parent_tree] = format!("<< /Nums [{parent_numbers}] >>").into_bytes();
+            objs[info] = format!("<< /Title {} >>", text_string(tags.title)).into_bytes();
         }
 
         let mut out: Vec<u8> = b"%PDF-1.5\n%\xe2\xe3\xcf\xd3\n".to_vec();
@@ -386,7 +531,8 @@ impl Doc {
         for off in offsets.iter().skip(1) {
             let _ = writeln!(out_as_string(&mut out), "{off:010} 00000 n ");
         }
-        let _ = writeln!(out_as_string(&mut out), "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref_at}\n%%EOF", total + 1);
+        let info_ref = tags.map_or(String::new(), |_| format!(" /Info {info} 0 R"));
+        let _ = writeln!(out_as_string(&mut out), "trailer\n<< /Size {} /Root 1 0 R{info_ref} >>\nstartxref\n{xref_at}\n%%EOF", total + 1);
         Ok(out)
     }
 }
@@ -435,17 +581,22 @@ fn widths_array(ttf: &Ttf) -> String {
 }
 
 fn tounicode_stream(map: Option<&BTreeMap<u16, char>>) -> Vec<u8> {
+    unicode_stream(map.into_iter().flat_map(|map| map.iter()).map(|(&gid, &value)| {
+        let mut buffer = [0; 2];
+        (gid, value.encode_utf16(&mut buffer).to_vec())
+    }))
+}
+
+fn unicode_stream(entries: impl Iterator<Item = (u16, Vec<u16>)>) -> Vec<u8> {
     let mut s = String::from(
         "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n",
     );
-    let entries: Vec<(&u16, &char)> = map.map(|m| m.iter().collect()).unwrap_or_default();
+    let entries: Vec<_> = entries.collect();
     for chunk in entries.chunks(100) {
         let _ = writeln!(s, "{} beginbfchar", chunk.len());
-        for (gid, c) in chunk {
-            let mut buf = [0u16; 2];
-            let enc = c.encode_utf16(&mut buf);
+        for (gid, encoded) in chunk {
             let _ = write!(s, "<{gid:04X}> <");
-            for u in enc.iter() {
+            for u in encoded {
                 let _ = write!(s, "{u:04X}");
             }
             s.push_str(">\n");
@@ -465,13 +616,26 @@ fn page_stream(p: &Page) -> Vec<u8> {
         if t.gids.is_empty() {
             continue;
         }
-        let mut hex = String::with_capacity(t.gids.len() * 4);
-        for g in &t.gids {
-            let _ = write!(hex, "{g:04X}");
-        }
-        let _ = writeln!(s, "BT /{} {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <{hex}> Tj ET", t.font, t.size, t.x, t.y);
+        write_text_run(&mut s, t);
     }
     s.into_bytes()
+}
+
+fn write_text_run(output: &mut String, run: &TextRun) {
+    let _ = write!(output, "BT /{} {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <", run.font, run.size, run.x, run.y);
+    for gid in &run.gids {
+        let _ = write!(output, "{gid:04X}");
+    }
+    output.push_str("> Tj ET\n");
+}
+
+fn text_string(value: &str) -> String {
+    let mut encoded = String::from("<FEFF");
+    for unit in value.encode_utf16() {
+        let _ = write!(encoded, "{unit:04X}");
+    }
+    encoded.push('>');
+    encoded
 }
 
 #[cfg(test)]

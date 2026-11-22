@@ -6,11 +6,11 @@
 use serde::{Deserialize, Serialize};
 
 use crate::matrix::{
-    REFERENCE_WHITE_NITS, from_linear, hlg_inverse_oetf, hlg_oetf, linear_to_srgb, pq_eotf,
-    pq_inverse_eotf, srgb_to_linear, to_linear,
+    REFERENCE_WHITE_NITS, hlg_inverse_oetf, hlg_oetf, linear_to_srgb, pq_eotf,
+    pq_inverse_eotf, srgb_to_linear,
 };
 use crate::spaces::{
-    ColorSpace, Curve, Gamut, WorkingSpace, apply3, gamut_matrix, to_f32,
+    ColorSpace, Curve, WorkingSpace, apply3, gamut_matrix, to_f32,
 };
 
 /// Tone mapping method for mapping HDR luminance into SDR/display ranges.

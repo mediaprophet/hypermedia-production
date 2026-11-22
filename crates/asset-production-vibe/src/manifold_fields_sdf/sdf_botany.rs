@@ -39,7 +39,7 @@ impl AssetHost<'_> {
         }
 
         let resolution = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
-        if resolution < 2 || resolution > 64 {
+        if !(2..=128).contains(&resolution) {
             return Err(format!("Unsupported SDF brick resolution: {resolution}"));
         }
 
