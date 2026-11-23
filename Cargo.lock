@@ -5191,7 +5191,7 @@ dependencies = [
 [[package]]
 name = "qualia-app-contract"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "ciborium",
  "serde",
@@ -5209,7 +5209,7 @@ dependencies = [
 [[package]]
 name = "qualia-audio"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "etalon-signal",
 ]
@@ -5230,7 +5230,7 @@ dependencies = [
 [[package]]
 name = "qualia-cooperative-core"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "chrono",
  "hex",
@@ -5365,7 +5365,7 @@ dependencies = [
 [[package]]
 name = "qualia-core-db"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "aead 0.6.1",
  "aes-gcm",
@@ -5498,7 +5498,7 @@ dependencies = [
 [[package]]
 name = "qualia-inference-kernel"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "etalon-inference-kernel",
 ]
@@ -7624,7 +7624,7 @@ dependencies = [
 [[package]]
 name = "vibe"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 dependencies = [
  "bytemuck",
  "etalon-vibe",
@@ -7639,7 +7639,7 @@ version = "0.0.41"
 [[package]]
 name = "vibescript-abi"
 version = "0.0.41"
-source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=f89a5979acb4cb4a9d167e2c3f2141dbf405bea2#f89a5979acb4cb4a9d167e2c3f2141dbf405bea2"
+source = "git+https://github.com/mediaprophet/qualiaDB.git?rev=fa69b4e9f780e50654d9f0c4bf351ce833e00a73#fa69b4e9f780e50654d9f0c4bf351ce833e00a73"
 
 [[package]]
 name = "video-h264-codec"
