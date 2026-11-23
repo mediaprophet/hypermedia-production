@@ -76,7 +76,7 @@ kurbo = "0.13.1"
 peniko = "0.6"
 parley = { version = "0.12.0", default-features = false, features = ["std", "complex-scripts"] }
 ttf-parser = "0.25.1"
-qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "8995a0f5b3f7bc05a4281df48e0f27a75bc5115e" }
+qualia-audio = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "5dcc5f3682bf8dc22c19458f807f9e108ac83aab" }
 png = "0.18"
 base64 = "0.22"
 bytemuck = "1.14"

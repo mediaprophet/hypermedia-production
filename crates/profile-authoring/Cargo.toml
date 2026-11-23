@@ -8,7 +8,7 @@ rust-version = "1.90"
 
 [dependencies]
 drafting-geometry = { path = "../drafting-geometry" }
-qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "8995a0f5b3f7bc05a4281df48e0f27a75bc5115e", default-features = false }
+qualia-core-db = { git = "https://github.com/mediaprophet/qualiaDB.git", rev = "5dcc5f3682bf8dc22c19458f807f9e108ac83aab", default-features = false }
 
 [lints.rust]
 unsafe_code = "forbid"
