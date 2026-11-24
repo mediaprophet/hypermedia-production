@@ -1,0 +1,15 @@
+[package]
+name = "biosphere-authoring-forge"
+version = "0.1.0"
+edition = "2024"
+authors = ["Timothy Charles Holborn <timothy.holborn@gmail.com>"]
+license-file = "../../LICENSE"
+description = "Unified biosphere authoring, arthropod gait & cuticle EMF v4 optics, zero-heap terrain foot-contact IK, SKL1/SKL2 6-DoF PGA skeletal admission, botanical SDF junction welding, and Holographic 10D v2 / M64 v3 container editing"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = "1.0"
+sha2 = "0.10"
+
+[lints.rust]
+unsafe_code = "forbid"

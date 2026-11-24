@@ -121,6 +121,7 @@ mod raster;
 mod sound;
 mod surface_bsdf_uv;
 
+pub use biosphere_authoring_forge;
 pub use operations_catalog::OPERATIONS;
 
 /// An intact retained input or encoded output; the application owns persistence.

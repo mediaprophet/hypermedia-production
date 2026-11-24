@@ -69,6 +69,7 @@ geodesy-spatial-analysis = { path = "../geodesy-spatial-analysis" }
 locus-geospatial-codecs = { path = "../locus-geospatial-codecs" }
 acoustics-daw-session = { path = "../acoustics-daw-session" }
 electromagnetics-rf-sensing = { path = "../electromagnetics-rf-sensing" }
+biosphere-authoring-forge = { path = "../biosphere-authoring-forge" }
 bitstream-codec = { path = "../bitstream-codec" }
 vector-render = { package = "vector-cpu-render-adapter", path = "../vector-cpu-render-adapter" }
 anyrender = "0.14.0"
